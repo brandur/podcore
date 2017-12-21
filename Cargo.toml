@@ -1,0 +1,20 @@
+[package]
+name = "pod_core"
+version = "0.1.0"
+authors = ["Brandur <brandur@brandur.org>"]
+
+[dependencies]
+
+# This should really be 0.6.0, but unfortunately there appears to be a mismatch
+# in which module the `Request` struct belongs. Hopefully `juniper_iron` will
+# get this fixed at some point.
+iron = "0.5.1"
+
+# Likewise, `mount` is also locked to something old to support old `iron`.
+mount = "^0.3.0"
+
+juniper = { version = "0.9.1" }
+juniper_iron = { version = "0.1.1" }
+serde = { version = "1.0.24" }
+serde_json = { version = "1.0.8" }
+time = { version = "*" }
