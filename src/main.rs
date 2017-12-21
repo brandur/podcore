@@ -67,7 +67,8 @@ fn main() {
     chain.link_before(ResponseTime);
     chain.link_after(ResponseTime);
 
-    let host = env::var("LISTEN").unwrap_or("0.0.0.0:8080".to_owned());
+    let port = env::var("PORT").unwrap_or("8080".to_owned());
+    let host = format!("0.0.0.0:{}", port);
     println!("GraphQL server started on {}", host);
     Iron::new(chain).http(host.as_str()).unwrap();
 }
