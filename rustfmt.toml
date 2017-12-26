@@ -1,0 +1,2 @@
+same_line_attributes = false
+struct_field_align_threshold = 20

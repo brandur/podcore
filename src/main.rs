@@ -1,7 +1,10 @@
-#[macro_use] extern crate diesel;
-#[macro_use] extern crate error_chain;
+#[macro_use]
+extern crate diesel;
+#[macro_use]
+extern crate error_chain;
 extern crate iron;
-#[macro_use] extern crate juniper;
+#[macro_use]
+extern crate juniper;
 extern crate juniper_iron;
 extern crate mount;
 extern crate r2d2;
@@ -14,7 +17,7 @@ mod schema;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use iron::prelude::*;
-use iron::{BeforeMiddleware, AfterMiddleware, typemap};
+use iron::{typemap, AfterMiddleware, BeforeMiddleware};
 use juniper::{EmptyMutation, FieldResult};
 use juniper_iron::{GraphQLHandler, GraphiQLHandler};
 use mount::Mount;
@@ -38,17 +41,16 @@ type DieselConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 
 #[derive(Queryable)]
 pub struct Podcast {
-    pub id: i64,
+    pub id:    i64,
     pub title: String,
-    pub url: String,
+    pub url:   String,
 }
 
 struct Context {
-     pool: Pool<ConnectionManager<PgConnection>>,
+    pool: Pool<ConnectionManager<PgConnection>>,
 }
 
-impl Context {
-}
+impl Context {}
 
 impl juniper::Context for Context {}
 
@@ -58,10 +60,10 @@ impl juniper::Context for Context {}
 
 #[derive(GraphQLObject)]
 struct PodcastObject {
-    #[graphql(description="The podcast's title.")]
+    #[graphql(description = "The podcast's title.")]
     pub title: String,
 
-    #[graphql(description="The podcast's RSS feed URL.")]
+    #[graphql(description = "The podcast's RSS feed URL.")]
     pub url: String,
 }
 
@@ -100,7 +102,9 @@ graphql_object!(Query: Context |&self| {
 
 struct ResponseTime;
 
-impl typemap::Key for ResponseTime { type Value = u64; }
+impl typemap::Key for ResponseTime {
+    type Value = u64;
+}
 
 impl BeforeMiddleware for ResponseTime {
     fn before(&self, req: &mut Request) -> IronResult<()> {
@@ -122,18 +126,14 @@ impl AfterMiddleware for ResponseTime {
 //
 
 fn main() {
-    let database_url = env::var("DATABASE_URL")
-        .expect("DATABASE_URL must be set");
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let manager = ConnectionManager::<PgConnection>::new(database_url);
-    let pool = Pool::builder().build(manager)
+    let pool = Pool::builder()
+        .build(manager)
         .expect("Failed to create pool.");
 
     let graphql_endpoint = GraphQLHandler::new(
-        move |_: &mut Request| -> Context {
-            Context {
-                pool: pool.clone(),
-            }
-        },
+        move |_: &mut Request| -> Context { Context { pool: pool.clone() } },
         Query {},
         EmptyMutation::<Context>::new(),
     );
