@@ -18,7 +18,7 @@ use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use iron::prelude::*;
 use iron::{typemap, AfterMiddleware, BeforeMiddleware};
-use juniper::{EmptyMutation, FieldResult};
+use juniper::FieldResult;
 use juniper_iron::{GraphQLHandler, GraphiQLHandler};
 use mount::Mount;
 use r2d2::Pool;
@@ -64,6 +64,21 @@ impl juniper::Context for Context {}
 // GraphQL
 //
 
+struct Mutation;
+
+graphql_object!(
+    Mutation: Context | &self | {
+
+    description: "The root mutation object of the schema."
+
+        //field createHuman(&executor, new_human: NewHuman) -> FieldResult<Human> {
+        //    let db = executor.context().pool.get_connection()?;
+        //    let human: Human = db.insert_human(&new_human)?;
+        //    Ok(human)
+        //}
+    }
+);
+
 #[derive(GraphQLObject)]
 struct PodcastObject {
     #[graphql(description = "The podcast's title.")]
@@ -85,13 +100,13 @@ impl<'a> From<&'a Podcast> for PodcastObject {
 struct Query;
 
 graphql_object!(Query: Context |&self| {
-    description: "The root query object of the schema"
+    description: "The root query object of the schema."
 
     field apiVersion() -> &str {
         "1.0"
     }
 
-    field podcasts(&executor) -> FieldResult<Vec<PodcastObject>> {
+    field podcasts(&executor) -> FieldResult<Vec<PodcastObject>> as "A collection podcasts." {
         let context = executor.context();
         let results = schema::podcasts::table
             .order(schema::podcasts::title.asc())
@@ -144,7 +159,7 @@ fn main() {
     let graphql_endpoint = GraphQLHandler::new(
         move |_: &mut Request| -> Context { Context { pool: pool.clone() } },
         Query {},
-        EmptyMutation::<Context>::new(),
+        Mutation {},
     );
     let graphiql_endpoint = GraphiQLHandler::new("/graphql");
 
