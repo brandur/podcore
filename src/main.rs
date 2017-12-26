@@ -1,4 +1,5 @@
 #[macro_use] extern crate diesel;
+#[macro_use] extern crate error_chain;
 extern crate iron;
 #[macro_use] extern crate juniper;
 extern crate juniper_iron;
@@ -21,6 +22,13 @@ use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use std::env;
 use time::precise_time_ns;
+
+//
+// Init
+//
+
+// Create the Error, ErrorKind, ResultExt, and Result types
+error_chain!{}
 
 //
 // Model
@@ -50,7 +58,10 @@ impl juniper::Context for Context {}
 
 #[derive(GraphQLObject)]
 struct PodcastObject {
+    #[graphql(description="The podcast's title.")]
     pub title: String,
+
+    #[graphql(description="The podcast's RSS feed URL.")]
     pub url: String,
 }
 
@@ -65,40 +76,23 @@ graphql_object!(Query: Context |&self| {
 
     field podcasts(&executor) -> FieldResult<Vec<PodcastObject>> {
         let context = executor.context();
-        let conn: DieselConnection = context.pool.get()?;
+        let conn: DieselConnection = context.pool.get()
+            .chain_err(|| "Error acquiring connection from database pool")?;
 
         let results = schema::podcasts::table
             .order(schema::podcasts::title.asc())
             .limit(5)
-            .load::<Podcast>(&*conn)?
+            .load::<Podcast>(&*conn)
+            .chain_err(|| "Error loading podcasts from the database")?
             .iter()
             .map(|p| PodcastObject {
                     title: p.title.to_owned(),
                     url: p.url.to_owned(),
             })
             .collect::<Vec<_>>();
-
         Ok(results)
     }
 });
-
-/*
-#[derive(GraphQLObject)]
-#[graphql(description="Information about a person")]
-struct Person {
-    #[graphql(description="The person's full name, including both first and last names")]
-    name: String,
-
-    #[graphql(description="The person's age in years, rounded down")]
-    age: i32,
-}
-
-#[derive(GraphQLObject)]
-struct House {
-    address: Option<String>, // Converted into String (nullable)
-    inhabitants: Vec<Person>, // Converted into [Person!]!
-}
-*/
 
 //
 // HTTP abstractions

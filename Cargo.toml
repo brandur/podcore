@@ -5,6 +5,7 @@ authors = ["Brandur <brandur@brandur.org>"]
 
 [dependencies]
 diesel = { version = "1.0.0-rc1", features = ["postgres"] }
+error-chain = { version = "*" }
 
 # This should really be 0.6.0, but unfortunately there appears to be a mismatch
 # in which module the `Request` struct belongs. Hopefully `juniper_iron` will
