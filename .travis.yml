@@ -25,7 +25,10 @@ before_script:
   - which diesel || cargo install diesel_cli --no-default-features --features postgres
   - createdb pod_core
   - diesel migration run
-  - if [[ $RUSTFMT == 'true' ]]; then which rustfmt || cargo install rustfmt-nightly --force; fi
+  - if [[ $RUSTFMT == 'true' ]]; then cargo install rustfmt-nightly --force; fi
+  # For some reason `which rustfmt` may show success even if `cargo fmt` fails.
+  # Add this back after this whole nightly-required disaster as ended.
+  #- if [[ $RUSTFMT == 'true' ]]; then which rustfmt || cargo install rustfmt-nightly --force; fi
 
 script:
   - cargo test --verbose
