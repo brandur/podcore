@@ -125,7 +125,8 @@ fn main() {
     let database_url = env::var("DATABASE_URL")
         .expect("DATABASE_URL must be set");
     let manager = ConnectionManager::<PgConnection>::new(database_url);
-    let pool = Pool::builder().build(manager).expect("Failed to create pool.");
+    let pool = Pool::builder().build(manager)
+        .expect("Failed to create pool.");
 
     let graphql_endpoint = GraphQLHandler::new(
         move |_: &mut Request| -> Context {
