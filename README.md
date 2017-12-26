@@ -1,4 +1,4 @@
-# pod_core
+# pod_core [![Build Status](https://travis-ci.org/brandur/pod_core.svg?branch=master)](https://travis-ci.org/brandur/pod_core)
 
 ```
 cargo install diesel_cli --no-default-features --features postgres
