@@ -1,0 +1,10 @@
+cache: cargo
+language: rust
+rust:
+  - nightly
+  - stable
+script:
+  - cargo test --verbose
+
+# Faster container-based builds
+sudo: false
