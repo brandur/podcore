@@ -29,4 +29,4 @@ before_script:
 
 script:
   - cargo test --verbose
-  - if [[ $RUSTFMT == 'true' ]]; then cargo fmt -- --write-mode=diff; fi
+  - if [[ $RUSTFMT == 'true' ]]; then cargo +nightly fmt -- --write-mode=diff; fi

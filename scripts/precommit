@@ -4,6 +4,5 @@
 # Install to: .git/hooks/
 #
 
-# Doesn't currently work because rustup doesn't pass through arguments passed
-# "--": https://github.com/rust-lang-nursery/rustfmt/issues/2279
-rustup run nightly cargo fmt -- --write-mode=diff
+# Get off +nightly as soon as possible
+cargo +nightly fmt -- --write-mode=diff
