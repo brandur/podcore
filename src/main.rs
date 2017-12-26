@@ -50,7 +50,13 @@ struct Context {
     pool: Pool<ConnectionManager<PgConnection>>,
 }
 
-impl Context {}
+impl Context {
+    fn get_conn(&self) -> Result<DieselConnection> {
+        self.pool
+            .get()
+            .chain_err(|| "Error acquiring connection from database pool")
+    }
+}
 
 impl juniper::Context for Context {}
 
@@ -87,13 +93,10 @@ graphql_object!(Query: Context |&self| {
 
     field podcasts(&executor) -> FieldResult<Vec<PodcastObject>> {
         let context = executor.context();
-        let conn: DieselConnection = context.pool.get()
-            .chain_err(|| "Error acquiring connection from database pool")?;
-
         let results = schema::podcasts::table
             .order(schema::podcasts::title.asc())
             .limit(5)
-            .load::<Podcast>(&*conn)
+            .load::<Podcast>(&*context.get_conn()?)
             .chain_err(|| "Error loading podcasts from the database")?
             .iter()
             .map(|p| PodcastObject::from(p) )
