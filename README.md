@@ -25,3 +25,16 @@ Schema changes:
 ```
 diesel print-schema > src/schema.rs
 ```
+
+Rustfmt (run on `nightly` because rustfmt can't seem to detach itself from
+`nightly`)::
+
+```
+rustup install nightly
+cargo install rustfmt-nightly
+rustup run nightly cargo fmt
+```
+
+<!--
+# vim: set tw=79:
+-->

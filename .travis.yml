@@ -5,19 +5,28 @@ language: rust
 notifications:
   email:
     on_success: never
-rust:
-  - nightly
-  - stable
 # Faster container-based builds
 sudo: false
 
 env:
-  - DATABASE_URL=postgres://localhost/pod_core
+  global:
+    - DATABASE_URL=postgres://localhost/pod_core
+
+matrix:
+  include:
+    - rust: stable
+    - rust: nightly
+      # Only run rustfmt on nightly because the current version (which has been
+      # current for a very long time now) is still only supported on nightly.
+      # Eliminate this specialized check as soon as it goes back to stable.
+      env: RUSTFMT=true
 
 before_script:
-  - cargo install diesel_cli --no-default-features --features postgres
+  - which diesel || cargo install diesel_cli --no-default-features --features postgres
   - createdb pod_core
   - diesel migration run
+  - if [[ $RUSTFMT == 'true' ]]; then which rustfmt || cargo install rustfmt-nightly --force; fi
 
 script:
   - cargo test --verbose
+  - if [[ $RUSTFMT == 'true' ]]; then cargo fmt -- --write-mode=diff; fi
