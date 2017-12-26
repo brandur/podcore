@@ -67,6 +67,15 @@ struct PodcastObject {
     pub url: String,
 }
 
+impl<'a> From<&'a Podcast> for PodcastObject {
+    fn from(p: &Podcast) -> Self {
+        PodcastObject {
+            title: p.title.to_owned(),
+            url:   p.url.to_owned(),
+        }
+    }
+}
+
 struct Query;
 
 graphql_object!(Query: Context |&self| {
@@ -87,10 +96,7 @@ graphql_object!(Query: Context |&self| {
             .load::<Podcast>(&*conn)
             .chain_err(|| "Error loading podcasts from the database")?
             .iter()
-            .map(|p| PodcastObject {
-                    title: p.title.to_owned(),
-                    url: p.url.to_owned(),
-            })
+            .map(|p| PodcastObject::from(p) )
             .collect::<Vec<_>>();
         Ok(results)
     }
