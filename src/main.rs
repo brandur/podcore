@@ -1,3 +1,4 @@
+#[macro_use] extern crate diesel;
 extern crate iron;
 #[macro_use] extern crate juniper;
 extern crate juniper_iron;
@@ -5,14 +6,26 @@ extern crate mount;
 extern crate serde;
 extern crate time;
 
-use std::env;
-
+use diesel::prelude::*;
+use diesel::pg::PgConnection;
 use iron::prelude::*;
 use iron::{BeforeMiddleware, AfterMiddleware, typemap};
 use juniper::{Context, EmptyMutation};
 use juniper_iron::{GraphQLHandler, GraphiQLHandler};
 use mount::Mount;
+use std::env;
 use time::precise_time_ns;
+
+//
+// Model
+//
+
+#[derive(Queryable)]
+pub struct Podcast {
+    pub id: i64,
+    pub title: String,
+    pub url: String,
+}
 
 struct Root;
 
@@ -23,6 +36,10 @@ impl Root {
 }
 
 impl Context for Root {}
+
+//
+// GraphQL
+//
 
 graphql_object!(Root: Root as "Root" |&self| {
     description: "The root query object of the schema"
@@ -48,6 +65,10 @@ struct House {
     inhabitants: Vec<Person>, // Converted into [Person!]!
 }
 
+//
+// HTTP abstractions
+//
+
 struct ResponseTime;
 
 impl typemap::Key for ResponseTime { type Value = u64; }
@@ -71,7 +92,16 @@ impl AfterMiddleware for ResponseTime {
     }
 }
 
+//
+// Main
+//
+
 fn main() {
+    let database_url = env::var("DATABASE_URL")
+        .expect("DATABASE_URL must be set");
+    PgConnection::establish(&database_url)
+        .expect(&format!("Error connecting to {}", database_url));
+
     let graphql_endpoint = GraphQLHandler::new(
         context_factory,
         Root::new(),
