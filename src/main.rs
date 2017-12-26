@@ -3,22 +3,30 @@ extern crate iron;
 #[macro_use] extern crate juniper;
 extern crate juniper_iron;
 extern crate mount;
+extern crate r2d2;
+extern crate r2d2_diesel;
 extern crate serde;
 extern crate time;
+
+mod schema;
 
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use iron::prelude::*;
 use iron::{BeforeMiddleware, AfterMiddleware, typemap};
-use juniper::{Context, EmptyMutation};
+use juniper::{EmptyMutation, FieldResult};
 use juniper_iron::{GraphQLHandler, GraphiQLHandler};
 use mount::Mount;
+use r2d2::Pool;
+use r2d2_diesel::ConnectionManager;
 use std::env;
 use time::precise_time_ns;
 
 //
 // Model
 //
+
+type DieselConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 
 #[derive(Queryable)]
 pub struct Podcast {
@@ -27,28 +35,54 @@ pub struct Podcast {
     pub url: String,
 }
 
-struct Root;
-
-impl Root {
-    fn new() -> Root {
-        Root {}
-    }
+struct Context {
+     pool: Pool<ConnectionManager<PgConnection>>,
 }
 
-impl Context for Root {}
+impl Context {
+}
+
+impl juniper::Context for Context {}
 
 //
 // GraphQL
 //
 
-graphql_object!(Root: Root as "Root" |&self| {
+#[derive(GraphQLObject)]
+struct PodcastObject {
+    pub title: String,
+    pub url: String,
+}
+
+struct Query;
+
+graphql_object!(Query: Context |&self| {
     description: "The root query object of the schema"
 
-    field foo() -> String {
-        "Bar".to_owned()
+    field apiVersion() -> &str {
+        "1.0"
+    }
+
+    field podcasts(&executor) -> FieldResult<Vec<PodcastObject>> {
+        let context = executor.context();
+        let conn: DieselConnection = context.pool.get()?;
+
+        let results = schema::podcasts::table
+            .order(schema::podcasts::title.asc())
+            .limit(5)
+            .load::<Podcast>(&*conn)?
+            .iter()
+            .map(|p| PodcastObject {
+                    title: p.title.to_owned(),
+                    url: p.url.to_owned(),
+            })
+            .collect::<Vec<_>>();
+
+        Ok(results)
     }
 });
 
+/*
 #[derive(GraphQLObject)]
 #[graphql(description="Information about a person")]
 struct Person {
@@ -64,6 +98,7 @@ struct House {
     address: Option<String>, // Converted into String (nullable)
     inhabitants: Vec<Person>, // Converted into [Person!]!
 }
+*/
 
 //
 // HTTP abstractions
@@ -72,10 +107,6 @@ struct House {
 struct ResponseTime;
 
 impl typemap::Key for ResponseTime { type Value = u64; }
-
-fn context_factory(_: &mut Request) -> Root {
-    Root::new()
-}
 
 impl BeforeMiddleware for ResponseTime {
     fn before(&self, req: &mut Request) -> IronResult<()> {
@@ -99,13 +130,17 @@ impl AfterMiddleware for ResponseTime {
 fn main() {
     let database_url = env::var("DATABASE_URL")
         .expect("DATABASE_URL must be set");
-    PgConnection::establish(&database_url)
-        .expect(&format!("Error connecting to {}", database_url));
+    let manager = ConnectionManager::<PgConnection>::new(database_url);
+    let pool = Pool::builder().build(manager).expect("Failed to create pool.");
 
     let graphql_endpoint = GraphQLHandler::new(
-        context_factory,
-        Root::new(),
-        EmptyMutation::<Root>::new(),
+        move |_: &mut Request| -> Context {
+            Context {
+                pool: pool.clone(),
+            }
+        },
+        Query {},
+        EmptyMutation::<Context>::new(),
     );
     let graphiql_endpoint = GraphiQLHandler::new("/graphql");
 

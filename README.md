@@ -19,3 +19,9 @@ $ curl -X POST http://localhost:8080/graphql -d 'query xxx { yyy }
 ```
 
 GraphiQL is available at [localhost:8080](http://localhost:8080).
+
+Schema changes:
+
+```
+diesel print-schema > src/schema.rs
+```
