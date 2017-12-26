@@ -1,10 +1,20 @@
+addons:
+  postgresql: "9.6"
 cache: cargo
 language: rust
 rust:
   - nightly
   - stable
-script:
-  - cargo test --verbose
-
 # Faster container-based builds
 sudo: false
+
+env:
+  - DATABASE_URL=postgres://localhost/pod_core
+
+before_script:
+  - cargo install diesel_cli --no-default-features --features postgres
+  - createdb pod_core
+  - diesel migration run
+
+script:
+  - cargo test --verbose
