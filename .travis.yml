@@ -2,6 +2,9 @@ addons:
   postgresql: "9.6"
 cache: cargo
 language: rust
+notifications:
+  email:
+    on_success: never
 rust:
   - nightly
   - stable
