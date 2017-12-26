@@ -27,7 +27,7 @@ before_script:
   - diesel migration run
   - if [[ $RUSTFMT == 'true' ]]; then cargo install rustfmt-nightly --force; fi
   # For some reason `which rustfmt` may show success even if `cargo fmt` fails.
-  # Add this back after this whole nightly-required disaster as ended.
+  # Add this back after this whole nightly-required disaster has ended.
   #- if [[ $RUSTFMT == 'true' ]]; then which rustfmt || cargo install rustfmt-nightly --force; fi
 
 script:
