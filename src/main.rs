@@ -58,10 +58,12 @@ pub struct Episode {
 
 #[derive(Queryable)]
 pub struct Podcast {
-    pub id:       i64,
-    pub feed_url: String,
-    pub link_url: String,
-    pub title:    String,
+    pub id:        i64,
+    pub feed_url:  String,
+    pub image_url: String,
+    pub language:  String,
+    pub link_url:  String,
+    pub title:     String,
 }
 
 struct Context {
@@ -149,6 +151,12 @@ struct PodcastObject {
     #[graphql(description = "The podcast's RSS feed URL.")]
     pub feed_url: String,
 
+    #[graphql(description = "The podcast's image URL.")]
+    pub image_url: String,
+
+    #[graphql(description = "The podcast's language.")]
+    pub language: String,
+
     #[graphql(description = "The podcast's RSS link URL.")]
     pub link_url: String,
 
@@ -159,10 +167,12 @@ struct PodcastObject {
 impl<'a> From<&'a Podcast> for PodcastObject {
     fn from(p: &Podcast) -> Self {
         PodcastObject {
-            id:       p.id.to_string(),
-            feed_url: p.feed_url.to_owned(),
-            link_url: p.link_url.to_owned(),
-            title:    p.title.to_owned(),
+            id:        p.id.to_string(),
+            feed_url:  p.feed_url.to_owned(),
+            image_url: p.image_url.to_owned(),
+            language:  p.language.to_owned(),
+            link_url:  p.link_url.to_owned(),
+            title:     p.title.to_owned(),
         }
     }
 }

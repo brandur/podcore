@@ -17,6 +17,8 @@ table! {
     podcasts (id) {
         id -> Int8,
         feed_url -> Text,
+        image_url -> Text,
+        language -> Text,
         link_url -> Text,
         title -> Text,
     }
