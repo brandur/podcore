@@ -4,7 +4,8 @@ version = "0.1.0"
 authors = ["Brandur <brandur@brandur.org>"]
 
 [dependencies]
-diesel = { version = "1.0.0-rc1", features = ["postgres"] }
+chrono = "0.4"
+diesel = { version = "1.0.0-rc1", features = ["chrono", "postgres"] }
 error-chain = { version = "*" }
 
 # This should really be 0.6.0, but unfortunately there appears to be a mismatch

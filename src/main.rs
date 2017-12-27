@@ -1,3 +1,4 @@
+extern crate chrono;
 #[macro_use]
 extern crate diesel;
 #[macro_use]
@@ -14,6 +15,7 @@ extern crate time;
 
 mod schema;
 
+use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use iron::prelude::*;
@@ -24,6 +26,7 @@ use mount::Mount;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use std::env;
+use std::str::FromStr;
 use time::precise_time_ns;
 
 //
@@ -38,6 +41,18 @@ error_chain!{}
 //
 
 type DieselConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
+
+#[derive(Queryable)]
+pub struct Episode {
+    pub id:             i64,
+    pub enclosure_type: String,
+    pub enclosure_url:  String,
+    pub guid:           String,
+    pub link_url:       String,
+    pub podcast_id:     i64,
+    pub published_at:   DateTime<Utc>,
+    pub title:          String,
+}
 
 #[derive(Queryable)]
 pub struct Podcast {
@@ -80,7 +95,46 @@ graphql_object!(
 );
 
 #[derive(GraphQLObject)]
+struct EpisodeObject {
+    #[graphql(description = "The episode's ID.")]
+    pub id: String,
+
+    #[graphql(description = "The episode's web link.")]
+    pub link_url: String,
+
+    #[graphql(description = "The episode's media link (i.e. where the audio can be found).")]
+    pub media_url: String,
+
+    #[graphql(description = "The episode's podcast's ID.")]
+    pub podcast_id: String,
+
+    #[graphql(description = "The episode's publishing date and time.")]
+    pub published_at: DateTime<Utc>,
+
+    #[graphql(description = "The episode's title.")]
+    pub title: String,
+}
+
+impl<'a> From<&'a Episode> for EpisodeObject {
+    fn from(e: &Episode) -> Self {
+        EpisodeObject {
+            id:           e.id.to_string(),
+            link_url:     e.link_url.to_owned(),
+            media_url:    e.enclosure_url.to_owned(),
+            podcast_id:   e.podcast_id.to_string(),
+            published_at: e.published_at,
+            title:        e.title.to_owned(),
+        }
+    }
+}
+
+#[derive(GraphQLObject)]
 struct PodcastObject {
+    // IDs are exposed as strings because JS cannot store a fully 64-bit integer. This should be
+    // okay because clients should be treating them as opaque tokens anyway.
+    #[graphql(description = "The podcast's ID.")]
+    pub id: String,
+
     #[graphql(description = "The podcast's title.")]
     pub title: String,
 
@@ -91,6 +145,7 @@ struct PodcastObject {
 impl<'a> From<&'a Podcast> for PodcastObject {
     fn from(p: &Podcast) -> Self {
         PodcastObject {
+            id:    p.id.to_string(),
             title: p.title.to_owned(),
             url:   p.url.to_owned(),
         }
@@ -106,7 +161,25 @@ graphql_object!(Query: Context |&self| {
         "1.0"
     }
 
-    field podcasts(&executor) -> FieldResult<Vec<PodcastObject>> as "A collection podcasts." {
+    field episodes(&executor, podcast_id: String as "The podcast's ID.") ->
+            FieldResult<Vec<EpisodeObject>> as "A collection episodes for a podcast." {
+        let id = i64::from_str(podcast_id.as_str()).
+            chain_err(|| "Error parsing podcast ID")?;
+
+        let context = executor.context();
+        let results = schema::episodes::table
+            .filter(schema::episodes::podcast_id.eq(id))
+            .order(schema::episodes::published_at.desc())
+            .limit(20)
+            .load::<Episode>(&*context.get_conn()?)
+            .chain_err(|| "Error loading episodes from the database")?
+            .iter()
+            .map(|p| EpisodeObject::from(p) )
+            .collect::<Vec<_>>();
+        Ok(results)
+    }
+
+    field podcasts(&executor) -> FieldResult<Vec<PodcastObject>> as "A collection of podcasts." {
         let context = executor.context();
         let results = schema::podcasts::table
             .order(schema::podcasts::title.asc())
