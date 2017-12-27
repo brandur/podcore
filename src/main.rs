@@ -44,21 +44,24 @@ type DieselConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 
 #[derive(Queryable)]
 pub struct Episode {
-    pub id:             i64,
-    pub enclosure_type: String,
-    pub enclosure_url:  String,
-    pub guid:           String,
-    pub link_url:       String,
-    pub podcast_id:     i64,
-    pub published_at:   DateTime<Utc>,
-    pub title:          String,
+    pub id:           i64,
+    pub description:  String,
+    pub explicit:     bool,
+    pub media_type:   String,
+    pub media_url:    String,
+    pub guid:         String,
+    pub link_url:     String,
+    pub podcast_id:   i64,
+    pub published_at: DateTime<Utc>,
+    pub title:        String,
 }
 
 #[derive(Queryable)]
 pub struct Podcast {
-    pub id:    i64,
-    pub title: String,
-    pub url:   String,
+    pub id:       i64,
+    pub feed_url: String,
+    pub link_url: String,
+    pub title:    String,
 }
 
 struct Context {
@@ -99,6 +102,12 @@ struct EpisodeObject {
     #[graphql(description = "The episode's ID.")]
     pub id: String,
 
+    #[graphql(description = "The episode's description.")]
+    pub description: String,
+
+    #[graphql(description = "Whether the episode is considered explicit.")]
+    pub explicit: bool,
+
     #[graphql(description = "The episode's web link.")]
     pub link_url: String,
 
@@ -119,8 +128,10 @@ impl<'a> From<&'a Episode> for EpisodeObject {
     fn from(e: &Episode) -> Self {
         EpisodeObject {
             id:           e.id.to_string(),
+            description:  e.description.to_string(),
+            explicit:     e.explicit,
             link_url:     e.link_url.to_owned(),
-            media_url:    e.enclosure_url.to_owned(),
+            media_url:    e.media_url.to_owned(),
             podcast_id:   e.podcast_id.to_string(),
             published_at: e.published_at,
             title:        e.title.to_owned(),
@@ -135,19 +146,23 @@ struct PodcastObject {
     #[graphql(description = "The podcast's ID.")]
     pub id: String,
 
+    #[graphql(description = "The podcast's RSS feed URL.")]
+    pub feed_url: String,
+
+    #[graphql(description = "The podcast's RSS link URL.")]
+    pub link_url: String,
+
     #[graphql(description = "The podcast's title.")]
     pub title: String,
-
-    #[graphql(description = "The podcast's RSS feed URL.")]
-    pub url: String,
 }
 
 impl<'a> From<&'a Podcast> for PodcastObject {
     fn from(p: &Podcast) -> Self {
         PodcastObject {
-            id:    p.id.to_string(),
-            title: p.title.to_owned(),
-            url:   p.url.to_owned(),
+            id:       p.id.to_string(),
+            feed_url: p.feed_url.to_owned(),
+            link_url: p.link_url.to_owned(),
+            title:    p.title.to_owned(),
         }
     }
 }
