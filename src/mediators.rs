@@ -57,25 +57,38 @@ impl<'a> DirectoryPodcastUpdater<'a> {
 
         loop {
             match reader.read_namespaced_event(&mut buf, &mut ns_buf) {
-                Ok((ns, Event::Start(ref e))) => match e.name() {
-                    b"title" => in_title = true,
-                    _ => (),
-                },
-                Ok((ns, Event::Text(e))) => {
+                Ok((ref ns, Event::Start(ref e))) => {
+                    match *ns {
+                        Some(ref ns_content) => println!(
+                            "ns = {:?} e = {:?}",
+                            str::from_utf8(*ns_content).unwrap(),
+                            str::from_utf8(e.name()).unwrap()
+                        ),
+                        None => {
+                            println!("(no namespace) e = {:?}", str::from_utf8(e.name()).unwrap())
+                        }
+                    };
+                    match e.name() {
+                        b"title" => in_title = true,
+                        _ => (),
+                    }
+                }
+                Ok((ref _ns, Event::Text(ref e))) => {
                     if in_title {
                         println!("title = {}", e.unescape_and_decode(&reader).unwrap())
                     }
                 }
-                Ok((ns, Event::End(ref e))) => match e.name() {
+                Ok((_, Event::End(ref e))) => match e.name() {
                     b"title" => in_title = false,
                     _ => (),
                 },
-                Ok((ns, Event::Eof)) => break,
+                Ok((_, Event::Eof)) => break,
                 Err(e) => bail!("Error at position {}: {:?}", reader.buffer_position(), e),
                 _ => (),
             };
         }
         buf.clear();
+        ns_buf.clear();
 
         Ok(())
     }
