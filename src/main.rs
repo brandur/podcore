@@ -82,7 +82,6 @@ pub struct Episode {
 #[derive(Queryable)]
 pub struct Podcast {
     pub id:        i64,
-    pub feed_url:  String,
     pub image_url: String,
     pub language:  String,
     pub link_url:  String,
@@ -96,6 +95,14 @@ pub struct PodcastFeedContent {
     pub podcast_id:   i64,
     pub retrieved_at: DateTime<Utc>,
     pub sha256_hash:  String,
+}
+
+#[derive(Queryable)]
+pub struct PodcastFeedLocation {
+    pub id:            i64,
+    pub discovered_at: DateTime<Utc>,
+    pub feed_url:      String,
+    pub podcast_id:    i64,
 }
 
 struct Context {

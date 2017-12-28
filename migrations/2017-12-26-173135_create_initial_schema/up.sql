@@ -36,8 +36,6 @@ COMMENT ON TABLE directory_searches
 CREATE TABLE podcasts (
     id BIGSERIAL PRIMARY KEY,
 
-    feed_url TEXT NOT NULL
-        CHECK (char_length(feed_url) <= 500),
     image_url TEXT NOT NULL
         CHECK (char_length(image_url) <= 500),
     language TEXT NOT NULL
@@ -49,6 +47,22 @@ CREATE TABLE podcasts (
 );
 COMMENT ON TABLE podcasts
     IS 'Podcast series. e.g. Roderick on the Line.';
+
+--
+-- podcast_feed_locations
+--
+
+CREATE TABLE podcast_feed_locations (
+    id BIGSERIAL PRIMARY KEY,
+
+    discovered_at TIMESTAMPTZ NOT NULL,
+    feed_url TEXT NOT NULL
+        CHECK (char_length(feed_url) <= 500),
+    podcast_id BIGINT NOT NULL
+        REFERENCES podcasts (id) ON DELETE RESTRICT
+);
+COMMENT ON TABLE podcast_feed_locations
+    IS 'Historical records of podcast feed URLs.';
 
 --
 -- podcast_feed_contents
@@ -150,8 +164,8 @@ CREATE UNIQUE INDEX episodes_podcast_id_guid
 --
 
 INSERT INTO podcasts
-    (title, feed_url, image_url, language, link_url)
+    (title, image_url, language, link_url)
 VALUES
-    ('Hardcore History', '', 'http://example.com/hardcore-history', 'en-US', ''),
-    ('Road Work', '', 'http://example.com/road-work', 'en-US', ''),
-    ('Waking Up', '', 'http://example.com/waking-up', 'en-US', '');
+    ('Hardcore History', 'http://example.com/hardcore-history', 'en-US', ''),
+    ('Road Work', 'http://example.com/road-work', 'en-US', ''),
+    ('Waking Up', 'http://example.com/waking-up', 'en-US', '');
