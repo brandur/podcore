@@ -17,6 +17,9 @@ extern crate time;
 #[cfg_attr(rustfmt, rustfmt_skip)]
 mod schema;
 
+#[cfg(test)]
+mod test_helpers;
+
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
@@ -279,6 +282,34 @@ impl AfterMiddleware for ResponseTime {
         Ok(res)
     }
 }
+
+//
+// Mediators
+//
+
+struct DirectoryPodcastUpdater<'a> {
+    pub dir_podcast: &'a DirectoryPodcast,
+}
+
+impl<'a> DirectoryPodcastUpdater<'a> {
+    fn run(&self) {}
+}
+
+#[test]
+fn test_run() {
+    let connection = test_helpers::connection();
+    connection.execute("SELECT 1").unwrap();
+}
+
+/*
+struct PodcastUpdater {
+    pub podcast: &Podcast,
+}
+
+impl PodcastUpdater {
+    fn run(&self) {}
+}
+*/
 
 //
 // Main
