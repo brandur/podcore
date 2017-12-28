@@ -5,6 +5,7 @@ cargo install diesel_cli --no-default-features --features postgres
 createdb podcore
 echo "export DATABASE_URL=postgres://localhost/podcore" > .envrc
 direnv allow
+diesel migration run
 ```
 
 ```
