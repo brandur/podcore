@@ -1,7 +1,8 @@
+use errors::*;
+
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
-use errors::*;
 use schema::{directories, directories_podcasts};
 
 #[derive(Queryable)]

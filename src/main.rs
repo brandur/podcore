@@ -17,6 +17,7 @@ extern crate time;
 extern crate tokio_core;
 
 mod errors;
+mod mediators;
 mod model;
 
 // Generated file: skip rustfmt
@@ -26,10 +27,11 @@ mod schema;
 #[cfg(test)]
 mod test_helpers;
 
+use self::errors::*;
+
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
-use hyper::client::HttpConnector;
 use iron::prelude::*;
 use iron::{typemap, AfterMiddleware, BeforeMiddleware};
 use juniper::FieldResult;
@@ -37,12 +39,10 @@ use juniper_iron::{GraphQLHandler, GraphiQLHandler};
 use mount::Mount;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
-use schema::{directories_podcasts, episodes, podcasts};
-use self::errors::*;
+use schema::{episodes, podcasts};
 use std::env;
 use std::str::FromStr;
 use time::precise_time_ns;
-use tokio_core::reactor::Core;
 
 type DieselConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 
@@ -226,75 +226,6 @@ impl AfterMiddleware for ResponseTime {
 //
 // Mediators
 //
-
-struct DirectoryPodcastUpdater<'a> {
-    pub client:      &'a hyper::Client<HttpConnector, hyper::Body>,
-    pub conn:        &'a PgConnection,
-    pub core:        &'a mut Core,
-    pub dir_podcast: &'a mut model::DirectoryPodcast,
-}
-
-impl<'a> DirectoryPodcastUpdater<'a> {
-    pub fn run(&mut self) -> Result<()> {
-        self.conn
-            .transaction::<_, Error, _>(|| self.run_inner())
-            .chain_err(|| "Error with database transaction")
-    }
-
-    fn run_inner(&mut self) -> Result<()> {
-        let raw_url = self.dir_podcast.feed_url.clone().unwrap();
-        let feed_url = hyper::Uri::from_str(raw_url.as_str())
-            .chain_err(|| format!("Error parsing feed URL: {}", raw_url))?;
-        let res = self.core
-            .run(self.client.get(feed_url))
-            .chain_err(|| format!("Error fetching feed URL: {}", raw_url))?;
-        println!("Response: {}", res.status());
-
-        self.dir_podcast.feed_url = None;
-        self.dir_podcast
-            .save_changes::<model::DirectoryPodcast>(&self.conn)
-            .chain_err(|| "Error saving changes to directory podcast")?;
-        Ok(())
-    }
-}
-
-#[test]
-fn test_run() {
-    let conn = test_helpers::connection();
-    let mut core = Core::new().unwrap();
-    let client = hyper::Client::new(&core.handle());
-
-    let itunes = model::Directory::itunes(&conn).unwrap();
-    let mut dir_podcast = model::DirectoryPodcast {
-        id:           0,
-        directory_id: itunes.id,
-        feed_url:     Some("http://feeds.feedburner.com/RoderickOnTheLine".to_owned()),
-        podcast_id:   None,
-        vendor_id:    "471418144".to_owned(),
-    };
-    diesel::insert_into(directories_podcasts::table)
-        .values(&dir_podcast)
-        .execute(&conn)
-        .unwrap();
-
-    let mut updater = DirectoryPodcastUpdater {
-        client:      &client,
-        conn:        &conn,
-        core:        &mut core,
-        dir_podcast: &mut dir_podcast,
-    };
-    updater.run().unwrap();
-}
-
-/*
-struct PodcastUpdater {
-    pub podcast: &Podcast,
-}
-
-impl PodcastUpdater {
-    fn run(&self) {}
-}
-*/
 
 //
 // Main
