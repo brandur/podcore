@@ -64,7 +64,7 @@ impl Directory {
     }
 }
 
-#[derive(Insertable, Queryable)]
+#[derive(AsChangeset, Identifiable, Insertable, Queryable)]
 #[table_name = "directories_podcasts"]
 pub struct DirectoryPodcast {
     pub id:           i64,
@@ -300,12 +300,16 @@ impl AfterMiddleware for ResponseTime {
 //
 
 struct DirectoryPodcastUpdater<'a> {
+    pub conn:        &'a PgConnection,
     pub dir_podcast: &'a mut DirectoryPodcast,
 }
 
 impl<'a> DirectoryPodcastUpdater<'a> {
     fn run(&mut self) -> Result<()> {
         self.dir_podcast.feed_url = None;
+        self.dir_podcast
+            .save_changes::<DirectoryPodcast>(&self.conn)
+            .chain_err(|| "Error saving changes to directory podcast")?;
         Ok(())
     }
 }
@@ -328,6 +332,7 @@ fn test_run() {
         .unwrap();
 
     let mut updater = DirectoryPodcastUpdater {
+        conn:        &conn,
         dir_podcast: &mut dir_podcast,
     };
     updater.run().unwrap();
