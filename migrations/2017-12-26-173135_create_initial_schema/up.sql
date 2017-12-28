@@ -60,7 +60,9 @@ CREATE TABLE podcast_feed_contents (
         CHECK (char_length(content) <= 100000),
     podcast_id BIGINT NOT NULL
         REFERENCES podcasts (id) ON DELETE RESTRICT,
-    retrieved_at TIMESTAMPTZ NOT NULL
+    retrieved_at TIMESTAMPTZ NOT NULL,
+    sha256_hash TEXT NOT NULL
+        CHECK (char_length(sha256_hash) = 64)
 );
 COMMENT ON TABLE podcast_feed_contents
     IS 'Historical records of raw content retrieved from podcast feeds.';

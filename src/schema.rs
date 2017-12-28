@@ -53,6 +53,7 @@ table! {
         content -> Text,
         podcast_id -> Int8,
         retrieved_at -> Timestamptz,
+        sha256_hash -> Text,
     }
 }
 

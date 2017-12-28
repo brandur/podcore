@@ -95,6 +95,7 @@ pub struct PodcastFeedContent {
     pub content:      String,
     pub podcast_id:   i64,
     pub retrieved_at: DateTime<Utc>,
+    pub sha256_hash:  String,
 }
 
 struct Context {
