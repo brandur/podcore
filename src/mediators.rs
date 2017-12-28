@@ -48,50 +48,79 @@ impl<'a> DirectoryPodcastUpdater<'a> {
     }
 
     fn parse_feed(data: &str) -> Result<()> {
+        let mut podcast = XMLPodcast {
+            image_url: None,
+            language:  None,
+            link_url:  None,
+            title:     None,
+        };
+
         let mut reader = Reader::from_str(data);
         reader.trim_text(true);
 
-        let mut in_title = false;
+        let mut depth = 0;
+        let mut in_channel = false;
+        let mut in_item = false;
+        let mut in_rss = false;
         let mut buf = Vec::new();
-        let mut ns_buf = Vec::new();
+        let mut tag_name: Option<String> = None;
 
         loop {
-            match reader.read_namespaced_event(&mut buf, &mut ns_buf) {
-                Ok((ref ns, Event::Start(ref e))) => {
-                    match *ns {
-                        Some(ref ns_content) => println!(
-                            "ns = {:?} e = {:?}",
-                            str::from_utf8(*ns_content).unwrap(),
-                            str::from_utf8(e.name()).unwrap()
-                        ),
-                        None => {
-                            println!("(no namespace) e = {:?}", str::from_utf8(e.name()).unwrap())
-                        }
-                    };
-                    match e.name() {
-                        b"title" => in_title = true,
+            match reader.read_event(&mut buf) {
+                Ok(Event::Start(ref e)) => {
+                    //if depth <= 2 {
+                    //println!( "depth = {} e = {:?}", depth, str::from_utf8(e.name()).unwrap());
+                    //}
+                    match (depth, e.name()) {
+                        (0, b"rss") => in_rss = true,
+                        (1, b"channel") => in_channel = true,
+                        (2, b"item") => in_item = true,
                         _ => (),
                     }
+                    depth += 1;
+                    tag_name = Some(str::from_utf8(e.name()).unwrap().to_owned());
                 }
-                Ok((ref _ns, Event::Text(ref e))) => {
-                    if in_title {
-                        println!("title = {}", e.unescape_and_decode(&reader).unwrap())
+                Ok(Event::Text(ref e)) => {
+                    if in_rss && in_channel {
+                        if !in_item {
+                            let value = e.unescape_and_decode(&reader).unwrap();
+                            match tag_name.clone().unwrap().as_str() {
+                                "language" => podcast.language = Some(value),
+                                "title" => podcast.title = Some(value),
+                                _ => (),
+                            };
+                        } else {
+                        }
                     }
                 }
-                Ok((_, Event::End(ref e))) => match e.name() {
-                    b"title" => in_title = false,
-                    _ => (),
-                },
-                Ok((_, Event::Eof)) => break,
+                Ok(Event::End(ref e)) => {
+                    match (depth, e.name()) {
+                        (0, b"rss") => in_rss = false,
+                        (1, b"channel") => in_channel = false,
+                        (2, b"item") => in_item = false,
+                        _ => (),
+                    }
+                    depth -= 1;
+                    tag_name = None;
+                }
+                Ok(Event::Eof) => break,
                 Err(e) => bail!("Error at position {}: {:?}", reader.buffer_position(), e),
                 _ => (),
             };
         }
         buf.clear();
-        ns_buf.clear();
+        println!("podcast = {:?}", podcast);
 
         Ok(())
     }
+}
+
+#[derive(Debug)]
+struct XMLPodcast {
+    pub image_url: Option<String>,
+    pub language:  Option<String>,
+    pub link_url:  Option<String>,
+    pub title:     Option<String>,
 }
 
 #[test]
