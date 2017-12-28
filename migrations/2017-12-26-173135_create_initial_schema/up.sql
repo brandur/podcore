@@ -101,7 +101,7 @@ CREATE TABLE directories_podcasts (
 
     directory_id BIGINT NOT NULL
         REFERENCES directories (id) ON DELETE RESTRICT,
-    feed_url TEXT NOT NULL
+    feed_url TEXT
         CHECK (char_length(feed_url) <= 500),
     podcast_id BIGINT
         REFERENCES podcasts (id) ON DELETE RESTRICT,

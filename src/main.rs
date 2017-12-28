@@ -69,7 +69,7 @@ impl Directory {
 pub struct DirectoryPodcast {
     pub id:           i64,
     pub directory_id: i64,
-    pub feed_url:     String,
+    pub feed_url:     Option<String>,
     pub podcast_id:   Option<i64>,
     pub vendor_id:    String,
 }
@@ -300,11 +300,14 @@ impl AfterMiddleware for ResponseTime {
 //
 
 struct DirectoryPodcastUpdater<'a> {
-    pub dir_podcast: &'a DirectoryPodcast,
+    pub dir_podcast: &'a mut DirectoryPodcast,
 }
 
 impl<'a> DirectoryPodcastUpdater<'a> {
-    fn run(&self) {}
+    fn run(&mut self) -> Result<()> {
+        self.dir_podcast.feed_url = None;
+        Ok(())
+    }
 }
 
 #[test]
@@ -312,10 +315,10 @@ fn test_run() {
     let conn = test_helpers::connection();
 
     let itunes = Directory::itunes(&conn).unwrap();
-    let dir_podcast = DirectoryPodcast {
+    let mut dir_podcast = DirectoryPodcast {
         id:           0,
         directory_id: itunes.id,
-        feed_url:     "https://".to_owned(),
+        feed_url:     Some("https://".to_owned()),
         podcast_id:   None,
         vendor_id:    "123".to_owned(),
     };
@@ -323,6 +326,11 @@ fn test_run() {
         .values(&dir_podcast)
         .execute(&conn)
         .unwrap();
+
+    let mut updater = DirectoryPodcastUpdater {
+        dir_podcast: &mut dir_podcast,
+    };
+    updater.run().unwrap();
 }
 
 /*
