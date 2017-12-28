@@ -17,6 +17,7 @@ extern crate time;
 extern crate tokio_core;
 
 mod errors;
+mod graphql;
 mod mediators;
 mod model;
 
@@ -27,176 +28,18 @@ mod schema;
 #[cfg(test)]
 mod test_helpers;
 
-use self::errors::*;
+// We'll need this soon enough
+//use errors::*;
 
-use chrono::{DateTime, Utc};
-use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use iron::prelude::*;
 use iron::{typemap, AfterMiddleware, BeforeMiddleware};
-use juniper::FieldResult;
 use juniper_iron::{GraphQLHandler, GraphiQLHandler};
 use mount::Mount;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
-use schema::{episodes, podcasts};
 use std::env;
-use std::str::FromStr;
 use time::precise_time_ns;
-
-type DieselConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
-
-//
-// Model
-//
-
-struct Context {
-    pool: Pool<ConnectionManager<PgConnection>>,
-}
-
-impl Context {
-    fn get_conn(&self) -> Result<DieselConnection> {
-        self.pool
-            .get()
-            .chain_err(|| "Error acquiring connection from database pool")
-    }
-}
-
-impl juniper::Context for Context {}
-
-//
-// GraphQL
-//
-
-struct Mutation;
-
-graphql_object!(
-    Mutation: Context | &self | {
-
-    description: "The root mutation object of the schema."
-
-        //field createHuman(&executor, new_human: NewHuman) -> FieldResult<Human> {
-        //    let db = executor.context().pool.get_connection()?;
-        //    let human: Human = db.insert_human(&new_human)?;
-        //    Ok(human)
-        //}
-    }
-);
-
-#[derive(GraphQLObject)]
-struct EpisodeObject {
-    #[graphql(description = "The episode's ID.")]
-    pub id: String,
-
-    #[graphql(description = "The episode's description.")]
-    pub description: String,
-
-    #[graphql(description = "Whether the episode is considered explicit.")]
-    pub explicit: bool,
-
-    #[graphql(description = "The episode's web link.")]
-    pub link_url: String,
-
-    #[graphql(description = "The episode's media link (i.e. where the audio can be found).")]
-    pub media_url: String,
-
-    #[graphql(description = "The episode's podcast's ID.")]
-    pub podcast_id: String,
-
-    #[graphql(description = "The episode's publishing date and time.")]
-    pub published_at: DateTime<Utc>,
-
-    #[graphql(description = "The episode's title.")]
-    pub title: String,
-}
-
-impl<'a> From<&'a model::Episode> for EpisodeObject {
-    fn from(e: &model::Episode) -> Self {
-        EpisodeObject {
-            id:           e.id.to_string(),
-            description:  e.description.to_string(),
-            explicit:     e.explicit,
-            link_url:     e.link_url.to_owned(),
-            media_url:    e.media_url.to_owned(),
-            podcast_id:   e.podcast_id.to_string(),
-            published_at: e.published_at,
-            title:        e.title.to_owned(),
-        }
-    }
-}
-
-#[derive(GraphQLObject)]
-struct PodcastObject {
-    // IDs are exposed as strings because JS cannot store a fully 64-bit integer. This should be
-    // okay because clients should be treating them as opaque tokens anyway.
-    #[graphql(description = "The podcast's ID.")]
-    pub id: String,
-
-    #[graphql(description = "The podcast's image URL.")]
-    pub image_url: String,
-
-    #[graphql(description = "The podcast's language.")]
-    pub language: String,
-
-    #[graphql(description = "The podcast's RSS link URL.")]
-    pub link_url: String,
-
-    #[graphql(description = "The podcast's title.")]
-    pub title: String,
-}
-
-impl<'a> From<&'a model::Podcast> for PodcastObject {
-    fn from(p: &model::Podcast) -> Self {
-        PodcastObject {
-            id:        p.id.to_string(),
-            image_url: p.image_url.to_owned(),
-            language:  p.language.to_owned(),
-            link_url:  p.link_url.to_owned(),
-            title:     p.title.to_owned(),
-        }
-    }
-}
-
-struct Query;
-
-graphql_object!(Query: Context |&self| {
-    description: "The root query object of the schema."
-
-    field apiVersion() -> &str {
-        "1.0"
-    }
-
-    field episodes(&executor, podcast_id: String as "The podcast's ID.") ->
-            FieldResult<Vec<EpisodeObject>> as "A collection episodes for a podcast." {
-        let id = i64::from_str(podcast_id.as_str()).
-            chain_err(|| "Error parsing podcast ID")?;
-
-        let context = executor.context();
-        let results = episodes::table
-            .filter(episodes::podcast_id.eq(id))
-            .order(episodes::published_at.desc())
-            .limit(20)
-            .load::<model::Episode>(&*context.get_conn()?)
-            .chain_err(|| "Error loading episodes from the database")?
-            .iter()
-            .map(|p| EpisodeObject::from(p) )
-            .collect::<Vec<_>>();
-        Ok(results)
-    }
-
-    field podcasts(&executor) -> FieldResult<Vec<PodcastObject>> as "A collection of podcasts." {
-        let context = executor.context();
-        let results = podcasts::table
-            .order(podcasts::title.asc())
-            .limit(5)
-            .load::<model::Podcast>(&*context.get_conn()?)
-            .chain_err(|| "Error loading podcasts from the database")?
-            .iter()
-            .map(|p| PodcastObject::from(p) )
-            .collect::<Vec<_>>();
-        Ok(results)
-    }
-});
 
 //
 // HTTP abstractions
@@ -224,10 +67,6 @@ impl AfterMiddleware for ResponseTime {
 }
 
 //
-// Mediators
-//
-
-//
 // Main
 //
 
@@ -239,9 +78,9 @@ fn main() {
         .expect("Failed to create pool.");
 
     let graphql_endpoint = GraphQLHandler::new(
-        move |_: &mut Request| -> Context { Context { pool: pool.clone() } },
-        Query {},
-        Mutation {},
+        move |_: &mut Request| -> graphql::Context { graphql::Context::new(pool.clone()) },
+        graphql::Query::new(),
+        graphql::Mutation::new(),
     );
     let graphiql_endpoint = GraphiQLHandler::new("/graphql");
 

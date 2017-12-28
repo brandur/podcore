@@ -1,5 +1,6 @@
 use errors::*;
 use model;
+use schema::directories_podcasts;
 use test_helpers;
 
 use diesel;
@@ -7,7 +8,6 @@ use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use hyper;
 use hyper::{Client, Uri};
-use schema::directories_podcasts;
 use std::str::FromStr;
 use tokio_core::reactor::Core;
 
