@@ -69,6 +69,8 @@ COMMENT ON TABLE podcast_feed_locations
 
 CREATE INDEX podcast_feed_locations_podcast_id_discovered_at
     ON podcast_feed_locations (podcast_id, discovered_at);
+CREATE UNIQUE INDEX podcast_feed_locations_podcast_id_feed_url
+    ON podcast_feed_locations (podcast_id, feed_url);
 
 --
 -- podcast_feed_contents
