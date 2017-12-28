@@ -5,6 +5,7 @@ use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 
+#[allow(dead_code)]
 #[derive(Queryable)]
 pub struct Directory {
     pub id:   i64,
@@ -12,10 +13,12 @@ pub struct Directory {
 }
 
 impl Directory {
+    #[allow(dead_code)]
     pub fn itunes(conn: &PgConnection) -> Result<Self> {
         Self::load_dir(conn, "Apple iTunes")
     }
 
+    #[allow(dead_code)]
     fn load_dir(conn: &PgConnection, name: &str) -> Result<Self> {
         directories::table
             .filter(directories::name.eq(name))

@@ -4,7 +4,7 @@ extern crate futures;
 extern crate iron;
 extern crate juniper_iron;
 extern crate mount;
-extern crate pod_core;
+extern crate podcore;
 extern crate r2d2;
 extern crate r2d2_diesel;
 extern crate time;
@@ -12,7 +12,7 @@ extern crate time;
 // We'll need this soon enough
 //use errors::*;
 
-use pod_core::graphql;
+use podcore::graphql;
 
 use diesel::pg::PgConnection;
 use iron::prelude::*;

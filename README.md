@@ -1,9 +1,9 @@
-# pod_core [![Build Status](https://travis-ci.org/brandur/pod_core.svg?branch=master)](https://travis-ci.org/brandur/pod_core)
+# podcore [![Build Status](https://travis-ci.org/brandur/podcore.svg?branch=master)](https://travis-ci.org/brandur/podcore)
 
 ```
 cargo install diesel_cli --no-default-features --features postgres
-createdb pod_core
-echo "export DATABASE_URL=postgres://localhost/pod_core" > .envrc
+createdb podcore
+echo "export DATABASE_URL=postgres://localhost/podcore" > .envrc
 direnv allow
 ```
 

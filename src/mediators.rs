@@ -1,7 +1,6 @@
 use errors::*;
 use model;
 
-use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use hyper;
@@ -9,7 +8,7 @@ use hyper::{Client, Uri};
 use std::str::FromStr;
 use tokio_core::reactor::Core;
 
-struct DirectoryPodcastUpdater<'a> {
+pub struct DirectoryPodcastUpdater<'a> {
     pub client:      &'a Client<hyper::client::HttpConnector, hyper::Body>,
     pub conn:        &'a PgConnection,
     pub core:        &'a mut Core,
@@ -42,6 +41,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
 
 #[test]
 fn test_run() {
+    use diesel;
     use schema::directories_podcasts;
     use test_helpers;
 

@@ -18,7 +18,7 @@ extern crate tokio_core;
 
 mod errors;
 pub mod graphql;
-mod mediators;
+pub mod mediators;
 mod model;
 
 // Generated file: skip rustfmt

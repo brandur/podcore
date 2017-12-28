@@ -1,10 +1,10 @@
 [package]
-name = "pod_core"
+name = "podcore"
 version = "0.1.0"
 authors = ["Brandur <brandur@brandur.org>"]
 
 [lib]
-name = "pod_core"
+name = "podcore"
 path = "src/lib.rs"
 
 [[bin]]
