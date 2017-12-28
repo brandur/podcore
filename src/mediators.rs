@@ -19,7 +19,33 @@ struct PodcastFeed {
 
 #[derive(Debug, Deserialize)]
 struct PodcastFeedChannel {
+    pub description: String,
+    pub explicit:    String, // "yes" instead of a bool
+
+    #[serde(rename = "item")]
+    pub items: Vec<PodcastFeedItem>,
+
+    pub language:        String,
+    pub last_build_date: String, // not iso8601 -- needs parsing
+
+    #[serde(rename = "link")]
+    pub link_url: Vec<String>,
+
+    #[serde(rename = "atom10:link")]
+    pub xx: String,
+
+    pub thumbnail: Option<PodcastFeedMediaThumbnail>, // media:thumbnail
+    pub title:     String,
+}
+
+#[derive(Debug, Deserialize)]
+struct PodcastFeedItem {
     pub title: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct PodcastFeedMediaThumbnail {
+    pub url: String,
 }
 
 pub struct DirectoryPodcastUpdater<'a> {
