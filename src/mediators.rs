@@ -38,39 +38,45 @@ impl<'a> DirectoryPodcastUpdater<'a> {
             .run(res.body().concat2())
             .chain_err(|| format!("Error reading body from URL: {}", raw_url))?;
 
-        let body_str = str::from_utf8(&*body).unwrap();
-        let mut reader = Reader::from_str(body_str);
+        Self::parse_feed(str::from_utf8(&*body).unwrap())?;
+
+        self.dir_podcast.feed_url = None;
+        self.dir_podcast
+            .save_changes::<model::DirectoryPodcast>(&self.conn)
+            .chain_err(|| "Error saving changes to directory podcast")?;
+        Ok(())
+    }
+
+    fn parse_feed(data: &str) -> Result<()> {
+        let mut reader = Reader::from_str(data);
         reader.trim_text(true);
 
         let mut in_title = false;
         let mut buf = Vec::new();
+        let mut ns_buf = Vec::new();
 
         loop {
-            match reader.read_event(&mut buf) {
-                Ok(Event::Start(ref e)) => match e.name() {
+            match reader.read_namespaced_event(&mut buf, &mut ns_buf) {
+                Ok((ns, Event::Start(ref e))) => match e.name() {
                     b"title" => in_title = true,
                     _ => (),
                 },
-                Ok(Event::Text(e)) => {
+                Ok((ns, Event::Text(e))) => {
                     if in_title {
                         println!("title = {}", e.unescape_and_decode(&reader).unwrap())
                     }
                 }
-                Ok(Event::End(ref e)) => match e.name() {
+                Ok((ns, Event::End(ref e))) => match e.name() {
                     b"title" => in_title = false,
                     _ => (),
                 },
-                Ok(Event::Eof) => break,
+                Ok((ns, Event::Eof)) => break,
                 Err(e) => bail!("Error at position {}: {:?}", reader.buffer_position(), e),
                 _ => (),
             };
         }
         buf.clear();
 
-        self.dir_podcast.feed_url = None;
-        self.dir_podcast
-            .save_changes::<model::DirectoryPodcast>(&self.conn)
-            .chain_err(|| "Error saving changes to directory podcast")?;
         Ok(())
     }
 }

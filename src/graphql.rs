@@ -103,13 +103,13 @@ struct PodcastObject {
     pub id: String,
 
     #[graphql(description = "The podcast's image URL.")]
-    pub image_url: String,
+    pub image_url: Option<String>,
 
     #[graphql(description = "The podcast's language.")]
-    pub language: String,
+    pub language: Option<String>,
 
     #[graphql(description = "The podcast's RSS link URL.")]
-    pub link_url: String,
+    pub link_url: Option<String>,
 
     #[graphql(description = "The podcast's title.")]
     pub title: String,
@@ -119,9 +119,9 @@ impl<'a> From<&'a model::Podcast> for PodcastObject {
     fn from(p: &model::Podcast) -> Self {
         PodcastObject {
             id:        p.id.to_string(),
-            image_url: p.image_url.to_owned(),
-            language:  p.language.to_owned(),
-            link_url:  p.link_url.to_owned(),
+            image_url: p.image_url.clone(),
+            language:  p.language.clone(),
+            link_url:  p.link_url.clone(),
             title:     p.title.to_owned(),
         }
     }
