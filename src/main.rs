@@ -304,7 +304,13 @@ struct DirectoryPodcastUpdater<'a> {
 }
 
 impl<'a> DirectoryPodcastUpdater<'a> {
-    fn run(&mut self) -> Result<()> {
+    pub fn run(&mut self) -> self::errors::Result<()> {
+        self.conn
+            .transaction::<(), Error, _>(|| self.run_inner())
+            .chain_err(|| "Error with database transaction")
+    }
+
+    fn run_inner(&mut self) -> self::errors::Result<()> {
         self.dir_podcast.feed_url = None;
         self.dir_podcast
             .save_changes::<DirectoryPodcast>(&self.conn)
