@@ -13,6 +13,8 @@ extern crate r2d2_diesel;
 extern crate serde;
 extern crate time;
 
+mod errors;
+
 // Generated file: skip rustfmt
 #[cfg_attr(rustfmt, rustfmt_skip)]
 mod schema;
@@ -32,16 +34,10 @@ use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use schema::directories;
 use schema::directories_podcasts;
+use self::errors::*;
 use std::env;
 use std::str::FromStr;
 use time::precise_time_ns;
-
-//
-// Init
-//
-
-// Create the Error, ErrorKind, ResultExt, and Result types
-error_chain!{}
 
 //
 // Model
