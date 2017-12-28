@@ -58,6 +58,14 @@ pub struct DirectoryPodcast {
 }
 
 #[derive(Queryable)]
+pub struct DirectorySearch {
+    pub id:           i64,
+    pub directory_id: i64,
+    pub query:        String,
+    pub retrieved_at: DateTime<Utc>,
+}
+
+#[derive(Queryable)]
 pub struct Episode {
     pub id:           i64,
     pub description:  String,

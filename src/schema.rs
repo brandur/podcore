@@ -16,6 +16,23 @@ table! {
 }
 
 table! {
+    directories_podcasts_directory_searches (id) {
+        id -> Int8,
+        directories_podcasts_id -> Int8,
+        directory_searches -> Int8,
+    }
+}
+
+table! {
+    directory_searches (id) {
+        id -> Int8,
+        directory_id -> Int8,
+        query -> Text,
+        retrieved_at -> Timestamptz,
+    }
+}
+
+table! {
     episodes (id) {
         id -> Int8,
         description -> Text,
@@ -52,12 +69,17 @@ table! {
 
 joinable!(directories_podcasts -> directories (directory_id));
 joinable!(directories_podcasts -> podcasts (podcast_id));
+joinable!(directories_podcasts_directory_searches -> directories_podcasts (directories_podcasts_id));
+joinable!(directories_podcasts_directory_searches -> directory_searches (directory_searches));
+joinable!(directory_searches -> directories (directory_id));
 joinable!(episodes -> podcasts (podcast_id));
 joinable!(podcast_feed_contents -> podcasts (podcast_id));
 
 allow_tables_to_appear_in_same_query!(
     directories,
     directories_podcasts,
+    directories_podcasts_directory_searches,
+    directory_searches,
     episodes,
     podcast_feed_contents,
     podcasts,

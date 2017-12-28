@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS directories_podcasts_directory_searches;
+DROP TABLE IF EXISTS directory_searches;
 DROP TABLE IF EXISTS directories_podcasts;
 DROP TABLE IF EXISTS directories;
 DROP TABLE IF EXISTS episodes;

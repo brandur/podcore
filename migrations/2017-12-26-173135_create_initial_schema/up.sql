@@ -15,6 +15,21 @@ INSERT INTO directories (name)
     ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name;
 
 --
+-- directory_searches
+--
+
+CREATE TABLE directory_searches (
+    id BIGSERIAL PRIMARY KEY,
+    directory_id BIGINT NOT NULL
+        REFERENCES directories (id) ON DELETE RESTRICT,
+    query TEXT NOT NULL
+        CHECK (char_length(query) <= 100),
+    retrieved_at TIMESTAMPTZ NOT NULL
+);
+COMMENT ON TABLE directory_searches
+    IS 'Cached searches for podcasts on directories.';
+
+--
 -- podcasts
 --
 
@@ -61,6 +76,7 @@ CREATE INDEX podcast_feed_contents_podcast_id_retrieved_at
 
 CREATE TABLE directories_podcasts (
     id BIGSERIAL PRIMARY KEY,
+
     directory_id BIGINT NOT NULL
         REFERENCES directories (id) ON DELETE RESTRICT,
     feed_url TEXT NOT NULL
@@ -81,6 +97,21 @@ COMMENT ON COLUMN directories_podcasts.vendor_id
 
 CREATE UNIQUE INDEX directories_podcasts_directory_id_vendor_id
     ON directories_podcasts (directory_id, vendor_id);
+
+--
+-- directories_podcasts_directory_searches
+--
+
+CREATE TABLE directories_podcasts_directory_searches (
+    id BIGSERIAL PRIMARY KEY,
+
+    directories_podcasts_id BIGINT NOT NULL
+        REFERENCES directories_podcasts (id) ON DELETE RESTRICT,
+    directory_searches BIGINT NOT NULL
+        REFERENCES directory_searches (id) ON DELETE RESTRICT
+);
+COMMENT ON TABLE directory_searches
+    IS 'Join table between searches on directories and directory podcasts.';
 
 --
 -- episodes
