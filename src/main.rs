@@ -30,6 +30,8 @@ use juniper_iron::{GraphQLHandler, GraphiQLHandler};
 use mount::Mount;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
+use schema::directories;
+use schema::directories_podcasts;
 use std::env;
 use std::str::FromStr;
 use time::precise_time_ns;
@@ -53,12 +55,22 @@ pub struct Directory {
     pub name: String,
 }
 
-#[derive(Queryable)]
+impl Directory {
+    pub fn itunes(conn: &PgConnection) -> Result<Directory> {
+        directories::table
+            .filter(schema::directories::name.eq("Apple iTunes"))
+            .first::<Directory>(conn)
+            .chain_err(|| "Error loading Apple iTunes directory record")
+    }
+}
+
+#[derive(Insertable, Queryable)]
+#[table_name = "directories_podcasts"]
 pub struct DirectoryPodcast {
     pub id:           i64,
     pub directory_id: i64,
     pub feed_url:     String,
-    pub podcast_id:   i64,
+    pub podcast_id:   Option<i64>,
     pub vendor_id:    String,
 }
 
@@ -297,8 +309,20 @@ impl<'a> DirectoryPodcastUpdater<'a> {
 
 #[test]
 fn test_run() {
-    let connection = test_helpers::connection();
-    connection.execute("SELECT 1").unwrap();
+    let conn = test_helpers::connection();
+
+    let itunes = Directory::itunes(&conn).unwrap();
+    let dir_podcast = DirectoryPodcast {
+        id:           0,
+        directory_id: itunes.id,
+        feed_url:     "https://".to_owned(),
+        podcast_id:   None,
+        vendor_id:    "123".to_owned(),
+    };
+    diesel::insert_into(directories_podcasts::table)
+        .values(&dir_podcast)
+        .execute(&conn)
+        .unwrap();
 }
 
 /*

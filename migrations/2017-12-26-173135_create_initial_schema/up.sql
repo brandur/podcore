@@ -10,6 +10,9 @@ CREATE TABLE directories (
 COMMENT ON TABLE directories
     IS 'Podcast directories. e.g. Apple iTunes.';
 
+CREATE INDEX directories_name
+    ON directories (name);
+
 INSERT INTO directories (name)
     VALUES ('Apple iTunes')
     ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name;
