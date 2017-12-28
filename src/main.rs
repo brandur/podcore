@@ -17,6 +17,7 @@ extern crate time;
 extern crate tokio_core;
 
 mod errors;
+mod model;
 
 // Generated file: skip rustfmt
 #[cfg_attr(rustfmt, rustfmt_skip)]
@@ -36,96 +37,18 @@ use juniper_iron::{GraphQLHandler, GraphiQLHandler};
 use mount::Mount;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
-use schema::{directories, directories_podcasts, episodes, podcasts};
+use schema::{directories_podcasts, episodes, podcasts};
 use self::errors::*;
 use std::env;
-//use std::io::{self, Write};
 use std::str::FromStr;
 use time::precise_time_ns;
 use tokio_core::reactor::Core;
 
+type DieselConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
+
 //
 // Model
 //
-
-type DieselConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
-
-#[derive(Queryable)]
-pub struct Directory {
-    pub id:   i64,
-    pub name: String,
-}
-
-impl Directory {
-    pub fn itunes(conn: &PgConnection) -> Result<Directory> {
-        Directory::load_dir(conn, "Apple iTunes")
-    }
-
-    fn load_dir(conn: &PgConnection, name: &str) -> Result<Directory> {
-        directories::table
-            .filter(schema::directories::name.eq("Apple iTunes"))
-            .first::<Directory>(conn)
-            .chain_err(|| format!("Error loading {} directory record", name))
-    }
-}
-
-#[derive(AsChangeset, Identifiable, Insertable, Queryable)]
-#[table_name = "directories_podcasts"]
-pub struct DirectoryPodcast {
-    pub id:           i64,
-    pub directory_id: i64,
-    pub feed_url:     Option<String>,
-    pub podcast_id:   Option<i64>,
-    pub vendor_id:    String,
-}
-
-#[derive(Queryable)]
-pub struct DirectorySearch {
-    pub id:           i64,
-    pub directory_id: i64,
-    pub query:        String,
-    pub retrieved_at: DateTime<Utc>,
-}
-
-#[derive(Queryable)]
-pub struct Episode {
-    pub id:           i64,
-    pub description:  String,
-    pub explicit:     bool,
-    pub media_type:   String,
-    pub media_url:    String,
-    pub guid:         String,
-    pub link_url:     String,
-    pub podcast_id:   i64,
-    pub published_at: DateTime<Utc>,
-    pub title:        String,
-}
-
-#[derive(Queryable)]
-pub struct Podcast {
-    pub id:        i64,
-    pub image_url: String,
-    pub language:  String,
-    pub link_url:  String,
-    pub title:     String,
-}
-
-#[derive(Queryable)]
-pub struct PodcastFeedContent {
-    pub id:           i64,
-    pub content:      String,
-    pub podcast_id:   i64,
-    pub retrieved_at: DateTime<Utc>,
-    pub sha256_hash:  String,
-}
-
-#[derive(Queryable)]
-pub struct PodcastFeedLocation {
-    pub id:            i64,
-    pub discovered_at: DateTime<Utc>,
-    pub feed_url:      String,
-    pub podcast_id:    i64,
-}
 
 struct Context {
     pool: Pool<ConnectionManager<PgConnection>>,
@@ -187,8 +110,8 @@ struct EpisodeObject {
     pub title: String,
 }
 
-impl<'a> From<&'a Episode> for EpisodeObject {
-    fn from(e: &Episode) -> Self {
+impl<'a> From<&'a model::Episode> for EpisodeObject {
+    fn from(e: &model::Episode) -> Self {
         EpisodeObject {
             id:           e.id.to_string(),
             description:  e.description.to_string(),
@@ -222,8 +145,8 @@ struct PodcastObject {
     pub title: String,
 }
 
-impl<'a> From<&'a Podcast> for PodcastObject {
-    fn from(p: &Podcast) -> Self {
+impl<'a> From<&'a model::Podcast> for PodcastObject {
+    fn from(p: &model::Podcast) -> Self {
         PodcastObject {
             id:        p.id.to_string(),
             image_url: p.image_url.to_owned(),
@@ -253,7 +176,7 @@ graphql_object!(Query: Context |&self| {
             .filter(episodes::podcast_id.eq(id))
             .order(episodes::published_at.desc())
             .limit(20)
-            .load::<Episode>(&*context.get_conn()?)
+            .load::<model::Episode>(&*context.get_conn()?)
             .chain_err(|| "Error loading episodes from the database")?
             .iter()
             .map(|p| EpisodeObject::from(p) )
@@ -266,7 +189,7 @@ graphql_object!(Query: Context |&self| {
         let results = podcasts::table
             .order(podcasts::title.asc())
             .limit(5)
-            .load::<Podcast>(&*context.get_conn()?)
+            .load::<model::Podcast>(&*context.get_conn()?)
             .chain_err(|| "Error loading podcasts from the database")?
             .iter()
             .map(|p| PodcastObject::from(p) )
@@ -308,7 +231,7 @@ struct DirectoryPodcastUpdater<'a> {
     pub client:      &'a hyper::Client<HttpConnector, hyper::Body>,
     pub conn:        &'a PgConnection,
     pub core:        &'a mut Core,
-    pub dir_podcast: &'a mut DirectoryPodcast,
+    pub dir_podcast: &'a mut model::DirectoryPodcast,
 }
 
 impl<'a> DirectoryPodcastUpdater<'a> {
@@ -329,7 +252,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
 
         self.dir_podcast.feed_url = None;
         self.dir_podcast
-            .save_changes::<DirectoryPodcast>(&self.conn)
+            .save_changes::<model::DirectoryPodcast>(&self.conn)
             .chain_err(|| "Error saving changes to directory podcast")?;
         Ok(())
     }
@@ -341,8 +264,8 @@ fn test_run() {
     let mut core = Core::new().unwrap();
     let client = hyper::Client::new(&core.handle());
 
-    let itunes = Directory::itunes(&conn).unwrap();
-    let mut dir_podcast = DirectoryPodcast {
+    let itunes = model::Directory::itunes(&conn).unwrap();
+    let mut dir_podcast = model::DirectoryPodcast {
         id:           0,
         directory_id: itunes.id,
         feed_url:     Some("http://feeds.feedburner.com/RoderickOnTheLine".to_owned()),
