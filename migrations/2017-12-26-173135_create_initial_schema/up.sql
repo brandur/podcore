@@ -64,6 +64,9 @@ CREATE TABLE podcast_feed_locations (
 COMMENT ON TABLE podcast_feed_locations
     IS 'Historical records of podcast feed URLs.';
 
+CREATE INDEX podcast_feed_locations_podcast_id_discovered_at
+    ON podcast_feed_locations (podcast_id, discovered_at);
+
 --
 -- podcast_feed_contents
 --
