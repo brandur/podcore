@@ -43,6 +43,21 @@ error_chain!{}
 type DieselConnection = r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 
 #[derive(Queryable)]
+pub struct Directory {
+    pub id:   i64,
+    pub name: String,
+}
+
+#[derive(Queryable)]
+pub struct DirectoryPodcast {
+    pub id:           i64,
+    pub directory_id: i64,
+    pub feed_url:     String,
+    pub podcast_id:   i64,
+    pub vendor_id:    String,
+}
+
+#[derive(Queryable)]
 pub struct Episode {
     pub id:           i64,
     pub description:  String,
