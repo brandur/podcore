@@ -1,7 +1,5 @@
 use errors::*;
 use model;
-use schema::directories_podcasts;
-use test_helpers;
 
 use diesel;
 use diesel::prelude::*;
@@ -44,6 +42,9 @@ impl<'a> DirectoryPodcastUpdater<'a> {
 
 #[test]
 fn test_run() {
+    use schema::directories_podcasts;
+    use test_helpers;
+
     let conn = test_helpers::connection();
     let mut core = Core::new().unwrap();
     let client = Client::new(&core.handle());

@@ -3,6 +3,14 @@ name = "pod_core"
 version = "0.1.0"
 authors = ["Brandur <brandur@brandur.org>"]
 
+[lib]
+name = "pod_core"
+path = "src/lib.rs"
+
+[[bin]]
+name = "podcore-serve"
+path = "src/podcore-serve/main.rs"
+
 [dependencies]
 chrono = "0.4"
 diesel = { version = "1.0.0-rc1", features = ["chrono", "postgres"] }
