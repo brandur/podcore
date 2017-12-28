@@ -36,6 +36,26 @@ COMMENT ON TABLE podcasts
     IS 'Podcast series. e.g. Roderick on the Line.';
 
 --
+-- podcast_feed_contents
+--
+
+CREATE TABLE podcast_feed_contents (
+    id BIGSERIAL PRIMARY KEY,
+    content TEXT NOT NULL
+        CHECK (char_length(content) <= 100000),
+    podcast_id BIGINT NOT NULL
+        REFERENCES podcasts (id) ON DELETE RESTRICT,
+    retrieved_at TIMESTAMPTZ NOT NULL
+);
+COMMENT ON TABLE podcast_feed_contents
+    IS 'Historical records of raw content retrieved from podcast feeds.';
+COMMENT ON COLUMN podcast_feed_contents.content
+    IS 'Raw XML content.';
+
+CREATE INDEX podcast_feed_contents_podcast_id_retrieved_at
+    ON podcast_feed_contents (podcast_id, retrieved_at);
+
+--
 -- directories_podcasts
 --
 

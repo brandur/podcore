@@ -81,6 +81,14 @@ pub struct Podcast {
     pub title:     String,
 }
 
+#[derive(Queryable)]
+pub struct PodcastFeedContent {
+    pub id:           i64,
+    pub content:      String,
+    pub podcast_id:   i64,
+    pub retrieved_at: DateTime<Utc>,
+}
+
 struct Context {
     pool: Pool<ConnectionManager<PgConnection>>,
 }

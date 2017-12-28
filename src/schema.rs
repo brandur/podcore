@@ -1,4 +1,21 @@
 table! {
+    directories (id) {
+        id -> Int8,
+        name -> Text,
+    }
+}
+
+table! {
+    directories_podcasts (id) {
+        id -> Int8,
+        directory_id -> Int8,
+        feed_url -> Text,
+        podcast_id -> Nullable<Int8>,
+        vendor_id -> Text,
+    }
+}
+
+table! {
     episodes (id) {
         id -> Int8,
         description -> Text,
@@ -14,6 +31,15 @@ table! {
 }
 
 table! {
+    podcast_feed_contents (id) {
+        id -> Int8,
+        content -> Text,
+        podcast_id -> Int8,
+        retrieved_at -> Timestamptz,
+    }
+}
+
+table! {
     podcasts (id) {
         id -> Int8,
         feed_url -> Text,
@@ -24,6 +50,15 @@ table! {
     }
 }
 
+joinable!(directories_podcasts -> directories (directory_id));
+joinable!(directories_podcasts -> podcasts (podcast_id));
 joinable!(episodes -> podcasts (podcast_id));
+joinable!(podcast_feed_contents -> podcasts (podcast_id));
 
-allow_tables_to_appear_in_same_query!(episodes, podcasts,);
+allow_tables_to_appear_in_same_query!(
+    directories,
+    directories_podcasts,
+    episodes,
+    podcast_feed_contents,
+    podcasts,
+);
