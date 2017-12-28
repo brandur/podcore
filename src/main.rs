@@ -13,6 +13,8 @@ extern crate r2d2_diesel;
 extern crate serde;
 extern crate time;
 
+// Generated file: skip rustfmt
+#[cfg_attr(rustfmt, rustfmt_skip)]
 mod schema;
 
 use chrono::{DateTime, Utc};
