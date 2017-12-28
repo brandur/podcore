@@ -28,7 +28,6 @@ mod test_helpers;
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
-use futures::{Future, Stream};
 use hyper::client::HttpConnector;
 use iron::prelude::*;
 use iron::{typemap, AfterMiddleware, BeforeMiddleware};
@@ -308,36 +307,31 @@ impl AfterMiddleware for ResponseTime {
 struct DirectoryPodcastUpdater<'a> {
     pub client:      &'a hyper::Client<HttpConnector, hyper::Body>,
     pub conn:        &'a PgConnection,
+    pub core:        &'a mut Core,
     pub dir_podcast: &'a mut DirectoryPodcast,
 }
 
 impl<'a> DirectoryPodcastUpdater<'a> {
-    pub fn run<F>(&mut self) -> F
-    where
-        F: Future<Item = Result<()>>,
-    {
+    pub fn run(&mut self) -> Result<()> {
         self.conn
             .transaction::<_, Error, _>(|| self.run_inner())
             .chain_err(|| "Error with database transaction")
     }
 
-    fn run_inner<F>(&mut self) -> F
-    where
-        F: Future<Item = Result<()>>,
-    {
-        self.client
-            .get(hyper::Uri::from_str(
-                self.dir_podcast.feed_url.unwrap().as_str(),
-            )?)
-            .and_then(|res| {
-                println!("Response: {}", res.status());
+    fn run_inner(&mut self) -> Result<()> {
+        let raw_url = self.dir_podcast.feed_url.clone().unwrap();
+        let feed_url = hyper::Uri::from_str(raw_url.as_str())
+            .chain_err(|| format!("Error parsing feed URL: {}", raw_url))?;
+        let res = self.core
+            .run(self.client.get(feed_url))
+            .chain_err(|| format!("Error fetching feed URL: {}", raw_url))?;
+        println!("Response: {}", res.status());
 
-                self.dir_podcast.feed_url = None;
-                self.dir_podcast
-                    .save_changes::<DirectoryPodcast>(&self.conn)
-                    .chain_err(|| "Error saving changes to directory podcast")?;
-                Ok(())
-            })
+        self.dir_podcast.feed_url = None;
+        self.dir_podcast
+            .save_changes::<DirectoryPodcast>(&self.conn)
+            .chain_err(|| "Error saving changes to directory podcast")?;
+        Ok(())
     }
 }
 
@@ -363,9 +357,10 @@ fn test_run() {
     let mut updater = DirectoryPodcastUpdater {
         client:      &client,
         conn:        &conn,
+        core:        &mut core,
         dir_podcast: &mut dir_podcast,
     };
-    core.run(updater.run()).unwrap();
+    updater.run().unwrap();
 }
 
 /*
