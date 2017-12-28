@@ -53,10 +53,14 @@ pub struct Directory {
 
 impl Directory {
     pub fn itunes(conn: &PgConnection) -> Result<Directory> {
+        Directory::load_dir(conn, "Apple iTunes")
+    }
+
+    fn load_dir(conn: &PgConnection, name: &str) -> Result<Directory> {
         directories::table
             .filter(schema::directories::name.eq("Apple iTunes"))
             .first::<Directory>(conn)
-            .chain_err(|| "Error loading Apple iTunes directory record")
+            .chain_err(|| format!("Error loading {} directory record", name))
     }
 }
 
