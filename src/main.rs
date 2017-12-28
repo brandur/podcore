@@ -32,8 +32,7 @@ use juniper_iron::{GraphQLHandler, GraphiQLHandler};
 use mount::Mount;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
-use schema::directories;
-use schema::directories_podcasts;
+use schema::{directories, directories_podcasts, episodes, podcasts};
 use self::errors::*;
 use std::env;
 use std::str::FromStr;
@@ -244,9 +243,9 @@ graphql_object!(Query: Context |&self| {
             chain_err(|| "Error parsing podcast ID")?;
 
         let context = executor.context();
-        let results = schema::episodes::table
-            .filter(schema::episodes::podcast_id.eq(id))
-            .order(schema::episodes::published_at.desc())
+        let results = episodes::table
+            .filter(episodes::podcast_id.eq(id))
+            .order(episodes::published_at.desc())
             .limit(20)
             .load::<Episode>(&*context.get_conn()?)
             .chain_err(|| "Error loading episodes from the database")?
@@ -258,8 +257,8 @@ graphql_object!(Query: Context |&self| {
 
     field podcasts(&executor) -> FieldResult<Vec<PodcastObject>> as "A collection of podcasts." {
         let context = executor.context();
-        let results = schema::podcasts::table
-            .order(schema::podcasts::title.asc())
+        let results = podcasts::table
+            .order(podcasts::title.asc())
             .limit(5)
             .load::<Podcast>(&*context.get_conn()?)
             .chain_err(|| "Error loading podcasts from the database")?
