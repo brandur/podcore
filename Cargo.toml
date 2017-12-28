@@ -7,6 +7,8 @@ authors = ["Brandur <brandur@brandur.org>"]
 chrono = "0.4"
 diesel = { version = "1.0.0-rc1", features = ["chrono", "postgres"] }
 error-chain = { version = "*" }
+futures = "0.1"
+hyper = "0.11"
 
 # This should really be 0.6.0, but unfortunately there appears to be a mismatch
 # in which module the `Request` struct belongs. Hopefully `juniper_iron` will
@@ -23,3 +25,4 @@ r2d2-diesel = { version = "1.0.0-rc1" }
 serde = { version = "1.0.24" }
 serde_json = { version = "1.0.8" }
 time = { version = "*" }
+tokio-core = "0.1"

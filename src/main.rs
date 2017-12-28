@@ -3,6 +3,8 @@ extern crate chrono;
 extern crate diesel;
 #[macro_use]
 extern crate error_chain;
+extern crate futures;
+extern crate hyper;
 extern crate iron;
 #[macro_use]
 extern crate juniper;
@@ -12,6 +14,7 @@ extern crate r2d2;
 extern crate r2d2_diesel;
 extern crate serde;
 extern crate time;
+extern crate tokio_core;
 
 mod errors;
 
@@ -25,6 +28,8 @@ mod test_helpers;
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
+use futures::{Future, Stream};
+use hyper::client::HttpConnector;
 use iron::prelude::*;
 use iron::{typemap, AfterMiddleware, BeforeMiddleware};
 use juniper::FieldResult;
@@ -35,8 +40,10 @@ use r2d2_diesel::ConnectionManager;
 use schema::{directories, directories_podcasts, episodes, podcasts};
 use self::errors::*;
 use std::env;
+//use std::io::{self, Write};
 use std::str::FromStr;
 use time::precise_time_ns;
+use tokio_core::reactor::Core;
 
 //
 // Model
@@ -299,29 +306,46 @@ impl AfterMiddleware for ResponseTime {
 //
 
 struct DirectoryPodcastUpdater<'a> {
+    pub client:      &'a hyper::Client<HttpConnector, hyper::Body>,
     pub conn:        &'a PgConnection,
     pub dir_podcast: &'a mut DirectoryPodcast,
 }
 
 impl<'a> DirectoryPodcastUpdater<'a> {
-    pub fn run(&mut self) -> self::errors::Result<()> {
+    pub fn run<F>(&mut self) -> F
+    where
+        F: Future<Item = Result<()>>,
+    {
         self.conn
-            .transaction::<(), Error, _>(|| self.run_inner())
+            .transaction::<_, Error, _>(|| self.run_inner())
             .chain_err(|| "Error with database transaction")
     }
 
-    fn run_inner(&mut self) -> self::errors::Result<()> {
-        self.dir_podcast.feed_url = None;
-        self.dir_podcast
-            .save_changes::<DirectoryPodcast>(&self.conn)
-            .chain_err(|| "Error saving changes to directory podcast")?;
-        Ok(())
+    fn run_inner<F>(&mut self) -> F
+    where
+        F: Future<Item = Result<()>>,
+    {
+        self.client
+            .get(hyper::Uri::from_str(
+                self.dir_podcast.feed_url.unwrap().as_str(),
+            )?)
+            .and_then(|res| {
+                println!("Response: {}", res.status());
+
+                self.dir_podcast.feed_url = None;
+                self.dir_podcast
+                    .save_changes::<DirectoryPodcast>(&self.conn)
+                    .chain_err(|| "Error saving changes to directory podcast")?;
+                Ok(())
+            })
     }
 }
 
 #[test]
 fn test_run() {
     let conn = test_helpers::connection();
+    let mut core = Core::new().unwrap();
+    let client = hyper::Client::new(&core.handle());
 
     let itunes = Directory::itunes(&conn).unwrap();
     let mut dir_podcast = DirectoryPodcast {
@@ -337,10 +361,11 @@ fn test_run() {
         .unwrap();
 
     let mut updater = DirectoryPodcastUpdater {
+        client:      &client,
         conn:        &conn,
         dir_podcast: &mut dir_podcast,
     };
-    updater.run().unwrap();
+    core.run(updater.run()).unwrap();
 }
 
 /*
