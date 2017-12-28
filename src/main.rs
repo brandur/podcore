@@ -318,9 +318,9 @@ fn test_run() {
     let mut dir_podcast = DirectoryPodcast {
         id:           0,
         directory_id: itunes.id,
-        feed_url:     Some("https://".to_owned()),
+        feed_url:     Some("http://feeds.feedburner.com/RoderickOnTheLine".to_owned()),
         podcast_id:   None,
-        vendor_id:    "123".to_owned(),
+        vendor_id:    "471418144".to_owned(),
     };
     diesel::insert_into(directories_podcasts::table)
         .values(&dir_podcast)
