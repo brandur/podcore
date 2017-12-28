@@ -28,15 +28,11 @@ mount = "^0.3.0"
 
 juniper = { version = "0.9.1" }
 juniper_iron = { version = "0.1.1" }
+quick-xml = "0.10.1"
 r2d2 = { version = "*" }
 r2d2-diesel = { version = "1.0.0-rc1" }
 serde = { version = "1.0.24" }
 serde_derive = "*"
 serde_json = { version = "1.0.8" }
-
-# Maintainer hasn't released a new version:
-#     https://github.com/RReverser/serde-xml-rs/issues/53
-serde-xml-rs = { git = "https://github.com/RReverser/serde-xml-rs" }
-
 time = { version = "*" }
 tokio-core = "0.1"

@@ -10,12 +10,9 @@ extern crate iron;
 extern crate juniper;
 extern crate juniper_iron;
 extern crate mount;
+extern crate quick_xml;
 extern crate r2d2;
 extern crate r2d2_diesel;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_xml_rs;
 extern crate time;
 extern crate tokio_core;
 

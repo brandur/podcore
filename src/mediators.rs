@@ -6,47 +6,11 @@ use diesel::pg::PgConnection;
 use futures::Stream;
 use hyper;
 use hyper::{Client, Uri};
-use serde_xml_rs;
+use quick_xml::events::Event;
+use quick_xml::reader::Reader;
 use std::str;
 use std::str::FromStr;
 use tokio_core::reactor::Core;
-
-// serde_xml_rs starts inside the root element (`<rss>`), so that's what this struct represents.
-#[derive(Debug, Deserialize)]
-struct PodcastFeed {
-    pub channel: PodcastFeedChannel,
-}
-
-#[derive(Debug, Deserialize)]
-struct PodcastFeedChannel {
-    pub description: String,
-    pub explicit:    String, // "yes" instead of a bool
-
-    #[serde(rename = "item")]
-    pub items: Vec<PodcastFeedItem>,
-
-    pub language:        String,
-    pub last_build_date: String, // not iso8601 -- needs parsing
-
-    #[serde(rename = "link")]
-    pub link_url: Vec<String>,
-
-    #[serde(rename = "atom10:link")]
-    pub xx: String,
-
-    pub thumbnail: Option<PodcastFeedMediaThumbnail>, // media:thumbnail
-    pub title:     String,
-}
-
-#[derive(Debug, Deserialize)]
-struct PodcastFeedItem {
-    pub title: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct PodcastFeedMediaThumbnail {
-    pub url: String,
-}
 
 pub struct DirectoryPodcastUpdater<'a> {
     pub client:      &'a Client<hyper::client::HttpConnector, hyper::Body>,
@@ -73,9 +37,35 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         let body = self.core
             .run(res.body().concat2())
             .chain_err(|| format!("Error reading body from URL: {}", raw_url))?;
-        let feed: PodcastFeed = serde_xml_rs::from_str(str::from_utf8(&*body).unwrap())
-            .chain_err(|| "Error deserializing feed")?;
-        println!("Feed: {:?}", feed);
+
+        let body_str = str::from_utf8(&*body).unwrap();
+        let mut reader = Reader::from_str(body_str);
+        reader.trim_text(true);
+
+        let mut in_title = false;
+        let mut buf = Vec::new();
+
+        loop {
+            match reader.read_event(&mut buf) {
+                Ok(Event::Start(ref e)) => match e.name() {
+                    b"title" => in_title = true,
+                    _ => (),
+                },
+                Ok(Event::Text(e)) => {
+                    if in_title {
+                        println!("title = {}", e.unescape_and_decode(&reader).unwrap())
+                    }
+                }
+                Ok(Event::End(ref e)) => match e.name() {
+                    b"title" => in_title = false,
+                    _ => (),
+                },
+                Ok(Event::Eof) => break,
+                Err(e) => bail!("Error at position {}: {:?}", reader.buffer_position(), e),
+                _ => (),
+            };
+        }
+        buf.clear();
 
         self.dir_podcast.feed_url = None;
         self.dir_podcast
