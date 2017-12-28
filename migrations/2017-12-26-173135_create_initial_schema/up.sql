@@ -39,11 +39,11 @@ COMMENT ON TABLE directory_searches
 CREATE TABLE podcasts (
     id BIGSERIAL PRIMARY KEY,
 
-    image_url TEXT NOT NULL
+    image_url TEXT
         CHECK (char_length(image_url) <= 500),
-    language TEXT NOT NULL
+    language TEXT
         CHECK (char_length(language) <= 10),
-    link_url TEXT NOT NULL
+    link_url TEXT
         CHECK (char_length(link_url) <= 500),
     title TEXT NOT NULL
         CHECK (char_length(title) <= 200)

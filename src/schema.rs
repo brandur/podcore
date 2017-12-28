@@ -69,9 +69,9 @@ table! {
 table! {
     podcasts (id) {
         id -> Int8,
-        image_url -> Text,
-        language -> Text,
-        link_url -> Text,
+        image_url -> Nullable<Text>,
+        language -> Nullable<Text>,
+        link_url -> Nullable<Text>,
         title -> Text,
     }
 }

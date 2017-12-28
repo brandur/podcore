@@ -63,9 +63,9 @@ pub struct Episode {
 #[derive(Queryable)]
 pub struct Podcast {
     pub id:        i64,
-    pub image_url: String,
-    pub language:  String,
-    pub link_url:  String,
+    pub image_url: Option<String>,
+    pub language:  Option<String>,
+    pub link_url:  Option<String>,
     pub title:     String,
 }
 
