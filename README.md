@@ -36,6 +36,15 @@ cargo install rustfmt-nightly
 rustup run nightly cargo fmt
 ```
 
+Tests:
+
+```
+cargo test
+
+# show stdout
+cargo test -- --nocapture
+```
+
 <!--
 # vim: set tw=79:
 -->

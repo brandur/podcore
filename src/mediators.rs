@@ -3,10 +3,24 @@ use model;
 
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
+use futures::Stream;
 use hyper;
 use hyper::{Client, Uri};
+use serde_xml_rs;
+use std::str;
 use std::str::FromStr;
 use tokio_core::reactor::Core;
+
+// serde_xml_rs starts inside the root element (`<rss>`), so that's what this struct represents.
+#[derive(Debug, Deserialize)]
+struct PodcastFeed {
+    pub channel: PodcastFeedChannel,
+}
+
+#[derive(Debug, Deserialize)]
+struct PodcastFeedChannel {
+    pub title: String,
+}
 
 pub struct DirectoryPodcastUpdater<'a> {
     pub client:      &'a Client<hyper::client::HttpConnector, hyper::Body>,
@@ -19,7 +33,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
     pub fn run(&mut self) -> Result<()> {
         self.conn
             .transaction::<_, Error, _>(|| self.run_inner())
-            .chain_err(|| "Error with database transaction")
+            .chain_err(|| "Error in database transaction")
     }
 
     fn run_inner(&mut self) -> Result<()> {
@@ -30,6 +44,12 @@ impl<'a> DirectoryPodcastUpdater<'a> {
             .run(self.client.get(feed_url))
             .chain_err(|| format!("Error fetching feed URL: {}", raw_url))?;
         println!("Response: {}", res.status());
+        let body = self.core
+            .run(res.body().concat2())
+            .chain_err(|| format!("Error reading body from URL: {}", raw_url))?;
+        let feed: PodcastFeed = serde_xml_rs::from_str(str::from_utf8(&*body).unwrap())
+            .chain_err(|| "Error deserializing feed")?;
+        println!("Feed: {:?}", feed);
 
         self.dir_podcast.feed_url = None;
         self.dir_podcast
