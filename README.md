@@ -9,7 +9,7 @@ diesel migration run
 ```
 
 ```
-$ cargo build && target/debug/pod_core
+$ cargo build && target/debug/podcore-serve
 GraphQL server started on 0.0.0.0:8080
 ```
 
