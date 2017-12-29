@@ -15,11 +15,36 @@ use std::str;
 use std::str::FromStr;
 use tokio_core::reactor::Core;
 
+pub trait URLFetcher {
+    fn fetch(&mut self, raw_url: &str) -> Result<Vec<u8>>;
+}
+
+pub struct LiveURLFetcher<'a> {
+    client: &'a Client<hyper::client::HttpConnector, hyper::Body>,
+    core:   &'a mut Core,
+}
+
+impl<'a> URLFetcher for LiveURLFetcher<'a> {
+    fn fetch(&mut self, raw_url: &str) -> Result<Vec<u8>> {
+        let feed_url =
+            Uri::from_str(raw_url).chain_err(|| format!("Error parsing feed URL: {}", raw_url))?;
+        let res = self.core
+            .run(self.client.get(feed_url))
+            .chain_err(|| format!("Error fetching feed URL: {}", raw_url))?;
+        println!("Response: {}", res.status());
+        let body = self.core
+            .run(res.body().concat2())
+            .chain_err(|| format!("Error reading body from URL: {}", raw_url))?;
+        Ok((*body).to_vec())
+    }
+}
+
+pub struct StubURLFetcher {}
+
 pub struct DirectoryPodcastUpdater<'a> {
-    pub client:      &'a Client<hyper::client::HttpConnector, hyper::Body>,
     pub conn:        &'a PgConnection,
-    pub core:        &'a mut Core,
     pub dir_podcast: &'a mut model::DirectoryPodcast,
+    pub url_fetcher: &'a mut URLFetcher,
 }
 
 impl<'a> DirectoryPodcastUpdater<'a> {
@@ -31,27 +56,20 @@ impl<'a> DirectoryPodcastUpdater<'a> {
 
     fn run_inner(&mut self) -> Result<()> {
         let raw_url = self.dir_podcast.feed_url.clone().unwrap();
-        let feed_url = Uri::from_str(raw_url.as_str())
-            .chain_err(|| format!("Error parsing feed URL: {}", raw_url))?;
-        let res = self.core
-            .run(self.client.get(feed_url))
-            .chain_err(|| format!("Error fetching feed URL: {}", raw_url))?;
-        println!("Response: {}", res.status());
-        let body = self.core
-            .run(res.body().concat2())
-            .chain_err(|| format!("Error reading body from URL: {}", raw_url))?;
+        let body = self.url_fetcher.fetch(raw_url.as_str())?;
 
-        let (podcast_xml, episode_xmls) = Self::parse_feed(str::from_utf8(&*body).unwrap())?;
-        let podcast = podcast_xml.to_model()?;
-        let inserted_podcast = diesel::insert_into(podcasts::table)
-            .values(&podcast)
+        let (podcast_xml, episode_xmls) =
+            Self::parse_feed(String::from_utf8(body).unwrap().as_str())?;
+        let podcast_ins = podcast_xml.to_model()?;
+        let podcast = diesel::insert_into(podcasts::table)
+            .values(&podcast_ins)
             .get_result(self.conn)
             .chain_err(|| "Error inserting podcast")?;
 
         let mut episodes = Vec::with_capacity(episode_xmls.len());
         for episode_xml in episode_xmls {
             episodes.push(episode_xml
-                .to_model(&inserted_podcast)
+                .to_model(&podcast)
                 .chain_err(|| format!("Failed to convert: {:?}", episode_xml))?);
         }
         diesel::insert_into(episodes::table)
@@ -276,24 +294,27 @@ fn test_run() {
     let conn = test_helpers::connection();
     let mut core = Core::new().unwrap();
     let client = Client::new(&core.handle());
+    let mut url_fetcher = LiveURLFetcher {
+        client: &client,
+        core:   &mut core,
+    };
 
     let itunes = model::Directory::itunes(&conn).unwrap();
-    let dir_podcast = model::DirectoryPodcastIns {
+    let dir_podcast_ins = model::DirectoryPodcastIns {
         directory_id: itunes.id,
         feed_url:     Some("http://feeds.feedburner.com/RoderickOnTheLine".to_owned()),
         podcast_id:   None,
         vendor_id:    "471418144".to_owned(),
     };
-    let mut inserted_dir_podcast = diesel::insert_into(directories_podcasts::table)
-        .values(&dir_podcast)
+    let mut dir_podcast = diesel::insert_into(directories_podcasts::table)
+        .values(&dir_podcast_ins)
         .get_result(&conn)
         .unwrap();
 
     let mut updater = DirectoryPodcastUpdater {
-        client:      &client,
         conn:        &conn,
-        core:        &mut core,
-        dir_podcast: &mut inserted_dir_podcast,
+        dir_podcast: &mut dir_podcast,
+        url_fetcher: &mut url_fetcher,
     };
     updater.run().unwrap();
 }
