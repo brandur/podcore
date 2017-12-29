@@ -83,13 +83,34 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                 Ok(Event::Text(ref e)) => {
                     if in_rss && in_channel {
                         if !in_item {
-                            let value = e.unescape_and_decode(&reader).unwrap();
+                            let val = e.unescape_and_decode(&reader).unwrap();
                             match tag_name.clone().unwrap().as_str() {
-                                "language" => podcast.language = Some(value),
-                                "title" => podcast.title = Some(value),
+                                "language" => podcast.language = Some(val),
+                                "link" => podcast.link_url = Some(val),
+                                "title" => podcast.title = Some(val),
                                 _ => (),
                             };
                         } else {
+                        }
+                    }
+                }
+                Ok(Event::Empty(ref e)) => {
+                    if in_channel {
+                        if !in_item {
+                            if e.name() == b"media:thumbnail" {
+                                for r in e.attributes() {
+                                    let kv = r.chain_err(|| "Error parsing XML attributes")?;
+                                    println!("key = {:?}", str::from_utf8(kv.key).unwrap());
+                                    if kv.key == b"url" {
+                                        podcast.image_url = Some(
+                                            String::from_utf8(kv.value.into_owned())
+                                                .unwrap()
+                                                .to_owned(),
+                                        );
+                                        break;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
