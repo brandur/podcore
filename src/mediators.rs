@@ -16,6 +16,7 @@ use schema::{episodes, podcast_feed_contents, podcasts};
 use slog::Logger;
 use std::str;
 use std::str::FromStr;
+use time::precise_time_ns;
 use tokio_core::reactor::Core;
 
 pub struct URLFetcherStub<F: Fn(&str) -> Result<Vec<u8>>> {
@@ -34,26 +35,26 @@ pub struct DirectoryPodcastUpdater<'a> {
     pub url_fetcher: &'a mut URLFetcher,
 }
 
-fn log_step<T, F>(log: &Logger, f: F) -> T
+fn log_timed<T, F>(log: &Logger, f: F) -> T
 where
     F: FnOnce() -> T,
 {
+    let start = precise_time_ns();
     info!(log, "Start");
     let res = f();
-    info!(log, "Finish");
+    let elapsed = precise_time_ns() - start;
+    info!(log, "Finish"; "elapsed" => format!("{}ms", ((elapsed as f64) / 1000000.0)));
     res
 }
 
 impl<'a> DirectoryPodcastUpdater<'a> {
     pub fn run(&mut self, log: &Logger) -> Result<()> {
         let log = log.new(o!("file" => file!()));
-
-        info!(log, "Start");
-        let res = self.conn
-            .transaction::<_, Error, _>(|| self.run_inner(&log))
-            .chain_err(|| "Error in database transaction");
-        info!(log, "Finish");
-        res
+        log_timed(&log, || {
+            self.conn
+                .transaction::<_, Error, _>(|| self.run_inner(&log))
+                .chain_err(|| "Error in database transaction")
+        })
     }
 
     fn content_hash(content: &Vec<u8>) -> String {
@@ -68,17 +69,15 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         episode_xmls: Vec<XMLEpisode>,
     ) -> Result<Vec<model::EpisodeIns>> {
         let log = log.new(o!("step" => "convert_episodes"));
-        info!(log, "Start");
-
-        let mut episodes_ins = Vec::with_capacity(episode_xmls.len());
-        for episode_xml in episode_xmls {
-            episodes_ins.push(episode_xml
-                .to_model(&podcast)
-                .chain_err(|| format!("Failed to convert: {:?}", episode_xml))?);
-        }
-
-        info!(log, "Finish");
-        Ok(episodes_ins)
+        log_timed(&log, || {
+            let mut episodes_ins = Vec::with_capacity(episode_xmls.len());
+            for episode_xml in episode_xmls {
+                episodes_ins.push(episode_xml
+                    .to_model(&podcast)
+                    .chain_err(|| format!("Failed to convert: {:?}", episode_xml))?);
+            }
+            Ok(episodes_ins)
+        })
     }
 
     fn run_inner(&mut self, log: &Logger) -> Result<()> {
@@ -120,141 +119,140 @@ impl<'a> DirectoryPodcastUpdater<'a> {
 
     fn parse_feed(log: &Logger, data: &str) -> Result<(XMLPodcast, Vec<XMLEpisode>)> {
         let log = log.new(o!("step" => "parse"));
-        info!(log, "Start");
-
-        let mut episodes: Vec<XMLEpisode> = Vec::new();
-        let mut podcast = XMLPodcast {
-            image_url: None,
-            language:  None,
-            link_url:  None,
-            title:     None,
-        };
-
-        let mut reader = Reader::from_str(data);
-        reader.trim_text(true);
-
-        let mut depth = 0;
-        let mut in_channel = false;
-        let mut in_item = false;
-        let mut in_rss = false;
-        let mut buf = Vec::new();
-        let mut tag_name: Option<String> = None;
-
-        loop {
-            match reader.read_event(&mut buf) {
-                Ok(Event::Start(ref e)) => {
-                    match (depth, e.name()) {
-                        (0, b"rss") => in_rss = true,
-                        (1, b"channel") => in_channel = true,
-                        (2, b"item") => {
-                            in_item = true;
-
-                            episodes.push(XMLEpisode {
-                                description:  None,
-                                explicit:     None,
-                                media_type:   None,
-                                media_url:    None,
-                                guid:         None,
-                                link_url:     None,
-                                published_at: None,
-                                title:        None,
-                            });
-                        }
-                        _ => (),
-                    }
-                    depth += 1;
-                    tag_name = Some(str::from_utf8(e.name()).unwrap().to_owned());
-                }
-                Ok(Event::Text(ref e)) => {
-                    if in_rss && in_channel {
-                        let val = e.unescape_and_decode(&reader).unwrap();
-                        if !in_item {
-                            match tag_name.clone().unwrap().as_str() {
-                                "language" => podcast.language = Some(val),
-                                "link" => podcast.link_url = Some(val),
-                                "title" => podcast.title = Some(val),
-                                _ => (),
-                            };
-                        } else {
-                            let episode = episodes.last_mut().unwrap();
-                            match tag_name.clone().unwrap().as_str() {
-                                "description" => episode.description = Some(val),
-                                "explicit" => episode.explicit = Some(val == "yes"),
-                                "guid" => episode.guid = Some(val),
-                                "link" => episode.link_url = Some(val),
-                                "pubDate" => episode.published_at = Some(val),
-                                "title" => episode.title = Some(val),
-                                _ => (),
-                            };
-                        }
-                    }
-                }
-                Ok(Event::Empty(ref e)) => {
-                    if in_channel {
-                        if !in_item {
-                            if e.name() == b"media:thumbnail" {
-                                for r in e.attributes() {
-                                    let kv = r.chain_err(|| "Error parsing XML attributes")?;
-                                    if kv.key == b"url" {
-                                        podcast.image_url = Some(
-                                            String::from_utf8(kv.value.into_owned())
-                                                .unwrap()
-                                                .to_owned(),
-                                        );
-                                        break;
-                                    }
-                                }
-                            }
-                        } else {
-                            if e.name() == b"media:content" {
-                                let episode = episodes.last_mut().unwrap();
-                                for r in e.attributes() {
-                                    let kv = r.chain_err(|| "Error parsing XML attributes")?;
-                                    match kv.key {
-                                        b"type" => {
-                                            episode.media_type = Some(
-                                                String::from_utf8(kv.value.into_owned())
-                                                    .unwrap()
-                                                    .to_owned(),
-                                            );
-                                            break;
-                                        }
-                                        b"url" => {
-                                            episode.media_url = Some(
-                                                String::from_utf8(kv.value.into_owned())
-                                                    .unwrap()
-                                                    .to_owned(),
-                                            );
-                                            break;
-                                        }
-                                        _ => (),
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                Ok(Event::End(ref e)) => {
-                    match (depth, e.name()) {
-                        (0, b"rss") => in_rss = false,
-                        (1, b"channel") => in_channel = false,
-                        (2, b"item") => in_item = false,
-                        _ => (),
-                    }
-                    depth -= 1;
-                    tag_name = None;
-                }
-                Ok(Event::Eof) => break,
-                Err(e) => bail!("Error at position {}: {:?}", reader.buffer_position(), e),
-                _ => (),
+        log_timed(&log, || {
+            let mut episodes: Vec<XMLEpisode> = Vec::new();
+            let mut podcast = XMLPodcast {
+                image_url: None,
+                language:  None,
+                link_url:  None,
+                title:     None,
             };
-        }
-        buf.clear();
-        //println!("podcast = {:?}", podcast);
-        //println!("episodes = {:?}", episodes);
 
-        info!(log, "Finish");
-        Ok((podcast, episodes))
+            let mut reader = Reader::from_str(data);
+            reader.trim_text(true);
+
+            let mut depth = 0;
+            let mut in_channel = false;
+            let mut in_item = false;
+            let mut in_rss = false;
+            let mut buf = Vec::new();
+            let mut tag_name: Option<String> = None;
+
+            loop {
+                match reader.read_event(&mut buf) {
+                    Ok(Event::Start(ref e)) => {
+                        match (depth, e.name()) {
+                            (0, b"rss") => in_rss = true,
+                            (1, b"channel") => in_channel = true,
+                            (2, b"item") => {
+                                in_item = true;
+
+                                episodes.push(XMLEpisode {
+                                    description:  None,
+                                    explicit:     None,
+                                    media_type:   None,
+                                    media_url:    None,
+                                    guid:         None,
+                                    link_url:     None,
+                                    published_at: None,
+                                    title:        None,
+                                });
+                            }
+                            _ => (),
+                        }
+                        depth += 1;
+                        tag_name = Some(str::from_utf8(e.name()).unwrap().to_owned());
+                    }
+                    Ok(Event::Text(ref e)) => {
+                        if in_rss && in_channel {
+                            let val = e.unescape_and_decode(&reader).unwrap();
+                            if !in_item {
+                                match tag_name.clone().unwrap().as_str() {
+                                    "language" => podcast.language = Some(val),
+                                    "link" => podcast.link_url = Some(val),
+                                    "title" => podcast.title = Some(val),
+                                    _ => (),
+                                };
+                            } else {
+                                let episode = episodes.last_mut().unwrap();
+                                match tag_name.clone().unwrap().as_str() {
+                                    "description" => episode.description = Some(val),
+                                    "explicit" => episode.explicit = Some(val == "yes"),
+                                    "guid" => episode.guid = Some(val),
+                                    "link" => episode.link_url = Some(val),
+                                    "pubDate" => episode.published_at = Some(val),
+                                    "title" => episode.title = Some(val),
+                                    _ => (),
+                                };
+                            }
+                        }
+                    }
+                    Ok(Event::Empty(ref e)) => {
+                        if in_channel {
+                            if !in_item {
+                                if e.name() == b"media:thumbnail" {
+                                    for r in e.attributes() {
+                                        let kv = r.chain_err(|| "Error parsing XML attributes")?;
+                                        if kv.key == b"url" {
+                                            podcast.image_url = Some(
+                                                String::from_utf8(kv.value.into_owned())
+                                                    .unwrap()
+                                                    .to_owned(),
+                                            );
+                                            break;
+                                        }
+                                    }
+                                }
+                            } else {
+                                if e.name() == b"media:content" {
+                                    let episode = episodes.last_mut().unwrap();
+                                    for r in e.attributes() {
+                                        let kv = r.chain_err(|| "Error parsing XML attributes")?;
+                                        match kv.key {
+                                            b"type" => {
+                                                episode.media_type = Some(
+                                                    String::from_utf8(kv.value.into_owned())
+                                                        .unwrap()
+                                                        .to_owned(),
+                                                );
+                                                break;
+                                            }
+                                            b"url" => {
+                                                episode.media_url = Some(
+                                                    String::from_utf8(kv.value.into_owned())
+                                                        .unwrap()
+                                                        .to_owned(),
+                                                );
+                                                break;
+                                            }
+                                            _ => (),
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Ok(Event::End(ref e)) => {
+                        match (depth, e.name()) {
+                            (0, b"rss") => in_rss = false,
+                            (1, b"channel") => in_channel = false,
+                            (2, b"item") => in_item = false,
+                            _ => (),
+                        }
+                        depth -= 1;
+                        tag_name = None;
+                    }
+                    Ok(Event::Eof) => break,
+                    Err(e) => bail!("Error at position {}: {:?}", reader.buffer_position(), e),
+                    _ => (),
+                };
+            }
+            buf.clear();
+            //println!("podcast = {:?}", podcast);
+            //println!("episodes = {:?}", episodes);
+
+            Ok((podcast, episodes))
+        })
     }
 }
 
