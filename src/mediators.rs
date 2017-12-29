@@ -121,7 +121,6 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                             if e.name() == b"media:thumbnail" {
                                 for r in e.attributes() {
                                     let kv = r.chain_err(|| "Error parsing XML attributes")?;
-                                    println!("key = {:?}", str::from_utf8(kv.key).unwrap());
                                     if kv.key == b"url" {
                                         podcast.image_url = Some(
                                             String::from_utf8(kv.value.into_owned())
@@ -129,6 +128,32 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                                                 .to_owned(),
                                         );
                                         break;
+                                    }
+                                }
+                            }
+                        } else {
+                            if e.name() == b"media:content" {
+                                let episode = podcast.episodes.last_mut().unwrap();
+                                for r in e.attributes() {
+                                    let kv = r.chain_err(|| "Error parsing XML attributes")?;
+                                    match kv.key {
+                                        b"type" => {
+                                            episode.media_type = Some(
+                                                String::from_utf8(kv.value.into_owned())
+                                                    .unwrap()
+                                                    .to_owned(),
+                                            );
+                                            break;
+                                        }
+                                        b"url" => {
+                                            episode.media_url = Some(
+                                                String::from_utf8(kv.value.into_owned())
+                                                    .unwrap()
+                                                    .to_owned(),
+                                            );
+                                            break;
+                                        }
+                                        _ => (),
                                     }
                                 }
                             }
