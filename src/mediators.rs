@@ -70,7 +70,7 @@ where
 
 impl<'a> DirectoryPodcastUpdater<'a> {
     pub fn run(&mut self, log: &Logger) -> Result<()> {
-        let log = log.new(o!("file" => file!()));
+        let log = log.new(o!("step" => file!()));
         log_timed(&log, || {
             self.conn
                 .transaction::<_, Error, _>(|| self.run_inner(&log))
@@ -103,16 +103,23 @@ impl<'a> DirectoryPodcastUpdater<'a> {
 
     fn run_inner(&mut self, log: &Logger) -> Result<()> {
         let raw_url = self.dir_podcast.feed_url.clone().unwrap();
-        let body = self.url_fetcher.fetch(raw_url.as_str())?;
+
+        let body = log_timed(&log.new(o!("step" => "fetch_feed")), || {
+            self.url_fetcher.fetch(raw_url.as_str())
+        })?;
+
         let sha256_hash = Self::content_hash(&body);
         let body_str = String::from_utf8(body).unwrap();
 
         let (podcast_xml, episode_xmls) = Self::parse_feed(&log, body_str.as_str())?;
         let podcast_ins = podcast_xml.to_model()?;
-        let podcast: model::Podcast = diesel::insert_into(podcasts::table)
-            .values(&podcast_ins)
-            .get_result(self.conn)
-            .chain_err(|| "Error inserting podcast")?;
+
+        let podcast: model::Podcast = log_timed(&log.new(o!("step" => "insert_podcast")), || {
+            diesel::insert_into(podcasts::table)
+                .values(&podcast_ins)
+                .get_result(self.conn)
+                .chain_err(|| "Error inserting podcast")
+        })?;
 
         let content_ins = model::PodcastFeedContentIns {
             content:      body_str,
@@ -120,16 +127,23 @@ impl<'a> DirectoryPodcastUpdater<'a> {
             retrieved_at: Utc::now(),
             sha256_hash:  sha256_hash,
         };
-        diesel::insert_into(podcast_feed_contents::table)
-            .values(&content_ins)
-            .execute(self.conn)
-            .chain_err(|| "Error inserting podcast feed contents")?;
+        log_timed(
+            &log.new(o!("step" => "insert_podcast_feed_contents")),
+            || {
+                diesel::insert_into(podcast_feed_contents::table)
+                    .values(&content_ins)
+                    .execute(self.conn)
+                    .chain_err(|| "Error inserting podcast feed contents")
+            },
+        )?;
 
         let episodes_ins = Self::convert_episodes(&log, &podcast, episode_xmls)?;
-        diesel::insert_into(episodes::table)
-            .values(&episodes_ins)
-            .execute(self.conn)
-            .chain_err(|| "Error inserting podcast episodes")?;
+        log_timed(&log.new(o!("step" => "insert_episodes")), || {
+            diesel::insert_into(episodes::table)
+                .values(&episodes_ins)
+                .execute(self.conn)
+                .chain_err(|| "Error inserting podcast episodes")
+        })?;
 
         self.dir_podcast.feed_url = None;
         self.dir_podcast
@@ -139,7 +153,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
     }
 
     fn parse_feed(log: &Logger, data: &str) -> Result<(XMLPodcast, Vec<XMLEpisode>)> {
-        let log = log.new(o!("step" => "parse"));
+        let log = log.new(o!("step" => "parse_feed"));
         log_timed(&log, || {
             let mut episodes: Vec<XMLEpisode> = Vec::new();
             let mut podcast = XMLPodcast {
