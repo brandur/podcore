@@ -43,14 +43,16 @@ impl<'a> DirectoryPodcastUpdater<'a> {
 
         let (podcast_xml, episode_xmls) = Self::parse_feed(str::from_utf8(&*body).unwrap())?;
         let podcast = podcast_xml.to_model()?;
-        diesel::insert_into(podcasts::table)
+        let inserted_podcast = diesel::insert_into(podcasts::table)
             .values(&podcast)
-            .execute(self.conn)
+            .get_result(self.conn)
             .chain_err(|| "Error inserting podcast")?;
 
         let mut episodes = Vec::with_capacity(episode_xmls.len());
         for episode_xml in episode_xmls {
-            episodes.push(episode_xml.to_model(&podcast)?);
+            episodes.push(episode_xml
+                .to_model(&inserted_podcast)
+                .chain_err(|| format!("Failed to convert: {:?}", episode_xml))?);
         }
         diesel::insert_into(episodes::table)
             .values(&episodes)
@@ -209,13 +211,14 @@ struct XMLPodcast {
 }
 
 impl XMLPodcast {
-    fn to_model(self) -> Result<model::Podcast> {
+    fn to_model(&self) -> Result<model::Podcast> {
         Ok(model::Podcast {
-            id:        0,
-            image_url: self.image_url,
-            language:  self.language,
-            link_url:  self.link_url,
+            id:        -1,
+            image_url: self.image_url.clone(),
+            language:  self.language.clone(),
+            link_url:  self.link_url.clone(),
             title:     self.title
+                .clone()
                 .chain_err(|| "Error extracting title from podcast feed")?,
         })
     }
@@ -234,26 +237,37 @@ struct XMLEpisode {
 }
 
 impl XMLEpisode {
-    fn to_model(self, podcast: &model::Podcast) -> Result<model::Episode> {
+    fn to_model(&self, podcast: &model::Podcast) -> Result<model::Episode> {
         Ok(model::Episode {
-            id:           0,
-            description:  self.description,
-            explicit:     self.explicit,
+            id:           -1,
+            description:  self.description.clone(),
+            explicit:     self.explicit.clone(),
             guid:         self.guid
-                .chain_err(|| "Error extracting GUID from feed item")?,
-            link_url:     self.link_url,
+                .clone()
+                .chain_err(|| "Missing GUID from feed item")?,
+            link_url:     self.link_url.clone(),
             media_url:    self.media_url
-                .chain_err(|| "Error extracting media URL from feed item")?,
-            media_type:   self.media_type,
+                .clone()
+                .chain_err(|| "Missing media URL from feed item")?,
+            media_type:   self.media_type.clone(),
             podcast_id:   podcast.id,
-            published_at: self.published_at
-                .chain_err(|| "Error extracting publishing date from feed item")?
-                .parse::<DateTime<Utc>>()
-                .chain_err(|| "Error parsing publishing date from feed item")?,
+            published_at: parse_date_time(
+                self.published_at
+                    .clone()
+                    .chain_err(|| "Missing publishing date from feed item")?
+                    .as_str(),
+            )?,
             title:        self.title
-                .chain_err(|| "Error extracting title from feed item")?,
+                .clone()
+                .chain_err(|| "Missing title from feed item")?,
         })
     }
+}
+
+fn parse_date_time(s: &str) -> Result<DateTime<Utc>> {
+    Ok(DateTime::parse_from_rfc2822(s)
+        .chain_err(|| format!("Error parsing publishing date {:?} from feed item", s))?
+        .with_timezone(&Utc))
 }
 
 #[test]
