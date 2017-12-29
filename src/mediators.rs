@@ -2,6 +2,7 @@ use errors::*;
 use model;
 
 use chrono::{DateTime, Utc};
+use digest::Digest;
 use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
@@ -10,7 +11,8 @@ use hyper;
 use hyper::{Client, Uri};
 use quick_xml::events::Event;
 use quick_xml::reader::Reader;
-use schema::{episodes, podcasts};
+use schema::{episodes, podcast_feed_contents, podcasts};
+use sha2::Sha256;
 use std::str;
 use std::str::FromStr;
 use tokio_core::reactor::Core;
@@ -41,14 +43,30 @@ impl<'a> DirectoryPodcastUpdater<'a> {
     fn run_inner(&mut self) -> Result<()> {
         let raw_url = self.dir_podcast.feed_url.clone().unwrap();
         let body = self.url_fetcher.fetch(raw_url.as_str())?;
+        let body_str = String::from_utf8(body).unwrap();
 
-        let (podcast_xml, episode_xmls) =
-            Self::parse_feed(String::from_utf8(body).unwrap().as_str())?;
+        let (podcast_xml, episode_xmls) = Self::parse_feed(body_str.as_str())?;
         let podcast_ins = podcast_xml.to_model()?;
         let podcast = diesel::insert_into(podcasts::table)
             .values(&podcast_ins)
             .get_result(self.conn)
             .chain_err(|| "Error inserting podcast")?;
+
+        let mut hasher = Sha256::default();
+        hasher.input(body.as_slice());
+
+        let content_ins = model::PodcastFeedContentIns {
+            content:      body_str,
+            podcast_id:   podcast.id,
+            retrieved_at: Utc::now(),
+            sha256_hash:  str::from_utf8(hasher.result().as_slice())
+                .unwrap()
+                .to_owned(),
+        };
+        diesel::insert_into(podcast_feed_contents::table)
+            .values(&content_ins)
+            .execute(self.conn)
+            .chain_err(|| "Error inserting podcast feed contents")?;
 
         let mut episodes = Vec::with_capacity(episode_xmls.len());
         for episode_xml in episode_xmls {

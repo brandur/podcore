@@ -1,6 +1,7 @@
 extern crate chrono;
 #[macro_use]
 extern crate diesel;
+extern crate digest;
 #[macro_use]
 extern crate error_chain;
 extern crate futures;
@@ -13,6 +14,7 @@ extern crate mount;
 extern crate quick_xml;
 extern crate r2d2;
 extern crate r2d2_diesel;
+extern crate sha2;
 extern crate time;
 extern crate tokio_core;
 
