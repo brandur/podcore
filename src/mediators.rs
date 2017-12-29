@@ -31,17 +31,16 @@ impl<F: Fn(&str) -> Result<Vec<u8>>> URLFetcher for URLFetcherStub<F> {
 pub struct DirectoryPodcastUpdater<'a> {
     pub conn:        &'a PgConnection,
     pub dir_podcast: &'a mut model::DirectoryPodcast,
-    pub log:         &'a Logger,
     pub url_fetcher: &'a mut URLFetcher,
 }
 
 impl<'a> DirectoryPodcastUpdater<'a> {
-    pub fn run(&mut self) -> Result<()> {
-        let log = self.log.new(o!("file" => file!()));
+    pub fn run(&mut self, log: &Logger) -> Result<()> {
+        let log = log.new(o!("file" => file!()));
 
         info!(log, "Start");
         let res = self.conn
-            .transaction::<_, Error, _>(|| self.run_inner())
+            .transaction::<_, Error, _>(|| self.run_inner(&log))
             .chain_err(|| "Error in database transaction");
         info!(log, "Finish");
         res
@@ -53,13 +52,32 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         sha.result_str()
     }
 
-    fn run_inner(&mut self) -> Result<()> {
+    fn convert_episodes(
+        log: &Logger,
+        podcast: &model::Podcast,
+        episode_xmls: Vec<XMLEpisode>,
+    ) -> Result<Vec<model::EpisodeIns>> {
+        let log = log.new(o!("step" => "convert_episodes"));
+        info!(log, "Start");
+
+        let mut episodes_ins = Vec::with_capacity(episode_xmls.len());
+        for episode_xml in episode_xmls {
+            episodes_ins.push(episode_xml
+                .to_model(&podcast)
+                .chain_err(|| format!("Failed to convert: {:?}", episode_xml))?);
+        }
+
+        info!(log, "Finish");
+        Ok(episodes_ins)
+    }
+
+    fn run_inner(&mut self, log: &Logger) -> Result<()> {
         let raw_url = self.dir_podcast.feed_url.clone().unwrap();
         let body = self.url_fetcher.fetch(raw_url.as_str())?;
         let sha256_hash = Self::content_hash(&body);
         let body_str = String::from_utf8(body).unwrap();
 
-        let (podcast_xml, episode_xmls) = Self::parse_feed(body_str.as_str())?;
+        let (podcast_xml, episode_xmls) = Self::parse_feed(&log, body_str.as_str())?;
         let podcast_ins = podcast_xml.to_model()?;
         let podcast: model::Podcast = diesel::insert_into(podcasts::table)
             .values(&podcast_ins)
@@ -77,14 +95,9 @@ impl<'a> DirectoryPodcastUpdater<'a> {
             .execute(self.conn)
             .chain_err(|| "Error inserting podcast feed contents")?;
 
-        let mut episodes = Vec::with_capacity(episode_xmls.len());
-        for episode_xml in episode_xmls {
-            episodes.push(episode_xml
-                .to_model(&podcast)
-                .chain_err(|| format!("Failed to convert: {:?}", episode_xml))?);
-        }
+        let episodes_ins = Self::convert_episodes(&log, &podcast, episode_xmls)?;
         diesel::insert_into(episodes::table)
-            .values(&episodes)
+            .values(&episodes_ins)
             .execute(self.conn)
             .chain_err(|| "Error inserting podcast episodes")?;
 
@@ -95,7 +108,10 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         Ok(())
     }
 
-    fn parse_feed(data: &str) -> Result<(XMLPodcast, Vec<XMLEpisode>)> {
+    fn parse_feed(log: &Logger, data: &str) -> Result<(XMLPodcast, Vec<XMLEpisode>)> {
+        let log = log.new(o!("step" => "parse"));
+        info!(log, "Start");
+
         let mut episodes: Vec<XMLEpisode> = Vec::new();
         let mut podcast = XMLPodcast {
             image_url: None,
@@ -227,6 +243,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         //println!("podcast = {:?}", podcast);
         //println!("episodes = {:?}", episodes);
 
+        info!(log, "Finish");
         Ok((podcast, episodes))
     }
 }
@@ -360,10 +377,9 @@ fn test_run() {
     let mut updater = DirectoryPodcastUpdater {
         conn:        &conn,
         dir_podcast: &mut dir_podcast,
-        log:         &log,
         url_fetcher: &mut url_fetcher,
     };
-    updater.run().unwrap();
+    updater.run(&log).unwrap();
 }
 
 /*
