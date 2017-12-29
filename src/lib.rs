@@ -14,6 +14,10 @@ extern crate mount;
 extern crate quick_xml;
 extern crate r2d2;
 extern crate r2d2_diesel;
+#[macro_use]
+extern crate slog;
+extern crate slog_async;
+extern crate slog_term;
 extern crate time;
 extern crate tokio_core;
 

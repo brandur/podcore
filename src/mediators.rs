@@ -13,6 +13,7 @@ use hyper::{Client, Uri};
 use quick_xml::events::Event;
 use quick_xml::reader::Reader;
 use schema::{episodes, podcast_feed_contents, podcasts};
+use slog::Logger;
 use std::str;
 use std::str::FromStr;
 use tokio_core::reactor::Core;
@@ -30,14 +31,18 @@ impl<F: Fn(&str) -> Result<Vec<u8>>> URLFetcher for URLFetcherStub<F> {
 pub struct DirectoryPodcastUpdater<'a> {
     pub conn:        &'a PgConnection,
     pub dir_podcast: &'a mut model::DirectoryPodcast,
+    pub logger:      &'a Logger,
     pub url_fetcher: &'a mut URLFetcher,
 }
 
 impl<'a> DirectoryPodcastUpdater<'a> {
     pub fn run(&mut self) -> Result<()> {
-        self.conn
+        info!(self.logger, "Start"; "file" => file!());
+        let res = self.conn
             .transaction::<_, Error, _>(|| self.run_inner())
-            .chain_err(|| "Error in database transaction")
+            .chain_err(|| "Error in database transaction");
+        info!(self.logger, "Finish"; "file" => file!());
+        res
     }
 
     fn content_hash(content: &Vec<u8>) -> String {
@@ -327,6 +332,8 @@ fn test_run() {
     use test_helpers;
 
     let conn = test_helpers::connection();
+    let logger = test_helpers::logger();
+
     let mut url_fetcher = URLFetcherStub {
         f: (|u| match u {
             "http://feeds.feedburner.com/RoderickOnTheLine" => {
@@ -351,6 +358,7 @@ fn test_run() {
     let mut updater = DirectoryPodcastUpdater {
         conn:        &conn,
         dir_podcast: &mut dir_podcast,
+        logger:      &logger,
         url_fetcher: &mut url_fetcher,
     };
     updater.run().unwrap();
