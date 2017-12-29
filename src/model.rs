@@ -6,6 +6,16 @@ use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 
+//
+// Database models for the application.
+//
+// Note that models are separately into `Queryable` and `Insertable` versions (with the later
+// suffixed with `Ins`) so that we can insert rows with default values like we'd want to for an
+// autoincrementing primary key. See here for details:
+//
+// https://github.com/diesel-rs/diesel/issues/1440
+//
+
 #[allow(dead_code)]
 #[derive(Queryable)]
 pub struct Directory {
@@ -48,10 +58,18 @@ pub struct DirectoryPodcastIns {
 }
 
 #[allow(dead_code)]
-#[derive(Insertable, Queryable)]
-#[table_name = "directory_searches"]
+#[derive(Queryable)]
 pub struct DirectorySearch {
     pub id:           i64,
+    pub directory_id: i64,
+    pub query:        String,
+    pub retrieved_at: DateTime<Utc>,
+}
+
+#[allow(dead_code)]
+#[derive(Insertable)]
+#[table_name = "directory_searches"]
+pub struct DirectorySearchIns {
     pub directory_id: i64,
     pub query:        String,
     pub retrieved_at: DateTime<Utc>,
@@ -104,8 +122,7 @@ pub struct PodcastIns {
 }
 
 #[allow(dead_code)]
-#[derive(Insertable, Queryable)]
-#[table_name = "podcast_feed_contents"]
+#[derive(Queryable)]
 pub struct PodcastFeedContent {
     pub id:           i64,
     pub content:      String,
@@ -115,10 +132,28 @@ pub struct PodcastFeedContent {
 }
 
 #[allow(dead_code)]
-#[derive(Insertable, Queryable)]
-#[table_name = "podcast_feed_locations"]
+#[derive(Insertable)]
+#[table_name = "podcast_feed_contents"]
+pub struct PodcastFeedContentIns {
+    pub content:      String,
+    pub podcast_id:   i64,
+    pub retrieved_at: DateTime<Utc>,
+    pub sha256_hash:  String,
+}
+
+#[allow(dead_code)]
+#[derive(Queryable)]
 pub struct PodcastFeedLocation {
     pub id:            i64,
+    pub discovered_at: DateTime<Utc>,
+    pub feed_url:      String,
+    pub podcast_id:    i64,
+}
+
+#[allow(dead_code)]
+#[derive(Insertable)]
+#[table_name = "podcast_feed_locations"]
+pub struct PodcastFeedLocationIns {
     pub discovered_at: DateTime<Utc>,
     pub feed_url:      String,
     pub podcast_id:    i64,
