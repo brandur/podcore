@@ -49,12 +49,12 @@ pub struct DirectorySearch {
 #[derive(Queryable)]
 pub struct Episode {
     pub id:           i64,
-    pub description:  String,
-    pub explicit:     bool,
-    pub media_type:   String,
+    pub description:  Option<String>,
+    pub explicit:     Option<bool>,
+    pub media_type:   Option<String>,
     pub media_url:    String,
     pub guid:         String,
-    pub link_url:     String,
+    pub link_url:     Option<String>,
     pub podcast_id:   i64,
     pub published_at: DateTime<Utc>,
     pub title:        String,

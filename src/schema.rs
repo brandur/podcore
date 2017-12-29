@@ -35,12 +35,12 @@ table! {
 table! {
     episodes (id) {
         id -> Int8,
-        description -> Text,
-        explicit -> Bool,
-        media_type -> Text,
+        description -> Nullable<Text>,
+        explicit -> Nullable<Bool>,
+        media_type -> Nullable<Text>,
         media_url -> Text,
         guid -> Text,
-        link_url -> Text,
+        link_url -> Nullable<Text>,
         podcast_id -> Int8,
         published_at -> Timestamptz,
         title -> Text,

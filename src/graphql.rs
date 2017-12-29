@@ -59,13 +59,13 @@ struct EpisodeObject {
     pub id: String,
 
     #[graphql(description = "The episode's description.")]
-    pub description: String,
+    pub description: Option<String>,
 
     #[graphql(description = "Whether the episode is considered explicit.")]
-    pub explicit: bool,
+    pub explicit: Option<bool>,
 
     #[graphql(description = "The episode's web link.")]
-    pub link_url: String,
+    pub link_url: Option<String>,
 
     #[graphql(description = "The episode's media link (i.e. where the audio can be found).")]
     pub media_url: String,
@@ -84,12 +84,12 @@ impl<'a> From<&'a model::Episode> for EpisodeObject {
     fn from(e: &model::Episode) -> Self {
         EpisodeObject {
             id:           e.id.to_string(),
-            description:  e.description.to_string(),
-            explicit:     e.explicit,
-            link_url:     e.link_url.to_owned(),
+            description:  e.description.clone(),
+            explicit:     e.explicit.clone(),
+            link_url:     e.link_url.clone(),
             media_url:    e.media_url.to_owned(),
             podcast_id:   e.podcast_id.to_string(),
-            published_at: e.published_at,
+            published_at: e.published_at.clone(),
             title:        e.title.to_owned(),
         }
     }

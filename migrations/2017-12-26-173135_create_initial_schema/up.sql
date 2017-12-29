@@ -144,16 +144,16 @@ COMMENT ON TABLE directory_searches
 CREATE TABLE episodes (
     id BIGSERIAL PRIMARY KEY,
 
-    description TEXT NOT NULL
+    description TEXT
         CHECK (char_length(title) <= 2000),
-    explicit BOOL NOT NULL,
-    media_type TEXT NOT NULL
+    explicit BOOL,
+    media_type TEXT
         CHECK (char_length(title) <= 100),
     media_url TEXT NOT NULL
         CHECK (char_length(title) <= 500),
     guid TEXT NOT NULL
         CHECK (char_length(title) <= 100),
-    link_url TEXT NOT NULL
+    link_url TEXT
         CHECK (char_length(title) <= 500),
     podcast_id BIGINT NOT NULL
         REFERENCES podcasts (id) ON DELETE RESTRICT,

@@ -47,8 +47,9 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         Ok(())
     }
 
-    fn parse_feed(data: &str) -> Result<()> {
+    fn parse_feed(data: &str) -> Result<XMLPodcast> {
         let mut podcast = XMLPodcast {
+            episodes:  Vec::new(),
             image_url: None,
             language:  None,
             link_url:  None,
@@ -68,13 +69,23 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         loop {
             match reader.read_event(&mut buf) {
                 Ok(Event::Start(ref e)) => {
-                    //if depth <= 2 {
-                    //println!( "depth = {} e = {:?}", depth, str::from_utf8(e.name()).unwrap());
-                    //}
                     match (depth, e.name()) {
                         (0, b"rss") => in_rss = true,
                         (1, b"channel") => in_channel = true,
-                        (2, b"item") => in_item = true,
+                        (2, b"item") => {
+                            in_item = true;
+
+                            podcast.episodes.push(XMLEpisode {
+                                description:  None,
+                                explicit:     None,
+                                media_type:   None,
+                                media_url:    None,
+                                guid:         None,
+                                link_url:     None,
+                                published_at: None,
+                                title:        None,
+                            });
+                        }
                         _ => (),
                     }
                     depth += 1;
@@ -82,8 +93,8 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                 }
                 Ok(Event::Text(ref e)) => {
                     if in_rss && in_channel {
+                        let val = e.unescape_and_decode(&reader).unwrap();
                         if !in_item {
-                            let val = e.unescape_and_decode(&reader).unwrap();
                             match tag_name.clone().unwrap().as_str() {
                                 "language" => podcast.language = Some(val),
                                 "link" => podcast.link_url = Some(val),
@@ -91,6 +102,16 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                                 _ => (),
                             };
                         } else {
+                            let episode = podcast.episodes.last_mut().unwrap();
+                            match tag_name.clone().unwrap().as_str() {
+                                "description" => episode.description = Some(val),
+                                "explicit" => episode.explicit = Some(val == "yes"),
+                                "guid" => episode.guid = Some(val),
+                                "link" => episode.link_url = Some(val),
+                                "pubDate" => episode.published_at = Some(val),
+                                "title" => episode.title = Some(val),
+                                _ => (),
+                            };
                         }
                     }
                 }
@@ -132,16 +153,29 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         buf.clear();
         println!("podcast = {:?}", podcast);
 
-        Ok(())
+        Ok(podcast)
     }
 }
 
 #[derive(Debug)]
 struct XMLPodcast {
+    pub episodes:  Vec<XMLEpisode>,
     pub image_url: Option<String>,
     pub language:  Option<String>,
     pub link_url:  Option<String>,
     pub title:     Option<String>,
+}
+
+#[derive(Debug)]
+struct XMLEpisode {
+    pub description:  Option<String>,
+    pub explicit:     Option<bool>,
+    pub media_type:   Option<String>,
+    pub media_url:    Option<String>,
+    pub guid:         Option<String>,
+    pub link_url:     Option<String>,
+    pub published_at: Option<String>,
+    pub title:        Option<String>,
 }
 
 #[test]
