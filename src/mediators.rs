@@ -31,17 +31,19 @@ impl<F: Fn(&str) -> Result<Vec<u8>>> URLFetcher for URLFetcherStub<F> {
 pub struct DirectoryPodcastUpdater<'a> {
     pub conn:        &'a PgConnection,
     pub dir_podcast: &'a mut model::DirectoryPodcast,
-    pub logger:      &'a Logger,
+    pub log:         &'a Logger,
     pub url_fetcher: &'a mut URLFetcher,
 }
 
 impl<'a> DirectoryPodcastUpdater<'a> {
     pub fn run(&mut self) -> Result<()> {
-        info!(self.logger, "Start"; "file" => file!());
+        let log = self.log.new(o!("file" => file!()));
+
+        info!(log, "Start");
         let res = self.conn
             .transaction::<_, Error, _>(|| self.run_inner())
             .chain_err(|| "Error in database transaction");
-        info!(self.logger, "Finish"; "file" => file!());
+        info!(log, "Finish");
         res
     }
 
@@ -332,7 +334,7 @@ fn test_run() {
     use test_helpers;
 
     let conn = test_helpers::connection();
-    let logger = test_helpers::logger();
+    let log = test_helpers::log();
 
     let mut url_fetcher = URLFetcherStub {
         f: (|u| match u {
@@ -358,7 +360,7 @@ fn test_run() {
     let mut updater = DirectoryPodcastUpdater {
         conn:        &conn,
         dir_podcast: &mut dir_podcast,
-        logger:      &logger,
+        log:         &log,
         url_fetcher: &mut url_fetcher,
     };
     updater.run().unwrap();

@@ -15,7 +15,7 @@ pub fn connection() -> PgConnection {
     conn
 }
 
-pub fn logger() -> Logger {
+pub fn log() -> Logger {
     let decorator = slog_term::PlainSyncDecorator::new(std::io::stdout());
     let drain = slog_term::CompactFormat::new(decorator).build().fuse();
     let async_drain = slog_async::Async::new(drain).build().fuse();
