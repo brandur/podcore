@@ -35,7 +35,17 @@ pub struct DirectoryPodcastUpdater<'a> {
     pub url_fetcher: &'a mut URLFetcher,
 }
 
-//fn format_duration(d: i64)
+fn unit(ns: u64) -> (f64, &'static str) {
+    if ns > 1_000_000_000 {
+        (1_000_000_000_f64, "s")
+    } else if ns > 1_000_000 {
+        (1_000_000_f64, "ms")
+    } else if ns > 1_000 {
+        (1_000_f64, "µs")
+    } else {
+        (1_f64, "ns")
+    }
+}
 
 fn log_timed<T, F>(log: &Logger, f: F) -> T
 where
@@ -45,15 +55,7 @@ where
     info!(log, "Start");
     let res = f();
     let elapsed = precise_time_ns() - start;
-    let (div, unit) = if elapsed > 1_000_000_000 {
-        (1_000_000_000_f64, "s")
-    } else if elapsed > 1_000_000 {
-        (1_000_000_f64, "ms")
-    } else if elapsed > 1_000 {
-        (1_000_f64, "µs")
-    } else {
-        (1_f64, "ns")
-    };
+    let (div, unit) = unit(elapsed);
 
     info!(log, "Finish"; "elapsed" => format!("{:.*}{}", 3, ((elapsed as f64) / div), unit));
     res
