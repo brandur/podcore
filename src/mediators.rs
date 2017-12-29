@@ -2,6 +2,7 @@ use errors::*;
 use model;
 
 use chrono::{DateTime, Utc};
+use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use futures::Stream;
@@ -9,6 +10,7 @@ use hyper;
 use hyper::{Client, Uri};
 use quick_xml::events::Event;
 use quick_xml::reader::Reader;
+use schema::podcasts;
 use std::str;
 use std::str::FromStr;
 use tokio_core::reactor::Core;
@@ -39,7 +41,11 @@ impl<'a> DirectoryPodcastUpdater<'a> {
             .run(res.body().concat2())
             .chain_err(|| format!("Error reading body from URL: {}", raw_url))?;
 
-        Self::parse_feed(str::from_utf8(&*body).unwrap())?;
+        let (podcast, episodes) = Self::parse_feed(str::from_utf8(&*body).unwrap())?;
+        diesel::insert_into(podcasts::table)
+            .values(&podcast.to_model()?)
+            .execute(self.conn)
+            .chain_err(|| "Error inserting podcast")?;
 
         self.dir_podcast.feed_url = None;
         self.dir_podcast
@@ -242,7 +248,6 @@ impl XMLEpisode {
 
 #[test]
 fn test_run() {
-    use diesel;
     use schema::directories_podcasts;
     use test_helpers;
 

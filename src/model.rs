@@ -1,5 +1,6 @@
 use errors::*;
-use schema::{directories, directories_podcasts};
+use schema::{directories, directories_podcasts, directory_searches, episodes,
+             podcast_feed_contents, podcast_feed_locations, podcasts};
 
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
@@ -38,7 +39,8 @@ pub struct DirectoryPodcast {
 }
 
 #[allow(dead_code)]
-#[derive(Queryable)]
+#[derive(Insertable, Queryable)]
+#[table_name = "directory_searches"]
 pub struct DirectorySearch {
     pub id:           i64,
     pub directory_id: i64,
@@ -46,7 +48,8 @@ pub struct DirectorySearch {
     pub retrieved_at: DateTime<Utc>,
 }
 
-#[derive(Queryable)]
+#[derive(Insertable, Queryable)]
+#[table_name = "episodes"]
 pub struct Episode {
     pub id:           i64,
     pub description:  Option<String>,
@@ -60,7 +63,8 @@ pub struct Episode {
     pub title:        String,
 }
 
-#[derive(Queryable)]
+#[derive(Insertable, Queryable)]
+#[table_name = "podcasts"]
 pub struct Podcast {
     pub id:        i64,
     pub image_url: Option<String>,
@@ -70,7 +74,8 @@ pub struct Podcast {
 }
 
 #[allow(dead_code)]
-#[derive(Queryable)]
+#[derive(Insertable, Queryable)]
+#[table_name = "podcast_feed_contents"]
 pub struct PodcastFeedContent {
     pub id:           i64,
     pub content:      String,
@@ -80,7 +85,8 @@ pub struct PodcastFeedContent {
 }
 
 #[allow(dead_code)]
-#[derive(Queryable)]
+#[derive(Insertable, Queryable)]
+#[table_name = "podcast_feed_locations"]
 pub struct PodcastFeedLocation {
     pub id:            i64,
     pub discovered_at: DateTime<Utc>,
