@@ -35,6 +35,7 @@ pub struct DirectoryPodcastUpdater<'a> {
     pub url_fetcher: &'a mut URLFetcher,
 }
 
+#[inline]
 fn unit(ns: u64) -> (f64, &'static str) {
     if ns >= 1_000_000_000 {
         (1_000_000_000_f64, "s")
@@ -55,13 +56,14 @@ fn test_unit() {
     assert_eq!((1_000_000_000_f64, "s"), unit(2_000_000_000_u64));
 }
 
+#[inline]
 fn log_timed<T, F>(log: &Logger, f: F) -> T
 where
-    F: FnOnce() -> T,
+    F: FnOnce(&Logger) -> T,
 {
     let start = precise_time_ns();
     info!(log, "Start");
-    let res = f();
+    let res = f(&log);
     let elapsed = precise_time_ns() - start;
     let (div, unit) = unit(elapsed);
     info!(log, "Finish"; "elapsed" => format!("{:.*}{}", 3, ((elapsed as f64) / div), unit));
@@ -70,8 +72,7 @@ where
 
 impl<'a> DirectoryPodcastUpdater<'a> {
     pub fn run(&mut self, log: &Logger) -> Result<()> {
-        let log = log.new(o!("step" => file!()));
-        log_timed(&log, || {
+        log_timed(&log.new(o!("step" => file!())), |ref log| {
             self.conn
                 .transaction::<_, Error, _>(|| self.run_inner(&log))
                 .chain_err(|| "Error in database transaction")
@@ -89,8 +90,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         podcast: &model::Podcast,
         episode_xmls: Vec<XMLEpisode>,
     ) -> Result<Vec<model::EpisodeIns>> {
-        let log = log.new(o!("step" => "convert_episodes"));
-        log_timed(&log, || {
+        log_timed(&log.new(o!("step" => "convert_episodes")), |ref _log| {
             let mut episodes_ins = Vec::with_capacity(episode_xmls.len());
             for episode_xml in episode_xmls {
                 episodes_ins.push(episode_xml
@@ -104,7 +104,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
     fn run_inner(&mut self, log: &Logger) -> Result<()> {
         let raw_url = self.dir_podcast.feed_url.clone().unwrap();
 
-        let body = log_timed(&log.new(o!("step" => "fetch_feed")), || {
+        let body = log_timed(&log.new(o!("step" => "fetch_feed")), |ref _log| {
             self.url_fetcher.fetch(raw_url.as_str())
         })?;
 
@@ -112,14 +112,18 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         let body_str = String::from_utf8(body).unwrap();
 
         let (podcast_xml, episode_xmls) = Self::parse_feed(&log, body_str.as_str())?;
-        let podcast_ins = podcast_xml.to_model()?;
 
-        let podcast: model::Podcast = log_timed(&log.new(o!("step" => "insert_podcast")), || {
-            diesel::insert_into(podcasts::table)
-                .values(&podcast_ins)
-                .get_result(self.conn)
-                .chain_err(|| "Error inserting podcast")
+        let podcast_ins = log_timed(&log.new(o!("step" => "convert_podcast")), |ref _log| {
+            podcast_xml.to_model()
         })?;
+
+        let podcast: model::Podcast =
+            log_timed(&log.new(o!("step" => "insert_podcast")), |ref _log| {
+                diesel::insert_into(podcasts::table)
+                    .values(&podcast_ins)
+                    .get_result(self.conn)
+                    .chain_err(|| "Error inserting podcast")
+            })?;
 
         let content_ins = model::PodcastFeedContentIns {
             content:      body_str,
@@ -129,7 +133,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         };
         log_timed(
             &log.new(o!("step" => "insert_podcast_feed_contents")),
-            || {
+            |ref _log| {
                 diesel::insert_into(podcast_feed_contents::table)
                     .values(&content_ins)
                     .execute(self.conn)
@@ -138,23 +142,25 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         )?;
 
         let episodes_ins = Self::convert_episodes(&log, &podcast, episode_xmls)?;
-        log_timed(&log.new(o!("step" => "insert_episodes")), || {
+        log_timed(&log.new(o!("step" => "insert_episodes")), |ref _log| {
             diesel::insert_into(episodes::table)
                 .values(&episodes_ins)
                 .execute(self.conn)
                 .chain_err(|| "Error inserting podcast episodes")
         })?;
 
-        self.dir_podcast.feed_url = None;
-        self.dir_podcast
-            .save_changes::<model::DirectoryPodcast>(&self.conn)
-            .chain_err(|| "Error saving changes to directory podcast")?;
+        log_timed(&log.new(o!("step" => "save_dir_podcast")), |ref _log| {
+            self.dir_podcast.feed_url = None;
+            self.dir_podcast
+                .save_changes::<model::DirectoryPodcast>(&self.conn)
+                .chain_err(|| "Error saving changes to directory podcast")
+        })?;
+
         Ok(())
     }
 
     fn parse_feed(log: &Logger, data: &str) -> Result<(XMLPodcast, Vec<XMLEpisode>)> {
-        let log = log.new(o!("step" => "parse_feed"));
-        log_timed(&log, || {
+        log_timed(&log.new(o!("step" => "parse_feed")), |ref _log| {
             let mut episodes: Vec<XMLEpisode> = Vec::new();
             let mut podcast = XMLPodcast {
                 image_url: None,
