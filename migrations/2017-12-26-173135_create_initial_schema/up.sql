@@ -79,7 +79,7 @@ CREATE UNIQUE INDEX podcast_feed_locations_podcast_id_feed_url
 CREATE TABLE podcast_feed_contents (
     id BIGSERIAL PRIMARY KEY,
     content TEXT NOT NULL
-        CHECK (char_length(content) <= 100000),
+        CHECK (char_length(content) <= 1000000),
     podcast_id BIGINT NOT NULL
         REFERENCES podcasts (id) ON DELETE RESTRICT,
     retrieved_at TIMESTAMPTZ NOT NULL,

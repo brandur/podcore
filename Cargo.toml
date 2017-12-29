@@ -14,7 +14,6 @@ path = "src/podcore-serve/main.rs"
 [dependencies]
 chrono = "0.4"
 diesel = { version = "1.0.0-rc1", features = ["chrono", "postgres"] }
-digest = "0.7"
 error-chain = { version = "*" }
 futures = "0.1"
 hyper = "0.11"
@@ -32,9 +31,9 @@ juniper_iron = { version = "0.1.1" }
 quick-xml = "0.10.1"
 r2d2 = { version = "*" }
 r2d2-diesel = { version = "1.0.0-rc1" }
+rust-crypto = "^0.2"
 serde = { version = "1.0.24" }
 serde_derive = "*"
 serde_json = { version = "1.0.8" }
-sha2 = "0.7"
 time = { version = "*" }
 tokio-core = "0.1"
