@@ -10,7 +10,7 @@ use hyper;
 use hyper::{Client, Uri};
 use quick_xml::events::Event;
 use quick_xml::reader::Reader;
-use schema::podcasts;
+use schema::{episodes, podcasts};
 use std::str;
 use std::str::FromStr;
 use tokio_core::reactor::Core;
@@ -41,11 +41,21 @@ impl<'a> DirectoryPodcastUpdater<'a> {
             .run(res.body().concat2())
             .chain_err(|| format!("Error reading body from URL: {}", raw_url))?;
 
-        let (podcast, episodes) = Self::parse_feed(str::from_utf8(&*body).unwrap())?;
+        let (podcast_xml, episode_xmls) = Self::parse_feed(str::from_utf8(&*body).unwrap())?;
+        let podcast = podcast_xml.to_model()?;
         diesel::insert_into(podcasts::table)
-            .values(&podcast.to_model()?)
+            .values(&podcast)
             .execute(self.conn)
             .chain_err(|| "Error inserting podcast")?;
+
+        let mut episodes = Vec::with_capacity(episode_xmls.len());
+        for episode_xml in episode_xmls {
+            episodes.push(episode_xml.to_model(&podcast)?);
+        }
+        diesel::insert_into(episodes::table)
+            .values(&episodes)
+            .execute(self.conn)
+            .chain_err(|| "Error inserting podcast episodes")?;
 
         self.dir_podcast.feed_url = None;
         self.dir_podcast
