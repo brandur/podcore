@@ -1,6 +1,7 @@
 use errors::*;
 use model;
 
+use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use futures::Stream;
@@ -191,16 +192,52 @@ struct XMLPodcast {
     pub title:     Option<String>,
 }
 
+impl XMLPodcast {
+    fn to_model(self) -> Result<model::Podcast> {
+        Ok(model::Podcast {
+            id:        0,
+            image_url: self.image_url,
+            language:  self.language,
+            link_url:  self.link_url,
+            title:     self.title
+                .chain_err(|| "Error extracting title from podcast feed")?,
+        })
+    }
+}
+
 #[derive(Debug)]
 struct XMLEpisode {
     pub description:  Option<String>,
     pub explicit:     Option<bool>,
-    pub media_type:   Option<String>,
-    pub media_url:    Option<String>,
     pub guid:         Option<String>,
     pub link_url:     Option<String>,
+    pub media_type:   Option<String>,
+    pub media_url:    Option<String>,
     pub published_at: Option<String>,
     pub title:        Option<String>,
+}
+
+impl XMLEpisode {
+    fn to_model(self, podcast: &model::Podcast) -> Result<model::Episode> {
+        Ok(model::Episode {
+            id:           0,
+            description:  self.description,
+            explicit:     self.explicit,
+            guid:         self.guid
+                .chain_err(|| "Error extracting GUID from feed item")?,
+            link_url:     self.link_url,
+            media_url:    self.media_url
+                .chain_err(|| "Error extracting media URL from feed item")?,
+            media_type:   self.media_type,
+            podcast_id:   podcast.id,
+            published_at: self.published_at
+                .chain_err(|| "Error extracting publishing date from feed item")?
+                .parse::<DateTime<Utc>>()
+                .chain_err(|| "Error parsing publishing date from feed item")?,
+            title:        self.title
+                .chain_err(|| "Error extracting title from feed item")?,
+        })
+    }
 }
 
 #[test]

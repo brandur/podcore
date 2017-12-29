@@ -147,13 +147,13 @@ CREATE TABLE episodes (
     description TEXT
         CHECK (char_length(title) <= 2000),
     explicit BOOL,
-    media_type TEXT
-        CHECK (char_length(title) <= 100),
-    media_url TEXT NOT NULL
-        CHECK (char_length(title) <= 500),
     guid TEXT NOT NULL
         CHECK (char_length(title) <= 100),
     link_url TEXT
+        CHECK (char_length(title) <= 500),
+    media_type TEXT
+        CHECK (char_length(title) <= 100),
+    media_url TEXT NOT NULL
         CHECK (char_length(title) <= 500),
     podcast_id BIGINT NOT NULL
         REFERENCES podcasts (id) ON DELETE RESTRICT,
