@@ -211,9 +211,8 @@ struct XMLPodcast {
 }
 
 impl XMLPodcast {
-    fn to_model(&self) -> Result<model::Podcast> {
-        Ok(model::Podcast {
-            id:        -1,
+    fn to_model(&self) -> Result<model::PodcastIns> {
+        Ok(model::PodcastIns {
             image_url: self.image_url.clone(),
             language:  self.language.clone(),
             link_url:  self.link_url.clone(),
@@ -237,9 +236,8 @@ struct XMLEpisode {
 }
 
 impl XMLEpisode {
-    fn to_model(&self, podcast: &model::Podcast) -> Result<model::Episode> {
-        Ok(model::Episode {
-            id:           -1,
+    fn to_model(&self, podcast: &model::Podcast) -> Result<model::EpisodeIns> {
+        Ok(model::EpisodeIns {
             description:  self.description.clone(),
             explicit:     self.explicit.clone(),
             guid:         self.guid
@@ -280,23 +278,22 @@ fn test_run() {
     let client = Client::new(&core.handle());
 
     let itunes = model::Directory::itunes(&conn).unwrap();
-    let mut dir_podcast = model::DirectoryPodcast {
-        id:           0,
+    let dir_podcast = model::DirectoryPodcastIns {
         directory_id: itunes.id,
         feed_url:     Some("http://feeds.feedburner.com/RoderickOnTheLine".to_owned()),
         podcast_id:   None,
         vendor_id:    "471418144".to_owned(),
     };
-    diesel::insert_into(directories_podcasts::table)
+    let mut inserted_dir_podcast = diesel::insert_into(directories_podcasts::table)
         .values(&dir_podcast)
-        .execute(&conn)
+        .get_result(&conn)
         .unwrap();
 
     let mut updater = DirectoryPodcastUpdater {
         client:      &client,
         conn:        &conn,
         core:        &mut core,
-        dir_podcast: &mut dir_podcast,
+        dir_podcast: &mut inserted_dir_podcast,
     };
     updater.run().unwrap();
 }

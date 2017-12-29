@@ -28,10 +28,19 @@ impl Directory {
     }
 }
 
-#[derive(AsChangeset, Identifiable, Insertable, Queryable)]
+#[derive(AsChangeset, Identifiable, Queryable)]
 #[table_name = "directories_podcasts"]
 pub struct DirectoryPodcast {
     pub id:           i64,
+    pub directory_id: i64,
+    pub feed_url:     Option<String>,
+    pub podcast_id:   Option<i64>,
+    pub vendor_id:    String,
+}
+
+#[derive(Insertable)]
+#[table_name = "directories_podcasts"]
+pub struct DirectoryPodcastIns {
     pub directory_id: i64,
     pub feed_url:     Option<String>,
     pub podcast_id:   Option<i64>,
@@ -48,8 +57,7 @@ pub struct DirectorySearch {
     pub retrieved_at: DateTime<Utc>,
 }
 
-#[derive(Insertable, Queryable)]
-#[table_name = "episodes"]
+#[derive(Queryable)]
 pub struct Episode {
     pub id:           i64,
     pub description:  Option<String>,
@@ -63,10 +71,32 @@ pub struct Episode {
     pub title:        String,
 }
 
-#[derive(Insertable, Queryable)]
-#[table_name = "podcasts"]
+#[derive(Insertable)]
+#[table_name = "episodes"]
+pub struct EpisodeIns {
+    pub description:  Option<String>,
+    pub explicit:     Option<bool>,
+    pub guid:         String,
+    pub link_url:     Option<String>,
+    pub media_type:   Option<String>,
+    pub media_url:    String,
+    pub podcast_id:   i64,
+    pub published_at: DateTime<Utc>,
+    pub title:        String,
+}
+
+#[derive(Queryable)]
 pub struct Podcast {
     pub id:        i64,
+    pub image_url: Option<String>,
+    pub language:  Option<String>,
+    pub link_url:  Option<String>,
+    pub title:     String,
+}
+
+#[derive(Insertable)]
+#[table_name = "podcasts"]
+pub struct PodcastIns {
     pub image_url: Option<String>,
     pub language:  Option<String>,
     pub link_url:  Option<String>,
