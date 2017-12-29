@@ -40,14 +40,16 @@ impl<'a> DirectoryPodcastUpdater<'a> {
             .chain_err(|| "Error in database transaction")
     }
 
+    fn content_hash(content: &Vec<u8>) -> String {
+        let mut sha = Sha256::new();
+        sha.input(content.clone().as_slice());
+        sha.result_str()
+    }
+
     fn run_inner(&mut self) -> Result<()> {
         let raw_url = self.dir_podcast.feed_url.clone().unwrap();
         let body = self.url_fetcher.fetch(raw_url.as_str())?;
-
-        let mut sha = Sha256::new();
-        sha.input(body.clone().as_slice());
-        let sha256_hash = sha.result_str();
-
+        let sha256_hash = Self::content_hash(&body);
         let body_str = String::from_utf8(body).unwrap();
 
         let (podcast_xml, episode_xmls) = Self::parse_feed(body_str.as_str())?;
