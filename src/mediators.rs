@@ -47,9 +47,9 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         Ok(())
     }
 
-    fn parse_feed(data: &str) -> Result<XMLPodcast> {
+    fn parse_feed(data: &str) -> Result<(XMLPodcast, Vec<XMLEpisode>)> {
+        let mut episodes: Vec<XMLEpisode> = Vec::new();
         let mut podcast = XMLPodcast {
-            episodes:  Vec::new(),
             image_url: None,
             language:  None,
             link_url:  None,
@@ -75,7 +75,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                         (2, b"item") => {
                             in_item = true;
 
-                            podcast.episodes.push(XMLEpisode {
+                            episodes.push(XMLEpisode {
                                 description:  None,
                                 explicit:     None,
                                 media_type:   None,
@@ -102,7 +102,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                                 _ => (),
                             };
                         } else {
-                            let episode = podcast.episodes.last_mut().unwrap();
+                            let episode = episodes.last_mut().unwrap();
                             match tag_name.clone().unwrap().as_str() {
                                 "description" => episode.description = Some(val),
                                 "explicit" => episode.explicit = Some(val == "yes"),
@@ -133,7 +133,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                             }
                         } else {
                             if e.name() == b"media:content" {
-                                let episode = podcast.episodes.last_mut().unwrap();
+                                let episode = episodes.last_mut().unwrap();
                                 for r in e.attributes() {
                                     let kv = r.chain_err(|| "Error parsing XML attributes")?;
                                     match kv.key {
@@ -177,14 +177,14 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         }
         buf.clear();
         println!("podcast = {:?}", podcast);
+        println!("episodes = {:?}", episodes);
 
-        Ok(podcast)
+        Ok((podcast, episodes))
     }
 }
 
 #[derive(Debug)]
 struct XMLPodcast {
-    pub episodes:  Vec<XMLEpisode>,
     pub image_url: Option<String>,
     pub language:  Option<String>,
     pub link_url:  Option<String>,
