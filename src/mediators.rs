@@ -34,6 +34,16 @@ pub struct DirectoryPodcastUpdater<'a> {
     pub url_fetcher: &'a mut URLFetcher,
 }
 
+fn log_step<T, F>(log: &Logger, f: F) -> T
+where
+    F: FnOnce() -> T,
+{
+    info!(log, "Start");
+    let res = f();
+    info!(log, "Finish");
+    res
+}
+
 impl<'a> DirectoryPodcastUpdater<'a> {
     pub fn run(&mut self, log: &Logger) -> Result<()> {
         let log = log.new(o!("file" => file!()));
