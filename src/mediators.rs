@@ -10,10 +10,11 @@ use diesel::pg::PgConnection;
 use futures::Stream;
 use hyper;
 use hyper::{Client, Uri};
-use quick_xml::events::Event;
+use quick_xml::events::{BytesText, Event};
 use quick_xml::reader::Reader;
 use schema::{episodes, podcast_feed_contents, podcasts};
 use slog::Logger;
+use std::io::BufRead;
 use std::str;
 use std::str::FromStr;
 use time::precise_time_ns;
@@ -158,6 +159,18 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         })
     }
 
+    //
+    //     Some(Error(Escape("Cannot find \';\' after \'&\'", 486..1124) ...
+    //
+    pub fn safe_unescape_and_decode<'b, B: BufRead>(
+        bytes: &BytesText<'b>,
+        reader: &Reader<B>,
+    ) -> Result<String> {
+        bytes
+            .unescape_and_decode(&reader)
+            .chain_err(|| "Unable to unescape and decode value")
+    }
+
     fn parse_feed(log: &Logger, data: &str) -> Result<(XMLPodcast, Vec<XMLEpisode>)> {
         log_timed(&log.new(o!("step" => "parse_feed")), |ref _log| {
             let mut episodes: Vec<XMLEpisode> = Vec::new();
@@ -205,7 +218,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                     }
                     Ok(Event::Text(ref e)) => {
                         if in_rss && in_channel {
-                            let val = e.unescape_and_decode(&reader).unwrap();
+                            let val = Self::safe_unescape_and_decode(e, &reader)?;
                             if !in_item {
                                 match tag_name.clone().unwrap().as_str() {
                                     "language" => podcast.language = Some(val),
@@ -230,7 +243,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                     // Totally duplicated from "Text" above: modularize
                     Ok(Event::CData(ref e)) => {
                         if in_rss && in_channel {
-                            let val = e.unescape_and_decode(&reader).unwrap();
+                            let val = Self::safe_unescape_and_decode(e, &reader)?;
                             if !in_item {
                                 match tag_name.clone().unwrap().as_str() {
                                     "language" => podcast.language = Some(val),
@@ -523,16 +536,14 @@ mod tests {
 
     #[test]
     fn test_real_feed() {
-        let mut bootstrap = bootstrap(include_bytes!(
-            "test_documents/feed_roderick_on_the_line.xml"
-        ));
+        let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_waking_up.xml"));
 
         let mut med = DirectoryPodcastUpdater {
             conn:        &bootstrap.conn,
             dir_podcast: &mut bootstrap.dir_podcast,
             url_fetcher: &mut bootstrap.url_fetcher,
         };
-        let _res = med.run(&test_helpers::log()).unwrap();
+        med.run(&test_helpers::log()).unwrap();
     }
 
     //
