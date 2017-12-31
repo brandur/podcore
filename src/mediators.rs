@@ -522,7 +522,18 @@ mod tests {
     }
 
     #[test]
-    fn test_real_feed() {}
+    fn test_real_feed() {
+        let mut bootstrap = bootstrap(include_bytes!(
+            "test_documents/feed_roderick_on_the_line.xml"
+        ));
+
+        let mut med = DirectoryPodcastUpdater {
+            conn:        &bootstrap.conn,
+            dir_podcast: &mut bootstrap.dir_podcast,
+            url_fetcher: &mut bootstrap.url_fetcher,
+        };
+        let _res = med.run(&test_helpers::log()).unwrap();
+    }
 
     //
     // Test helpers
