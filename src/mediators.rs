@@ -442,15 +442,18 @@ impl XMLEpisode {
     }
 }
 
+// Represents a regex find and replac rule that we use to coerce datetime formats that are not
+// technically valid RFC 2822 into ones that are and which we can parse.
+struct DateTimeReplaceRule {
+    find:    Regex,
+    replace: &'static str,
+}
+
 fn parse_date_time(s: &str) -> Result<DateTime<Utc>> {
     lazy_static! {
-        static ref FINDS: Vec<Regex> = vec!(
-            Regex::new(r"-0000$").unwrap(),
-            Regex::new(r"\b0:").unwrap(),
-        );
-        static ref REPLACES: Vec<&'static str> = vec!(
-            "+0000",
-            "00:",
+        static ref RULES: Vec<DateTimeReplaceRule> = vec!(
+            DateTimeReplaceRule { find: Regex::new(r"-0000$").unwrap(), replace: "+0000", },
+            DateTimeReplaceRule { find: Regex::new(r"\b0:").unwrap(), replace: "00:", },
         );
     }
 
@@ -460,8 +463,8 @@ fn parse_date_time(s: &str) -> Result<DateTime<Utc>> {
         Ok(d) => Ok(d.with_timezone(&Utc)),
         _ => {
             let mut s = s.to_owned();
-            for i in 0..FINDS.len() {
-                s = FINDS[i].replace(s.as_str(), REPLACES[i]).into_owned();
+            for r in RULES.iter() {
+                s = r.find.replace(s.as_str(), r.replace).into_owned();
             }
             Ok(DateTime::parse_from_rfc2822(s.as_str())
                 .chain_err(|| format!("Error parsing publishing date {:?} from feed item", s))?
