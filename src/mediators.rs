@@ -71,7 +71,8 @@ where
 }
 
 pub struct RunResult {
-    pub podcast: model::Podcast,
+    pub episodes: Vec<model::Episode>,
+    pub podcast:  model::Podcast,
 }
 
 impl<'a> DirectoryPodcastUpdater<'a> {
@@ -146,12 +147,13 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         )?;
 
         let episodes_ins = Self::convert_episodes(&log, &podcast, episode_xmls)?;
-        log_timed(&log.new(o!("step" => "insert_episodes")), |ref _log| {
-            diesel::insert_into(episodes::table)
-                .values(&episodes_ins)
-                .execute(self.conn)
-                .chain_err(|| "Error inserting podcast episodes")
-        })?;
+        let episodes: Vec<model::Episode> =
+            log_timed(&log.new(o!("step" => "insert_episodes")), |ref _log| {
+                diesel::insert_into(episodes::table)
+                    .values(&episodes_ins)
+                    .get_results(self.conn)
+                    .chain_err(|| "Error inserting podcast episodes")
+            })?;
 
         log_timed(&log.new(o!("step" => "save_dir_podcast")), |ref _log| {
             self.dir_podcast.feed_url = None;
@@ -160,7 +162,10 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                 .chain_err(|| "Error saving changes to directory podcast")
         })?;
 
-        Ok(RunResult { podcast: podcast })
+        Ok(RunResult {
+            episodes: episodes,
+            podcast:  podcast,
+        })
     }
 
     fn parse_feed(log: &Logger, data: &str) -> Result<(XMLPodcast, Vec<XMLEpisode>)> {
@@ -222,8 +227,8 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                                 let episode = episodes.last_mut().unwrap();
                                 match tag_name.clone().unwrap().as_str() {
                                     "description" => episode.description = Some(val),
-                                    "explicit" => episode.explicit = Some(val == "yes"),
                                     "guid" => episode.guid = Some(val),
+                                    "itunes:explicit" => episode.explicit = Some(val == "yes"),
                                     "link" => episode.link_url = Some(val),
                                     "pubDate" => episode.published_at = Some(val),
                                     "title" => episode.title = Some(val),
@@ -244,7 +249,6 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                                                     .unwrap()
                                                     .to_owned(),
                                             );
-                                            break;
                                         }
                                     }
                                 }
@@ -260,7 +264,6 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                                                         .unwrap()
                                                         .to_owned(),
                                                 );
-                                                break;
                                             }
                                             b"url" => {
                                                 episode.media_url = Some(
@@ -268,7 +271,6 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                                                         .unwrap()
                                                         .to_owned(),
                                                 );
-                                                break;
                                             }
                                             _ => (),
                                         }
@@ -417,11 +419,12 @@ fn test_ideal_feed() {
     <media:thumbnail url="https://example.com/podcast-image-url.jpg"/>
     <title>Title</title>
     <item>
-      <title>Item 1 Title</title>
-      <pubDate>Sun, 24 Dec 2017 21:37:32 +0000</pubDate>
+      <description>Item 1 description</description>
       <guid>1</guid>
-      <description>Item 1 Description</description>
+      <itunes:explicit>yes</itunes:explicit>
       <media:content url="https://example.com/item-1" type="audio/mpeg"/>
+      <pubDate>Sun, 24 Dec 2017 21:37:32 +0000</pubDate>
+      <title>Item 1 Title</title>
     </item>
   </channel>
 </rss>"#.to_vec()),
@@ -459,6 +462,17 @@ fn test_ideal_feed() {
         res.podcast.link_url
     );
     assert_eq!("Title", res.podcast.title);
+
+    assert_eq!(1, res.episodes.len());
+
+    let episode = &res.episodes[0];
+    assert_ne!(0, episode.id);
+    assert_eq!(Some("Item 1 description".to_owned()), episode.description);
+    assert_eq!(Some(true), episode.explicit);
+    assert_eq!("1", episode.guid);
+    assert_eq!(Some("audio/mpeg".to_owned()), episode.media_type);
+    assert_eq!("https://example.com/item-1", episode.media_url);
+    assert_eq!(res.podcast.id, episode.podcast_id);
 }
 
 #[test]
