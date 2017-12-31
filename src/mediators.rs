@@ -298,7 +298,9 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                                     }
                                 }
                             } else {
-                                if e.name() == b"media:content" {
+                                // Either of these tags might be used for a media URL in podcast
+                                // feeds that you see around.
+                                if e.name() == b"enclosure" || e.name() == b"media:content" {
                                     let episode = episodes.last_mut().unwrap();
                                     for r in e.attributes() {
                                         let kv = r.chain_err(|| "Error parsing XML attributes")?;
