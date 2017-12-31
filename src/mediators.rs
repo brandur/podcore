@@ -442,9 +442,22 @@ impl XMLEpisode {
 }
 
 fn parse_date_time(s: &str) -> Result<DateTime<Utc>> {
-    Ok(DateTime::parse_from_rfc2822(s)
-        .chain_err(|| format!("Error parsing publishing date {:?} from feed item", s))?
-        .with_timezone(&Utc))
+    match DateTime::parse_from_rfc2822(s) {
+        Ok(d) => Ok(d.with_timezone(&Utc)),
+        res => {
+            let mut s = s.to_owned();
+            let res = if s.ends_with("-0000") {
+                s = s.replace("-0000", "+0000");
+                DateTime::parse_from_rfc2822(s.as_str())
+            } else {
+                res
+            };
+            Ok(
+                res.chain_err(|| format!("Error parsing publishing date {:?} from feed item", s))?
+                    .with_timezone(&Utc),
+            )
+        }
+    }
 }
 
 #[cfg(test)]
@@ -544,10 +557,57 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_date_time() {
+        // Valid RFC 2822
+        assert_eq!(
+            Utc.ymd(2017, 12, 24).and_hms(21, 37, 32),
+            parse_date_time("Sun, 24 Dec 2017 21:37:32 +0000").unwrap()
+        );
+
+        // Never forget how uselessly pedantic Rust programmers are. A "-0000" is technically
+        // considered missing even though it's obvious to anyone on Earth what should be done with
+        // it. Our special implementation handles it, so test this case specifically.
+        assert_eq!(
+            Utc.ymd(2017, 12, 24).and_hms(21, 37, 32),
+            parse_date_time("Sun, 24 Dec 2017 21:37:32 -0000").unwrap()
+        );
+    }
+
+    #[test]
     fn test_real_feed() {
-        let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_waking_up.xml"));
-        let mut mediator = bootstrap.mediator();
-        mediator.run(&test_helpers::log()).unwrap();
+        {
+            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_8_4_play.xml"));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap = bootstrap(include_bytes!(
+                "test_documents/feed_99_percent_invisible.xml"
+            ));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_adventure_zone.xml"));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap = bootstrap(include_bytes!(
+                "test_documents/feed_roderick_on_the_line.xml"
+            ));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_waking_up.xml"));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
     }
 
     //
