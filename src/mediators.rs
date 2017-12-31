@@ -448,9 +448,9 @@ fn parse_date_time(s: &str) -> Result<DateTime<Utc>> {
             Regex::new(r"-0000$").unwrap(),
             Regex::new(r"\b0:").unwrap(),
         );
-        static ref REPLACES: Vec<String> = vec!(
-            "+0000".to_owned(),
-            "00:".to_owned(),
+        static ref REPLACES: Vec<&'static str> = vec!(
+            "+0000",
+            "00:",
         );
     }
 
@@ -461,9 +461,7 @@ fn parse_date_time(s: &str) -> Result<DateTime<Utc>> {
         _ => {
             let mut s = s.to_owned();
             for i in 0..FINDS.len() {
-                s = FINDS[i]
-                    .replace(s.as_str(), REPLACES[i].as_str())
-                    .into_owned();
+                s = FINDS[i].replace(s.as_str(), REPLACES[i]).into_owned();
             }
             Ok(DateTime::parse_from_rfc2822(s.as_str())
                 .chain_err(|| format!("Error parsing publishing date {:?} from feed item", s))?
