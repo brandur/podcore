@@ -452,8 +452,12 @@ struct DateTimeReplaceRule {
 fn parse_date_time(s: &str) -> Result<DateTime<Utc>> {
     lazy_static! {
         static ref RULES: Vec<DateTimeReplaceRule> = vec!(
+            // The "-0000" timezone is not considered valid by true pedants
             DateTimeReplaceRule { find: Regex::new(r"-0000$").unwrap(), replace: "+0000", },
-            DateTimeReplaceRule { find: Regex::new(r"\b0:").unwrap(), replace: "00:", },
+
+            // Like: "Mon, 27 Mar 2017 9:42:00 EST" (technically need two digits everywhere to be
+            // valid)
+            DateTimeReplaceRule { find: Regex::new(r"\b(?P<h>\d):").unwrap(), replace: "0$h:", },
         );
     }
 
