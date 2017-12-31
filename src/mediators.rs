@@ -159,16 +159,29 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         })
     }
 
-    //
-    //     Some(Error(Escape("Cannot find \';\' after \'&\'", 486..1124) ...
-    //
+    // The idea here is to produce a tolerant form of quick-xml's function that is tolerant to as
+    // wide of a variety of possibly misencoded podcast feeds as possible.
     pub fn safe_unescape_and_decode<'b, B: BufRead>(
         bytes: &BytesText<'b>,
         reader: &Reader<B>,
-    ) -> Result<String> {
-        bytes
-            .unescape_and_decode(&reader)
-            .chain_err(|| "Unable to unescape and decode value")
+    ) -> String {
+        // quick-xml's unescape might fail if it runs into an improperly encoded '&' with something
+        // like this:
+        //
+        //     Some(Error(Escape("Cannot find \';\' after \'&\'", 486..1124) ...
+        //
+        // The idea here is that we try to unescape: If we can, great, continue to decode. If we
+        // can't, then we just ignore the error (it goes to logs, but nothing else) and continue to
+        // decode.
+        //
+        // Eventually this would probably be better served by completely reimplementing quick-xml's
+        // unescaped so that we just don't balk when we see certain things that we know to be
+        // problems. Just do as good of a job as possible in the same style as a web browser with
+        // HTML.
+        match bytes.unescaped() {
+            Ok(bytes) => reader.decode(&*bytes).into_owned(),
+            _ => reader.decode(&*bytes).into_owned(),
+        }
     }
 
     fn parse_feed(log: &Logger, data: &str) -> Result<(XMLPodcast, Vec<XMLEpisode>)> {
@@ -218,7 +231,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                     }
                     Ok(Event::Text(ref e)) => {
                         if in_rss && in_channel {
-                            let val = Self::safe_unescape_and_decode(e, &reader)?;
+                            let val = Self::safe_unescape_and_decode(e, &reader);
                             if !in_item {
                                 match tag_name.clone().unwrap().as_str() {
                                     "language" => podcast.language = Some(val),
@@ -243,7 +256,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                     // Totally duplicated from "Text" above: modularize
                     Ok(Event::CData(ref e)) => {
                         if in_rss && in_channel {
-                            let val = Self::safe_unescape_and_decode(e, &reader)?;
+                            let val = Self::safe_unescape_and_decode(e, &reader);
                             if !in_item {
                                 match tag_name.clone().unwrap().as_str() {
                                     "language" => podcast.language = Some(val),
