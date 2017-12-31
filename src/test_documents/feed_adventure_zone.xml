@@ -1,0 +1,1283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:cc="http://web.resource.org/cc/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:media="http://search.yahoo.com/mrss/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" version="2.0">
+  <channel>
+    <atom:link href="http://adventurezone.libsyn.com/rss" rel="self" type="application/rss+xml" />
+    <title>The Adventure Zone</title>
+    <pubDate>Fri, 29 Dec 2017 18:24:49 +0000</pubDate>
+    <lastBuildDate>Sat, 30 Dec 2017 15:43:24 +0000</lastBuildDate>
+    <generator>Libsyn WebEngine 2.0</generator>
+    <link>http://adventurezone.libsyn.com/podcast</link>
+    <language>en</language>
+    <copyright><![CDATA[Copyright The McElroy Brothers, all rights reserved.]]></copyright>
+    <docs>http://adventurezone.libsyn.com/podcast</docs>
+    <managingEditor>adventurezonecast@gmail.com (adventurezonecast@gmail.com)</managingEditor>
+    <itunes:summary><![CDATA[Justin, Travis and Griffin McElroy from My Brother, My Brother and Me have recruited their dad Clint for a campaign of high adventure. Join the McElroys as they find their fortune and slay an unconscionable number of ... you know, kobolds or whatever in ... The Adventure Zone.]]></itunes:summary>
+    <image>
+      <url>http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg</url>
+      <title>The Adventure Zone</title>
+      <link><![CDATA[http://adventurezone.libsyn.com/podcast]]></link>
+    </image>
+    <itunes:author>The McElroys</itunes:author>
+    <itunes:keywords>adventure</itunes:keywords>
+    <itunes:category text="Comedy" />
+    <itunes:category text="Games &amp; Hobbies" />
+    <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+    <itunes:explicit>no</itunes:explicit>
+    <itunes:owner>
+      <itunes:name><![CDATA[The McElroys]]></itunes:name>
+      <itunes:email>adventurezonecast@gmail.com</itunes:email>
+    </itunes:owner>
+    <description><![CDATA[Justin, Travis and Griffin McElroy from My Brother, My Brother and Me have recruited their dad for a campaign of high adventure. Join The McElroys every other Thursday as they kill a nauseating number of gerblins in ... The Adventure Zone!]]></description>
+    <itunes:subtitle />
+    <itunes:type>episodic</itunes:type>
+    <item>
+      <title>The Adventure Zone: Candlenights in Tacoma!</title>
+      <pubDate>Fri, 29 Dec 2017 18:24:49 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[45fc95672b8bb0aeb2ca21b528fdb32f]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/the-adventure-zone-candlenights-in-tacoma]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes reconvene at an important site from their storied past to traverse a perilous dungeon. What awaits them is far more deadly than they could have imagined -- and far more ... festive?</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes reconvene at an important site from their storied past to traverse a perilous dungeon. What awaits them is far more deadly than they could have imagined -- and far more ... festive?</p>]]></content:encoded>
+      <enclosure length="88262309" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZoneLiveinTacoma.mp3?dest-id=235309" />
+      <itunes:duration>01:27:11</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes reconvene at an important site from their storied past to traverse a perilous dungeon. What awaits them is far more deadly than they could have imagined -- and far more ... festive?]]></itunes:subtitle>
+      <itunes:episodeType>full</itunes:episodeType>
+    </item>
+    <item>
+      <title>The Adventure Zone: Live in Nashville!</title>
+      <pubDate>Thu, 14 Dec 2017 19:56:53 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[671af5035ebcddd036ad22976492f958]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/the-adventure-zone-live-in-nashville]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes are joined by a familiar face as they take on a dangerous heist in another reality. ALSO: Some news about the next few experimental arcs!</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes are joined by a familiar face as they take on a dangerous heist in another reality. ALSO: Some news about the next few experimental arcs!</p>]]></content:encoded>
+      <enclosure length="83832363" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZoneLiveInNashville.mp3?dest-id=235309" />
+      <itunes:duration>01:22:34</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes are joined by a familiar face as they take on a dangerous heist in another reality. ALSO: Some news about the next few experimental arcs!]]></itunes:subtitle>
+      <itunes:episodeType>full</itunes:episodeType>
+    </item>
+    <item>
+      <title>The Adventure Zone: Commitment - Episode 4</title>
+      <pubDate>Thu, 30 Nov 2017 18:25:26 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[fa6a873aa9719687cf810e79d30e018d]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/the-adventure-zone-commitment-episode-4]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes come face-to-face with the King of America in the climactic finale of our Commitment arc. Remy does those good flips. Nadiya causes some collateral damage. Kardala swears her very genuine, heartfelt loyalty.</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes come face-to-face with the King of America in the climactic finale of our Commitment arc. Remy does those good flips. Nadiya causes some collateral damage. Kardala swears her very genuine, heartfelt loyalty.</p>]]></content:encoded>
+      <enclosure length="65423728" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZoneCommitment04.mp3?dest-id=235309" />
+      <itunes:duration>01:03:24</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes come face-to-face with the King of America in the climactic finale of our Commitment arc. Remy does those good flips. Nadiya causes some collateral damage. Kardala swears her very genuine, heartfelt loyalty.]]></itunes:subtitle>
+      <itunes:episodeType>full</itunes:episodeType>
+    </item>
+    <item>
+      <title>The Adventure Zone: Commitment - Episode 3</title>
+      <pubDate>Thu, 16 Nov 2017 17:08:53 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[6678bdc362353f52c0ae0b6c003617af]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/the-adventure-zone-commitment-episode-3]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p class="p1">Our heroes face their first test of combat with their newfound superpowers, with … mixed results. Kardala tells a painful joke. Remy keeps the peace. Nadiya is good out here.</p>]]></description>
+      <content:encoded><![CDATA[<p class="p1">Our heroes face their first test of combat with their newfound superpowers, with … mixed results. Kardala tells a painful joke. Remy keeps the peace. Nadiya is good out here.</p>]]></content:encoded>
+      <enclosure length="66851824" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZoneCommitment03.mp3?dest-id=235309" />
+      <itunes:duration>01:04:53</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes face their first test of combat with their newfound superpowers, with … mixed results. Kardala tells a painful joke. Remy keeps the peace. Nadiya is good out here.]]></itunes:subtitle>
+      <itunes:episodeType>full</itunes:episodeType>
+    </item>
+    <item>
+      <title>The Adventure Zone: Commitment - Episode 2</title>
+      <pubDate>Thu, 02 Nov 2017 16:11:36 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[6a07ce59824e06d81988d4ed6615539c]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/the-adventure-zone-commitment-episode-2]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes are empowered by a somewhat gross and dangerous scientific process, and are dispatched on their first mission. Remy tries to keep the peace. Nadiya picks her favorite movie. Kardala breaks free.</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes are empowered by a somewhat gross and dangerous scientific process, and are dispatched on their first mission. Remy tries to keep the peace. Nadiya picks her favorite movie. Kardala breaks free.</p>]]></content:encoded>
+      <enclosure length="65895280" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZoneCommitment02.mp3?dest-id=235309" />
+      <itunes:duration>01:03:53</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes are empowered by a somewhat gross and dangerous scientific process, and are dispatched on their first mission. Remy tries to keep the peace. Nadiya picks her favorite movie. Kardala breaks free.]]></itunes:subtitle>
+      <itunes:episodeType>full</itunes:episodeType>
+    </item>
+    <item>
+      <title>The Adventure Zone: Commitment - Episode 1</title>
+      <pubDate>Thu, 19 Oct 2017 14:44:02 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[1e528397ea64f65e76cab62061a15de3]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/the-adventure-zone-commitment-episode-1]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our new heroes attend a corporate mixer for the Do-Good Fellowship that will change the course of their very lives. The first chapter in Clint's superhero story, taking place inside of the Fate system. Remy embarks on a slider quest. Nadiya threatens a co-worker. Irene solves a particularly difficult employee benefit issue.</p>]]></description>
+      <content:encoded><![CDATA[<p>Our new heroes attend a corporate mixer for the Do-Good Fellowship that will change the course of their very lives. The first chapter in Clint's superhero story, taking place inside of the Fate system. Remy embarks on a slider quest. Nadiya threatens a co-worker. Irene solves a particularly difficult employee benefit issue.</p>]]></content:encoded>
+      <enclosure length="64973624" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZoneCommitment01.mp3?dest-id=235309" />
+      <itunes:duration>01:02:56</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our new heroes attend a corporate mixer for the Do-Good Fellowship that will change the course of their very lives. The first chapter in Clint's superhero story, taking place inside of the Fate system. Remy embarks on a slider quest. Nadiya threatens...]]></itunes:subtitle>
+      <itunes:episodeType>full</itunes:episodeType>
+    </item>
+    <item>
+      <title>Setup - The Adventure Zone: Commitment</title>
+      <pubDate>Thu, 05 Oct 2017 13:51:54 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[ff26e8dc4a2b1d081fba69194ef1d695]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/setup-the-adventure-zone-commitment]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>As we prepare for Season Two of The Adventure Zone, we're going to be doing a handful of short-form, experimental arcs, taking turns running new games and exploring new genres. Our first experiment is a super hero story created by Dad, who's running us through the Fate system! Come learn the basics of the Fate rules, and meet the new characters we'll be playing over the next couple of episodes.</p>]]></description>
+      <content:encoded><![CDATA[<p>As we prepare for Season Two of The Adventure Zone, we're going to be doing a handful of short-form, experimental arcs, taking turns running new games and exploring new genres. Our first experiment is a super hero story created by Dad, who's running us through the Fate system! Come learn the basics of the Fate rules, and meet the new characters we'll be playing over the next couple of episodes.</p>]]></content:encoded>
+      <enclosure length="83266162" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZoneCommitment00.mp3?dest-id=235309" />
+      <itunes:duration>01:22:12</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[As we prepare for Season Two of The Adventure Zone, we're going to be doing a handful of short-form, experimental arcs, taking turns running new games and exploring new genres. Our first experiment is a super hero story created by Dad, who's running...]]></itunes:subtitle>
+      <itunes:episodeType>full</itunes:episodeType>
+    </item>
+    <item>
+      <title>The Adventure Zone: Live in San Diego!</title>
+      <pubDate>Thu, 21 Sep 2017 15:42:15 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[53ad17873438fe05b167539e8b7702b6]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/the-adventure-zone-live-in-san-diego]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>The Tres Horny Boys are dropped into a deadly virtual training program modeled after a classic D&D adventure. With the help of the Chat, can they make it through Lucas' trap-filled dungeon before their lives run out?</p>]]></description>
+      <content:encoded><![CDATA[<p>The Tres Horny Boys are dropped into a deadly virtual training program modeled after a classic D&D adventure. With the help of the Chat, can they make it through Lucas' trap-filled dungeon before their lives run out?</p>]]></content:encoded>
+      <enclosure length="102404894" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZoneLiveinSanDiego.mp3?dest-id=235309" />
+      <itunes:duration>01:43:14</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[The Tres Horny Boys are dropped into a deadly virtual training program modeled after a classic D&D adventure. With the help of the Chat, can they make it through Lucas' trap-filled dungeon before their lives run out?]]></itunes:subtitle>
+      <itunes:episodeType>full</itunes:episodeType>
+    </item>
+    <item>
+      <title>The Adventure Zone: Live in Austin!</title>
+      <pubDate>Fri, 08 Sep 2017 20:38:08 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[07d0f24a918fad3720318568bd272e43]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/the-adventure-zone-live-in-austin]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p class="p1">Earlier this year, Tres Horny Boys rolled up on Austin, Texas, and wove a tale of demons, dreamscapes and High School Drama. THIS IS THAT TALE.</p>]]></description>
+      <content:encoded><![CDATA[<p class="p1">Earlier this year, Tres Horny Boys rolled up on Austin, Texas, and wove a tale of demons, dreamscapes and High School Drama. THIS IS THAT TALE.</p>]]></content:encoded>
+      <enclosure length="92218808" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZoneLiveinAustin.mp3?dest-id=235309" />
+      <itunes:duration>01:32:38</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Earlier this year, Tres Horny Boys rolled up on Austin, Texas, and wove a tale of demons, dreamscapes and High School Drama. THIS IS THAT TALE.]]></itunes:subtitle>
+      <itunes:episodeType>full</itunes:episodeType>
+    </item>
+    <item>
+      <title>The The Adventure Zone Zone: Balance Finale Edition</title>
+      <pubDate>Thu, 24 Aug 2017 16:41:31 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[35155d6092a48d0a94b3b6e2062fc68c]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/the-the-adventure-zone-zone-balance-finale-edition]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p class="p1">Everyone’s favorite talk show about a podcast hosted by the participants in said podcast is back! This time, we’re talking about the end of the Balance campaign, answering a bunch of listener questions and talking about what’s next for the show!</p>]]></description>
+      <content:encoded><![CDATA[<p class="p1">Everyone’s favorite talk show about a podcast hosted by the participants in said podcast is back! This time, we’re talking about the end of the Balance campaign, answering a bunch of listener questions and talking about what’s next for the show!</p>]]></content:encoded>
+      <enclosure length="97287850" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheTheAdventureZoneZoneAugust2017.mp3?dest-id=235309" />
+      <itunes:duration>01:37:54</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Everyone’s favorite talk show about a podcast hosted by the participants in said podcast is back! This time, we’re talking about the end of the Balance campaign, answering a bunch of listener questions and talking about what’s next for the show!]]></itunes:subtitle>
+      <itunes:episodeType>full</itunes:episodeType>
+    </item>
+    <item>
+      <title>Ep. 69. Story and Song - Finale, Part Three</title>
+      <pubDate>Thu, 17 Aug 2017 16:02:39 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[7833f4b367777131c6c32bee1541b1a7]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-69-story-and-song-finale-part-three]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes reach their journey's end.</p> <p>Additional Music by Reeder: https://iamreeder.bandcamp.com/</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes reach their journey's end.</p> <p>Additional Music by Reeder: https://iamreeder.bandcamp.com/</p>]]></content:encoded>
+      <enclosure length="158960156" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone069.mp3?dest-id=235309" />
+      <itunes:duration>02:42:09</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes reach their journey's end. Additional Music by Reeder: https://iamreeder.bandcamp.com/]]></itunes:subtitle>
+      <itunes:episodeType>full</itunes:episodeType>
+    </item>
+    <item>
+      <title>Ep. 68. Story and Song - Finale, Part Two</title>
+      <pubDate>Tue, 01 Aug 2017 15:51:12 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[ae495babafc47bfa81b5aeef1f28ab5e]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-68-story-and-song-finale-part-two]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Two lights shine down from the sky. Their story passes through reality. His song fills their hearts.</p> <p>The world fights back.</p> <p>Music: "Voidfish (Plural) by Rachel Rose Mitchell - https://rachelrosemitchell.bandcamp.com/</p>]]></description>
+      <content:encoded><![CDATA[<p>Two lights shine down from the sky. Their story passes through reality. His song fills their hearts.</p> <p>The world fights back.</p> <p>Music: "Voidfish (Plural) by Rachel Rose Mitchell - https://rachelrosemitchell.bandcamp.com/</p>]]></content:encoded>
+      <enclosure length="120101660" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone068.mp3?dest-id=235309" />
+      <itunes:duration>02:01:40</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Two lights shine down from the sky. Their story passes through reality. His song fills their hearts. The world fights back. Music: "Voidfish (Plural) by Rachel Rose Mitchell - https://rachelrosemitchell.bandcamp.com/]]></itunes:subtitle>
+      <itunes:episodeType>full</itunes:episodeType>
+    </item>
+    <item>
+      <title>Ep. 67. Story and Song - Finale, Part One</title>
+      <pubDate>Thu, 13 Jul 2017 16:37:36 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[426792f448e0661953d4d947d5702b8d]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-67-story-and-song-finale-part-one]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes' memories have returned. At the end of everything, will they stand together against the encroaching darkness? Or will their past sins leave them irrevocably driven apart?</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes' memories have returned. At the end of everything, will they stand together against the encroaching darkness? Or will their past sins leave them irrevocably driven apart?</p>]]></content:encoded>
+      <enclosure length="81157510" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone067.mp3?dest-id=235309" />
+      <itunes:duration>01:21:06</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes' memories have returned. At the end of everything, will they stand together against the encroaching darkness? Or will their past sins leave them irrevocably driven apart?]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 66. The Stolen Century - Chapter Seven</title>
+      <pubDate>Thu, 29 Jun 2017 18:10:52 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[191fc52fa20b75d819e60b6de505bb09]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-66-the-stolen-century-chapter-seven]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes' long, forgotten journey comes to an end.</p> <p> </p> <p>Music: "Relic" by Reeder - https://iamreeder.bandcamp.com/</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes' long, forgotten journey comes to an end.</p> <p> </p> <p>Music: "Relic" by Reeder - https://iamreeder.bandcamp.com/</p>]]></content:encoded>
+      <enclosure length="88338048" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone066.mp3?dest-id=235309" />
+      <itunes:duration>01:28:35</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes' long, forgotten journey comes to an end.   Music: "Relic" by Reeder - https://iamreeder.bandcamp.com/]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 65. The Stolen Century - Chapter Six</title>
+      <pubDate>Thu, 15 Jun 2017 15:48:59 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[b4740e38a301d613986263af98b1e911]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-65-the-stolen-century-chapter-six]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p class="p1"> </p> <p class="p1">The Hunger pursues, and our heroes escape. They’ve been keeping up the chase for decades now, evading without fail. But the Hunger’s getting faster. The journey’s getting harder. The team must take drastic steps, just to stay afloat. We’re nearly caught up, now. Merle writes his story. Magnus breaks his bonds. Taako plans a very good day.</p>]]></description>
+      <content:encoded><![CDATA[<p class="p1"> </p> <p class="p1">The Hunger pursues, and our heroes escape. They’ve been keeping up the chase for decades now, evading without fail. But the Hunger’s getting faster. The journey’s getting harder. The team must take drastic steps, just to stay afloat. We’re nearly caught up, now. Merle writes his story. Magnus breaks his bonds. Taako plans a very good day.</p>]]></content:encoded>
+      <enclosure length="85472938" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone065.mp3?dest-id=235309" />
+      <itunes:duration>01:25:36</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[The Hunger pursues, and our heroes escape. They’ve been keeping up the chase for decades now, evading without fail. But the Hunger’s getting faster. The journey’s getting harder. The team must take drastic steps, just to stay afloat....]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 64. The Stolen Century - Chapter Five</title>
+      <pubDate>Thu, 01 Jun 2017 15:34:54 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[b8ecc1ef15309706cd76a99d9f9db1dc]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-64-the-stolen-century-chapter-five]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes find themselves in a strange world where artists compete for national pride, submitting their works to a mountain that can make them known throughout the land. Can the team create satisfactory masterpieces before their year is up? Merle gets academic. Taako borrows some pearls of widsom. Magnus meets a fateful friend.</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes find themselves in a strange world where artists compete for national pride, submitting their works to a mountain that can make them known throughout the land. Can the team create satisfactory masterpieces before their year is up? Merle gets academic. Taako borrows some pearls of widsom. Magnus meets a fateful friend.</p>]]></content:encoded>
+      <enclosure length="66616292" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone064.mp3?dest-id=235309" />
+      <itunes:duration>01:05:58</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes find themselves in a strange world where artists compete for national pride, submitting their works to a mountain that can make them known throughout the land. Can the team create satisfactory masterpieces before their year is up? Merle...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 63. The Stolen Century - Chapter Four</title>
+      <pubDate>Thu, 18 May 2017 16:03:49 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[8490c6df0e2881ece985d3503398d1c6]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-63-the-stolen-century-chapter-four]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>We're fairly deep into our trip down memory lane, but our heroes are no closer to figuring out how to stop the ever-evolving force that's pursuing them. With few other options, they'll have to adopt a new, remarkably costly strategy. Magnus helps out some Losers. Taako eats a fateful meal. Merle makes a powerful new friend.</p>]]></description>
+      <content:encoded><![CDATA[<p>We're fairly deep into our trip down memory lane, but our heroes are no closer to figuring out how to stop the ever-evolving force that's pursuing them. With few other options, they'll have to adopt a new, remarkably costly strategy. Magnus helps out some Losers. Taako eats a fateful meal. Merle makes a powerful new friend.</p>]]></content:encoded>
+      <enclosure length="90569115" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone063.mp3?dest-id=235309" />
+      <itunes:duration>01:30:55</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[We're fairly deep into our trip down memory lane, but our heroes are no closer to figuring out how to stop the ever-evolving force that's pursuing them. With few other options, they'll have to adopt a new, remarkably costly strategy. Magnus helps out...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>The Adventure Zone LIVE at SDCC 2017 Announcement!</title>
+      <pubDate>Mon, 15 May 2017 16:40:37 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[c0df3e7fab7a2a3e50f6b8e8687bdaa7]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/the-adventure-zone-live-at-sdcc-2017-announcement]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Are you planning on going to San Diego Comic Con this year? Clear some time for Tres Horny Boys! We're going to be doing a live TAZ (and MBMBaM!) this year -- listen in for more details! Tickets go on sale THIS WEDNESDAY, so don't miss out!</p>]]></description>
+      <content:encoded><![CDATA[<p>Are you planning on going to San Diego Comic Con this year? Clear some time for Tres Horny Boys! We're going to be doing a live TAZ (and MBMBaM!) this year -- listen in for more details! Tickets go on sale THIS WEDNESDAY, so don't miss out!</p>]]></content:encoded>
+      <enclosure length="6744752" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TAZ_SDCC_ANNOUNCEMENT.mp3?dest-id=235309" />
+      <itunes:duration>03:36</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Are you planning on going to San Diego Comic Con this year? Clear some time for Tres Horny Boys! We're going to be doing a live TAZ (and MBMBaM!) this year -- listen in for more details! Tickets go on sale THIS WEDNESDAY, so don't miss out!]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 62. The Stolen Century - Chapter Three</title>
+      <pubDate>Thu, 04 May 2017 16:25:29 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[b903c2377266bc18df51bea25b187475]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-62-the-stolen-century-chapter-three]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes have earned a break, don't you think? Merle finds a place to settle down. Magnus keeps 'em on their toes. Taako dispenses some beach wisdom.</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes have earned a break, don't you think? Merle finds a place to settle down. Magnus keeps 'em on their toes. Taako dispenses some beach wisdom.</p>]]></content:encoded>
+      <enclosure length="41149621" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone062.mp3?dest-id=235309" />
+      <itunes:duration>39:26</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes have earned a break, don't you think? Merle finds a place to settle down. Magnus keeps 'em on their toes. Taako dispenses some beach wisdom.]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 61. The Stolen Century - Chapter Two</title>
+      <pubDate>Thu, 27 Apr 2017 14:06:26 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[85f9446572e5d0a25fe1b274c0e1f69c]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-61-the-stolen-century-chapter-two]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes find themselves crossing between strange, deadly, beautiful worlds, pursued by a foe they cannot comprehend. Can they grow strong enough to defeat their cosmic enemy? Or will their journey take them down a road from which they can never return? Magnus leads an expedition. Taako is tempted. Merle leads his congregation.</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes find themselves crossing between strange, deadly, beautiful worlds, pursued by a foe they cannot comprehend. Can they grow strong enough to defeat their cosmic enemy? Or will their journey take them down a road from which they can never return? Magnus leads an expedition. Taako is tempted. Merle leads his congregation.</p>]]></content:encoded>
+      <enclosure length="87733262" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone061.mp3?dest-id=235309" />
+      <itunes:duration>01:27:57</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes find themselves crossing between strange, deadly, beautiful worlds, pursued by a foe they cannot comprehend. Can they grow strong enough to defeat their cosmic enemy? Or will their journey take them down a road from which they can never...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 60. The Stolen Century - Chapter One</title>
+      <pubDate>Thu, 13 Apr 2017 16:32:46 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[6ab4a80dbbbba1234a55794884796066]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-60-the-stolen-century-chapter-one]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>We're nearly at our journey's end -- but before we can understand what lies ahead, we must first return to this story's true beginning. What brought our heroes together to the crisis they face today? What happened to the memories of their dear, forgotten friends? And just how long have they been running away? Taako learns a new language. Merle eats some beans. Magnus trains under an unlikely teacher.</p>]]></description>
+      <content:encoded><![CDATA[<p>We're nearly at our journey's end -- but before we can understand what lies ahead, we must first return to this story's true beginning. What brought our heroes together to the crisis they face today? What happened to the memories of their dear, forgotten friends? And just how long have they been running away? Taako learns a new language. Merle eats some beans. Magnus trains under an unlikely teacher.</p>]]></content:encoded>
+      <enclosure length="96083250" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone060.mp3?dest-id=235309" />
+      <itunes:duration>01:36:39</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[We're nearly at our journey's end -- but before we can understand what lies ahead, we must first return to this story's true beginning. What brought our heroes together to the crisis they face today? What happened to the memories of their dear,...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>The The Adventure Zone Zone - MaxFunDrive 2017</title>
+      <pubDate>Thu, 30 Mar 2017 18:24:39 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[9cb772cd54448cb8821ed77709f219e1]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/the-the-adventure-zone-zone-maxfundrive-2017]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Hey folks! In honor of the MaxFunDrive, we decided to put out an extra episode on the off week: It's another The The Adventure Zone Zone, the world's premiere The Adventure Zone fancast, hosted by the people who make The Adventure Zone. Listen in as we answer fan questions and talk about what's next after this campaign wraps up!</p>]]></description>
+      <content:encoded><![CDATA[<p>Hey folks! In honor of the MaxFunDrive, we decided to put out an extra episode on the off week: It's another The The Adventure Zone Zone, the world's premiere The Adventure Zone fancast, hosted by the people who make The Adventure Zone. Listen in as we answer fan questions and talk about what's next after this campaign wraps up!</p>]]></content:encoded>
+      <enclosure length="82772521" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheTheAdventureZoneZoneMarch2017.mp3?dest-id=235309" />
+      <itunes:duration>01:22:47</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Hey folks! In honor of the MaxFunDrive, we decided to put out an extra episode on the off week: It's another The The Adventure Zone Zone, the world's premiere The Adventure Zone fancast, hosted by the people who make The Adventure Zone. Listen in as...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 59. Lunar Interlude V: Reunion Tour - Part Two</title>
+      <pubDate>Thu, 23 Mar 2017 17:24:31 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[ef385e16cf22ccc815a7c92921d37567]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-59-lunar-interlude-v-reunion-tour-part-two]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes are out of time, out of options, out of places to hide. The holes in their history are starting to fill in; but are they going to like the answers they receive? We're almost caught up, now. Taako fights his fears. Merle loses faith. Magnus hears music.</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes are out of time, out of options, out of places to hide. The holes in their history are starting to fill in; but are they going to like the answers they receive? We're almost caught up, now. Taako fights his fears. Merle loses faith. Magnus hears music.</p>]]></content:encoded>
+      <enclosure length="104155714" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone059.mp3?dest-id=235309" />
+      <itunes:duration>01:45:04</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes are out of time, out of options, out of places to hide. The holes in their history are starting to fill in; but are they going to like the answers they receive? We're almost caught up, now. Taako fights his fears. Merle loses faith. Magnus...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 58. Lunar Interlude V: Reunion Tour - Part One</title>
+      <pubDate>Thu, 09 Mar 2017 21:56:25 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[0bec2b604871f9c847f5488ac27fc1ca]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-58-lunar-interlude-v-reunion-tour-part-one]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes' party has just undergone a fairly shocking expansion. They're now tasked with an infiltration mission that hits close to home. As the pieces move into place for the endgame, what do our heroes hope to find -- and where do their allegiances lie? Merle goes along for the ride. Magnus faces a difficult decision. Taako makes one last deal.</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes' party has just undergone a fairly shocking expansion. They're now tasked with an infiltration mission that hits close to home. As the pieces move into place for the endgame, what do our heroes hope to find -- and where do their allegiances lie? Merle goes along for the ride. Magnus faces a difficult decision. Taako makes one last deal.</p>]]></content:encoded>
+      <enclosure length="77459407" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone058.mp3?dest-id=235309" />
+      <itunes:duration>01:17:15</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes' party has just undergone a fairly shocking expansion. They're now tasked with an infiltration mission that hits close to home. As the pieces move into place for the endgame, what do our heroes hope to find -- and where do their allegiances...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 57. The Suffering Game - Chapter Seven</title>
+      <pubDate>Thu, 23 Feb 2017 17:19:20 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[4cf6f3dbeb528006003898321533c659]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-57-the-suffering-game-chapter-seven]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Game Over.</p> <p>Taako makes some fashionable friends. Merle does some wordplay. Magnus remembers.</p>]]></description>
+      <content:encoded><![CDATA[<p>Game Over.</p> <p>Taako makes some fashionable friends. Merle does some wordplay. Magnus remembers.</p>]]></content:encoded>
+      <enclosure length="74988014" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone057.mp3?dest-id=235309" />
+      <itunes:duration>01:14:41</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Game Over. Taako makes some fashionable friends. Merle does some wordplay. Magnus remembers.]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 56. The Suffering Game - Chapter Six</title>
+      <pubDate>Thu, 09 Feb 2017 19:34:15 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[27ed938a4951aeeb7f1c989a70e43b52]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-56-the-suffering-game-chapter-six]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes are forced to square off against their deadliest former foes -- but their real challenge comes in the form of a danger the likes of which they've never experienced. Taako gets primal. Merle gets disconnected. Magnus gets a couple of helping hands.</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes are forced to square off against their deadliest former foes -- but their real challenge comes in the form of a danger the likes of which they've never experienced. Taako gets primal. Merle gets disconnected. Magnus gets a couple of helping hands.</p>]]></content:encoded>
+      <enclosure length="65099100" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone056.mp3?dest-id=235309" />
+      <itunes:duration>01:04:23</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes are forced to square off against their deadliest former foes -- but their real challenge comes in the form of a danger the likes of which they've never experienced. Taako gets primal. Merle gets disconnected. Magnus gets a couple of helping...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 55. The Suffering Game - Chapter Five</title>
+      <pubDate>Thu, 26 Jan 2017 16:51:47 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[9705dedf0f76309e78b1cc68547f2908]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-55-the-suffering-game-chapter-five]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Strange things are afoot in Wonderland as our heroes find themselves aided by an invisible accomplice -- but will their secret plan pop off before the boys lose something precious to the Wheel? Merle does some costly healing. Taako gets into cosmetics. Magnus forgets.</p>]]></description>
+      <content:encoded><![CDATA[<p>Strange things are afoot in Wonderland as our heroes find themselves aided by an invisible accomplice -- but will their secret plan pop off before the boys lose something precious to the Wheel? Merle does some costly healing. Taako gets into cosmetics. Magnus forgets.</p>]]></content:encoded>
+      <enclosure length="71228053" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone055.mp3?dest-id=235309" />
+      <itunes:duration>01:10:46</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Strange things are afoot in Wonderland as our heroes find themselves aided by an invisible accomplice -- but will their secret plan pop off before the boys lose something precious to the Wheel? Merle does some costly healing. Taako gets into...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 54. The Suffering Game - Chapter Four</title>
+      <pubDate>Thu, 12 Jan 2017 16:48:15 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[5cb0f94fae83ce6129074a97dbc4d835]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-54-the-suffering-game-chapter-four]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>After Round One of The Suffering Game, our heroes aren't doing too great -- and with another turn of the Wheel ahead, the future's not especially bright, either. Can they keep their heads up (and on) to power through? Magnus makes an invisible friend. Merle charms the crowd. Taako makes 'em laugh.</p>]]></description>
+      <content:encoded><![CDATA[<p>After Round One of The Suffering Game, our heroes aren't doing too great -- and with another turn of the Wheel ahead, the future's not especially bright, either. Can they keep their heads up (and on) to power through? Magnus makes an invisible friend. Merle charms the crowd. Taako makes 'em laugh.</p>]]></content:encoded>
+      <enclosure length="65677137" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone054.mp3?dest-id=235309" />
+      <itunes:duration>01:04:59</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[After Round One of The Suffering Game, our heroes aren't doing too great -- and with another turn of the Wheel ahead, the future's not especially bright, either. Can they keep their heads up (and on) to power through? Magnus makes an invisible friend....]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>The Flop House Presents: Return of The Hogsbottom Three</title>
+      <pubDate>Thu, 29 Dec 2016 17:38:35 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[f22917c0c7b213367c2cb806c3146374]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/the-flop-house-presents-return-of-the-hogsbottom-three]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>We're all on holiday break as we spend some time with our recently expanded families, but instead of skipping a biweek, our friends at The Flop House put together a SUPER BEEFY bonus episode for us! The Hogsbottom Three, fresh off their MaxFunDrive Switcheroo debut, are up against some devious dangers whipped up by DM Stuart Wellington: an old foe, a volcanic giant and the deadliest bowl of chili ever stewed.</p>]]></description>
+      <content:encoded><![CDATA[<p>We're all on holiday break as we spend some time with our recently expanded families, but instead of skipping a biweek, our friends at The Flop House put together a SUPER BEEFY bonus episode for us! The Hogsbottom Three, fresh off their MaxFunDrive Switcheroo debut, are up against some devious dangers whipped up by DM Stuart Wellington: an old foe, a volcanic giant and the deadliest bowl of chili ever stewed.</p>]]></content:encoded>
+      <enclosure length="205373340" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZoneFlopHouseReturns.mp3?dest-id=235309" />
+      <itunes:duration>03:30:30</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[We're all on holiday break as we spend some time with our recently expanded families, but instead of skipping a biweek, our friends at The Flop House put together a SUPER BEEFY bonus episode for us! The Hogsbottom Three, fresh off their MaxFunDrive...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 53. The Suffering Game - Chapter Three</title>
+      <pubDate>Thu, 15 Dec 2016 16:12:36 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[cd593fd5976c3491b064bbfce455cace]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-53-the-suffering-game-chapter-three]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Wonderland has revealed itself as a genuinely unsafe place for our heroes to be. Can they make forward progress in a cyclical game designed to extract raw anguish from them? Can they reach their distant goal before they've sacrificed too much? Magnus goes spear fishing. Merle is the MVP. Taako has a spot of bad luck.</p>]]></description>
+      <content:encoded><![CDATA[<p>Wonderland has revealed itself as a genuinely unsafe place for our heroes to be. Can they make forward progress in a cyclical game designed to extract raw anguish from them? Can they reach their distant goal before they've sacrificed too much? Magnus goes spear fishing. Merle is the MVP. Taako has a spot of bad luck.</p>]]></content:encoded>
+      <enclosure length="78989137" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone053.mp3?dest-id=235309" />
+      <itunes:duration>01:18:51</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Wonderland has revealed itself as a genuinely unsafe place for our heroes to be. Can they make forward progress in a cyclical game designed to extract raw anguish from them? Can they reach their distant goal before they've sacrificed too much? Magnus...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>The Adventure Zone: MaxFunCon East Live</title>
+      <pubDate>Thu, 01 Dec 2016 16:35:14 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[ff1fb33d1f6f3aa87d89189377f4a612]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/the-adventure-zone-maxfuncon-east-live]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Griffin and Rachel had a baby! But that's not the only bundle of joy being delivered this week! We have a very special episode recorded live at MaxFunCon East! Our adventurers have been through a lot together, but they don't always work so well together. Well, the BoB higher ups have noticed and they've decided to do something about it! So join the fellas (and a very special guest!) as they grow closer as coworkers and friends!</p>]]></description>
+      <content:encoded><![CDATA[<p>Griffin and Rachel had a baby! But that's not the only bundle of joy being delivered this week! We have a very special episode recorded live at MaxFunCon East! Our adventurers have been through a lot together, but they don't always work so well together. Well, the BoB higher ups have noticed and they've decided to do something about it! So join the fellas (and a very special guest!) as they grow closer as coworkers and friends!</p>]]></content:encoded>
+      <enclosure length="95501120" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZoneMaxFunConEast2016.mp3?dest-id=235309" />
+      <itunes:duration>01:39:26</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Griffin and Rachel had a baby! But that's not the only bundle of joy being delivered this week! We have a very special episode recorded live at MaxFunCon East! Our adventurers have been through a lot together, but they don't always work so well...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 52. The Suffering Game - Chapter Two</title>
+      <pubDate>Thu, 17 Nov 2016 14:27:42 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[09df9cef15f19e085683a9284c98a160]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-52-the-suffering-game-chapter-two]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our boys survived their first encounter in The Felicity Wilds -- but will they survive the perils that await them inside of Wonderland? Or like, maybe it's not so bad in there? No, I'm just goofin'. It's pretty dang bad in there. Magnus makes a new BFF. Merle goes dark. Taako considers a job application.</p> <p>Music: "Storm Top Dog" by Zackery Wilson. You can find his music at soundcloud.com/zackerywilson and at zwmusic.bandcamp.com!</p>]]></description>
+      <content:encoded><![CDATA[<p>Our boys survived their first encounter in The Felicity Wilds -- but will they survive the perils that await them inside of Wonderland? Or like, maybe it's not so bad in there? No, I'm just goofin'. It's pretty dang bad in there. Magnus makes a new BFF. Merle goes dark. Taako considers a job application.</p> <p>Music: "Storm Top Dog" by Zackery Wilson. You can find his music at soundcloud.com/zackerywilson and at zwmusic.bandcamp.com!</p>]]></content:encoded>
+      <enclosure length="67229438" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone052.mp3?dest-id=235309" />
+      <itunes:duration>01:06:36</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our boys survived their first encounter in The Felicity Wilds -- but will they survive the perils that await them inside of Wonderland? Or like, maybe it's not so bad in there? No, I'm just goofin'. It's pretty dang bad in there. Magnus makes a new...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>The Adventure Zone: The Live Boston Stunt Spectacular</title>
+      <pubDate>Thu, 03 Nov 2016 16:58:40 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[d1a43cf8dec84a44a49b24fe34ed9e05]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/the-adventure-zone-the-live-boston-stunt-spectacular]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Travis and Teresa had a baby! We're so excited for them, but we're also very excited for YOU! Because you're about to hear a live episode we recorded in Boston this past July that turned out super, super great. Thanks to everyone in attendance, and to all our listeners for sticking with us during Trav's leave of absence!</p>]]></description>
+      <content:encoded><![CDATA[<p>Travis and Teresa had a baby! We're so excited for them, but we're also very excited for YOU! Because you're about to hear a live episode we recorded in Boston this past July that turned out super, super great. Thanks to everyone in attendance, and to all our listeners for sticking with us during Trav's leave of absence!</p>]]></content:encoded>
+      <enclosure length="114896856" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZoneLiveInBoston.mp3?dest-id=235309" />
+      <itunes:duration>01:56:15</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Travis and Teresa had a baby! We're so excited for them, but we're also very excited for YOU! Because you're about to hear a live episode we recorded in Boston this past July that turned out super, super great. Thanks to everyone in attendance, and to...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 51. The Suffering Game - Chapter One</title>
+      <pubDate>Thu, 20 Oct 2016 14:42:59 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[f47215a1452f4dcae2424877c0ce09f8]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-51-the-suffering-game-chapter-one]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>After a summer spent tirelessly training, our heroes are finally prepared to take on their next, harrowing mission. What horrors -- or fortunes -- await them in Wonderland? I mean, this arc is literally titled "The Suffering Game," so you can probably piece it together yourself. Merle hangs ten. Taako's like a bird. Magnus drops in on an old friend.</p>]]></description>
+      <content:encoded><![CDATA[<p>After a summer spent tirelessly training, our heroes are finally prepared to take on their next, harrowing mission. What horrors -- or fortunes -- await them in Wonderland? I mean, this arc is literally titled "The Suffering Game," so you can probably piece it together yourself. Merle hangs ten. Taako's like a bird. Magnus drops in on an old friend.</p>]]></content:encoded>
+      <enclosure length="67855959" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone051.mp3?dest-id=235309" />
+      <itunes:duration>01:07:15</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[After a summer spent tirelessly training, our heroes are finally prepared to take on their next, harrowing mission. What horrors -- or fortunes -- await them in Wonderland? I mean, this arc is literally titled "The Suffering Game," so you can probably...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 50. Lunar Interlude IV: The Calm Before The Storm</title>
+      <pubDate>Thu, 06 Oct 2016 13:39:32 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[b5af1e7dd22a40eb62b88c63761a6139]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-50-lunar-interlude-iv-the-calm-before-the-storm]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes have some well-earned free time between missions, although some of their sidequests are a bit more relaxing than others. Enjoy it while it lasts, fellas. Taako has a date with death. Merle spends time with some VIPs. Magnus takes a swim.</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes have some well-earned free time between missions, although some of their sidequests are a bit more relaxing than others. Enjoy it while it lasts, fellas. Taako has a date with death. Merle spends time with some VIPs. Magnus takes a swim.</p>]]></content:encoded>
+      <enclosure length="96587309" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone050.mp3?dest-id=235309" />
+      <itunes:duration>01:37:11</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes have some well-earned free time between missions, although some of their sidequests are a bit more relaxing than others. Enjoy it while it lasts, fellas. Taako has a date with death. Merle spends time with some VIPs. Magnus takes a swim.]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 49. The Eleventh Hour - Chapter Nine</title>
+      <pubDate>Thu, 22 Sep 2016 13:21:14 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[ed3337835935b4175166b31a0b01d388]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-49-the-eleventh-hour-chapter-nine]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p class="p1"> </p> <p class="p1">Their prize secured, our heroes look to close out their final loop in Refuge by doing something unprecedented: They try to keep everyone in town from exploding, for once. Merle does some stargazing. Taako encounters an old friend. Magnus opens a tube.</p>]]></description>
+      <content:encoded><![CDATA[<p class="p1"> </p> <p class="p1">Their prize secured, our heroes look to close out their final loop in Refuge by doing something unprecedented: They try to keep everyone in town from exploding, for once. Merle does some stargazing. Taako encounters an old friend. Magnus opens a tube.</p>]]></content:encoded>
+      <enclosure length="202834723" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone49.mp3?dest-id=235309" />
+      <itunes:duration>01:23:09</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Their prize secured, our heroes look to close out their final loop in Refuge by doing something unprecedented: They try to keep everyone in town from exploding, for once. Merle does some stargazing. Taako encounters an old friend. Magnus opens...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 48. The Eleventh Hour - Chapter Eight</title>
+      <pubDate>Thu, 08 Sep 2016 11:43:49 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[353d65014696d86a280219670a4802ad]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-48-the-eleventh-hour-chapter-eight]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Could you resist the power to go back and change your very worst mistake? What if it meant unraveling some of the non-mistakes you've made since? Also: Imagine, for the sake of this hypothetical, that you're a complete goober. Merle runs out for smokes. Taako takes the show on the road. Magnus goes home.</p>]]></description>
+      <content:encoded><![CDATA[<p>Could you resist the power to go back and change your very worst mistake? What if it meant unraveling some of the non-mistakes you've made since? Also: Imagine, for the sake of this hypothetical, that you're a complete goober. Merle runs out for smokes. Taako takes the show on the road. Magnus goes home.</p>]]></content:encoded>
+      <enclosure length="77407162" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone048.mp3?dest-id=235309" />
+      <itunes:duration>01:17:12</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Could you resist the power to go back and change your very worst mistake? What if it meant unraveling some of the non-mistakes you've made since? Also: Imagine, for the sake of this hypothetical, that you're a complete goober. Merle runs out for...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 47. The Eleventh Hour - Chapter Seven</title>
+      <pubDate>Thu, 25 Aug 2016 13:28:14 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[1042e3ebebc27f07a0deb0c9ca7dffc1]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-47-the-eleventh-hour-chapter-seven]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>With a fairly rowdy loop behind them, our heroes come face-to-face with divinity, and try their darndest not to make complete asses of themselves. With the Big Clock winding down and their prize in sight, can Tres Horny Boys save the day -- or, at least, one of the days? Merle goes deity shopping. Magnus takes a Chance. Taako lends a hand.</p>]]></description>
+      <content:encoded><![CDATA[<p>With a fairly rowdy loop behind them, our heroes come face-to-face with divinity, and try their darndest not to make complete asses of themselves. With the Big Clock winding down and their prize in sight, can Tres Horny Boys save the day -- or, at least, one of the days? Merle goes deity shopping. Magnus takes a Chance. Taako lends a hand.</p>]]></content:encoded>
+      <enclosure length="73117647" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone047.mp3?dest-id=235309" />
+      <itunes:duration>01:12:44</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[With a fairly rowdy loop behind them, our heroes come face-to-face with divinity, and try their darndest not to make complete asses of themselves. With the Big Clock winding down and their prize in sight, can Tres Horny Boys save the day -- or, at...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 46. The Eleventh Hour - Chapter Six</title>
+      <pubDate>Thu, 11 Aug 2016 13:18:37 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[f4e72c17fa3754778a84838e7586ea6a]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-46-the-eleventh-hour-chapter-six]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>If our boys want to get out of this time-locked quagmire, they're going to need some divine intervention -- and the only way to get this particular god to play ball is to get up to no good. Let's hope that big wheel doesn't stop turning on this rotation, yeah? Magnus hurls a friend. Merle does horse stunts. Taako gets the gold.</p>]]></description>
+      <content:encoded><![CDATA[<p>If our boys want to get out of this time-locked quagmire, they're going to need some divine intervention -- and the only way to get this particular god to play ball is to get up to no good. Let's hope that big wheel doesn't stop turning on this rotation, yeah? Magnus hurls a friend. Merle does horse stunts. Taako gets the gold.</p>]]></content:encoded>
+      <enclosure length="87260968" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone046.mp3?dest-id=235309" />
+      <itunes:duration>01:27:28</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[If our boys want to get out of this time-locked quagmire, they're going to need some divine intervention -- and the only way to get this particular god to play ball is to get up to no good. Let's hope that big wheel doesn't stop turning on this...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 45. The Eleventh Hour - Chapter Five</title>
+      <pubDate>Thu, 28 Jul 2016 14:40:07 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[9bfed03855038928224e111ede5f9367]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-45-the-eleventh-hour-chapter-five]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Now that Refuge's destroyer has been revealed, our heroes work together to discover a way to stop it. But how many more attempts will they get at solving this, their most deadly mystery yet? Merle leads the group in prayer. Magnus plays hardball. Taako gets on his diamond grind.</p>]]></description>
+      <content:encoded><![CDATA[<p>Now that Refuge's destroyer has been revealed, our heroes work together to discover a way to stop it. But how many more attempts will they get at solving this, their most deadly mystery yet? Merle leads the group in prayer. Magnus plays hardball. Taako gets on his diamond grind.</p>]]></content:encoded>
+      <enclosure length="69533229" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone045.mp3?dest-id=235309" />
+      <itunes:duration>01:09:00</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Now that Refuge's destroyer has been revealed, our heroes work together to discover a way to stop it. But how many more attempts will they get at solving this, their most deadly mystery yet? Merle leads the group in prayer. Magnus plays hardball....]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 44. The Eleventh Hour - Chapter Four</title>
+      <pubDate>Thu, 14 Jul 2016 12:53:48 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[9513fe676baacf7c78e17fae8fe4d1ae]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-44-the-eleventh-hour-chapter-four]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes explore an extremely deadly derelict mine in an attempt to find out what's happening to Refuge every time the clock strikes noon. They do so with the usual amount of caution and grace, which is to say things go very, very, very poorly, very, very, very often. Merle makes some furry friends. Magnus finds a trap the hard way. Taako flies to Heaven.</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes explore an extremely deadly derelict mine in an attempt to find out what's happening to Refuge every time the clock strikes noon. They do so with the usual amount of caution and grace, which is to say things go very, very, very poorly, very, very, very often. Merle makes some furry friends. Magnus finds a trap the hard way. Taako flies to Heaven.</p>]]></content:encoded>
+      <enclosure length="75693529" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone044.mp3?dest-id=235309" />
+      <itunes:duration>01:15:25</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes explore an extremely deadly derelict mine in an attempt to find out what's happening to Refuge every time the clock strikes noon. They do so with the usual amount of caution and grace, which is to say things go very, very, very poorly,...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 43. The Eleventh Hour - Chapter Three</title>
+      <pubDate>Thu, 30 Jun 2016 12:59:45 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[61a7e95cb5271bc48e9744b0dd99b500]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-43-the-eleventh-hour-chapter-three]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes start to get a hang of the difficult business of repetition as they learn more about Refuge and the events that led the town to such a sorry state. How much catastrophe can they undo in 60 minutes? Certainly they can't make things worse -- can they? Taako burns some spell slots. Magnus goes Over the Top. Merle's evangelism is met with the usual reception.</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes start to get a hang of the difficult business of repetition as they learn more about Refuge and the events that led the town to such a sorry state. How much catastrophe can they undo in 60 minutes? Certainly they can't make things worse -- can they? Taako burns some spell slots. Magnus goes Over the Top. Merle's evangelism is met with the usual reception.</p>]]></content:encoded>
+      <enclosure length="71912253" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone043.mp3?dest-id=235309" />
+      <itunes:duration>01:11:28</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes start to get a hang of the difficult business of repetition as they learn more about Refuge and the events that led the town to such a sorry state. How much catastrophe can they undo in 60 minutes? Certainly they can't make things worse --...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 42. The Eleventh Hour - Chapter Two</title>
+      <pubDate>Thu, 16 Jun 2016 15:26:02 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[a23f5662f31536c8cf70513f7c62c4f7]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-42-the-eleventh-hour-chapter-two]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>What waits for our heroes on the other side of the time-stuck barrier? Seriously, what could be in there? A dragon made out of time? A parallel universe where people eat time like snack chips? A genuinely kind of innocuous, rustic town? Whatever it is, one thing's for sure: There's about to be some trouble in that bubble. Merle does some successful evangelizing. Taako gets caught red-handed. Magnus rushes in!</p>]]></description>
+      <content:encoded><![CDATA[<p>What waits for our heroes on the other side of the time-stuck barrier? Seriously, what could be in there? A dragon made out of time? A parallel universe where people eat time like snack chips? A genuinely kind of innocuous, rustic town? Whatever it is, one thing's for sure: There's about to be some trouble in that bubble. Merle does some successful evangelizing. Taako gets caught red-handed. Magnus rushes in!</p>]]></content:encoded>
+      <enclosure length="70701007" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone042.mp3?dest-id=235309" />
+      <itunes:duration>01:10:13</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[What waits for our heroes on the other side of the time-stuck barrier? Seriously, what could be in there? A dragon made out of time? A parallel universe where people eat time like snack chips? A genuinely kind of innocuous, rustic town? Whatever it...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 41. The Eleventh Hour - Chapter One</title>
+      <pubDate>Thu, 02 Jun 2016 13:08:42 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[518c78a0360dccf2be51530768f16583]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-41-the-eleventh-hour-chapter-one]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>After a fairly morose start to the episode, our heroes are launched -- with great speed -- into a new adventure. What awaits them inside of the time-stuck anomaly? More important question: Who's ready for SUMMER FASHIONS? Merle exhibits classic Dwarven jealousy. Magnus loves a fish. Taako accidentally saves the day.</p>]]></description>
+      <content:encoded><![CDATA[<p>After a fairly morose start to the episode, our heroes are launched -- with great speed -- into a new adventure. What awaits them inside of the time-stuck anomaly? More important question: Who's ready for SUMMER FASHIONS? Merle exhibits classic Dwarven jealousy. Magnus loves a fish. Taako accidentally saves the day.</p>]]></content:encoded>
+      <enclosure length="69086848" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone041.mp3?dest-id=235309" />
+      <itunes:duration>01:08:32</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[After a fairly morose start to the episode, our heroes are launched -- with great speed -- into a new adventure. What awaits them inside of the time-stuck anomaly? More important question: Who's ready for SUMMER FASHIONS? Merle exhibits classic...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>The Adventure Zone LIVE in Boston Announcement!</title>
+      <pubDate>Mon, 30 May 2016 13:33:33 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[d78e6e27f00f29bae2ab362d2246defa]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/the-adventure-zone-live-in-boston-announcement]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>The Adventure Zone is doing its first open-to-the-public live show! We'll be at the Wilbur Theater in Boston, MA, on Fri. July 15. Tickets go on sale this Wednesday, June 1, at noon EST.</p> <p>Tickets will be available at bit.ly/tazboston! They will probably go quickly! Do not sleep on them!</p>]]></description>
+      <content:encoded><![CDATA[<p>The Adventure Zone is doing its first open-to-the-public live show! We'll be at the Wilbur Theater in Boston, MA, on Fri. July 15. Tickets go on sale this Wednesday, June 1, at noon EST.</p> <p>Tickets will be available at bit.ly/tazboston! They will probably go quickly! Do not sleep on them!</p>]]></content:encoded>
+      <enclosure length="6047596" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZoneLiveAnnouncement.mp3?dest-id=235309" />
+      <itunes:duration>02:52</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[The Adventure Zone is doing its first open-to-the-public live show! We'll be at the Wilbur Theater in Boston, MA, on Fri. July 15. Tickets go on sale this Wednesday, June 1, at noon EST. Tickets will be available at bit.ly/tazboston! They will...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 40. Lunar Interlude III: Rest &amp; Relaxation</title>
+      <pubDate>Thu, 19 May 2016 13:54:20 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[bedba1dd040c781aa61e8f99f436d68e]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-40-lunar-interlude-iii-rest-relaxation]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>That last adventure was a tough one. Our heroes have earned some time off -- both from mortal danger, and from each other. But how do adventurers spend their downtime between jobs? Also, what's hot and fresh at the bakery counter of the Fantasy Costco? Magnus considers a change in careers. Merle dishes out some beard-centric philosophy. Taako takes on a pupil.</p>]]></description>
+      <content:encoded><![CDATA[<p>That last adventure was a tough one. Our heroes have earned some time off -- both from mortal danger, and from each other. But how do adventurers spend their downtime between jobs? Also, what's hot and fresh at the bakery counter of the Fantasy Costco? Magnus considers a change in careers. Merle dishes out some beard-centric philosophy. Taako takes on a pupil.</p>]]></content:encoded>
+      <enclosure length="90979133" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone040.mp3?dest-id=235309" />
+      <itunes:duration>01:31:20</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[That last adventure was a tough one. Our heroes have earned some time off -- both from mortal danger, and from each other. But how do adventurers spend their downtime between jobs? Also, what's hot and fresh at the bakery counter of the Fantasy...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 39. The Crystal Kingdom - Chapter Eleven</title>
+      <pubDate>Thu, 05 May 2016 13:29:22 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[92d6b95c25e9b28a43c8ba7b7da56073]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-39-the-crystal-kingdom-chapter-eleven]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>After a climactic victory, our heroes have a few loose ends to tie up before moving on to their next adventure. Will Lucas and Maureen get Regulated? Will Kravitz claim his undead bounty? More importantly, how are they going to get that big, magic rock out of Magnus' tummy? Merle does prank medicine. Magnus tells a fib. Taako just twerks it out.</p>]]></description>
+      <content:encoded><![CDATA[<p>After a climactic victory, our heroes have a few loose ends to tie up before moving on to their next adventure. Will Lucas and Maureen get Regulated? Will Kravitz claim his undead bounty? More importantly, how are they going to get that big, magic rock out of Magnus' tummy? Merle does prank medicine. Magnus tells a fib. Taako just twerks it out.</p>]]></content:encoded>
+      <enclosure length="72639919" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone039.mp3?dest-id=235309" />
+      <itunes:duration>01:12:14</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[After a climactic victory, our heroes have a few loose ends to tie up before moving on to their next adventure. Will Lucas and Maureen get Regulated? Will Kravitz claim his undead bounty? More importantly, how are they going to get that big, magic...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 38. The Crystal Kingdom - Chapter Ten</title>
+      <pubDate>Thu, 21 Apr 2016 17:06:29 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[d92c253a65386b4c5988b0fdf98f0300]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-38-the-crystal-kingdom-chapter-ten]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>It's time for the final confrontation. Who's been hunting our heroes all throughout this campaign? What's Lucas really after? Why is Merle getting just completely boned in every fight? Answers to these questions and more linger just behind the play button. Taako has a plan. Magnus has a snack. Merle says his prayers.</p>]]></description>
+      <content:encoded><![CDATA[<p>It's time for the final confrontation. Who's been hunting our heroes all throughout this campaign? What's Lucas really after? Why is Merle getting just completely boned in every fight? Answers to these questions and more linger just behind the play button. Taako has a plan. Magnus has a snack. Merle says his prayers.</p>]]></content:encoded>
+      <enclosure length="73821908" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone038.mp3?dest-id=235309" />
+      <itunes:duration>01:13:28</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[It's time for the final confrontation. Who's been hunting our heroes all throughout this campaign? What's Lucas really after? Why is Merle getting just completely boned in every fight? Answers to these questions and more linger just behind the play...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 37. The Crystal Kingdom - Chapter Nine</title>
+      <pubDate>Thu, 07 Apr 2016 13:34:12 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[1ae7a1fd96bfd6e642e7086f9342ebe6]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-37-the-crystal-kingdom-chapter-nine]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>It's going down. Our heroes have a thrilling showdown with three of their most deadly, most dead foes -- but will they fare as well in Round Two as they did the first time around? Taako defies gravity. Magnus adds to his collection. Merle learns the basics of the Cleric class.</p>]]></description>
+      <content:encoded><![CDATA[<p>It's going down. Our heroes have a thrilling showdown with three of their most deadly, most dead foes -- but will they fare as well in Round Two as they did the first time around? Taako defies gravity. Magnus adds to his collection. Merle learns the basics of the Cleric class.</p>]]></content:encoded>
+      <enclosure length="63943443" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone037.mp3?dest-id=235309" />
+      <itunes:duration>01:03:10</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[It's going down. Our heroes have a thrilling showdown with three of their most deadly, most dead foes -- but will they fare as well in Round Two as they did the first time around? Taako defies gravity. Magnus adds to his collection. Merle learns the...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 36. The Crystal Kingdom - Chapter Eight</title>
+      <pubDate>Thu, 24 Mar 2016 15:07:21 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[4ca22bb76803142776fdf18675dbdf86]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-36-the-crystal-kingdom-chapter-eight]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Hey, things aren't really going that great for our heroes right now, but on the plus side -- it's MaxFunDrive time! You can support our show by going to maximumfun.org/donate, though unfortunately, you can't really support our heroes right now; they've got to un-goof this situation themselves. Merle saves a life. Magnus gets new legs. Taako introduces a long-overdue tentacle scene to the show.</p>]]></description>
+      <content:encoded><![CDATA[<p>Hey, things aren't really going that great for our heroes right now, but on the plus side -- it's MaxFunDrive time! You can support our show by going to maximumfun.org/donate, though unfortunately, you can't really support our heroes right now; they've got to un-goof this situation themselves. Merle saves a life. Magnus gets new legs. Taako introduces a long-overdue tentacle scene to the show.</p>]]></content:encoded>
+      <enclosure length="81033376" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone036.mp3?dest-id=235309" />
+      <itunes:duration>01:20:59</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Hey, things aren't really going that great for our heroes right now, but on the plus side -- it's MaxFunDrive time! You can support our show by going to maximumfun.org/donate, though unfortunately, you can't really support our heroes right now;...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>The The Adventure Zone Zone</title>
+      <pubDate>Thu, 17 Mar 2016 15:47:34 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[3c09ae24168176817e4fdda4e39816d8]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/the-the-adventure-zone-zone]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Happy MaxFunDrive, everybody! To celebrate, we're doing a between-weeks episode of The The Adventure Zone Zone, an informal chat show about the rest of the podcast that we do. Join us for a discussion of Taako's Taco Quest, the origins of Barry Bluejeans and what's in store for future campaigns! And visit maximumfun.org/donate!</p>]]></description>
+      <content:encoded><![CDATA[<p>Happy MaxFunDrive, everybody! To celebrate, we're doing a between-weeks episode of The The Adventure Zone Zone, an informal chat show about the rest of the podcast that we do. Join us for a discussion of Taako's Taco Quest, the origins of Barry Bluejeans and what's in store for future campaigns! And visit maximumfun.org/donate!</p>]]></content:encoded>
+      <enclosure length="102107300" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheTheAdventureZoneZone.mp3?dest-id=235309" />
+      <itunes:duration>01:42:56</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Happy MaxFunDrive, everybody! To celebrate, we're doing a between-weeks episode of The The Adventure Zone Zone, an informal chat show about the rest of the podcast that we do. Join us for a discussion of Taako's Taco Quest, the origins of Barry...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 35. The Crystal Kingdom - Chapter Seven</title>
+      <pubDate>Thu, 10 Mar 2016 14:55:06 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[12e954f869ca3978271678a2ba66aca3]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-35-the-crystal-kingdom-chapter-seven]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes recover after performing some impromptu emergency surgery on their holiest team member, and then, after kicking it for a while, learn the secrets of the universe. No big deal. Taako tries on a new voice. Magnus does some backseat Regulating. Merle learns about an exciting new plant.</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes recover after performing some impromptu emergency surgery on their holiest team member, and then, after kicking it for a while, learn the secrets of the universe. No big deal. Taako tries on a new voice. Magnus does some backseat Regulating. Merle learns about an exciting new plant.</p>]]></content:encoded>
+      <enclosure length="71501399" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone035.mp3?dest-id=235309" />
+      <itunes:duration>01:11:03</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes recover after performing some impromptu emergency surgery on their holiest team member, and then, after kicking it for a while, learn the secrets of the universe. No big deal. Taako tries on a new voice. Magnus does some backseat...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 34. The Crystal Kingdom - Chapter Six</title>
+      <pubDate>Thu, 25 Feb 2016 15:02:57 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[d10deb79e6174b1dfa17c89b9ea613b3]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-34-the-crystal-kingdom-chapter-six]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Can our heroes achieve a competent victory against three relatively unkillable foes? More importantly: Can they do any sick stunts while doing so? Taako conjures up the ultimate terror. Magnus has a public service announcement. Merle faces a crystal conundrum.</p>]]></description>
+      <content:encoded><![CDATA[<p>Can our heroes achieve a competent victory against three relatively unkillable foes? More importantly: Can they do any sick stunts while doing so? Taako conjures up the ultimate terror. Magnus has a public service announcement. Merle faces a crystal conundrum.</p>]]></content:encoded>
+      <enclosure length="61521369" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone034.mp3?dest-id=235309" />
+      <itunes:duration>01:00:39</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Can our heroes achieve a competent victory against three relatively unkillable foes? More importantly: Can they do any sick stunts while doing so? Taako conjures up the ultimate terror. Magnus has a public service announcement. Merle faces a crystal...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 33. The Crystal Kingdom - Chapter Five</title>
+      <pubDate>Thu, 11 Feb 2016 16:38:31 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[6b75d416e8c2dab069580e0b72fe08c9]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-33-the-crystal-kingdom-chapter-five]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes face a series of challenges while exploring Lucas' lab that are, admittedly, all pretty adorable. But still super deadly! Just, like, huggably deadly. Merle performs a random act of kindness. Taako remembers an acrobatic nursery rhyme. Magnus experiences the magic of flight.</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes face a series of challenges while exploring Lucas' lab that are, admittedly, all pretty adorable. But still super deadly! Just, like, huggably deadly. Merle performs a random act of kindness. Taako remembers an acrobatic nursery rhyme. Magnus experiences the magic of flight.</p>]]></content:encoded>
+      <enclosure length="60005431" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone033.mp3?dest-id=235309" />
+      <itunes:duration>59:04</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes face a series of challenges while exploring Lucas' lab that are, admittedly, all pretty adorable. But still super deadly! Just, like, huggably deadly. Merle performs a random act of kindness. Taako remembers an acrobatic nursery rhyme....]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 32. The Crystal Kingdom - Chapter Four</title>
+      <pubDate>Thu, 28 Jan 2016 14:44:52 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[88804b1b80f5b940882bcfff86e50e9c]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-32-the-crystal-kingdom-chapter-four]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>We may have finally found a challenge that our heroes cannot overcome: Math-based trivia. Can our heroes stump their animatronic captor before turning extra crispy? Can they stave off a crystalline death for one more episode? Merle seeks divine intervention. Magnus makes an otherworldly find. Taako's good out here.</p>]]></description>
+      <content:encoded><![CDATA[<p>We may have finally found a challenge that our heroes cannot overcome: Math-based trivia. Can our heroes stump their animatronic captor before turning extra crispy? Can they stave off a crystalline death for one more episode? Merle seeks divine intervention. Magnus makes an otherworldly find. Taako's good out here.</p>]]></content:encoded>
+      <enclosure length="64073287" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone032.mp3?dest-id=235309" />
+      <itunes:duration>01:03:19</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[We may have finally found a challenge that our heroes cannot overcome: Math-based trivia. Can our heroes stump their animatronic captor before turning extra crispy? Can they stave off a crystalline death for one more episode? Merle seeks divine...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 31. The Crystal Kingdom - Chapter Three</title>
+      <pubDate>Thu, 14 Jan 2016 16:35:23 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[a23f07c5a057063862cc38d461b6b017]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-31-the-crystal-kingdom-chapter-three]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Having survived an encounter with their deadliest foe yet, our heroes take a moment to reflect on some of Faerun's most prodigious scientific achievements. Later, the trio is forced into a deadly test of intellect, and you can probably guess how well that goes. Merle does some pest control. Magnus makes a token of friendship. Taako enjoys some "Taako time."</p>]]></description>
+      <content:encoded><![CDATA[<p>Having survived an encounter with their deadliest foe yet, our heroes take a moment to reflect on some of Faerun's most prodigious scientific achievements. Later, the trio is forced into a deadly test of intellect, and you can probably guess how well that goes. Merle does some pest control. Magnus makes a token of friendship. Taako enjoys some "Taako time."</p>]]></content:encoded>
+      <enclosure length="62607227" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone031.mp3?dest-id=235309" />
+      <itunes:duration>01:01:47</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Having survived an encounter with their deadliest foe yet, our heroes take a moment to reflect on some of Faerun's most prodigious scientific achievements. Later, the trio is forced into a deadly test of intellect, and you can probably guess how well...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 30. The Crystal Kingdom - Chapter Two</title>
+      <pubDate>Thu, 31 Dec 2015 16:36:41 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[76326c473db29356afd797b9fcbad124]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-30-the-crystal-kingdom-chapter-two]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes make their way into Lucas' floating, crystallized lab, and face off against their deadliest foe yet. Will they thrive under the pressure of an apocalyptic time limit? Or will they waste too much time just standing around, debating the names of members of the band U2? Magnus gets caught fibbing. Taako learns about a Grandpa. Merle gets Touched by an Angel.</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes make their way into Lucas' floating, crystallized lab, and face off against their deadliest foe yet. Will they thrive under the pressure of an apocalyptic time limit? Or will they waste too much time just standing around, debating the names of members of the band U2? Magnus gets caught fibbing. Taako learns about a Grandpa. Merle gets Touched by an Angel.</p>]]></content:encoded>
+      <enclosure length="62915540" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone030.mp3?dest-id=235309" />
+      <itunes:duration>01:02:06</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes make their way into Lucas' floating, crystallized lab, and face off against their deadliest foe yet. Will they thrive under the pressure of an apocalyptic time limit? Or will they waste too much time just standing around, debating the names...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep 29. The Crystal Kingdom - Chapter One</title>
+      <pubDate>Sat, 19 Dec 2015 19:54:32 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[f2b93569e4539e5bbbc7139ce8dce8f3]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-29-the-crystal-kingdom-chapter-one]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>A new adventure begins! Join our heroes as they host a relatively successful office holiday party, and mourn as that party gets totally sidelined by a potential apocalypse. Magnus puts his carpentry to good use. Taako perfects his macaroon recipe. Merle does some re-gifting.</p>]]></description>
+      <content:encoded><![CDATA[<p>A new adventure begins! Join our heroes as they host a relatively successful office holiday party, and mourn as that party gets totally sidelined by a potential apocalypse. Magnus puts his carpentry to good use. Taako perfects his macaroon recipe. Merle does some re-gifting.</p>]]></content:encoded>
+      <enclosure length="62628961" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone029.mp3?dest-id=235309" />
+      <itunes:duration>01:01:48</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[A new adventure begins! Join our heroes as they host a relatively successful office holiday party, and mourn as that party gets totally sidelined by a potential apocalypse. Magnus puts his carpentry to good use. Taako perfects his macaroon recipe....]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 28. Lunar Interlude II: Internal Affairs</title>
+      <pubDate>Thu, 03 Dec 2015 16:55:36 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[ee284c2a5e82bbbf3492d0c2e6528087]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-28-lunar-interlude-ii-internal-affairs]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes return to the Bureau of Balance's moonbase after a job kind-of well done. They've got a lot waiting for them: A heated debrief, a major change in the payroll and, of course, a visit to everyone's favorite fantasy bulk shopping outlet. Magnus makes a tentacle connection. Merle gets Zone of Truth-blocked. Taako really just wants to get down on some Quiznos.</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes return to the Bureau of Balance's moonbase after a job kind-of well done. They've got a lot waiting for them: A heated debrief, a major change in the payroll and, of course, a visit to everyone's favorite fantasy bulk shopping outlet. Magnus makes a tentacle connection. Merle gets Zone of Truth-blocked. Taako really just wants to get down on some Quiznos.</p>]]></content:encoded>
+      <enclosure length="75840651" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone028.mp3?dest-id=235309" />
+      <itunes:duration>01:15:34</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes return to the Bureau of Balance's moonbase after a job kind-of well done. They've got a lot waiting for them: A heated debrief, a major change in the payroll and, of course, a visit to everyone's favorite fantasy bulk shopping outlet....]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 27. Petals to the Metal - Chapter 10</title>
+      <pubDate>Thu, 19 Nov 2015 15:33:29 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[715535c2e1c525fae358a2baf969cecb]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-27-petals-to-the-metal-chapter-10]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>This is it. Our heroes are in a dead heat with The Raven, the finish line in sight. Who will emerge victorious? Who will end up with the mighty Gaia Sash? More importantly, is there any prize money for this thing? Taako does some sunbathing. Magnus gets shredded. Merle executes the weirdest brag ever.</p>]]></description>
+      <content:encoded><![CDATA[<p>This is it. Our heroes are in a dead heat with The Raven, the finish line in sight. Who will emerge victorious? Who will end up with the mighty Gaia Sash? More importantly, is there any prize money for this thing? Taako does some sunbathing. Magnus gets shredded. Merle executes the weirdest brag ever.</p>]]></content:encoded>
+      <enclosure length="69711697" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone027.mp3?dest-id=235309" />
+      <itunes:duration>01:09:11</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[This is it. Our heroes are in a dead heat with The Raven, the finish line in sight. Who will emerge victorious? Who will end up with the mighty Gaia Sash? More importantly, is there any prize money for this thing? Taako does some sunbathing. Magnus...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 26. Petals to the Metal - Chapter Nine</title>
+      <pubDate>Thu, 05 Nov 2015 17:03:53 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[990b6f701c3b05ec8691a2cdc6264730]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-26-petals-to-the-metal-chapter-nine]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>In this penultimate installment of a race that has gotten wildly, profoundly out of hand, our heroes take on a trio of automotive threats. Merle starts himself a convoy. Magnus fights a shark. Taako catches up with an old friend.</p>]]></description>
+      <content:encoded><![CDATA[<p>In this penultimate installment of a race that has gotten wildly, profoundly out of hand, our heroes take on a trio of automotive threats. Merle starts himself a convoy. Magnus fights a shark. Taako catches up with an old friend.</p>]]></content:encoded>
+      <enclosure length="63692249" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone026.mp3?dest-id=235309" />
+      <itunes:duration>01:02:55</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[In this penultimate installment of a race that has gotten wildly, profoundly out of hand, our heroes take on a trio of automotive threats. Merle starts himself a convoy. Magnus fights a shark. Taako catches up with an old friend.]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 25. Petals to the Metal - Chapter Eight</title>
+      <pubDate>Thu, 22 Oct 2015 15:12:01 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[f782509f7fe772c1306d83e5248f7d4a]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-25-petals-to-the-metal-chapter-eight]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>This episode is basically a self-contained Fast and the Furious movie, if that film franchise incorporated actual arcane magicks, rather than just "movie magic." Magnus does some risky jumping. Merle takes a tumble. Taako summons a new best friend.</p>]]></description>
+      <content:encoded><![CDATA[<p>This episode is basically a self-contained Fast and the Furious movie, if that film franchise incorporated actual arcane magicks, rather than just "movie magic." Magnus does some risky jumping. Merle takes a tumble. Taako summons a new best friend.</p>]]></content:encoded>
+      <enclosure length="60462679" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone025.mp3?dest-id=235309" />
+      <itunes:duration>59:33</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[This episode is basically a self-contained Fast and the Furious movie, if that film franchise incorporated actual arcane magicks, rather than just "movie magic." Magnus does some risky jumping. Merle takes a tumble. Taako summons a new best friend.]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>The Adventure Zone Presents: The Great Switcheroo of 2015</title>
+      <pubDate>Thu, 08 Oct 2015 16:58:27 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[539b0ec568cfa03a062d0d888b9ece10]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/the-adventure-zone-presents-the-great-switcheroo-of-2015]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>You didn't think our heroes were the only adventurers in the world of The Adventure Zone, did you? In this episode, the hysterical folks from The Flop House take over, introducing the world to a new, lovable trio of mercenaries.</p>
+<p>Strap in for a two-hour D&D session starring Stuart Wellington as DM, Elliott Kalan as the Dragonborn Bard Jeremy "Scales" Fangbattle, Dan McCoy as High Elf Druid Lucian Buttwatcher and Zhubin Parang as the noble Tanzer Silverview.</p>]]></description>
+      <content:encoded><![CDATA[<p>You didn't think our heroes were the only adventurers in the world of The Adventure Zone, did you? In this episode, the hysterical folks from The Flop House take over, introducing the world to a new, lovable trio of mercenaries.</p>
+<p>Strap in for a two-hour D&D session starring Stuart Wellington as DM, Elliott Kalan as the Dragonborn Bard Jeremy "Scales" Fangbattle, Dan McCoy as High Elf Druid Lucian Buttwatcher and Zhubin Parang as the noble Tanzer Silverview.</p>]]></content:encoded>
+      <enclosure length="123516037" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZoneGreatSwitcheroo2015.mp3?dest-id=235309" />
+      <itunes:duration>02:05:14</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[You didn't think our heroes were the only adventurers in the world of The Adventure Zone, did you? In this episode, the hysterical folks from The Flop House take over, introducing the world to a new, lovable trio of mercenaries.
+Strap in for a...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 24. Petals to the Metal - Chapter Seven</title>
+      <pubDate>Thu, 24 Sep 2015 14:24:14 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[f8c7caa60a48e1ad37a76efdf7eb87f9]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-24-petals-to-the-metal-chapter-seven]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>BWAAAAAAAAHHHHHHHH! That's the sound of a horn, meaning it's time for the Battlewagon Races we've been building up to for six episodes to begin. BUCKLE UP. Taako holds a coronation. Magnus leaps before looking. Merle gets a face hug.</p>]]></description>
+      <content:encoded><![CDATA[<p>BWAAAAAAAAHHHHHHHH! That's the sound of a horn, meaning it's time for the Battlewagon Races we've been building up to for six episodes to begin. BUCKLE UP. Taako holds a coronation. Magnus leaps before looking. Merle gets a face hug.</p>]]></content:encoded>
+      <enclosure length="60596008" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone024.mp3?dest-id=235309" />
+      <itunes:duration>59:41</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[BWAAAAAAAAHHHHHHHH! That's the sound of a horn, meaning it's time for the Battlewagon Races we've been building up to for six episodes to begin. BUCKLE UP. Taako holds a coronation. Magnus leaps before looking. Merle gets a face hug.]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 23. Petals to the Metal - Chapter Six</title>
+      <pubDate>Thu, 10 Sep 2015 14:42:07 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[0f90c460a68126b7b4b41ce7d23dc1e4]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-23-petals-to-the-metal-chapter-six]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Can our heroes secure their hairy compatriot and their arcane objective while not killing everyone in sight? Also, can they go five whole minutes without making a dildo joke? Merle soothes some anger. Magnus sets his axe to stun. Taako reveals his spirit animal.</p>]]></description>
+      <content:encoded><![CDATA[<p>Can our heroes secure their hairy compatriot and their arcane objective while not killing everyone in sight? Also, can they go five whole minutes without making a dildo joke? Merle soothes some anger. Magnus sets his axe to stun. Taako reveals his spirit animal.</p>]]></content:encoded>
+      <enclosure length="58256272" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone023.mp3?dest-id=235309" />
+      <itunes:duration>57:15</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Can our heroes secure their hairy compatriot and their arcane objective while not killing everyone in sight? Also, can they go five whole minutes without making a dildo joke? Merle soothes some anger. Magnus sets his axe to stun. Taako reveals his...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 22. Petals to the Metal - Chapter Five</title>
+      <pubDate>Thu, 27 Aug 2015 14:35:51 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[172fddda0534ce85c07b19177d1e8991]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-22-petals-to-the-metal-chapter-five]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes attempt a sneaking mission to retrieve a vital Battlewagon component, and end up doing something ghoulish that they'll have to keep secret forever. Also, a beloved character returns. Merle saves his heals. Taako grows a third eye. Magnus clefts.</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes attempt a sneaking mission to retrieve a vital Battlewagon component, and end up doing something ghoulish that they'll have to keep secret forever. Also, a beloved character returns. Merle saves his heals. Taako grows a third eye. Magnus clefts.</p>]]></content:encoded>
+      <enclosure length="61600364" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone022.mp3?dest-id=235309" />
+      <itunes:duration>01:00:44</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes attempt a sneaking mission to retrieve a vital Battlewagon component, and end up doing something ghoulish that they'll have to keep secret forever. Also, a beloved character returns. Merle saves his heals. Taako grows a third eye. Magnus...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 21. Petals to the Metal - Chapter Four</title>
+      <pubDate>Thu, 13 Aug 2015 15:16:40 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[f8f029ca685b3c87441dd614eae40b6b]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-21-petals-to-the-metal-chapter-four]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Having straight-up embarrassed themselves in their first encounter with The Raven, our heroes look for alternative methods of defeating her. Merle channels a Train God. Magnus makes a fishy deal. Taako receives some bathroom aid.</p>]]></description>
+      <content:encoded><![CDATA[<p>Having straight-up embarrassed themselves in their first encounter with The Raven, our heroes look for alternative methods of defeating her. Merle channels a Train God. Magnus makes a fishy deal. Taako receives some bathroom aid.</p>]]></content:encoded>
+      <enclosure length="68341209" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone021.mp3?dest-id=235309" />
+      <itunes:duration>01:07:45</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Having straight-up embarrassed themselves in their first encounter with The Raven, our heroes look for alternative methods of defeating her. Merle channels a Train God. Magnus makes a fishy deal. Taako receives some bathroom aid.]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 20. Petals to the Metal - Chapter Three</title>
+      <pubDate>Thu, 30 Jul 2015 15:03:32 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[221d27466d414aef0d547d25aedf46cf]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-20-petals-to-the-metal-chapter-three]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>In this installment, the question isn't 'Will our heroes survive,' it's, 'What's going to kill them first?' Our money's on either the elevator shaft full of sentient vines, or the godlike criminal waiting for them at the top of said shaft. Magnus has an embarrassing pants accident. Taako runs out of juice. Merle goes walking in Memphis.</p>]]></description>
+      <content:encoded><![CDATA[<p>In this installment, the question isn't 'Will our heroes survive,' it's, 'What's going to kill them first?' Our money's on either the elevator shaft full of sentient vines, or the godlike criminal waiting for them at the top of said shaft. Magnus has an embarrassing pants accident. Taako runs out of juice. Merle goes walking in Memphis.</p>]]></content:encoded>
+      <enclosure length="57674055" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone020.mp3?dest-id=235309" />
+      <itunes:duration>56:39</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[In this installment, the question isn't 'Will our heroes survive,' it's, 'What's going to kill them first?' Our money's on either the elevator shaft full of sentient vines, or the godlike criminal waiting for them at the top of said shaft. Magnus has...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 19. Petals to the Metal - Chapter Two</title>
+      <pubDate>Thu, 16 Jul 2015 12:41:29 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[fc37f3920aa90156b64981c22c328c53]]></guid>
+      <link><![CDATA[http://adventurezone.libsyn.com/ep-19-petals-to-the-metal-chapter-two]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes attempt to reconcile with Trent the Treant; a task made difficult by the fact that one of them just cut him in half. After that, buckle up y'all, because it's ELEVATOR TIME. YEEEEAAAAHHHHHH ELEVATORS. Merle befriends a crowbar. Taako does a rope trick. Magnus holds on for dear lives.</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes attempt to reconcile with Trent the Treant; a task made difficult by the fact that one of them just cut him in half. After that, buckle up y'all, because it's ELEVATOR TIME. YEEEEAAAAHHHHHH ELEVATORS. Merle befriends a crowbar. Taako does a rope trick. Magnus holds on for dear lives.</p>]]></content:encoded>
+      <enclosure length="56478274" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone019.mp3?dest-id=235309" />
+      <itunes:duration>55:24</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes attempt to reconcile with Trent the Treant; a task made difficult by the fact that one of them just cut him in half. After that, buckle up y'all, because it's ELEVATOR TIME. YEEEEAAAAHHHHHH ELEVATORS. Merle befriends a crowbar. Taako does a...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 18. Petals to the Metal - Chapter One</title>
+      <pubDate>Thu, 02 Jul 2015 15:27:38 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[0ad7ece82b2d5dddd30cd6c82e90e8ab]]></guid>
+      <link><![CDATA[http://traffic.libsyn.com/adventurezone/TheAdventureZone018.mp3]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>In this first chapter in a new Adventure Zone story, Merle, Taako and Magnus are in hot pursuit of a master criminal in the metropolitan city of Goldcliff. Can they stop The Raven before her crime spree tears the town apart? I don't know, because we haven't finished playing this part of the campaign yet. Magnus does some chopping. Taako learns to Nightcrawl. Merle has a genuinely upsetting encounter with some vines.</p>]]></description>
+      <content:encoded><![CDATA[<p>In this first chapter in a new Adventure Zone story, Merle, Taako and Magnus are in hot pursuit of a master criminal in the metropolitan city of Goldcliff. Can they stop The Raven before her crime spree tears the town apart? I don't know, because we haven't finished playing this part of the campaign yet. Magnus does some chopping. Taako learns to Nightcrawl. Merle has a genuinely upsetting encounter with some vines.</p>]]></content:encoded>
+      <enclosure length="61676014" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone018.mp3?dest-id=235309" />
+      <itunes:duration>01:00:49</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[In this first chapter in a new Adventure Zone story, Merle, Taako and Magnus are in hot pursuit of a master criminal in the metropolitan city of Goldcliff. Can they stop The Raven before her crime spree tears the town apart? I don't know, because we...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 17. Lunar Interlude I: Carnival Chaos</title>
+      <pubDate>Thu, 18 Jun 2015 13:49:07 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[7353938b6afa2c28e12385e9f7046e48]]></guid>
+      <link><![CDATA[http://traffic.libsyn.com/adventurezone/TheAdventureZone017.mp3]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p class="p1">In this brief interlude between adventures, our heroes attend an office party — well, a carnival — at the Bureau of Balance’s lunar headquarters. They also hit up the Fantasy Costco, where they must match wits with their most fearsome mercantile foe yet. Taako makes a discrete trade. Merle tries on some cool-ass slippies. Magnus finally finds a friend.</p>]]></description>
+      <content:encoded><![CDATA[<p class="p1">In this brief interlude between adventures, our heroes attend an office party — well, a carnival — at the Bureau of Balance’s lunar headquarters. They also hit up the Fantasy Costco, where they must match wits with their most fearsome mercantile foe yet. Taako makes a discrete trade. Merle tries on some cool-ass slippies. Magnus finally finds a friend.</p>]]></content:encoded>
+      <enclosure length="71594186" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone017.mp3?dest-id=235309" />
+      <itunes:duration>01:11:09</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[In this brief interlude between adventures, our heroes attend an office party — well, a carnival — at the Bureau of Balance’s lunar headquarters. They also hit up the Fantasy Costco, where they must match wits with their most...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 16. Murder on the Rockport Limited - Chapter Seven</title>
+      <pubDate>Thu, 04 Jun 2015 14:39:43 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[cefa791ba17a21277582e58c419d407d]]></guid>
+      <link><![CDATA[http://traffic.libsyn.com/adventurezone/TheAdventureZone016.mp3]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>In the final chapter in the Rockport Limited story arc, our heroes have little time to stop their runaway train from colliding with Neverwinter, potentially ruining some other group's D&D session. Magnus takes a tumble. Merle channels Gary Sinise. Taako does some pretty dope magical stuff.</p>]]></description>
+      <content:encoded><![CDATA[<p>In the final chapter in the Rockport Limited story arc, our heroes have little time to stop their runaway train from colliding with Neverwinter, potentially ruining some other group's D&D session. Magnus takes a tumble. Merle channels Gary Sinise. Taako does some pretty dope magical stuff.</p>]]></content:encoded>
+      <enclosure length="63147648" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone016.mp3?dest-id=235309" />
+      <itunes:duration>01:02:21</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[In the final chapter in the Rockport Limited story arc, our heroes have little time to stop their runaway train from colliding with Neverwinter, potentially ruining some other group's D&D session. Magnus takes a tumble. Merle channels Gary Sinise....]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 15. Murder on the Rockport Limited - Chapter Six</title>
+      <pubDate>Thu, 21 May 2015 15:07:32 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[846a97f6bb0e26ef2a001716714aa9b3]]></guid>
+      <link><![CDATA[http://traffic.libsyn.com/adventurezone/TheAdventureZone015.mp3]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>In this penultimate chapter in the Rockport Limited murder fiasco, our players deduce the true culprit of the titular heinous crime. Merle runs out of magic. Taako finds more creative applications for Levitation. Magnus gets some fresh air.</p>]]></description>
+      <content:encoded><![CDATA[<p>In this penultimate chapter in the Rockport Limited murder fiasco, our players deduce the true culprit of the titular heinous crime. Merle runs out of magic. Taako finds more creative applications for Levitation. Magnus gets some fresh air.</p>]]></content:encoded>
+      <enclosure length="61726169" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone015.mp3?dest-id=235309" />
+      <itunes:duration>01:00:52</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[In this penultimate chapter in the Rockport Limited murder fiasco, our players deduce the true culprit of the titular heinous crime. Merle runs out of magic. Taako finds more creative applications for Levitation. Magnus gets some fresh air.]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 14. Murder on the Rockport Limited - Chapter Five</title>
+      <pubDate>Thu, 07 May 2015 13:52:04 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[e8c852a8be0e7e564ca7b5653e3d7cf4]]></guid>
+      <link><![CDATA[http://traffic.libsyn.com/adventurezone/TheAdventureZone014.mp3]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>The game is afoot! The game of murder-solving, I mean. The game of Dungeons & Dragons has been afoot for a while. Magnus finds unorthodox uses for furniture. Taako practices his interrogation techinques. Merle becomes a robot mom.</p>]]></description>
+      <content:encoded><![CDATA[<p>The game is afoot! The game of murder-solving, I mean. The game of Dungeons & Dragons has been afoot for a while. Magnus finds unorthodox uses for furniture. Taako practices his interrogation techinques. Merle becomes a robot mom.</p>]]></content:encoded>
+      <enclosure length="59318583" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone014.mp3?dest-id=235309" />
+      <itunes:duration>58:21</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[The game is afoot! The game of murder-solving, I mean. The game of Dungeons & Dragons has been afoot for a while. Magnus finds unorthodox uses for furniture. Taako practices his interrogation techinques. Merle becomes a robot mom.]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 13. Murder on the Rockport Limited - Chapter Four</title>
+      <pubDate>Thu, 23 Apr 2015 16:39:59 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[2544ca21802356ad4cc62925aa4aeb96]]></guid>
+      <link><![CDATA[http://traffic.libsyn.com/adventurezone/TheAdventureZone013.mp3]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>As you might have guessed from the title of the past few episodes, our heroes' journey isn't going to be an especially calm one. Because of all the murder, I mean. Taako mourns the dead. Merle finally plays his part. Magnus does one of the absolute coolest punches ever.</p>]]></description>
+      <content:encoded><![CDATA[<p>As you might have guessed from the title of the past few episodes, our heroes' journey isn't going to be an especially calm one. Because of all the murder, I mean. Taako mourns the dead. Merle finally plays his part. Magnus does one of the absolute coolest punches ever.</p>]]></content:encoded>
+      <enclosure length="57796099" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone013.mp3?dest-id=235309" />
+      <itunes:duration>56:46</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[As you might have guessed from the title of the past few episodes, our heroes' journey isn't going to be an especially calm one. Because of all the murder, I mean. Taako mourns the dead. Merle finally plays his part. Magnus does one of the absolute...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 12. Murder on the Rockport Limited - Chapter Three</title>
+      <pubDate>Thu, 16 Apr 2015 13:32:48 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[cfa5dcd023f1e0dc2a26dcce47443e5f]]></guid>
+      <link><![CDATA[http://traffic.libsyn.com/adventurezone/TheAdventureZone012.mp3]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes board their fateful train to Neverwinter, and are rude to just about every single person aboard. Merle strikes out at evangelism. Magnus learns that he may not, in fact, have the biggest muscles. Taako just wrecks some baby carrots.</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes board their fateful train to Neverwinter, and are rude to just about every single person aboard. Merle strikes out at evangelism. Magnus learns that he may not, in fact, have the biggest muscles. Taako just wrecks some baby carrots.</p>]]></content:encoded>
+      <enclosure length="60412524" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone012.mp3?dest-id=235309" />
+      <itunes:duration>59:30</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes board their fateful train to Neverwinter, and are rude to just about every single person aboard. Merle strikes out at evangelism. Magnus learns that he may not, in fact, have the biggest muscles. Taako just wrecks some baby carrots.]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 11. Murder on the Rockport Limited - Chapter Two</title>
+      <pubDate>Thu, 26 Mar 2015 14:05:14 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[579e7db129a5f22b84fe602c3e9a6eca]]></guid>
+      <link><![CDATA[http://traffic.libsyn.com/adventurezone/TheAdventureZone011.mp3]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes attempt to make the best out of a swampy situation, and race to Rockport before they miss a fateful train. They also meet a beloved radio personality and spokesperson, and hold him ransom for MaxFunDrive donations. Magnus exhibits his upper body strength. Taako gets charming. Merle takes a stink-bath.</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes attempt to make the best out of a swampy situation, and race to Rockport before they miss a fateful train. They also meet a beloved radio personality and spokesperson, and hold him ransom for MaxFunDrive donations. Magnus exhibits his upper body strength. Taako gets charming. Merle takes a stink-bath.</p>]]></content:encoded>
+      <enclosure length="63963364" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone011.mp3?dest-id=235309" />
+      <itunes:duration>01:03:12</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes attempt to make the best out of a swampy situation, and race to Rockport before they miss a fateful train. They also meet a beloved radio personality and spokesperson, and hold him ransom for MaxFunDrive donations. Magnus exhibits his upper...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 10. Murder on the Rockport Limited - Chapter One</title>
+      <pubDate>Thu, 19 Mar 2015 14:35:11 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[261b506d1870d523d9e87031edf4bd0a]]></guid>
+      <link><![CDATA[http://traffic.libsyn.com/adventurezone/TheAdventureZone010.mp3]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p class="p1">Our heroes are sent out on their first mission as Reclaimers for the Bureau of Balance. Their initial task is an impossible one: Do they possess the competence required to be on time for a train? The answer may surprise you, but — no, actually, it probably won’t.</p>]]></description>
+      <content:encoded><![CDATA[<p class="p1">Our heroes are sent out on their first mission as Reclaimers for the Bureau of Balance. Their initial task is an impossible one: Do they possess the competence required to be on time for a train? The answer may surprise you, but — no, actually, it probably won’t.</p>]]></content:encoded>
+      <enclosure length="67444269" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone010.mp3?dest-id=235309" />
+      <itunes:duration>01:06:49</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes are sent out on their first mission as Reclaimers for the Bureau of Balance. Their initial task is an impossible one: Do they possess the competence required to be on time for a train? The answer may surprise you, but — no, actually,...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 9. Moonlighting - Chapter Three</title>
+      <pubDate>Thu, 12 Mar 2015 13:17:44 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[3bef69db8fe1a15a4023e42e1ccf3c34]]></guid>
+      <link><![CDATA[http://traffic.libsyn.com/adventurezone/TheAdventureZone009.mp3]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Having passed the Bureau of Balance's punishing test of initiation, our heroes stock up on supplies and learn abilities that will help them immeasurably in the future. Merle finds a new god. Taako has a difficult encounter with a coin slot. Magnus advocates for moon-dogs.</p>]]></description>
+      <content:encoded><![CDATA[<p>Having passed the Bureau of Balance's punishing test of initiation, our heroes stock up on supplies and learn abilities that will help them immeasurably in the future. Merle finds a new god. Taako has a difficult encounter with a coin slot. Magnus advocates for moon-dogs.</p>]]></content:encoded>
+      <enclosure length="66846169" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone009.mp3?dest-id=235309" />
+      <itunes:duration>01:06:12</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Having passed the Bureau of Balance's punishing test of initiation, our heroes stock up on supplies and learn abilities that will help them immeasurably in the future. Merle finds a new god. Taako has a difficult encounter with a coin slot. Magnus...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 8. Moonlighting - Chapter Two</title>
+      <pubDate>Thu, 26 Feb 2015 12:23:41 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[a55228437c50471df5a21880a7d0650c]]></guid>
+      <link><![CDATA[http://traffic.libsyn.com/adventurezone/TheAdventureZone008.mp3]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Now that they can finally understand like, anything that anybody important is saying, our heroes seek employment in the Bureau of Balance. Merle brags about how smart he is. Taako accidentally encounters some life-changing intel. Magnus does horrible, horrible things to an automaton. </p>]]></description>
+      <content:encoded><![CDATA[<p>Now that they can finally understand like, anything that anybody important is saying, our heroes seek employment in the Bureau of Balance. Merle brags about how smart he is. Taako accidentally encounters some life-changing intel. Magnus does horrible, horrible things to an automaton. </p>]]></content:encoded>
+      <enclosure length="73732465" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone008.mp3?dest-id=235309" />
+      <itunes:duration>01:13:22</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Now that they can finally understand like, anything that anybody important is saying, our heroes seek employment in the Bureau of Balance. Merle brags about how smart he is. Taako accidentally encounters some life-changing intel. Magnus does horrible,...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 7. Moonlighting - Chapter One</title>
+      <pubDate>Thu, 12 Feb 2015 14:44:00 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[21ba0aa3dd6aa773af2f716fc2d8bb68]]></guid>
+      <link><![CDATA[http://traffic.libsyn.com/adventurezone/TheAdventureZone007.mp3]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>In this interlude chapter to the Adventure Zone saga, the mysteries of the universe are revealed to our heroes. Magnus has a good cry to some elevator music. Taako further unravels The Eldritch Riddle. It's about to get super weal up in here.</p>]]></description>
+      <content:encoded><![CDATA[<p>In this interlude chapter to the Adventure Zone saga, the mysteries of the universe are revealed to our heroes. Magnus has a good cry to some elevator music. Taako further unravels The Eldritch Riddle. It's about to get super weal up in here.</p>]]></content:encoded>
+      <enclosure length="66294463" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone007.mp3?dest-id=235309" />
+      <itunes:duration>01:05:37</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[In this interlude chapter to the Adventure Zone saga, the mysteries of the universe are revealed to our heroes. Magnus has a good cry to some elevator music. Taako further unravels The Eldritch Riddle. It's about to get super weal up in here.]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 6. Here There Be Gerblins - Chapter Six</title>
+      <pubDate>Thu, 29 Jan 2015 15:25:58 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[17924dffdad7bfed769c9bc447c8766c]]></guid>
+      <link><![CDATA[http://traffic.libsyn.com/adventurezone/TheAdventureZone006.mp3]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>In this, the thrilling conclusion to our first Adventure, Merle, Taako and Magnus pursue their engulfed employer into the heart of Phandalin. Will they be able to douse him before things get out of hand? Also, are you going to finish that Luna Bar?</p>]]></description>
+      <content:encoded><![CDATA[<p>In this, the thrilling conclusion to our first Adventure, Merle, Taako and Magnus pursue their engulfed employer into the heart of Phandalin. Will they be able to douse him before things get out of hand? Also, are you going to finish that Luna Bar?</p>]]></content:encoded>
+      <enclosure length="58500778" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone006.mp3?dest-id=235309" />
+      <itunes:duration>57:30</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[In this, the thrilling conclusion to our first Adventure, Merle, Taako and Magnus pursue their engulfed employer into the heart of Phandalin. Will they be able to douse him before things get out of hand? Also, are you going to finish that Luna Bar?]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 5. Here There Be Gerblins - Chapter Five</title>
+      <pubDate>Thu, 15 Jan 2015 14:14:48 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[18e26fd1ea6244ed241c67ad6c508746]]></guid>
+      <link><![CDATA[http://traffic.libsyn.com/adventurezone/TheAdventureZone005.mp3]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Merle, Taako and Magnus complete their rescue mission, but then completely fail an entirely new, far more important mission. Taako acquires a powerful artifact, and doesn't seem so stoked about it.</p>]]></description>
+      <content:encoded><![CDATA[<p>Merle, Taako and Magnus complete their rescue mission, but then completely fail an entirely new, far more important mission. Taako acquires a powerful artifact, and doesn't seem so stoked about it.</p>]]></content:encoded>
+      <enclosure length="59750476" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone005.mp3?dest-id=235309" />
+      <itunes:duration>58:48</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Merle, Taako and Magnus complete their rescue mission, but then completely fail an entirely new, far more important mission. Taako acquires a powerful artifact, and doesn't seem so stoked about it.]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 4. Here There Be Gerblins - Chapter Four</title>
+      <pubDate>Thu, 01 Jan 2015 15:55:49 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[da94a38057cbaea79ffadd26706c9086]]></guid>
+      <link><![CDATA[http://traffic.libsyn.com/adventurezone/TheAdventureZone004.mp3]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>After solving a particularly difficult jelly puzzle, our heroes journey ever deeper into Wave Echo Cave. Taako meets a kindred spirit, Merle does some missionary work and Magnus does some really cool stuff with some chains.</p>]]></description>
+      <content:encoded><![CDATA[<p>After solving a particularly difficult jelly puzzle, our heroes journey ever deeper into Wave Echo Cave. Taako meets a kindred spirit, Merle does some missionary work and Magnus does some really cool stuff with some chains.</p>]]></content:encoded>
+      <enclosure length="66317033" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone004.mp3?dest-id=235309" />
+      <itunes:duration>01:05:39</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[After solving a particularly difficult jelly puzzle, our heroes journey ever deeper into Wave Echo Cave. Taako meets a kindred spirit, Merle does some missionary work and Magnus does some really cool stuff with some chains.]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 3. Here There Be Gerblins - Chapter Three</title>
+      <pubDate>Thu, 18 Dec 2014 14:41:21 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[1ed76c7ed60417c7f45618fe89fec1a0]]></guid>
+      <link><![CDATA[http://traffic.libsyn.com/adventurezone/TheAdventureZone003.mp3]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>With one half of their former employers effectively rescued, our party begins the hunt for Gundren Rockseeker in earnest. There are just a few things standing in their way: They don't know where he is, they're all Level Clown-Shoes, and also, a jelly monster.</p>]]></description>
+      <content:encoded><![CDATA[<p>With one half of their former employers effectively rescued, our party begins the hunt for Gundren Rockseeker in earnest. There are just a few things standing in their way: They don't know where he is, they're all Level Clown-Shoes, and also, a jelly monster.</p>]]></content:encoded>
+      <enclosure length="77420537" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone003.mp3?dest-id=235309" />
+      <itunes:duration>01:17:13</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[With one half of their former employers effectively rescued, our party begins the hunt for Gundren Rockseeker in earnest. There are just a few things standing in their way: They don't know where he is, they're all Level Clown-Shoes, and also, a jelly...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 2. Here There Be Gerblins - Chapter Two</title>
+      <pubDate>Thu, 04 Dec 2014 15:59:24 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[89c233b0172b858ef85840e95809a303]]></guid>
+      <link><![CDATA[http://traffic.libsyn.com/adventurezone/TheAdventureZone002.mp3]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>Our heroes’ first job is not going especially well. Taako, Merle and Magnus are hot on the trail of their employer’s kidnappers, leading them into a perilous gerblin den. Will they discover the fate of Gundren and his ward, Barry Bluejeans? Or will they find themselves held up by complicated gerblin office politics?</p>]]></description>
+      <content:encoded><![CDATA[<p>Our heroes’ first job is not going especially well. Taako, Merle and Magnus are hot on the trail of their employer’s kidnappers, leading them into a perilous gerblin den. Will they discover the fate of Gundren and his ward, Barry Bluejeans? Or will they find themselves held up by complicated gerblin office politics?</p>]]></content:encoded>
+      <enclosure length="68055743" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone002.mp3?dest-id=235309" />
+      <itunes:duration>01:07:27</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[Our heroes’ first job is not going especially well. Taako, Merle and Magnus are hot on the trail of their employer’s kidnappers, leading them into a perilous gerblin den. Will they discover the fate of Gundren and his ward, Barry...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 1.5: Here There Be Gerblins - Chapter One (Super Cut)</title>
+      <pubDate>Wed, 03 Dec 2014 17:00:00 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[1a63597dbea0c958f83a43ba92ac95be]]></guid>
+      <link><![CDATA[http://traffic.libsyn.com/adventurezone/TAZ1SuperCut.mp3]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>In this, the pilot episode of The Adventure Zone, the McElroys create the characters with which they'll build a new -- and hopefuly very, very lucrative -- fantasy fiction franchise. Join in the campaign as Justin (Taako), Travis (Magnus) and Clint (Merle), led by Dungeon Master Griffin, take their first steps into the unknown.</p>
+<p>If you enjoy this episode, be sure to listen to the FULL first episode! Also, be sure share with friends!</p>]]></description>
+      <content:encoded><![CDATA[<p>In this, the pilot episode of The Adventure Zone, the McElroys create the characters with which they'll build a new -- and hopefuly very, very lucrative -- fantasy fiction franchise. Join in the campaign as Justin (Taako), Travis (Magnus) and Clint (Merle), led by Dungeon Master Griffin, take their first steps into the unknown.</p>
+<p>If you enjoy this episode, be sure to listen to the FULL first episode! Also, be sure share with friends!</p>]]></content:encoded>
+      <enclosure length="48866532" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TAZ1SuperCut.mp3?dest-id=235309" />
+      <itunes:duration>50:55</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[In this, the pilot episode of The Adventure Zone, the McElroys create the characters with which they'll build a new -- and hopefuly very, very lucrative -- fantasy fiction franchise. Join in the campaign as Justin (Taako), Travis (Magnus) and Clint...]]></itunes:subtitle>
+    </item>
+    <item>
+      <title>Ep. 1: Here There Be Gerblins - Chapter One</title>
+      <pubDate>Wed, 03 Dec 2014 15:40:03 +0000</pubDate>
+      <guid isPermaLink="false"><![CDATA[f9343285c2bcbdcc9f5569b072d71833]]></guid>
+      <link><![CDATA[http://traffic.libsyn.com/adventurezone/TheAdventureZone001.mp3]]></link>
+      <itunes:image href="http://static.libsyn.com/p/assets/c/3/7/e/c37e81258bbd2c79/ADVENTURE_ZONE_EXPERIMENT_ART.jpg" />
+      <description><![CDATA[<p>In this, the pilot episode of The Adventure Zone, the McElroys create the characters with which they'll build a new -- and hopefuly very, very lucrative -- fantasy fiction franchise. Join in the campaign as Justin (Taako), Travis (Magnus) and Clint (Merle), led by Dungeon Master Griffin, take their first steps into the unknown.</p>]]></description>
+      <content:encoded><![CDATA[<p>In this, the pilot episode of The Adventure Zone, the McElroys create the characters with which they'll build a new -- and hopefuly very, very lucrative -- fantasy fiction franchise. Join in the campaign as Justin (Taako), Travis (Magnus) and Clint (Merle), led by Dungeon Master Griffin, take their first steps into the unknown.</p>]]></content:encoded>
+      <enclosure length="117268765" type="audio/mpeg" url="http://traffic.libsyn.com/adventurezone/TheAdventureZone001.mp3?dest-id=235309" />
+      <itunes:duration>01:58:43</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <itunes:keywords />
+      <itunes:subtitle><![CDATA[In this, the pilot episode of The Adventure Zone, the McElroys create the characters with which they'll build a new -- and hopefuly very, very lucrative -- fantasy fiction franchise. Join in the campaign as Justin (Taako), Travis (Magnus) and Clint...]]></itunes:subtitle>
+    </item>
+  </channel>
+</rss>

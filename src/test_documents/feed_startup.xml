@@ -1,0 +1,1660 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" media="screen" href="/~d/styles/rss2enclosuresfull.xsl"?>
+<?xml-stylesheet type="text/css" media="screen" href="http://feeds.hearstartup.com/~d/styles/itemcontent.css"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:feedburner="http://rssnamespace.org/feedburner/ext/1.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:media="http://search.yahoo.com/mrss/" version="2.0">
+  <channel>
+    <title>StartUp Podcast</title>
+    <link>http://gimletmedia.com</link>
+    <language>en</language>
+    <copyright>All rights reserved</copyright>
+    <description>A series about what it's really like to start a business.</description>
+    <image>
+      <url>http://static.megaphone.fm/podcasts/f23b021e-a9a3-11e5-8768-bfc7a8ea314d/image/uploads_2F1504017749067-ctypu3hc2ek-2d58ca80077a4085d6b9adbaadea5d0e_2FStartUp-show-art-edit-3000px.png</url>
+      <title>StartUp Podcast</title>
+      <link>http://gimletmedia.com</link>
+    </image>
+    <itunes:explicit>no</itunes:explicit>
+    <itunes:type>episodic</itunes:type>
+    <itunes:subtitle>The business origin story you never get to hear</itunes:subtitle>
+    <itunes:author>Gimlet</itunes:author>
+    <itunes:summary>A series about what it's really like to start a business.</itunes:summary>
+    <itunes:image href="http://static.megaphone.fm/podcasts/f23b021e-a9a3-11e5-8768-bfc7a8ea314d/image/uploads_2F1504017749067-ctypu3hc2ek-2d58ca80077a4085d6b9adbaadea5d0e_2FStartUp-show-art-edit-3000px.png" />
+    <atom10:link xmlns:atom10="http://www.w3.org/2005/Atom" rel="self" type="application/rss+xml" href="http://feeds.hearstartup.com/hearstartup" />
+    <feedburner:info uri="hearstartup" />
+    <atom10:link xmlns:atom10="http://www.w3.org/2005/Atom" rel="hub" href="http://pubsubhubbub.appspot.com/" />
+    <media:copyright>All rights reserved</media:copyright>
+    <media:thumbnail url="http://static.megaphone.fm/podcasts/f23b021e-a9a3-11e5-8768-bfc7a8ea314d/image/uploads_2F1504017749067-ctypu3hc2ek-2d58ca80077a4085d6b9adbaadea5d0e_2FStartUp-show-art-edit-3000px.png" />
+    <media:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</media:keywords>
+    <media:category scheme="http://www.itunes.com/dtds/podcast-1.0.dtd">Business</media:category>
+    <itunes:owner>
+      <itunes:email>hearstartup@gmail.com</itunes:email>
+      <itunes:name>Gimlet</itunes:name>
+    </itunes:owner>
+    <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+    <itunes:category text="Business" />
+    <item>
+      <title>StartupBus Part 5: Friday</title>
+      <description>All this week we’ve been following StartupBus, a hackathon on wheels, where a bunch of strangers come together to launch companies in one week, all while on a bus. If you haven’t heard Monday’s episode, start &lt;a href="https://gimletmedia.com/episode/startupbus-part-1-monday/"&gt;there&lt;/a&gt;.&lt;br&gt;&lt;br&gt;It’s Friday, the fifth and final day of StartupBus. By the end of today, one company will be crowned the winner of the competition. But before the final pitches take place, a mysterious opponent emerges to challenge the five finalists.&amp;nbsp;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 15 Dec 2017 10:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:image href="http://commondatastorage.googleapis.com/megaphone-prod/podcasts/ca178210-2e8d-11e7-9b83-ab3a27c369da/image/uploads_2F1512834945169-6aivhn3ib2p-a1b770ea68cbdbea2e4de1ba7cc0efc7_2F20171208_StartUp-StartUpBus-5.png" />
+      <itunes:title>StartupBus Part 5: Friday</itunes:title>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:season>6</itunes:season>
+      <itunes:episode>14</itunes:episode>
+      <itunes:subtitle>You just gotta enjoy the ride.</itunes:subtitle>
+      <itunes:summary><![CDATA[All this week we’ve been following StartupBus, a hackathon on wheels, where a bunch of strangers come together to launch companies in one week, all while on a bus. If you haven’t heard Monday’s episode, start <a href="https://gimletmedia.com/episode/startupbus-part-1-monday/">there</a>.<br><br>It’s Friday, the fifth and final day of StartupBus. By the end of today, one company will be crowned the winner of the competition. But before the final pitches take place, a mysterious opponent emerges to challenge the five finalists.&nbsp;<br><br><br>]]></itunes:summary>
+      <itunes:duration>2373</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[ca178210-2e8d-11e7-9b83-ab3a27c369da]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/1j5RHZBAQoU/GLT1068485319.mp3" fileSize="50116231" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/1j5RHZBAQoU/GLT1068485319.mp3" length="50116231" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT1068485319.mp3?updated=1513289285</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>StartupBus Part 4: Thursday</title>
+      <description>Every day this week we’re following StartupBus, a hackathon on wheels, where a bunch of strangers come together to launch companies in one week, all while on a bus. If you haven’t heard Monday’s episode, start &lt;a href="https://gimletmedia.com/episode/startupbus-part-1-monday/"&gt;there&lt;/a&gt;.&lt;br&gt;&lt;br&gt;It’s Thursday, day four on StartupBus. The bus has finally arrived in New Orleans, where teams from all six buses will go up against one another and pitch for a spot in the finals. By the end of the day, only five teams will be left standing. And a behind-the-scenes look at the judging process raises some concerns for reporter Eric Mennel.</description>
+      <pubDate>Thu, 14 Dec 2017 10:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:image href="http://commondatastorage.googleapis.com/megaphone-prod/podcasts/61e28c96-2e90-11e7-8ecd-a7cd279094db/image/uploads_2F1512834924562-11zsku3ghey-7ae0ee7ef75670b96681b1797d218f4e_2F20171208_StartUp-StartUpBus-4.png" />
+      <itunes:title>StartupBus Part 4: Thursday</itunes:title>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:season>6</itunes:season>
+      <itunes:episode>13</itunes:episode>
+      <itunes:subtitle>I'm just like my comp'ny, I'm young, scrappy, and hungry.</itunes:subtitle>
+      <itunes:summary><![CDATA[Every day this week we’re following StartupBus, a hackathon on wheels, where a bunch of strangers come together to launch companies in one week, all while on a bus. If you haven’t heard Monday’s episode, start <a href="https://gimletmedia.com/episode/startupbus-part-1-monday/">there</a>.<br><br>It’s Thursday, day four on StartupBus. The bus has finally arrived in New Orleans, where teams from all six buses will go up against one another and pitch for a spot in the finals. By the end of the day, only five teams will be left standing. And a behind-the-scenes look at the judging process raises some concerns for reporter Eric Mennel.]]></itunes:summary>
+      <itunes:duration>2360</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[61e28c96-2e90-11e7-8ecd-a7cd279094db]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/tSe-iF7DIys/GLT4018980188.mp3" fileSize="49802135" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/tSe-iF7DIys/GLT4018980188.mp3" length="49802135" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT4018980188.mp3?updated=1513180687</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>StartupBus Part 3: Wednesday</title>
+      <description>Every day this week we’re following StartupBus, a hackathon on wheels, where a bunch of strangers come together to launch companies in one week, all while on a bus. If you haven’t heard Monday’s episode, start &lt;a href="https://gimletmedia.com/episode/startupbus-part-1-monday/"&gt;there&lt;/a&gt;.&lt;br&gt;&lt;br&gt;It’s Wednesday, day three on StartupBus. Teams have just 24 hours left to refine their pitches before the competition begins. And reporter Eric Mennel sits down with some of the bus riders to learn more about why they signed up for this unusual hackathon in the first place.&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Wed, 13 Dec 2017 10:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:image href="http://commondatastorage.googleapis.com/megaphone-prod/podcasts/ca06dc58-2e8d-11e7-9b83-8bb1ae32e857/image/uploads_2F1512834904178-h36dnbsmxs-17467d7330c34df2f3f645130eaae093_2F20171208_StartUp-StartUpBus-3.png" />
+      <itunes:title>StartupBus Part 3: Wednesday</itunes:title>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:season>6</itunes:season>
+      <itunes:episode>12</itunes:episode>
+      <itunes:subtitle>"The more you know, the more you realize 'I don't know sh*t'"</itunes:subtitle>
+      <itunes:summary><![CDATA[Every day this week we’re following StartupBus, a hackathon on wheels, where a bunch of strangers come together to launch companies in one week, all while on a bus. If you haven’t heard Monday’s episode, start <a href="https://gimletmedia.com/episode/startupbus-part-1-monday/">there</a>.<br><br>It’s Wednesday, day three on StartupBus. Teams have just 24 hours left to refine their pitches before the competition begins. And reporter Eric Mennel sits down with some of the bus riders to learn more about why they signed up for this unusual hackathon in the first place.<br><br><br>]]></itunes:summary>
+      <itunes:duration>2101</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[ca06dc58-2e8d-11e7-9b83-8bb1ae32e857]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/NHolYHm00YA/GLT1621658049.mp3" fileSize="43598576" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/NHolYHm00YA/GLT1621658049.mp3" length="43598576" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT1621658049.mp3?updated=1513024255</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>StartupBus Part 2: Tuesday</title>
+      <description>Every day this week we’re following StartupBus, a hackathon on wheels, where a bunch of strangers come together to launch companies in one week, all while on a bus. If you haven’t heard Monday’s episode, start &lt;a href="https://gimletmedia.com/episode/startupbus-part-1-monday/"&gt;there&lt;/a&gt;.&lt;br&gt;&lt;br&gt;It’s Tuesday, day two on StartupBus. Now that teams have settled on ideas for their companies, it’s time to start building. But when tension runs high, one company considers kicking one of their own members off the team.&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Tue, 12 Dec 2017 10:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:image href="http://commondatastorage.googleapis.com/megaphone-prod/podcasts/ca0f10a8-2e8d-11e7-9b83-5773edcf8497/image/uploads_2F1512834880994-x245mubo83-523b1e8c08e067b05292edc263861c46_2F20171208_StartUp-StartUpBus-2.png" />
+      <itunes:title>StartupBus Part 2: Tuesday</itunes:title>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:season>6</itunes:season>
+      <itunes:episode>11</itunes:episode>
+      <itunes:subtitle>Life's a pitch</itunes:subtitle>
+      <itunes:summary><![CDATA[Every day this week we’re following StartupBus, a hackathon on wheels, where a bunch of strangers come together to launch companies in one week, all while on a bus. If you haven’t heard Monday’s episode, start <a href="https://gimletmedia.com/episode/startupbus-part-1-monday/">there</a>.<br><br>It’s Tuesday, day two on StartupBus. Now that teams have settled on ideas for their companies, it’s time to start building. But when tension runs high, one company considers kicking one of their own members off the team.<br><br><br><br><br><br>]]></itunes:summary>
+      <itunes:duration>2103</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[ca0f10a8-2e8d-11e7-9b83-5773edcf8497]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/bou3KUnoZ7w/GLT1682250152.mp3" fileSize="43649985" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/bou3KUnoZ7w/GLT1682250152.mp3" length="43649985" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT1682250152.mp3?updated=1512776856</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>StartupBus Part 1: Monday</title>
+      <description>This summer, 20 strangers got on a bus headed from New York to New Orleans. For five days, they had one goal: to build and launch companies while on the bus. We’ll be telling this story as it unfolded — with one new episode, every day, over the next five days.&lt;br&gt;&lt;br&gt;Today’s episode: Monday. Day One.</description>
+      <pubDate>Mon, 11 Dec 2017 10:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:image href="http://commondatastorage.googleapis.com/megaphone-prod/podcasts/ca1f2af6-2e8d-11e7-9b83-df786b8d59da/image/uploads_2F1512834781232-x4xshfg4tjb-073716cffbb2f5eb6b8cf12ef4d801d4_2F20171208_StartUp-StartUpBus-1.png" />
+      <itunes:title>StartupBus Part 1: Monday</itunes:title>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:season>6</itunes:season>
+      <itunes:episode>10</itunes:episode>
+      <itunes:subtitle>The road rules.</itunes:subtitle>
+      <itunes:summary><![CDATA[This summer, 20 strangers got on a bus headed from New York to New Orleans. For five days, they had one goal: to build and launch companies while on the bus. We’ll be telling this story as it unfolded — with one new episode, every day, over the next five days.<br><br>Today’s episode: Monday. Day One.]]></itunes:summary>
+      <itunes:duration>2285</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[ca1f2af6-2e8d-11e7-9b83-df786b8d59da]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/iWyqJvvIcRo/GLT8902080114.mp3" fileSize="48010344" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/iWyqJvvIcRo/GLT8902080114.mp3" length="48010344" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT8902080114.mp3?updated=1513009397</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Coming Next Week: StartupBus</title>
+      <description>This past summer, 20 strangers got on a charter bus headed from New York to New Orleans. For three days they had one goal: Build and launch companies from inside the bus. And then? Compete against each other.&lt;br&gt;&lt;br&gt;Reporter Eric Mennel documented it all. And next week, it drops as a five-day, in-real-time miniseries.</description>
+      <pubDate>Thu, 07 Dec 2017 09:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:image href="http://commondatastorage.googleapis.com/megaphone-prod/podcasts/370c4236-daee-11e7-92cc-1f1255615b81/image/uploads_2F1512763830821-xnfgrofokf-ec1eb698e0855080eb8d5d1a8cffd118_2F20171208_StartUp-StartUpBus-pre.png" />
+      <itunes:episodeType>trailer</itunes:episodeType>
+      <itunes:season>6</itunes:season>
+      <itunes:subtitle>"Why am I on this bus right now?"</itunes:subtitle>
+      <itunes:summary><![CDATA[This past summer, 20 strangers got on a charter bus headed from New York to New Orleans. For three days they had one goal: Build and launch companies from inside the bus. And then? Compete against each other.<br><br>Reporter Eric Mennel documented it all. And next week, it drops as a five-day, in-real-time miniseries.]]></itunes:summary>
+      <itunes:duration>198</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[370c4236-daee-11e7-92cc-1f1255615b81]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/fjEi4NKGWLE/GLT5163925062.mp3" fileSize="4754076" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/fjEi4NKGWLE/GLT5163925062.mp3" length="4754076" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT5163925062.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Introducing Story Pirates</title>
+      <description>Alex is back in the host’s chair today to introduce Gimlet’s first kid’s show—Story Pirates. It’s a podcast where actors, musicians, and comedians turn stories written by kids into hilarious plays and songs.&lt;br&gt;&lt;br&gt;Alex talked with co-host Lee Overtree about the process of making the Story Pirates podcast, and the amazing, wacky ideas that children come up with. And gather your kids: After the chat, we’ll be playing one of our favorite episodes of Story Pirates.&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Tue, 05 Dec 2017 23:34:58 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:title>Introducing Story Pirates</itunes:title>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:season>6</itunes:season>
+      <itunes:subtitle>Gimlet... for kids</itunes:subtitle>
+      <itunes:summary><![CDATA[Alex is back in the host’s chair today to introduce Gimlet’s first kid’s show—Story Pirates. It’s a podcast where actors, musicians, and comedians turn stories written by kids into hilarious plays and songs.<br><br>Alex talked with co-host Lee Overtree about the process of making the Story Pirates podcast, and the amazing, wacky ideas that children come up with. And gather your kids: After the chat, we’ll be playing one of our favorite episodes of Story Pirates.<br><br><br><br><br><br><br>]]></itunes:summary>
+      <itunes:duration>1436</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[779bd394-da02-11e7-8d43-67b71f1138bb]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/Gi3eMSXM7JI/GLT8073647484.mp3" fileSize="32677929" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/Gi3eMSXM7JI/GLT8073647484.mp3" length="32677929" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT8073647484.mp3?updated=1512516657</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Dear Music Fans… (Season 3, Episode 4)</title>
+      <description>When a group of college kids in Florida set out to change the music industry, they did not anticipate how disruptive they would be. Their mission was a noble one: bring an end to online piracy by offering cheap, convenient, and legal access to music. Their execution, however, was less than thorough. And when you’re dealing with protective music labels, forgetting to dot an “i” or cross a “t” can mean being one lawsuit away from the swift and unceremonious collapse of your company.&lt;br&gt;&lt;br&gt;This is the story of Grooveshark, the people who built it, and the relationships that were tested during its rocky road to growth—and its eventual demise.</description>
+      <pubDate>Fri, 10 Nov 2017 05:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:title>Dear Music Fans…</itunes:title>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:season>6</itunes:season>
+      <itunes:episode>9</itunes:episode>
+      <itunes:subtitle>Business ain’t Yeezy.</itunes:subtitle>
+      <itunes:summary><![CDATA[When a group of college kids in Florida set out to change the music industry, they did not anticipate how disruptive they would be. Their mission was a noble one: bring an end to online piracy by offering cheap, convenient, and legal access to music. Their execution, however, was less than thorough. And when you’re dealing with protective music labels, forgetting to dot an “i” or cross a “t” can mean being one lawsuit away from the swift and unceremonious collapse of your company.<br><br>This is the story of Grooveshark, the people who built it, and the relationships that were tested during its rocky road to growth—and its eventual demise.]]></itunes:summary>
+      <itunes:duration>3291</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[c9fe9778-2e8d-11e7-9b83-971fb413a480]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/QBsHsshxbOU/GLT8184996869.mp3" fileSize="72146233" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/QBsHsshxbOU/GLT8184996869.mp3" length="72146233" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT8184996869.mp3?updated=1510266939</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>The Race for a Driverless Future (Season 6, Episode 8)</title>
+      <description>On the last episode of StartUp, we followed the &lt;a href="https://gimletmedia.com/episode/grand-challenge-season-6-episode-7/"&gt;government-sponsored desert race&lt;/a&gt; that launched the self-driving car industry. This week, we see what the industry looks like today. You’ve probably heard that Google, Uber, and Tesla are pumping resources into developing autonomous vehicles. But there are plenty of smaller, younger companies in the space. What are they doing to keep up with the major players?</description>
+      <pubDate>Fri, 03 Nov 2017 11:47:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:title>The Race for a Driverless Future</itunes:title>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:season>6</itunes:season>
+      <itunes:episode>8</itunes:episode>
+      <itunes:subtitle>When will we get robotaxis, anyway?</itunes:subtitle>
+      <itunes:summary><![CDATA[On the last episode of StartUp, we followed the <a href="https://gimletmedia.com/episode/grand-challenge-season-6-episode-7/">government-sponsored desert race</a> that launched the self-driving car industry. This week, we see what the industry looks like today. You’ve probably heard that Google, Uber, and Tesla are pumping resources into developing autonomous vehicles. But there are plenty of smaller, younger companies in the space. What are they doing to keep up with the major players?]]></itunes:summary>
+      <itunes:duration>1653</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[c9f62cd2-2e8d-11e7-9b83-ff32b2861215]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/DTCIlnI2mwk/GLT8784603782.mp3" fileSize="32840933" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/DTCIlnI2mwk/GLT8784603782.mp3" length="32840933" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT8784603782.mp3?updated=1509795461</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>The Grand Challenge (Season 6, Episode 7)</title>
+      <description>In 2004, the U.S. government held a race unlike anything that had come before it. It was called the DARPA Grand Challenge, and it followed a 150-mile route through the rugged Mojave Desert.&amp;nbsp;&lt;br&gt;&lt;br&gt;The participants were cars, trucks, ATVs, and one motorcycle. The catch? Each vehicle was required to drive itself—no remote control, no human intervention. Dozens of engineers and robot enthusiasts worked relentlessly to make it happen. The Carnegie Mellon team was a favorite, but every team faced hurdles—from smashed sensors and exploding toilets to poorly placed tumbleweeds. Was the Grand Challenge too grand for its time?&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 27 Oct 2017 07:02:56 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:title>The Grand Challenge</itunes:title>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:season>6</itunes:season>
+      <itunes:episode>7</itunes:episode>
+      <itunes:subtitle>When the driverless future began</itunes:subtitle>
+      <itunes:summary><![CDATA[In 2004, the U.S. government held a race unlike anything that had come before it. It was called the DARPA Grand Challenge, and it followed a 150-mile route through the rugged Mojave Desert.&nbsp;<br><br>The participants were cars, trucks, ATVs, and one motorcycle. The catch? Each vehicle was required to drive itself—no remote control, no human intervention. Dozens of engineers and robot enthusiasts worked relentlessly to make it happen. The Carnegie Mellon team was a favorite, but every team faced hurdles—from smashed sensors and exploding toilets to poorly placed tumbleweeds. Was the Grand Challenge too grand for its time?<br><br><br><br>]]></itunes:summary>
+      <itunes:duration>2770</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[c9ed16f6-2e8d-11e7-9b83-a79451c230a4]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/23xN0km7QH8/GLT5217659928.mp3" fileSize="59641939" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/23xN0km7QH8/GLT5217659928.mp3" length="59641939" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT5217659928.mp3?updated=1509087289</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>New Money (Season 6, Episode 6)</title>
+      <description>Kik, a chat app popular with teenagers, launched in 2010. Users flocked to it, and within a few years it was valued at a billion dollars. Then a new competitor came on the chat scene: Facebook. When Kik started struggling to grow their revenue and find new investors, they landed on a wild new idea. Now they’re betting their company’s future on creating their own cryptocurrency.&lt;br&gt;&lt;br&gt;Listen to Gimlet's newest podcast, Uncivil, wherever you get your podcasts&lt;br&gt;&lt;a href="http://gimlet.media/2yg1htn"&gt;Apple Podcasts&lt;/a&gt; | &lt;a href="http://gimlet.media/2kKMOTp"&gt;Overcast&lt;/a&gt; | &lt;a href="http://gimlet.media/2gA6wfR"&gt;Stitcher&lt;/a&gt; | &lt;a href="http://gimlet.media/2xBYwkp"&gt;Pocketcasts&lt;/a&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 13 Oct 2017 04:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:title>New Money</itunes:title>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:season>6</itunes:season>
+      <itunes:episode>6</itunes:episode>
+      <itunes:subtitle>A company bets big on cryptocurrency</itunes:subtitle>
+      <itunes:summary><![CDATA[Kik, a chat app popular with teenagers, launched in 2010. Users flocked to it, and within a few years it was valued at a billion dollars. Then a new competitor came on the chat scene: Facebook. When Kik started struggling to grow their revenue and find new investors, they landed on a wild new idea. Now they’re betting their company’s future on creating their own cryptocurrency.<br><br>Listen to Gimlet's newest podcast, Uncivil, wherever you get your podcasts<br><a href="http://gimlet.media/2yg1htn">Apple Podcasts</a> | <a href="http://gimlet.media/2kKMOTp">Overcast</a> | <a href="http://gimlet.media/2gA6wfR">Stitcher</a> | <a href="http://gimlet.media/2xBYwkp">Pocketcasts</a><br><br><br><br>]]></itunes:summary>
+      <itunes:duration>1788</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[c9e4744c-2e8d-11e7-9b83-6f894b7ddca8]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/VkKnuy9sD6s/GLT7756125189.mp3" fileSize="36089730" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/VkKnuy9sD6s/GLT7756125189.mp3" length="36089730" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT7756125189.mp3?updated=1507860693</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Just Hit Record (Season 6, Episode 5)</title>
+      <description>Earlier this year, we asked listeners to call us with questions for Gimlet Founder Alex Blumberg. Alex answered a bunch of them in an &lt;a href="https://gimletmedia.com/startup/"&gt;episode&lt;/a&gt; last season. But one caller’s question was so big, it needed its own episode. Skyler Gronholz had decided to make a podcast about starting up his life again after several years in prison. But he was anxious about making something bad, and wanted Alex’s advice. In this week’s episode, we find out: can making a podcast about your life actually change the way you live it?&lt;br&gt;&lt;br&gt;--&lt;br&gt;&lt;br&gt;If you or someone you know is struggling with substance abuse, the Substance Abuse and Mental Health Services Administration has a number you can call. 1-800-662-HELP. That hotline gives referrals to local treatment facilities and support groups. And it is completely free and confidential.&amp;nbsp;</description>
+      <pubDate>Fri, 06 Oct 2017 04:28:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:title>Just Hit Record</itunes:title>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:season>6</itunes:season>
+      <itunes:episode>5</itunes:episode>
+      <itunes:subtitle>Can making a podcast about your life change the way you live it?</itunes:subtitle>
+      <itunes:summary><![CDATA[Earlier this year, we asked listeners to call us with questions for Gimlet Founder Alex Blumberg. Alex answered a bunch of them in an <a href="https://gimletmedia.com/startup/">episode</a> last season. But one caller’s question was so big, it needed its own episode. Skyler Gronholz had decided to make a podcast about starting up his life again after several years in prison. But he was anxious about making something bad, and wanted Alex’s advice. In this week’s episode, we find out: can making a podcast about your life actually change the way you live it?<br><br>--<br><br>If you or someone you know is struggling with substance abuse, the Substance Abuse and Mental Health Services Administration has a number you can call. 1-800-662-HELP. That hotline gives referrals to local treatment facilities and support groups. And it is completely free and confidential.&nbsp;]]></itunes:summary>
+      <itunes:duration>3432</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[c9dba628-2e8d-11e7-9b83-37abd85a70d6]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/HqDEAEkCUTI/GLT4437651055.mp3" fileSize="75530449" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/HqDEAEkCUTI/GLT4437651055.mp3" length="75530449" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT4437651055.mp3?updated=1507263799</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Make China Cool Again (Season 6, Episode 4)</title>
+      <description>China is on a mission to upgrade its international reputation. The government doesn’t want people to see the country as just the world’s factory for socks and toys and cell phones. It wants people around the globe to think China is cool. And it’s tried a bunch of different things to do that, including building a global pop star. But can China change its image through the power of pop music?</description>
+      <pubDate>Fri, 29 Sep 2017 04:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:title>Make China Cool Again</itunes:title>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:season>6</itunes:season>
+      <itunes:episode>4</itunes:episode>
+      <itunes:subtitle>One country's quest to create a global pop star.</itunes:subtitle>
+      <itunes:summary><![CDATA[China is on a mission to upgrade its international reputation. The government doesn’t want people to see the country as just the world’s factory for socks and toys and cell phones. It wants people around the globe to think China is cool. And it’s tried a bunch of different things to do that, including building a global pop star. But can China change its image through the power of pop music?]]></itunes:summary>
+      <itunes:duration>1761</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[c9d2d7aa-2e8d-11e7-9b83-337f902dfaf6]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/-osJV8djAsU/GLT5234087588.mp3" fileSize="35438968" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/-osJV8djAsU/GLT5234087588.mp3" length="35438968" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT5234087588.mp3?updated=1506651152</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>An Announcement From StartUp and Introducing The Nod</title>
+      <description>Lisa Chow and Alex Blumberg sit down together to talk about the future of StartUp.&lt;br&gt;&lt;br&gt;And, we introduce you to Gimlet Media's newest podcast The Nod. Co-hosted by Brittany Luse and Eric Eddings, The Nod celebrates and explores the multitudes of Black culture and Black life. For more information, visit gimletmedia.com/thenod.</description>
+      <pubDate>Fri, 22 Sep 2017 16:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:title>An Announcement From StartUp and Introducing The Nod</itunes:title>
+      <itunes:episodeType>bonus</itunes:episodeType>
+      <itunes:season>6</itunes:season>
+      <itunes:subtitle>An announcement about the future of StartUp and a preview of Gimlet's latest show about Blackness' biggest fans.</itunes:subtitle>
+      <itunes:summary><![CDATA[Lisa Chow and Alex Blumberg sit down together to talk about the future of StartUp.<br><br>And, we introduce you to Gimlet Media's newest podcast The Nod. Co-hosted by Brittany Luse and Eric Eddings, The Nod celebrates and explores the multitudes of Black culture and Black life. For more information, visit gimletmedia.com/thenod.]]></itunes:summary>
+      <itunes:duration>2568</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[32a88128-9ef8-11e7-b3b3-df75f22a38c5]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/zKj67napHWo/GLT2306588151.mp3" fileSize="91346024" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/zKj67napHWo/GLT2306588151.mp3" length="91346024" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT2306588151.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Sell the Apartment, Keep the Startup (Season 6, Episode 3)</title>
+      <description>Jasen Yang gave up the security of a high-paying Wall Street job to launch his company, Polly Portfolio. It’s been three years since then, and Jasen still isn’t taking a salary. It’s put a lot of strain on his family, and made it difficult for Jasen and his wife, Lynn, to make important decisions about their future. So we brought in executive coach Jerry Colonna, who helped Jasen find the unlikely source of his anxiety.</description>
+      <pubDate>Fri, 15 Sep 2017 04:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:title>Sell the Apartment, Keep the Startup</itunes:title>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:season>6</itunes:season>
+      <itunes:episode>3</itunes:episode>
+      <itunes:subtitle>Getting hung up on the truth can be bad for business.</itunes:subtitle>
+      <itunes:summary><![CDATA[Jasen Yang gave up the security of a high-paying Wall Street job to launch his company, Polly Portfolio. It’s been three years since then, and Jasen still isn’t taking a salary. It’s put a lot of strain on his family, and made it difficult for Jasen and his wife, Lynn, to make important decisions about their future. So we brought in executive coach Jerry Colonna, who helped Jasen find the unlikely source of his anxiety.]]></itunes:summary>
+      <itunes:duration>1953</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[c9ca1688-2e8d-11e7-9b83-5b16e90997a2]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/npL0LZGmpMY/GLT8589225555.mp3" fileSize="40035683" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/npL0LZGmpMY/GLT8589225555.mp3" length="40035683" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT8589225555.mp3?updated=1505444338</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Sex Dot Con (Season 6, Episode 2)</title>
+      <description>Gary Kremen owned one of the most valuable domain names in the history of the internet. And then one day, he lost it in the most unusual way. For years, Gary fought to win back his domain “sex dot com." The legal battle transformed the way the courts treat virtual property. But in the end, was his lengthy and expensive crusade worth it?</description>
+      <pubDate>Fri, 08 Sep 2017 04:21:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:title>Sex Dot Con</itunes:title>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:season>6</itunes:season>
+      <itunes:episode>2</itunes:episode>
+      <itunes:subtitle>How the battle over a domain name nearly destroyed one man's life.</itunes:subtitle>
+      <itunes:summary><![CDATA[Gary Kremen owned one of the most valuable domain names in the history of the internet. And then one day, he lost it in the most unusual way. For years, Gary fought to win back his domain “sex dot com." The legal battle transformed the way the courts treat virtual property. But in the end, was his lengthy and expensive crusade worth it?]]></itunes:summary>
+      <itunes:duration>2009</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[c9c06f2a-2e8d-11e7-9b83-db2086faef10]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/IhWneF5ntAI/GLT8871793250.mp3" fileSize="41379213" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/IhWneF5ntAI/GLT8871793250.mp3" length="41379213" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT8871793250.mp3?updated=1504844233</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>The Domain King (Season 6, Episode 1)</title>
+      <description>StartUp is back for a brand new season, and we're kicking things off with a story about the competitive world of domains.&lt;br&gt;&lt;br&gt;Reporter Amy Standen brings us the story of Rick Schwartz, who earned the title “Domain King” by building a portfolio of dot com web addresses worth millions. But why is a “.com” address worth so much in the first place? And why doesn’t Gimlet own “gimlet.com”?&lt;br&gt;&lt;br&gt;And coming up this season, we'll hear from startups in unexpected places.&amp;nbsp; We'll go to the Mojave Desert for a self-driving car race, we'll take you on a cross-country bus ride for a hackathon on wheels, and we'll head to China to track their growing pop music scene.&amp;nbsp;</description>
+      <pubDate>Fri, 01 Sep 2017 04:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:title>The Domain King</itunes:title>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:season>6</itunes:season>
+      <itunes:episode>1</itunes:episode>
+      <itunes:subtitle>Why the dot com still reigns supreme.</itunes:subtitle>
+      <itunes:summary><![CDATA[StartUp is back for a brand new season, and we're kicking things off with a story about the competitive world of domains.<br><br>Reporter Amy Standen brings us the story of Rick Schwartz, who earned the title “Domain King” by building a portfolio of dot com web addresses worth millions. But why is a “.com” address worth so much in the first place? And why doesn’t Gimlet own “gimlet.com”?<br><br>And coming up this season, we'll hear from startups in unexpected places.&nbsp; We'll go to the Mojave Desert for a self-driving car race, we'll take you on a cross-country bus ride for a hackathon on wheels, and we'll head to China to track their growing pop music scene.&nbsp;]]></itunes:summary>
+      <itunes:duration>1818</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[c9b5ea00-2e8d-11e7-9b83-2ff6991b9925]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/0vPpjU3NwHU/GLT1306292044.mp3" fileSize="36793155" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/0vPpjU3NwHU/GLT1306292044.mp3" length="36793155" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT1306292044.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Introducing Season 6</title>
+      <description>StartUp returns September 1st with a brand new season. Here's a preview of what's coming up in Season 6.&lt;br&gt;&lt;br&gt;And are you looking for more Gimlet in your life? Then click &lt;a href="http://fall.gimletmedia.com/"&gt;here&lt;/a&gt; to view our guide to other Gimlet shows returning this fall.</description>
+      <pubDate>Mon, 28 Aug 2017 20:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>trailer</itunes:episodeType>
+      <itunes:season>6</itunes:season>
+      <itunes:subtitle>StartUp returns with a brand new season on September 1st.</itunes:subtitle>
+      <itunes:summary><![CDATA[StartUp returns September 1st with a brand new season. Here's a preview of what's coming up in Season 6.<br><br>And are you looking for more Gimlet in your life? Then click <a href="http://fall.gimletmedia.com/">here</a> to view our guide to other Gimlet shows returning this fall.]]></itunes:summary>
+      <itunes:duration>185</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[c01617e0-8c25-11e7-8f45-e3a68a83df79]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/U1recXCpPMI/GLT9397214975.mp3" fileSize="4456280" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/U1recXCpPMI/GLT9397214975.mp3" length="4456280" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT9397214975.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>BONUS — Check Out Mogul: The Life and Death of Chris Lighty</title>
+      <description>On this episode of StartUp, we're introducing you to a new show from Gimlet Media. It's called Mogul: The Life and Death of Chris Lighty. The show charts the career of the hip hop executive, from young hustler in the Bronx, to one of the most powerful men in the music industry.</description>
+      <pubDate>Tue, 25 Jul 2017 22:13:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>A preview of Mogul: The Life and Death of Chris Lighty.</itunes:subtitle>
+      <itunes:summary><![CDATA[On this episode of StartUp, we're introducing you to a new show from Gimlet Media. It's called Mogul: The Life and Death of Chris Lighty. The show charts the career of the hip hop executive, from young hustler in the Bronx, to one of the most powerful men in the music industry.]]></itunes:summary>
+      <itunes:duration>2307</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[c528b4ae-7181-11e7-991c-ab836db6d7a6]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/JuyFIfgaX1U/GLT9770909253.mp3" fileSize="51062282" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/JuyFIfgaX1U/GLT9770909253.mp3" length="51062282" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT9770909253.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>BONUS — Check Out The Pitch</title>
+      <description>Concussions have cast a major shadow over contact sports, from youth leagues to the pros. But entrepreneur Anthony Gonzales thinks he can fix it by putting a gadget in the mouths of athletes. Now he just has to convince investors to put their dollars behind his idea.&lt;br&gt;&lt;br&gt;&lt;strong&gt;Our Sponsors&lt;/strong&gt;: &lt;a href="http://trunkclub.com/startup"&gt;Trunk Club&lt;/a&gt; | &lt;a href="https://itunes.apple.com/us/podcast/the-venture/id1227832614?mt=2"&gt;Virgin Atlantic&lt;/a&gt;</description>
+      <pubDate>Thu, 20 Jul 2017 04:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>On this episode of Gimlet Media’s newest business show: an entrepreneur thinks he has the solution to sports-related concussions.</itunes:subtitle>
+      <itunes:summary><![CDATA[Concussions have cast a major shadow over contact sports, from youth leagues to the pros. But entrepreneur Anthony Gonzales thinks he can fix it by putting a gadget in the mouths of athletes. Now he just has to convince investors to put their dollars behind his idea.<br><br><strong>Our Sponsors</strong>: <a href="http://trunkclub.com/startup">Trunk Club</a> | <a href="https://itunes.apple.com/us/podcast/the-venture/id1227832614?mt=2">Virgin Atlantic</a>]]></itunes:summary>
+      <itunes:duration>2261</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[525c3194-6cbd-11e7-97bc-bf06ed76607b]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/rbq4z64GA9Y/GLT4083076800.mp3" fileSize="50677969" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/rbq4z64GA9Y/GLT4083076800.mp3" length="50677969" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT4083076800.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Building The Perfect Cup of Coffee (Season 5, Episode 10)</title>
+      <description>Mokhtar Alkhanshali is trying to produce the perfect cup of coffee. And he’s trying to do it with beans grown in the midst of an active war zone in Yemen. Despite those challenges, his company’s first batch earned rave reviews, and sold for $16 a cup at one of the fanciest coffee chains around. But can he turn that early success into a profitable business, or will the challenges of trying to achieve perfection using a supply chain that starts halfway around the world do his young company in?&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 07 Jul 2017 04:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:season>5</itunes:season>
+      <itunes:subtitle>Two suitcases, a tiny boat, and a $25 billion industry.</itunes:subtitle>
+      <itunes:summary><![CDATA[Mokhtar Alkhanshali is trying to produce the perfect cup of coffee. And he’s trying to do it with beans grown in the midst of an active war zone in Yemen. Despite those challenges, his company’s first batch earned rave reviews, and sold for $16 a cup at one of the fanciest coffee chains around. But can he turn that early success into a profitable business, or will the challenges of trying to achieve perfection using a supply chain that starts halfway around the world do his young company in?<br><br><br>]]></itunes:summary>
+      <itunes:duration>2098</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[395db9f0-ac20-11e6-bd1a-4bd1c9314a40]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/7ICQfEGoNp0/GLT9607449073.mp3" fileSize="43516447" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/7ICQfEGoNp0/GLT9607449073.mp3" length="43516447" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT9607449073.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Ask Alex (Season 5, Episode 9)</title>
+      <description>You called with your questions. Alex Blumberg has your answers—about growth, diversity at Gimlet and, oh yeah, that ABC sitcom that’s currently being made about the first season of StartUp.</description>
+      <pubDate>Fri, 30 Jun 2017 04:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:season>5</itunes:season>
+      <itunes:subtitle>A Gimlet update.</itunes:subtitle>
+      <itunes:summary><![CDATA[You called with your questions. Alex Blumberg has your answers—about growth, diversity at Gimlet and, oh yeah, that ABC sitcom that’s currently being made about the first season of StartUp.]]></itunes:summary>
+      <itunes:duration>2084</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[395667ea-ac20-11e6-bd1a-2fa510fa2adc]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/u0-Dkv4oN_I/GLT7797143529.mp3" fileSize="43914553" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/u0-Dkv4oN_I/GLT7797143529.mp3" length="43914553" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT7797143529.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>How To Invent A New Sport (Season 5, Episode 8)</title>
+      <description>Mason Gordon’s dream is to create a new global team sport, something that hasn’t happened since basketball came on the scene in the 1890s. But Mason is determined. He invented Slamball—an amped up combination of basketball and football that’s played on trampolines—nearly twenty years ago. He had some splashy early success and got two seasons on TV. And then Slamball seemingly disappeared. But Mason is still at it, and now Slamball is surging in popularity on the other side of the globe.&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 23 Jun 2017 04:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>The saga of Slamball.</itunes:subtitle>
+      <itunes:summary><![CDATA[Mason Gordon’s dream is to create a new global team sport, something that hasn’t happened since basketball came on the scene in the 1890s. But Mason is determined. He invented Slamball—an amped up combination of basketball and football that’s played on trampolines—nearly twenty years ago. He had some splashy early success and got two seasons on TV. And then Slamball seemingly disappeared. But Mason is still at it, and now Slamball is surging in popularity on the other side of the globe.<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>]]></itunes:summary>
+      <itunes:duration>2225</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[394e7300-ac20-11e6-bd1a-e3289e18bb60]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/F8wNJoGUHok/GLT8027354144.mp3" fileSize="31043082" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/F8wNJoGUHok/GLT8027354144.mp3" length="31043082" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT8027354144.mp3?updated=1498184265</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Life After Startup (Season 5, Episode 7)</title>
+      <description>Jason from Bento started a business that prepared and delivered pan-Asian meals on demand. Lauren and Emma from Dating Ring wanted to reinvent online dating. Mary from Saint Harridan made sharp suits for masculine women and trans men. And Mike moved food across international borders, evading employees of a large grocery store chain. This episode, we return to some of the companies we followed in previous seasons and find out how their founders are doing—and what the label “entrepreneur” means to them now.&amp;nbsp;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 16 Jun 2017 04:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:season>5</itunes:season>
+      <itunes:subtitle>Where are they now?</itunes:subtitle>
+      <itunes:summary><![CDATA[Jason from Bento started a business that prepared and delivered pan-Asian meals on demand. Lauren and Emma from Dating Ring wanted to reinvent online dating. Mary from Saint Harridan made sharp suits for masculine women and trans men. And Mike moved food across international borders, evading employees of a large grocery store chain. This episode, we return to some of the companies we followed in previous seasons and find out how their founders are doing—and what the label “entrepreneur” means to them now.&nbsp;<br><br><br><br><br><br><br><br><br><br><br><br>]]></itunes:summary>
+      <itunes:duration>2499</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[39466ffc-ac20-11e6-bd1a-b701d16cc79c]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/NogStDAshVI/GLT2609591153.mp3" fileSize="35428310" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/NogStDAshVI/GLT2609591153.mp3" length="35428310" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT2609591153.mp3?updated=1497566908</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>BONUS - Introducing The Pitch</title>
+      <description>Alex and Matt talk to Josh Muccio, the host of Gimlet's newest show, about his path to podcasting. Then we sample the first half of the latest episode of Josh's show, The Pitch.</description>
+      <pubDate>Wed, 14 Jun 2017 18:57:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Gimlet's newest show follows real entrepreneurs as they pitch to real investors for real money.</itunes:subtitle>
+      <itunes:summary><![CDATA[Alex and Matt talk to Josh Muccio, the host of Gimlet's newest show, about his path to podcasting. Then we sample the first half of the latest episode of Josh's show, The Pitch.]]></itunes:summary>
+      <itunes:duration>2343</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[952ef5b6-40a2-11e7-81fd-cbb768d0e24c]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/czD_7PzWc7w/GLT6622325637.mp3" fileSize="49393998" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/czD_7PzWc7w/GLT6622325637.mp3" length="49393998" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT6622325637.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Another Side Of The Story (Season 2, Episode 3 REBROADCAST)</title>
+      <description>Hello, there! This week we’re rebroadcasting an episode from way back in Season 2 when we were following Dating Ring, a company that was different from other dating sites and apps because it used matchmakers to help its customers go out on dates. This episode picks up just after the co-founders of the company, Lauren and Emma, finished Y Combinator and started pitching angel investors. You’ll hear them struggle to raise money—while wondering if their company was floundering for reasons completely outside of their control.&amp;nbsp;</description>
+      <pubDate>Fri, 09 Jun 2017 04:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle />
+      <itunes:summary><![CDATA[Hello, there! This week we’re rebroadcasting an episode from way back in Season 2 when we were following Dating Ring, a company that was different from other dating sites and apps because it used matchmakers to help its customers go out on dates. This episode picks up just after the co-founders of the company, Lauren and Emma, finished Y Combinator and started pitching angel investors. You’ll hear them struggle to raise money—while wondering if their company was floundering for reasons completely outside of their control.&nbsp;]]></itunes:summary>
+      <itunes:duration>1978</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[9508781e-40a2-11e7-81fd-3f85bf06a090]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/stTZQ-cUHeg/GLT4221069689.mp3" fileSize="40634409" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/stTZQ-cUHeg/GLT4221069689.mp3" length="40634409" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT4221069689.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Bug Business (Season 5, Episode 6)</title>
+      <description>Researchers who think about the thorny problem of feeding our growing global population have started to point at one possible solution: bugs. They’re protein-rich and ecologically sustainable—but can bug entrepreneurs get lots of Americans to eat something they’re kinda grossed out by?&amp;nbsp;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 26 May 2017 04:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Can one entrepreneur worm her way into the snack food aisle?</itunes:subtitle>
+      <itunes:summary><![CDATA[Researchers who think about the thorny problem of feeding our growing global population have started to point at one possible solution: bugs. They’re protein-rich and ecologically sustainable—but can bug entrepreneurs get lots of Americans to eat something they’re kinda grossed out by?&nbsp;<br><br><br><br>]]></itunes:summary>
+      <itunes:duration>1765</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[393fc06c-ac20-11e6-bd1a-ebd1bd7d921a]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/5ZsQjn6ESK0/GLT6672397922.mp3" fileSize="23682403" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/5ZsQjn6ESK0/GLT6672397922.mp3" length="23682403" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT6672397922.mp3?updated=1495766343</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Bootstrapping a Better Vaccine (Season 5, Episode 5)</title>
+      <description>Jake Glanville and his small biotech startup are trying to beat big pharmaceutical companies and major research institutions to a potentially game-changing medical breakthrough: the universal flu vaccine.&amp;nbsp;</description>
+      <pubDate>Fri, 19 May 2017 14:08:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>How much does a pig cost in Guatemala?</itunes:subtitle>
+      <itunes:summary><![CDATA[Jake Glanville and his small biotech startup are trying to beat big pharmaceutical companies and major research institutions to a potentially game-changing medical breakthrough: the universal flu vaccine.&nbsp;]]></itunes:summary>
+      <itunes:duration>1891</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[3938e058-ac20-11e6-bd1a-bf00b1bb0f3b]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/EHJf7vBsiSM/GLT4965604866.mp3" fileSize="25706161" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/EHJf7vBsiSM/GLT4965604866.mp3" length="25706161" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT4965604866.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Running a Family and a Business (Season 5, Episode 4)</title>
+      <description>This week on StartUp we’re listening in as executive coach Jerry Colonna sits down with Diana Lovett, the founder of a socially responsible chocolate company called Cissé Cocoa. In the episode, they tackle something that many founders struggle with—how to balance entrepreneurship and parenthood.&amp;nbsp;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 12 May 2017 08:31:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>A founder struggles with a difficult balancing act.</itunes:subtitle>
+      <itunes:summary><![CDATA[This week on StartUp we’re listening in as executive coach Jerry Colonna sits down with Diana Lovett, the founder of a socially responsible chocolate company called Cissé Cocoa. In the episode, they tackle something that many founders struggle with—how to balance entrepreneurship and parenthood.&nbsp;<br><br><br>]]></itunes:summary>
+      <itunes:duration>2143</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[393231e0-ac20-11e6-bd1a-073392852c52]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/AztdvtYYhVw/GLT5774967058.mp3" fileSize="29732362" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/AztdvtYYhVw/GLT5774967058.mp3" length="29732362" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT5774967058.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>BONUS - Introducing Every Little Thing</title>
+      <description>Gimlet launched a new podcast this month. It's called "Every Little Thing"and it searches for the extraordinary lurking in the ordinary. It's hosted by science journalist Flora Lichtman, who on this recent episode of the show found the extraordinary in office plants.&amp;nbsp;&lt;br&gt;&lt;br&gt;StartUp will be back with a new episode next week.</description>
+      <pubDate>Fri, 05 May 2017 15:55:52 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle />
+      <itunes:summary><![CDATA[Gimlet launched a new podcast this month. It's called "Every Little Thing"and it searches for the extraordinary lurking in the ordinary. It's hosted by science journalist Flora Lichtman, who on this recent episode of the show found the extraordinary in office plants.&nbsp;<br><br>StartUp will be back with a new episode next week.]]></itunes:summary>
+      <itunes:duration>1482</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[4c544810-31a1-11e7-b77e-eb98ba219146]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/OsqL3Btmlds/GLT3364148491.mp3" fileSize="31268571" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/OsqL3Btmlds/GLT3364148491.mp3" length="31268571" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT3364148491.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Friendster: Part 2 (Season 5, Episode 3)</title>
+      <description>After a turbulent start and the firing of its founder, Friendster looked like it was back on track. It was still the biggest social network around and its board—which was packed with some of the biggest names in venture capital—quickly assembled a star-studded executive team. So, why couldn’t all that talent deliver on the company’s promise? &lt;br&gt;&lt;br&gt;Why aren’t we all logging onto Friendster today? &lt;br&gt;&lt;br&gt;&lt;strong&gt;Ask Alex&lt;br&gt;&lt;/strong&gt;Got a question for Alex Blumberg? Leave us a message at 812-641-1231, and your question could end up on the show.&lt;br&gt;&lt;br&gt;&lt;strong&gt;The Facts&lt;br&gt;&lt;/strong&gt;Mark Phillips wrote and performed our theme song.&lt;br&gt;Build Buildings wrote and performed our special ad music.&lt;br&gt;Additional music by Typhoon, Jupyter, Marley Carrol and the band Hot Moms Dot Gov.&lt;br&gt;David Herman, Ian Scott, and Rick Kwan mixed the episode.&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 28 Apr 2017 04:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Why aren’t we all logging onto Friendster today?</itunes:subtitle>
+      <itunes:summary><![CDATA[After a turbulent start and the firing of its founder, Friendster looked like it was back on track. It was still the biggest social network around and its board—which was packed with some of the biggest names in venture capital—quickly assembled a star-studded executive team. So, why couldn’t all that talent deliver on the company’s promise? <br><br>Why aren’t we all logging onto Friendster today? <br><br><strong>Ask Alex<br></strong>Got a question for Alex Blumberg? Leave us a message at 812-641-1231, and your question could end up on the show.<br><br><strong>The Facts<br></strong>Mark Phillips wrote and performed our theme song.<br>Build Buildings wrote and performed our special ad music.<br>Additional music by Typhoon, Jupyter, Marley Carrol and the band Hot Moms Dot Gov.<br>David Herman, Ian Scott, and Rick Kwan mixed the episode.<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>]]></itunes:summary>
+      <itunes:duration>2054</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[392b69e6-ac20-11e6-bd1a-0fcec38f91d8]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/4nP-kAaabgo/GLT3005381667.mp3" fileSize="42478236" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/4nP-kAaabgo/GLT3005381667.mp3" length="42478236" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT3005381667.mp3?updated=1493991939</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Friendster: Part 1 (Season 5, Episode 2)</title>
+      <description>In 2003, Jonathan Abrams was sitting atop one of the hottest new companies in Silicon Valley. He and his website were at the forefront of an industry that would eventually be worth more than $400 billion. So, what went wrong?&lt;br&gt;&lt;br&gt;--&lt;br&gt;&lt;br&gt;&lt;strong&gt;Ask Alex&lt;/strong&gt;&lt;br&gt;Got a question for Alex Blumberg? Leave us a message at 812-641-1231, and your question could end up on the show.&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 21 Apr 2017 15:13:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>In 2003, Jonathan Abrams was sitting atop one of the hottest new companies in Silicon Valley. But it didn't take long for things to fall apart.</itunes:subtitle>
+      <itunes:summary><![CDATA[In 2003, Jonathan Abrams was sitting atop one of the hottest new companies in Silicon Valley. He and his website were at the forefront of an industry that would eventually be worth more than $400 billion. So, what went wrong?<br><br>--<br><br><strong>Ask Alex</strong><br>Got a question for Alex Blumberg? Leave us a message at 812-641-1231, and your question could end up on the show.<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>]]></itunes:summary>
+      <itunes:duration>2213</itunes:duration>
+      <guid isPermaLink="false"><![CDATA[39248e14-ac20-11e6-bd1a-730b8bff5124]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/081ikDqfvL4/GLT7039121697.mp3" fileSize="46273097" type="audio/mpeg" />
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/081ikDqfvL4/GLT7039121697.mp3" length="46273097" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT7039121697.mp3?updated=1492804174</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>You Have to Invent Something (Season 5, Episode 1)</title>
+      <description>In 1983 a guy named Stuart Anders invented a toy that would become a huge hit -- one of the biggest fad toys of a generation. But the toy world can be treacherous, and Stuart's big idea left him broke. Now he's back with a new toy and a surprising ally.&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 14 Apr 2017 15:42:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>In 1983 a guy named Stuart Anders invented a toy that would become a huge hit -- one of the biggest fad toys of a generation. But then it all fell apart.</itunes:subtitle>
+      <itunes:summary><![CDATA[In 1983 a guy named Stuart Anders invented a toy that would become a huge hit -- one of the biggest fad toys of a generation. But the toy world can be treacherous, and Stuart's big idea left him broke. Now he's back with a new toy and a surprising ally.<br><br><br><br><br><br><br><br>]]></itunes:summary>
+      <itunes:duration>2379</itunes:duration>
+      <guid isPermaLink="false"><![CDATA[391d7c64-ac20-11e6-bd1a-fb92226b45f0]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/sdY0pWwVSN8/GLT4040931812.mp3" fileSize="33514475" type="audio/mpeg" />
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/sdY0pWwVSN8/GLT4040931812.mp3" length="33514475" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT4040931812.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>BONUS - Introducing Twice Removed</title>
+      <description>In episode 2 of this season of &lt;em&gt;StartUp&lt;/em&gt;, producer Molly Messick followed producers Eric Mennel and Ngofeen Mputubwele, who were working on creating a new Gimlet show called &lt;em&gt;Twice Removed&lt;/em&gt;. That show has now launched. In this special bonus episode, Alex Blumberg catches up with Eric and Ngofeen, to see how things have been going since Molly spoke with them this past summer. Enjoy this update from the &lt;em&gt;Twice Removed&lt;/em&gt; team and then listen to the first half of a new episode, which features Alex's wife Nazanin Rafsanjani as a special guest.&amp;nbsp;</description>
+      <pubDate>Fri, 13 Jan 2017 15:19:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Alex Blumberg sits down with Eric Mennel and Ngofeen Mputubwele, producers on Gimlet's new show Twice Removed.</itunes:subtitle>
+      <itunes:summary><![CDATA[In episode 2 of this season of <em>StartUp</em>, producer Molly Messick followed producers Eric Mennel and Ngofeen Mputubwele, who were working on creating a new Gimlet show called <em>Twice Removed</em>. That show has now launched. In this special bonus episode, Alex Blumberg catches up with Eric and Ngofeen, to see how things have been going since Molly spoke with them this past summer. Enjoy this update from the <em>Twice Removed</em> team and then listen to the first half of a new episode, which features Alex's wife Nazanin Rafsanjani as a special guest.&nbsp;]]></itunes:summary>
+      <itunes:duration>2100</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[0ae1e034-d9a1-11e6-9c39-a78c303d0b12]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/uFK8jUVP140/GLT6496860137.mp3" fileSize="50402115" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/uFK8jUVP140/GLT6496860137.mp3" length="50402115" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT6496860137.mp3?updated=1484342678</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Part 7: MAGIC (Season 4, Episode 10)</title>
+      <description>Following his ousting from American Apparel, Dov Charney has been eager to restart and launch his new venture—Los Angeles Apparel. He has assembled the fabric, the equipment, and the people to help make his new clothing line. Now he needs to find his customer base.&lt;br&gt;&lt;br&gt;In this, the season finale of StartUp, Charney debuts his product to a group of people that knows his history well. But will his past prove to be an obstacle, or become part of what leads his new business to success?&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Thu, 22 Dec 2016 18:44:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>"In America, if you're making money, everything is forgiven. Trust me." - Dov Charney</itunes:subtitle>
+      <itunes:summary><![CDATA[Following his ousting from American Apparel, Dov Charney has been eager to restart and launch his new venture—Los Angeles Apparel. He has assembled the fabric, the equipment, and the people to help make his new clothing line. Now he needs to find his customer base.<br><br>In this, the season finale of StartUp, Charney debuts his product to a group of people that knows his history well. But will his past prove to be an obstacle, or become part of what leads his new business to success?<br><br><br><br><br><br><br><br><br><br>]]></itunes:summary>
+      <itunes:duration>2415</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[0ace2f10-4dcb-11e6-b392-63b6c57c6724]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/ED1667AKNCU/GLT6360193081.mp3" fileSize="51122468" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/ED1667AKNCU/GLT6360193081.mp3" length="51122468" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT6360193081.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Part 6: Anger (Season 4, Episode 9)</title>
+      <description>In the spring of 2014, the American Apparel board offered Dov Charney two options: forfeit your position as CEO and stay on as a creative consultant or be removed from the company entirely. Charney chose the latter, and it became big news.&amp;nbsp;&lt;br&gt;&lt;br&gt;It’s a story that has followed Charney as he starts his new business. But there are two accounts of what happened at American Apparel: Dov’s and the board’s. In this episode, we explore the moments that led up to Charney’s ousting, and the fallout from a founder’s firing.&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 16 Dec 2016 06:10:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>How does a founder get fired from his own company?</itunes:subtitle>
+      <itunes:summary><![CDATA[In the spring of 2014, the American Apparel board offered Dov Charney two options: forfeit your position as CEO and stay on as a creative consultant or be removed from the company entirely. Charney chose the latter, and it became big news.&nbsp;<br><br>It’s a story that has followed Charney as he starts his new business. But there are two accounts of what happened at American Apparel: Dov’s and the board’s. In this episode, we explore the moments that led up to Charney’s ousting, and the fallout from a founder’s firing.<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>]]></itunes:summary>
+      <itunes:duration>3735</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[0ac63922-4dcb-11e6-b392-8736616e04f3]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/lqGLK0AIAUE/GLT3019472394.mp3" fileSize="82819866" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/lqGLK0AIAUE/GLT3019472394.mp3" length="82819866" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT3019472394.mp3?updated=1481868315</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Part 5: Suits (Season 4, Episode 8)</title>
+      <description>In 2007, Dov Charney took American Apparel public, placing the company under heightened scrutiny. This meant Charney lost the privacy and autonomy he’d grown accustomed to.&amp;nbsp; And, as more stories emerged from inside the company, some began to reevaluate the man they’d chosen to work with.</description>
+      <pubDate>Fri, 09 Dec 2016 18:50:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>The private affairs of a public company.</itunes:subtitle>
+      <itunes:summary><![CDATA[In 2007, Dov Charney took American Apparel public, placing the company under heightened scrutiny. This meant Charney lost the privacy and autonomy he’d grown accustomed to.&nbsp; And, as more stories emerged from inside the company, some began to reevaluate the man they’d chosen to work with.]]></itunes:summary>
+      <itunes:duration>3854</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[0abea752-4dcb-11e6-b392-77099cfed4ec]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/hwmKwoFZcII/GLT6961441001.mp3" fileSize="85313828" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/hwmKwoFZcII/GLT6961441001.mp3" length="85313828" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT6961441001.mp3?updated=1482431434</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Part 4: Boundaries (Season 4, Episode 7)</title>
+      <description>While Dov Charney was running American Apparel, he didn’t shy away from unconventionality. And for many entrepreneurs, breaking convention is an essential part of growing an innovative company. But pushing boundaries is one thing. Completely ignoring them is another.&lt;br&gt;&lt;br&gt;In this episode, we explore the nebulous lines between Charney’s professional and personal relationships. We ask the the women of American Apparel what it was like to work for the former CEO and how, in a company where the boundaries aren’t clear, they could determine what was—and wasn’t—appropriate in the workplace.&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 02 Dec 2016 10:16:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>There's logic, and then there's Dov logic.</itunes:subtitle>
+      <itunes:summary><![CDATA[While Dov Charney was running American Apparel, he didn’t shy away from unconventionality. And for many entrepreneurs, breaking convention is an essential part of growing an innovative company. But pushing boundaries is one thing. Completely ignoring them is another.<br><br>In this episode, we explore the nebulous lines between Charney’s professional and personal relationships. We ask the the women of American Apparel what it was like to work for the former CEO and how, in a company where the boundaries aren’t clear, they could determine what was—and wasn’t—appropriate in the workplace.<br><br><br><br><br><br>]]></itunes:summary>
+      <itunes:duration>2739</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[0ab6f66a-4dcb-11e6-b392-276e61bdb5f4]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/9Yo4Kerl74s/GLT3465640148.mp3" fileSize="58898390" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/9Yo4Kerl74s/GLT3465640148.mp3" length="58898390" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT3465640148.mp3?updated=1482111569</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>BONUS - Introducing Gimlet’s Fall Slate</title>
+      <description>Alex Blumberg interviews Pat Walters, Eli Horowitz, Marc Smerling, and Zac Stuart-Pontier — the creators of Gimlet’s three newest shows. Hear how Gimlet developed these projects and what they are all about. And enjoy some favorite clips as well as sneak peeks from upcoming episodes.&amp;nbsp;&lt;br&gt;&lt;br&gt;StartUp Theme by Mark Phillips.&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Wed, 23 Nov 2016 23:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Alex Blumberg talks with Pat Walters, Eli Horowitz, Marc Smerling, and Zac Stuart-Pontier — the creators of Gimlet’s three newest shows.</itunes:subtitle>
+      <itunes:summary><![CDATA[Alex Blumberg interviews Pat Walters, Eli Horowitz, Marc Smerling, and Zac Stuart-Pontier — the creators of Gimlet’s three newest shows. Hear how Gimlet developed these projects and what they are all about. And enjoy some favorite clips as well as sneak peeks from upcoming episodes.&nbsp;<br><br>StartUp Theme by Mark Phillips.<br><br><br><br><br><br><br><br><br>]]></itunes:summary>
+      <itunes:duration>1707</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[9afd89da-b042-11e6-a902-f7963fdb2082]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/bEwRH5uEPIw/GLT4368453679.mp3" fileSize="34853407" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/bEwRH5uEPIw/GLT4368453679.mp3" length="34853407" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT4368453679.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Part 3: Photos (Season 4, Episode 6)</title>
+      <description>In this episode, we trace American Apparel’s rise from the early wholesale days in South Carolina to the booming retail behemoth that the company eventually became. We speak with some of the people closest to Dov Charney along the way, in order to figure out how his past informs the present.&lt;br&gt;We also begin to explore how sexuality came to define the American Apparel brand, and how Dov’s unorthodox business practices and questionable personal behavior led to widespread scrutiny about what was really going on at the company. &amp;nbsp;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 18 Nov 2016 07:29:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>In order to understand the present, we take a look at the past.</itunes:subtitle>
+      <itunes:summary><![CDATA[In this episode, we trace American Apparel’s rise from the early wholesale days in South Carolina to the booming retail behemoth that the company eventually became. We speak with some of the people closest to Dov Charney along the way, in order to figure out how his past informs the present.<br>We also begin to explore how sexuality came to define the American Apparel brand, and how Dov’s unorthodox business practices and questionable personal behavior led to widespread scrutiny about what was really going on at the company. &nbsp;<br><br><br><br><br><br><br><br><br><br>]]></itunes:summary>
+      <itunes:duration>2093</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[0aaed926-4dcb-11e6-b392-1b454c34127a]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/yYFIA3XZ8cs/GLT5565671412.mp3" fileSize="43034331" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/yYFIA3XZ8cs/GLT5565671412.mp3" length="43034331" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT5565671412.mp3?updated=1479453697</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Part 2: Workers (Season 4, Episode 5)</title>
+      <description>Dov Charney is trying to rebuild a multi-million dollar apparel company from the ground up. But he can’t do it alone. In this episode, we’ll hear from the people who have signed on to work with Charney, the people who have remained loyal to him since the early days of American Apparel, and those who have been inspired to join him in his new venture.&lt;br&gt;&lt;br&gt;The commitment Charney receives from his workers feels like a double-edged sword—the more they devote their time and energy to his new company, the more they depend on its success. This time around, the pressure to succeed feels much, much higher.&lt;br&gt;&lt;br&gt;&lt;br&gt;To learn more about Undone and the other shows Gimlet is launching this fall, go to &lt;a href="http://gimlet.media/fallslate"&gt;gimletmedia.com/fallseason&lt;/a&gt;.</description>
+      <pubDate>Fri, 11 Nov 2016 08:27:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>The key to success is believing your own bullshit -- and getting others to believe it too.</itunes:subtitle>
+      <itunes:summary><![CDATA[Dov Charney is trying to rebuild a multi-million dollar apparel company from the ground up. But he can’t do it alone. In this episode, we’ll hear from the people who have signed on to work with Charney, the people who have remained loyal to him since the early days of American Apparel, and those who have been inspired to join him in his new venture.<br><br>The commitment Charney receives from his workers feels like a double-edged sword—the more they devote their time and energy to his new company, the more they depend on its success. This time around, the pressure to succeed feels much, much higher.<br><br><br>To learn more about Undone and the other shows Gimlet is launching this fall, go to <a href="http://gimlet.media/fallslate">gimletmedia.com/fallseason</a>.]]></itunes:summary>
+      <itunes:duration>1769</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[0aa6554e-4dcb-11e6-b392-6b5e8df258fe]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/ioj6U5bMpNk/GLT3034055198.mp3" fileSize="34538057" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/ioj6U5bMpNk/GLT3034055198.mp3" length="34538057" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT3034055198.mp3?updated=1478851687</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Part 1: Labels (Season 4, Episode 4)</title>
+      <description>Season 4 of StartUp continues with the story of a well-known entrepreneur who built a widely recognized business, lost it all, and is now starting over—from scratch.&lt;br&gt;&lt;br&gt;Over the next several episodes, we’ll hear as this founder makes his second attempt at success, and creates an entirely new company in the shadow of his controversial past.&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 04 Nov 2016 09:15:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>The American Dream is south of the 10 freeway.</itunes:subtitle>
+      <itunes:summary><![CDATA[Season 4 of StartUp continues with the story of a well-known entrepreneur who built a widely recognized business, lost it all, and is now starting over—from scratch.<br><br>Over the next several episodes, we’ll hear as this founder makes his second attempt at success, and creates an entirely new company in the shadow of his controversial past.<br><br><br><br><br><br><br><br><br><br><br><br><br>]]></itunes:summary>
+      <itunes:duration>2376</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[0a9d4594-4dcb-11e6-b392-5319dadb64d0]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/8GBU5Pe7u24/GLT4763721113.mp3" fileSize="47316950" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/8GBU5Pe7u24/GLT4763721113.mp3" length="47316950" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT4763721113.mp3?updated=1478250265</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Shadowed Qualities (Season 4, Episode 3)</title>
+      <description>This week, Alex receives feedback about his job performance from his co-workers, friends, and family. Some of it is good, some less so. But there is something else that comes up during the review process that shocks him.&lt;br&gt;&lt;br&gt;We explore what happens when you unpack your emotional baggage—or someone unpacks it for you—and you realize the unexpected effect that it has been having on your team.&lt;br&gt;&lt;br&gt;In this final Gimlet-focused episode of season four, we take a raw and intimate look at a defining moment in the trajectory of a CEO.&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 21 Oct 2016 02:25:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>What you don’t know won’t hurt you, but it could hurt your company.</itunes:subtitle>
+      <itunes:summary><![CDATA[This week, Alex receives feedback about his job performance from his co-workers, friends, and family. Some of it is good, some less so. But there is something else that comes up during the review process that shocks him.<br><br>We explore what happens when you unpack your emotional baggage—or someone unpacks it for you—and you realize the unexpected effect that it has been having on your team.<br><br>In this final Gimlet-focused episode of season four, we take a raw and intimate look at a defining moment in the trajectory of a CEO.<br><br><br><br><br><br>]]></itunes:summary>
+      <itunes:duration>2447</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[0a96ff0e-4dcb-11e6-b392-2fd86954a35b]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/1w69niQJjuA/GLT5185505596.mp3" fileSize="51890468" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/1w69niQJjuA/GLT5185505596.mp3" length="51890468" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT5185505596.mp3?updated=1477011582</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>You Can't Wear a Suit Here (Season 4, Episode 2)</title>
+      <description>Growth. It can be exciting, it can be motivating, and it can be really stressful. In this week’s episode, we take a look at the tensions that Gimlet’s growth spurt is creating.&amp;nbsp;&lt;br&gt;&lt;br&gt;We speak with the team producing one of our upcoming shows to see what it’s really like to build a podcast from the ground up. Each of them is being asked to step up to the plate in a way that they never have before, and some are realizing that the support they expected, it just isn’t there.&amp;nbsp;&lt;br&gt;&lt;br&gt;People are pushed to their limits, emotions run high, and things that have remained hitherto unsaid are finally aired.&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 14 Oct 2016 00:14:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Building a new show can be a lonely business.</itunes:subtitle>
+      <itunes:summary><![CDATA[Growth. It can be exciting, it can be motivating, and it can be really stressful. In this week’s episode, we take a look at the tensions that Gimlet’s growth spurt is creating.&nbsp;<br><br>We speak with the team producing one of our upcoming shows to see what it’s really like to build a podcast from the ground up. Each of them is being asked to step up to the plate in a way that they never have before, and some are realizing that the support they expected, it just isn’t there.&nbsp;<br><br>People are pushed to their limits, emotions run high, and things that have remained hitherto unsaid are finally aired.<br><br><br><br>]]></itunes:summary>
+      <itunes:duration>2307</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[0a90d6ba-4dcb-11e6-b392-dfaa97c5e2a8]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/puv6xfGMqyo/GLT2184139976.mp3" fileSize="45303222" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/puv6xfGMqyo/GLT2184139976.mp3" length="45303222" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT2184139976.mp3?updated=1476403757</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Diversification of Worry (Season 4, Episode 1)</title>
+      <description>StartUp is back! And we’re kicking Season 4 off with an update on what’s happening here at Gimlet Media.&amp;nbsp;&lt;br&gt;&lt;br&gt;Since the start of the year, Gimlet has more than doubled in size. And while growth is often the goal for a startup, it also costs a lot of money. In this episode, Alex and his team ask themselves some very scary questions: How are they going to pay for all this growth? And what will happen if they can’t?&amp;nbsp;&lt;br&gt;With a larger staff and six new shows launching in the fall, this feels like a particularly pivotal moment at the company. There are big decisions to be made, with potentially even bigger consequences.&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 07 Oct 2016 02:28:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>When it comes to growth, every upside has its downside.</itunes:subtitle>
+      <itunes:summary><![CDATA[StartUp is back! And we’re kicking Season 4 off with an update on what’s happening here at Gimlet Media.&nbsp;<br><br>Since the start of the year, Gimlet has more than doubled in size. And while growth is often the goal for a startup, it also costs a lot of money. In this episode, Alex and his team ask themselves some very scary questions: How are they going to pay for all this growth? And what will happen if they can’t?&nbsp;<br>With a larger staff and six new shows launching in the fall, this feels like a particularly pivotal moment at the company. There are big decisions to be made, with potentially even bigger consequences.<br><br><br>]]></itunes:summary>
+      <itunes:duration>2230</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[0a872b38-4dcb-11e6-b392-7b7bc9c41e0b]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/n3-w0flhNIg/GLT6862559102.mp3" fileSize="45970912" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/n3-w0flhNIg/GLT6862559102.mp3" length="45970912" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT6862559102.mp3?updated=1475806390</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Introducing Season 4</title>
+      <description>Season 4 of StartUp is almost here. Here's a sneak peek of the fourth season, which kicks off with some episodes about the company that makes this podcast: Gimlet Media.&lt;br&gt;&lt;br&gt;Since we last checked in on Gimlet HQ, the company has grown a ton. And with growth, come the growing pains. Season 4 of StartUp premieres on October 6.&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Tue, 04 Oct 2016 05:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Season 4 of StartUp premieres on October 6.</itunes:subtitle>
+      <itunes:summary><![CDATA[Season 4 of StartUp is almost here. Here's a sneak peek of the fourth season, which kicks off with some episodes about the company that makes this podcast: Gimlet Media.<br><br>Since we last checked in on Gimlet HQ, the company has grown a ton. And with growth, come the growing pains. Season 4 of StartUp premieres on October 6.<br><br>]]></itunes:summary>
+      <itunes:duration>136</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[2d7f8c68-89a1-11e6-bf58-7719278e02dc]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/Nw2RwI1-4kU/GLT6351043405.mp3" fileSize="3275755" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/Nw2RwI1-4kU/GLT6351043405.mp3" length="3275755" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT6351043405.mp3?updated=1475606158</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>BONUS - Introducing Heavyweight</title>
+      <description>Alex Blumberg sits down with Jonathan Goldstein, host of Gimlet Media's newest show, Heavyweight. They talk about working at This American Life, about Jonathan's previous show, WireTap, about Kermit the Frog. And, they play an excerpt from a Heavyweight episode: Gregor.&lt;br&gt;&lt;br&gt;StartUp will return with a full season on October 6th.&lt;br&gt;&lt;br&gt;StartUp Theme by Build Buildings.&lt;br&gt;&lt;br&gt;&lt;strong&gt;Heavyweight Info:&lt;/strong&gt;&lt;br&gt;&lt;br&gt;20 years ago, Gregor lent some CDs to a musician friend. The CDs helped make him a famous rockstar. Now, Gregor would like some recognition. But mostly, he wants his CDs back.&lt;br&gt;&lt;br&gt;&lt;strong&gt;Credits&lt;br&gt;&lt;/strong&gt;Heavyweight is hosted and produced by Jonathan Goldstein, along with Wendy Dorr, Chris Neary, and Kalila Holt.&amp;nbsp;&lt;br&gt;Editing by Alex Blumberg &amp;amp; Peter Clowney. &amp;nbsp;&lt;br&gt;Special thanks to Emily Condon, Jackie Cohen, Paul Tough, Stevie Lane, Michelle Harris, Dimitri Erlich, Sean Cole and Jorge Just.&amp;nbsp;&lt;br&gt;The show was mixed by Haley Shaw.&amp;nbsp;&lt;br&gt;Music for this episode by Christine Fellows, with additional music by Takstar, The Eastern Watershed Klezmer Quartet and Haley Shaw, who also did our ad music. Our theme song is by The Weakerthans courtesy of Epitaph Records.&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Tue, 27 Sep 2016 01:02:56 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Alex Blumberg sits down with Jonathan Goldstein, host of Gimlet Media's newest show, Heavyweight.</itunes:subtitle>
+      <itunes:summary><![CDATA[Alex Blumberg sits down with Jonathan Goldstein, host of Gimlet Media's newest show, Heavyweight. They talk about working at This American Life, about Jonathan's previous show, WireTap, about Kermit the Frog. And, they play an excerpt from a Heavyweight episode: Gregor.<br><br>StartUp will return with a full season on October 6th.<br><br>StartUp Theme by Build Buildings.<br><br><strong>Heavyweight Info:</strong><br><br>20 years ago, Gregor lent some CDs to a musician friend. The CDs helped make him a famous rockstar. Now, Gregor would like some recognition. But mostly, he wants his CDs back.<br><br><strong>Credits<br></strong>Heavyweight is hosted and produced by Jonathan Goldstein, along with Wendy Dorr, Chris Neary, and Kalila Holt.&nbsp;<br>Editing by Alex Blumberg &amp; Peter Clowney. &nbsp;<br>Special thanks to Emily Condon, Jackie Cohen, Paul Tough, Stevie Lane, Michelle Harris, Dimitri Erlich, Sean Cole and Jorge Just.&nbsp;<br>The show was mixed by Haley Shaw.&nbsp;<br>Music for this episode by Christine Fellows, with additional music by Takstar, The Eastern Watershed Klezmer Quartet and Haley Shaw, who also did our ad music. Our theme song is by The Weakerthans courtesy of Epitaph Records.<br><br><br>]]></itunes:summary>
+      <itunes:duration>1840</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[be4ecba4-8439-11e6-9fa6-6fbfc49cb91f]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/hWjnSAmErNM/GLT2005984383.mp3" fileSize="73629779" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/hWjnSAmErNM/GLT2005984383.mp3" length="73629779" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT2005984383.mp3?updated=1474937453</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>BONUS - Introducing Science Vs</title>
+      <description>Alex Blumberg interviews Wendy Zukerman, host of Gimlet Media's newest show,&amp;nbsp;&lt;a href="https://itunes.apple.com/us/podcast/science-vs-new-season/id1051557000?mt=2"&gt;Science Vs&lt;/a&gt;. Hear how Wendy found her way to Gimlet and enjoy the first half of the latest episode: Science Vs Attachment Parenting.&amp;nbsp;</description>
+      <pubDate>Thu, 28 Jul 2016 22:01:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle />
+      <itunes:summary><![CDATA[Alex Blumberg interviews Wendy Zukerman, host of Gimlet Media's newest show,&nbsp;<a href="https://itunes.apple.com/us/podcast/science-vs-new-season/id1051557000?mt=2">Science Vs</a>. Hear how Wendy found her way to Gimlet and enjoy the first half of the latest episode: Science Vs Attachment Parenting.&nbsp;]]></itunes:summary>
+      <itunes:duration>1719</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[18cc1f22-5510-11e6-bd07-73d751ab9e97]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/sqn8_rZ3xTM/GLT6849433183.mp3" fileSize="39818135" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/sqn8_rZ3xTM/GLT6849433183.mp3" length="39818135" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT6849433183.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>2680 Madison Road (Season 3, Episode 10)</title>
+      <description>Something is amiss at 2680 Madison Road. In the thriving Cincinnati neighborhood of Hyde Park, the property is sandwiched between several decades-old Cincinnati staples, and a stone’s throw away from an upscale shopping center. The space is huge, the parking is ample. And yet, the building has been abandoned for five years. Seven different businesses have cycled through the address over the last thirty years. It seems that every business that inhabits its four walls is destined to fail.&lt;br&gt;&lt;br&gt;Alex Blumberg sends StartUp Senior Producer Kaitlin Roberts to his hometown to investigate this peculiar property. With a microphone in hand, she books a ticket to Cin City.&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 01 Jul 2016 08:01:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Abandon all hope, ye who startup here.</itunes:subtitle>
+      <itunes:summary><![CDATA[Something is amiss at 2680 Madison Road. In the thriving Cincinnati neighborhood of Hyde Park, the property is sandwiched between several decades-old Cincinnati staples, and a stone’s throw away from an upscale shopping center. The space is huge, the parking is ample. And yet, the building has been abandoned for five years. Seven different businesses have cycled through the address over the last thirty years. It seems that every business that inhabits its four walls is destined to fail.<br><br>Alex Blumberg sends StartUp Senior Producer Kaitlin Roberts to his hometown to investigate this peculiar property. With a microphone in hand, she books a ticket to Cin City.<br><br><br><br>]]></itunes:summary>
+      <itunes:duration>2688</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[2347efca-3eff-11e6-a910-1b32f0a7ad24]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/XoHsQh5aC3U/GLT5501778439.mp3" fileSize="58767360" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/XoHsQh5aC3U/GLT5501778439.mp3" length="58767360" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT5501778439.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Up in Flames (Season 3, Episode 9)</title>
+      <description>Edgar Diaz has dedicated his life to dairy. He sees an incredible beauty in milk and the things that can come from it: soft cheese, rich dulce de leche, and creamy yogurt.&lt;br&gt;He knows that to produce a really good yogurt, the conditions are just as important as the ingredients. You can use the freshest milk, but if your temperature is off or the timing inexact you risk ruining the whole batch.&lt;br&gt;Edgar has a lot in common with some of the world’s most successful founders: intense passion, a deep knowledge of his product, and awards and acclaim from peers in his field. He seems to have all the ingredients for success, and the conditions seem right, so why is he so far from it?</description>
+      <pubDate>Fri, 24 Jun 2016 03:27:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>A story of asylum, ashes, and acidophilus.</itunes:subtitle>
+      <itunes:summary><![CDATA[Edgar Diaz has dedicated his life to dairy. He sees an incredible beauty in milk and the things that can come from it: soft cheese, rich dulce de leche, and creamy yogurt.<br>He knows that to produce a really good yogurt, the conditions are just as important as the ingredients. You can use the freshest milk, but if your temperature is off or the timing inexact you risk ruining the whole batch.<br>Edgar has a lot in common with some of the world’s most successful founders: intense passion, a deep knowledge of his product, and awards and acclaim from peers in his field. He seems to have all the ingredients for success, and the conditions seem right, so why is he so far from it?]]></itunes:summary>
+      <itunes:duration>2571</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[00fae094-3950-11e6-be42-7bb7b2b462bb]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/flYu7PsaZtw/GLT8206555017.mp3" fileSize="55946135" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/flYu7PsaZtw/GLT8206555017.mp3" length="55946135" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT8206555017.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>From the Cell to the Sell (Season 3, Episode 8)</title>
+      <description>Coss Marte went from running a multi-million dollar drug operation to sitting in solitary confinement. And it’s here, alone in his cell, where he gets the idea for his next business: a fitness company inspired by his time behind bars. But Coss quickly learns that building a legal business comes with its own set of challenges—one being that pitching your company on stage to a bunch of investors requires a slightly different approach to selling an eight-ball outside a busy New York club.&lt;br&gt;Building a startup is a tough and uncertain endeavor for any founder. But for one with a criminal history, the journey can be far more complicated.</description>
+      <pubDate>Fri, 17 Jun 2016 07:58:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Want to build a fitness empire? Swipe right.</itunes:subtitle>
+      <itunes:summary><![CDATA[Coss Marte went from running a multi-million dollar drug operation to sitting in solitary confinement. And it’s here, alone in his cell, where he gets the idea for his next business: a fitness company inspired by his time behind bars. But Coss quickly learns that building a legal business comes with its own set of challenges—one being that pitching your company on stage to a bunch of investors requires a slightly different approach to selling an eight-ball outside a busy New York club.<br>Building a startup is a tough and uncertain endeavor for any founder. But for one with a criminal history, the journey can be far more complicated.]]></itunes:summary>
+      <itunes:duration>2829</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[849fbc04-345e-11e6-aed0-3b7dfd08c291]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/IYbOZvj6lp4/GLT2039766347.mp3" fileSize="62147186" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/IYbOZvj6lp4/GLT2039766347.mp3" length="62147186" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT2039766347.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Happy Ending (Season 3, Episode 7)</title>
+      <description>Coss Marte is getting ready to pitch his company to a panel of prominent entrepreneurs and an audience of hundreds. He’s competing against five other startups for a chance at $100,000. With this money, Coss hopes to grow his small exercise studio in the Lower East Side of Manhattan into an international fitness brand.&amp;nbsp;&lt;br&gt;&lt;br&gt;But this isn’t his first experience with scaling up. In his early twenties, Coss ran a business that brought in nearly $4 million in annual revenue, a business that catered to doctors, judges and lawyers. A business that landed him a seven year prison sentence.&lt;br&gt;This is part one of Coss’s story on his path from felon to founder.</description>
+      <pubDate>Fri, 10 Jun 2016 02:53:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>A different kind of boom and bust</itunes:subtitle>
+      <itunes:summary><![CDATA[Coss Marte is getting ready to pitch his company to a panel of prominent entrepreneurs and an audience of hundreds. He’s competing against five other startups for a chance at $100,000. With this money, Coss hopes to grow his small exercise studio in the Lower East Side of Manhattan into an international fitness brand.&nbsp;<br><br>But this isn’t his first experience with scaling up. In his early twenties, Coss ran a business that brought in nearly $4 million in annual revenue, a business that catered to doctors, judges and lawyers. A business that landed him a seven year prison sentence.<br>This is part one of Coss’s story on his path from felon to founder.]]></itunes:summary>
+      <itunes:duration>2376</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[1398c482-2e6a-11e6-afd3-5b2b6bced374]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/IRAJ9I9ACG4/GLT5132895603.mp3" fileSize="48755147" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/IRAJ9I9ACG4/GLT5132895603.mp3" length="48755147" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT5132895603.mp3?updated=1466700865</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Kitchen Confidential (Season 3, Episode 6)</title>
+      <description>Two men decide to start a company. Everything is going well... until it’s not. That’s the moment they decide to start recording their conversations—painful, awkward, emotional conversations.&lt;br&gt;&lt;br&gt;Jason and Vincent launched Bento about a year ago. Their goal was to make Pan-Asian food fresh, tasty, and on-demand. They joined the food tech swell just as it was winding down, just as the funding was drying up, just as the smaller players were being weeded out. With only a year under their belt and a quickly draining bank account, Bento’s odds don’t look good. We listen in on the co-founders as they try to decide whether their setbacks are just bumps on the road to success or a sign to shut things down.</description>
+      <pubDate>Fri, 27 May 2016 05:52:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>The many demands of on-demand.</itunes:subtitle>
+      <itunes:summary><![CDATA[Two men decide to start a company. Everything is going well... until it’s not. That’s the moment they decide to start recording their conversations—painful, awkward, emotional conversations.<br><br>Jason and Vincent launched Bento about a year ago. Their goal was to make Pan-Asian food fresh, tasty, and on-demand. They joined the food tech swell just as it was winding down, just as the funding was drying up, just as the smaller players were being weeded out. With only a year under their belt and a quickly draining bank account, Bento’s odds don’t look good. We listen in on the co-founders as they try to decide whether their setbacks are just bumps on the road to success or a sign to shut things down.]]></itunes:summary>
+      <itunes:duration>2775</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[c014bd10-23ca-11e6-9aea-73da2f133a64]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/f_1HKzoKDVM/GLT7757367680.mp3" fileSize="60841900" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/f_1HKzoKDVM/GLT7757367680.mp3" length="60841900" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT7757367680.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>The Runway (Season 3, Episode 5)</title>
+      <description>It’s not uncommon for shoppers to walk out of Mary Going’s store feeling on top of the world. Mary runs Saint Harridan, a company that makes custom suits for the gender non-conforming. With her store, Mary has created a space that caters to the needs of butch women and trans men—something that doesn’t happen very often. Her fans are enthusiastic and dedicated, her products are selling out… and she can barely pay her rent.&lt;br&gt;&lt;br&gt;Saint Harridan is struggling to raise enough money to cover basic costs. Mary knows the demand for her product is there, but it isn’t translating into dollars. Her runway is getting shorter and shorter, but she’s hoping that by turning to her community, she can buy time and make a comeback.&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 20 May 2016 04:27:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Sometimes when you're close to the end, you have to go back to the beginning.</itunes:subtitle>
+      <itunes:summary><![CDATA[It’s not uncommon for shoppers to walk out of Mary Going’s store feeling on top of the world. Mary runs Saint Harridan, a company that makes custom suits for the gender non-conforming. With her store, Mary has created a space that caters to the needs of butch women and trans men—something that doesn’t happen very often. Her fans are enthusiastic and dedicated, her products are selling out… and she can barely pay her rent.<br><br>Saint Harridan is struggling to raise enough money to cover basic costs. Mary knows the demand for her product is there, but it isn’t translating into dollars. Her runway is getting shorter and shorter, but she’s hoping that by turning to her community, she can buy time and make a comeback.<br><br><br><br>]]></itunes:summary>
+      <itunes:duration>2227</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[7739d6ce-1ddb-11e6-a9c1-770cdb2fb1f2]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/szK2EPCoMFo/GLT4330212010.mp3" fileSize="47689978" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/szK2EPCoMFo/GLT4330212010.mp3" length="47689978" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT4330212010.mp3?updated=1466197774</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Dear Music Fans... (Season 3, Episode 4)</title>
+      <description>When a group of college kids in Florida set out to change the music industry, they did not anticipate quite how disruptive they would be. Their mission was a noble one: bring an end to online piracy by offering cheap, convenient, and legal access to music. Their execution, however, was less than thorough. And when you're dealing with protective music labels, forgetting to dot an "i" or cross a "t" can mean being one lawsuit away from the swift and unceremonious death of your company.&lt;br&gt;&lt;br&gt;This is the story of Grooveshark, the people who built it and the relationships that were tested during its rocky road to growth—and eventual demise.&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 13 May 2016 00:05:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Business ain't Yeezy.</itunes:subtitle>
+      <itunes:summary><![CDATA[When a group of college kids in Florida set out to change the music industry, they did not anticipate quite how disruptive they would be. Their mission was a noble one: bring an end to online piracy by offering cheap, convenient, and legal access to music. Their execution, however, was less than thorough. And when you're dealing with protective music labels, forgetting to dot an "i" or cross a "t" can mean being one lawsuit away from the swift and unceremonious death of your company.<br><br>This is the story of Grooveshark, the people who built it and the relationships that were tested during its rocky road to growth—and eventual demise.<br><br><br><br>]]></itunes:summary>
+      <itunes:duration>3230</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[982eb23e-1884-11e6-9bde-df44b030ac77]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/K_YOT4ljNec/GLT4955515689.mp3" fileSize="71762546" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/K_YOT4ljNec/GLT4955515689.mp3" length="71762546" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT4955515689.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Pirate Needs Pirate (Season 3, Episode 3)</title>
+      <description>Mike is on a mission to bring his customers something they desperately want. Every week, he embarks on a long and unpredictable journey across international borders and smuggles back some highly sought-after goods. And though what he’s doing is technically legal, Mike goes to unusual lengths to evade authorities who want to shut his whole operation down.&lt;br&gt;&lt;br&gt;What Mike does is a hassle. He’s tired, he’s ready to move on. Still, he can’t seem to shake it, and finds himself stuck running a business he never imagined would make it this far.&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 29 Apr 2016 02:56:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>A look inside a small, grassroots, international smuggling operation.</itunes:subtitle>
+      <itunes:summary><![CDATA[Mike is on a mission to bring his customers something they desperately want. Every week, he embarks on a long and unpredictable journey across international borders and smuggles back some highly sought-after goods. And though what he’s doing is technically legal, Mike goes to unusual lengths to evade authorities who want to shut his whole operation down.<br><br>What Mike does is a hassle. He’s tired, he’s ready to move on. Still, he can’t seem to shake it, and finds himself stuck running a business he never imagined would make it this far.<br><br><br><br>]]></itunes:summary>
+      <itunes:duration>2230</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[67e65546-0cae-11e6-a434-33d850d7b578]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/8jU5MBpHm20/GLT4772408185.mp3" fileSize="47779004" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/8jU5MBpHm20/GLT4772408185.mp3" length="47779004" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT4772408185.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Gaming the System (Season 3, Episode 2)</title>
+      <description>We pick up where we left off in the last episode, and hear how Justin, Emmett, Michael, and Kyle try to extend the life of their video-streaming company by making some risky but important decisions. In the process, their scrappy startup catches the eye of some very powerful people who challenge everything they’ve built.&lt;br&gt;&lt;br&gt;The road of a startup is a bumpy one and, as Justin and his team are finding out, they have only just gotten started.&amp;nbsp; &amp;nbsp;</description>
+      <pubDate>Fri, 22 Apr 2016 03:13:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>It takes 2 percent to make a thing go right.</itunes:subtitle>
+      <itunes:summary><![CDATA[We pick up where we left off in the last episode, and hear how Justin, Emmett, Michael, and Kyle try to extend the life of their video-streaming company by making some risky but important decisions. In the process, their scrappy startup catches the eye of some very powerful people who challenge everything they’ve built.<br><br>The road of a startup is a bumpy one and, as Justin and his team are finding out, they have only just gotten started.&nbsp; &nbsp;]]></itunes:summary>
+      <itunes:duration>2215</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[b3178758-081a-11e6-9211-7f962026695b]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/sCq4CTrinkQ/GLT8574420635.mp3" fileSize="46323879" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/sCq4CTrinkQ/GLT8574420635.mp3" length="46323879" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT8574420635.mp3?updated=1477689688</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Almost Famous (Season 3, Episode 1)</title>
+      <description>Welcome to the first episode of Season 3!&amp;nbsp;&lt;br&gt;&lt;br&gt;This season, we’re doing something new. Instead of following one company over many episodes, we’ll be telling the stories of a bunch of different companies. This season, you’ll meet entrepreneurs from different parts of the world, in all sorts of businesses. We’ll follow prisoners, tailors, smugglers, and tech geeks. And these founders all actually have something in common: their companies are stuck, and they know they need to make a big change. But they have no idea what to change, or whether it will bring the end or a whole new beginning.&amp;nbsp;&lt;br&gt;&lt;br&gt;We’re kicking off this season with a story about a group of friends that moves across the country to launch an unlikely website that they think could replace television. The media loves them. They just need to figure out how to get their users to feel the same way.&amp;nbsp;</description>
+      <pubDate>Fri, 15 Apr 2016 05:35:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>A backpack, a camera, and a big idea</itunes:subtitle>
+      <itunes:summary><![CDATA[Welcome to the first episode of Season 3!&nbsp;<br><br>This season, we’re doing something new. Instead of following one company over many episodes, we’ll be telling the stories of a bunch of different companies. This season, you’ll meet entrepreneurs from different parts of the world, in all sorts of businesses. We’ll follow prisoners, tailors, smugglers, and tech geeks. And these founders all actually have something in common: their companies are stuck, and they know they need to make a big change. But they have no idea what to change, or whether it will bring the end or a whole new beginning.&nbsp;<br><br>We’re kicking off this season with a story about a group of friends that moves across the country to launch an unlikely website that they think could replace television. The media loves them. They just need to figure out how to get their users to feel the same way.&nbsp;]]></itunes:summary>
+      <itunes:duration>1805</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[84d4d148-02ca-11e6-8b8a-3f5b495f32a1]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/L0GMJ4vz2uY/GLT2217622683.mp3" fileSize="36482194" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/L0GMJ4vz2uY/GLT2217622683.mp3" length="36482194" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT2217622683.mp3?updated=1480100171</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Season 3 Teaser</title>
+      <description>Season 3 launches Thursday, April 14th</description>
+      <pubDate>Fri, 08 Apr 2016 23:36:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>StartUp Podcast Returns</itunes:subtitle>
+      <itunes:summary><![CDATA[Season 3 launches Thursday, April 14th]]></itunes:summary>
+      <itunes:duration>198</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[7b7c0488-fde1-11e5-8baa-378e58c5754b]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/dHIyjLnh91k/GLT1737500601.mp3" fileSize="5555722" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/dHIyjLnh91k/GLT1737500601.mp3" length="5555722" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT1737500601.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>BONUS - Introducing Sampler (#20.5)</title>
+      <description>This week, we bring you a special bonus episode. In episode #20.5, Alex shares Gimlet’s latest podcast,&amp;nbsp;&lt;a href="http://gimletmedia.com/sampler"&gt;Sampler&lt;/a&gt;, hosted by&amp;nbsp;&lt;a href="https://twitter.com/bmluse"&gt;Brittany Luse&lt;/a&gt;.&lt;br&gt;&lt;br&gt;**Warning, this episode contains content and language not suitable for children.&lt;br&gt;&lt;br&gt;&lt;strong&gt;About Sampler:&lt;br&gt;&lt;/strong&gt;&lt;br&gt;Sampler brings you the best moments from the world of podcasts. Each week, we'll feature bite size tastes from a variety of shows plus we'll talk with other podcasters to find out why they do what they do. Sampler is hosted by Brittany Luse. This week’s guest co-host is Gimlet senior producer&amp;nbsp;&lt;a href="https://twitter.com/cjneary"&gt;Chris Neary&lt;/a&gt;.&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Thu, 28 Jan 2016 15:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Hear Gimlet's Newest Podcast</itunes:subtitle>
+      <itunes:summary><![CDATA[This week, we bring you a special bonus episode. In episode #20.5, Alex shares Gimlet’s latest podcast,&nbsp;<a href="http://gimletmedia.com/sampler">Sampler</a>, hosted by&nbsp;<a href="https://twitter.com/bmluse">Brittany Luse</a>.<br><br>**Warning, this episode contains content and language not suitable for children.<br><br><strong>About Sampler:<br></strong><br>Sampler brings you the best moments from the world of podcasts. Each week, we'll feature bite size tastes from a variety of shows plus we'll talk with other podcasters to find out why they do what they do. Sampler is hosted by Brittany Luse. This week’s guest co-host is Gimlet senior producer&nbsp;<a href="https://twitter.com/cjneary">Chris Neary</a>.<br><br>]]></itunes:summary>
+      <itunes:duration>2033</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[e4343d8a-c5f9-11e5-bb7b-b35ec3b1b33a]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/8iSjyoTFLP4/GLT5898785960.mp3" fileSize="31575980" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/8iSjyoTFLP4/GLT5898785960.mp3" length="31575980" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT5898785960.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>#20 Disorg Chart</title>
+      <description>As we wrap up this mini-season, Lisa Chow comes back from maternity leave and notices some big changes at Gimlet. And these changes... they aren't all for the better. Lisa talks to Gimlet employees about concerns over power, accountability, and control - things that crop up when you go from startup, to regular company. And she takes those concerns to the bosses.&amp;nbsp;&lt;br&gt;&lt;br&gt;Music for the episode from the band Hot Mom's Dot Gov. Our theme song was composed and performed by Mark Phillips. Ad music from the band Build Buildings.&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 08 Jan 2016 00:08:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>As we wrap up this mini-season, Lisa Chow comes b…</itunes:subtitle>
+      <itunes:summary><![CDATA[As we wrap up this mini-season, Lisa Chow comes back from maternity leave and notices some big changes at Gimlet. And these changes... they aren't all for the better. Lisa talks to Gimlet employees about concerns over power, accountability, and control - things that crop up when you go from startup, to regular company. And she takes those concerns to the bosses.&nbsp;<br><br>Music for the episode from the band Hot Mom's Dot Gov. Our theme song was composed and performed by Mark Phillips. Ad music from the band Build Buildings.<br><br><br><br>]]></itunes:summary>
+      <itunes:duration>2040</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/240894652]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/irgmP-md4Mk/GLT1647332185.mp3" fileSize="28802821" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/irgmP-md4Mk/GLT1647332185.mp3" length="28802821" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT1647332185.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>#19 Diversity Report</title>
+      <description>If you were to walk into Gimlet HQ, there are a few things you’d probably notice right off the bat. First, it’s crowded - like a grungy dorm room. Second, the lighting… it’s not great. Not many windows. Third, it’s white. Really white. 24 of Gimlet’s 27 employees are white. In this episode, we look at diversity (or lack thereof) at Gimlet. And we try to figure out what diversity should mean for the company going forward.&amp;nbsp;&lt;br&gt;&lt;br&gt;The Facts:&lt;br&gt;&lt;br&gt;Our theme song was written and performed by Mark Phillips.&lt;br&gt;&lt;br&gt;John Kimbrough composed music for this episode.&lt;br&gt;&lt;br&gt;More music written and performed by John Delore along with his band mates, Jordan Scanella, Sam Merrick and Isamu McGregor.&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 18 Dec 2015 04:22:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>If you were to walk into Gimlet HQ, there are a f…</itunes:subtitle>
+      <itunes:summary><![CDATA[If you were to walk into Gimlet HQ, there are a few things you’d probably notice right off the bat. First, it’s crowded - like a grungy dorm room. Second, the lighting… it’s not great. Not many windows. Third, it’s white. Really white. 24 of Gimlet’s 27 employees are white. In this episode, we look at diversity (or lack thereof) at Gimlet. And we try to figure out what diversity should mean for the company going forward.&nbsp;<br><br>The Facts:<br><br>Our theme song was written and performed by Mark Phillips.<br><br>John Kimbrough composed music for this episode.<br><br>More music written and performed by John Delore along with his band mates, Jordan Scanella, Sam Merrick and Isamu McGregor.<br><br><br>]]></itunes:summary>
+      <itunes:duration>2678</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/238075970]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/Gu2PgzA5rbo/GLT5916778021.mp3" fileSize="39008548" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/Gu2PgzA5rbo/GLT5916778021.mp3" length="39008548" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT5916778021.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>#18 Pitch Perfect 2</title>
+      <description>Gimlet is growing fast. We have four shows on the air, and several others in pre-production. If we want to grow faster, though, we could use some more cash. Matt and Alex head back into the world of venture capital, deciding whether or not to raise another round of financing, this time, much bigger.&lt;br&gt;&lt;br&gt;Our theme song was written and performed by Mark Phillips.&lt;br&gt;&lt;br&gt;John Kimbrough composed music for this episode.&lt;br&gt;&lt;br&gt;More music written and performed by John Delore along with his band mates, Jordan Scanella, Sam Merrickand Isamu McGregor.&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Thu, 03 Dec 2015 23:59:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Gimlet is growing fast. We have four shows on the…</itunes:subtitle>
+      <itunes:summary><![CDATA[Gimlet is growing fast. We have four shows on the air, and several others in pre-production. If we want to grow faster, though, we could use some more cash. Matt and Alex head back into the world of venture capital, deciding whether or not to raise another round of financing, this time, much bigger.<br><br>Our theme song was written and performed by Mark Phillips.<br><br>John Kimbrough composed music for this episode.<br><br>More music written and performed by John Delore along with his band mates, Jordan Scanella, Sam Merrickand Isamu McGregor.<br><br><br>]]></itunes:summary>
+      <itunes:duration>2172</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/235975547]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/Tuvvnqfyo8w/GLT9321897189.mp3" fileSize="30915604" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/Tuvvnqfyo8w/GLT9321897189.mp3" length="30915604" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT9321897189.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>#17 Words About Words From Our Sponsors</title>
+      <description>Gimlet is starting a new line of business, and it’s a complicated one: Branded content. Branded content is a piece of media (a video, a story, a podcast, etc.) paid for by a company that then has editorial control over the product. Lots of companies have been asking Gimlet to make podcasts for them. But, as we see in this episode, there are some very real anxieties about how to do this right.&amp;nbsp;&lt;br&gt;&lt;br&gt;As part of this episode, we’ve put together Gimlet Media’s Advertising Guidelines. You can find them on our website.&lt;br&gt;&lt;br&gt;Our theme song was written and performed by Mark Phillips.&lt;br&gt;&lt;br&gt;John Kimbrough composed music for this episode.&lt;br&gt;&lt;br&gt;More music written and performed by John Delore along with his band mates, Jordan Scanella, Sam Merrick and Isamu McGregor.&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Fri, 20 Nov 2015 01:23:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Gimlet is starting a new line of business, and it…</itunes:subtitle>
+      <itunes:summary><![CDATA[Gimlet is starting a new line of business, and it’s a complicated one: Branded content. Branded content is a piece of media (a video, a story, a podcast, etc.) paid for by a company that then has editorial control over the product. Lots of companies have been asking Gimlet to make podcasts for them. But, as we see in this episode, there are some very real anxieties about how to do this right.&nbsp;<br><br>As part of this episode, we’ve put together Gimlet Media’s Advertising Guidelines. You can find them on our website.<br><br>Our theme song was written and performed by Mark Phillips.<br><br>John Kimbrough composed music for this episode.<br><br>More music written and performed by John Delore along with his band mates, Jordan Scanella, Sam Merrick and Isamu McGregor.<br><br><br><br>]]></itunes:summary>
+      <itunes:duration>2479</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/233862595]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/c3eEqs1kmWI/GLT3146215137.mp3" fileSize="35827043" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/c3eEqs1kmWI/GLT3146215137.mp3" length="35827043" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT3146215137.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>#16 The Secret Formula</title>
+      <description>Gimlet is making a big, expensive bet. The kind of bet that could make or break the company. And it’s a bet that comes down to one factor: What is Gimlet’s competitive advantage? As the company launches its fourth new show, “Surprisingly Awesome,” we take a deep dive in to how the show was made. From the kernel of an idea to the final product. And, along the way, we look at what we believe is Gimlet’s secret formula for making podcasts.&lt;br&gt;&lt;br&gt;The Facts:&lt;br&gt;&lt;br&gt;Our theme song was written and performed by Mark Phillips.&lt;br&gt;&lt;br&gt;John Kimbrough composed music for this episode.&lt;br&gt;&lt;br&gt;More music written and performed by John Delore along with his band mates, Jordan Scanella, Sam Merrickand Isamu McGregor.&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Wed, 04 Nov 2015 00:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Gimlet is making a big, expensive bet. The kind o…</itunes:subtitle>
+      <itunes:summary><![CDATA[Gimlet is making a big, expensive bet. The kind of bet that could make or break the company. And it’s a bet that comes down to one factor: What is Gimlet’s competitive advantage? As the company launches its fourth new show, “Surprisingly Awesome,” we take a deep dive in to how the show was made. From the kernel of an idea to the final product. And, along the way, we look at what we believe is Gimlet’s secret formula for making podcasts.<br><br>The Facts:<br><br>Our theme song was written and performed by Mark Phillips.<br><br>John Kimbrough composed music for this episode.<br><br>More music written and performed by John Delore along with his band mates, Jordan Scanella, Sam Merrickand Isamu McGregor.<br><br>]]></itunes:summary>
+      <itunes:duration>2794</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/231752817]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/P84TYjAq6bg/GLT4187906976.mp3" fileSize="40870138" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/P84TYjAq6bg/GLT4187906976.mp3" length="40870138" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT4187906976.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>#15 Married To Your Business</title>
+      <description>We return to the offices of Gimlet for the start of a new mini-season. It's been a year since the company launched and things are changing... fast. In this episode, Alex and his wife, Nazanin, wrestle with a huge decision that has implications for both the company and their family.</description>
+      <pubDate>Thu, 22 Oct 2015 13:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>We return to the offices of Gimlet for the start …</itunes:subtitle>
+      <itunes:summary><![CDATA[We return to the offices of Gimlet for the start of a new mini-season. It's been a year since the company launched and things are changing... fast. In this episode, Alex and his wife, Nazanin, wrestle with a huge decision that has implications for both the company and their family.]]></itunes:summary>
+      <itunes:duration>2088</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/229633246]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/LWOjSzxH98I/GLT7859636128.mp3" fileSize="29568522" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/LWOjSzxH98I/GLT7859636128.mp3" length="29568522" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT7859636128.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>BONUS: But Wait, There's More!</title>
+      <description>A Gimlet update and a special announcement</description>
+      <pubDate>Fri, 17 Jul 2015 02:22:41 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>A Gimlet update and a special announcement</itunes:subtitle>
+      <itunes:summary><![CDATA[A Gimlet update and a special announcement]]></itunes:summary>
+      <itunes:duration>1738</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/215077404]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/rmCryDkd1y8/GLT9106675706.mp3" fileSize="40284578" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/rmCryDkd1y8/GLT9106675706.mp3" length="40284578" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT9106675706.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>116 Men and a Baby (S2 Ep10)</title>
+      <description>Lessons learned in business and love&amp;nbsp;</description>
+      <pubDate>Thu, 02 Jul 2015 01:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Lessons learned in business and love</itunes:subtitle>
+      <itunes:summary><![CDATA[Lessons learned in business and love&nbsp;]]></itunes:summary>
+      <itunes:duration>2182</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/213055246]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/YrQrsvdClwE/GLT6770134594.mp3" fileSize="31081534" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/YrQrsvdClwE/GLT6770134594.mp3" length="31081534" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT6770134594.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Dating Ring Of Fire (S2 Ep9)</title>
+      <description>Under pressure, the Dating Ring founders make a big decision</description>
+      <pubDate>Thu, 25 Jun 2015 01:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Under pressure, the Dating Ring founders make a b…</itunes:subtitle>
+      <itunes:summary><![CDATA[Under pressure, the Dating Ring founders make a big decision]]></itunes:summary>
+      <itunes:duration>1738</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/212038700]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/ffX-F5fiUco/GLT4775300256.mp3" fileSize="23972049" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/ffX-F5fiUco/GLT4775300256.mp3" length="23972049" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT4775300256.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Til Debt Do Us Part (S2 Ep8)</title>
+      <description>Lauren and Emma visit the CEO Whisperer</description>
+      <pubDate>Thu, 18 Jun 2015 01:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Lauren and Emma visit the CEO Whisperer</itunes:subtitle>
+      <itunes:summary><![CDATA[Lauren and Emma visit the CEO Whisperer]]></itunes:summary>
+      <itunes:duration>1697</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/211017203]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/4bcbMPnOpw4/GLT9022075982.mp3" fileSize="23327973" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/4bcbMPnOpw4/GLT9022075982.mp3" length="23327973" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT9022075982.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Survival's a Pitch (S2 Ep7)</title>
+      <description>A golden opportunity sows seeds of doubt</description>
+      <pubDate>Wed, 10 Jun 2015 01:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>A golden opportunity sows seeds of doubt</itunes:subtitle>
+      <itunes:summary><![CDATA[A golden opportunity sows seeds of doubt]]></itunes:summary>
+      <itunes:duration>1820</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/209952501]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/C9wusb-o_lU/GLT2322681292.mp3" fileSize="25292382" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/C9wusb-o_lU/GLT2322681292.mp3" length="25292382" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT2322681292.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Profiled (S2 Ep6)</title>
+      <description>In online dating, love is not blind</description>
+      <pubDate>Tue, 02 Jun 2015 01:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>In online dating, love is not blind</itunes:subtitle>
+      <itunes:summary><![CDATA[In online dating, love is not blind]]></itunes:summary>
+      <itunes:duration>1843</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/208879014]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/kKyJQjwhrVw/GLT7146862216.mp3" fileSize="25656842" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/kKyJQjwhrVw/GLT7146862216.mp3" length="25656842" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT7146862216.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>BONUS - Gimlet's Newest Podcast (Season 2, #5.5)</title>
+      <description>This week, we take a break from our usual programming on Dating Ring to bring you this very special bonus episode, featuring Gimlet's newest show.&amp;nbsp;</description>
+      <pubDate>Fri, 29 May 2015 23:02:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>This week, we take a break from our usual program…</itunes:subtitle>
+      <itunes:summary><![CDATA[This week, we take a break from our usual programming on Dating Ring to bring you this very special bonus episode, featuring Gimlet's newest show.&nbsp;]]></itunes:summary>
+      <itunes:duration>1613</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/207894228]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/0LZA-p_crC0/GLT4243281433.mp3" fileSize="62135902" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/0LZA-p_crC0/GLT4243281433.mp3" length="62135902" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT4243281433.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Playing With Matches (S2 Ep5)</title>
+      <description>Inside Dating Ring's Matchmaking System</description>
+      <pubDate>Wed, 20 May 2015 01:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Inside Dating Ring's Matchmaking System</itunes:subtitle>
+      <itunes:summary><![CDATA[Inside Dating Ring's Matchmaking System]]></itunes:summary>
+      <itunes:duration>1906</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/206641319]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/jT7M107vsUI/GLT2620175446.mp3" fileSize="26665795" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/jT7M107vsUI/GLT2620175446.mp3" length="26665795" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT2620175446.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Save The Date (S2 Ep4)</title>
+      <description>Save The Date (S2 Ep4) by Gimlet</description>
+      <pubDate>Wed, 13 May 2015 01:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Save The Date (S2 Ep4) by Gimlet</itunes:subtitle>
+      <itunes:summary><![CDATA[Save The Date (S2 Ep4) by Gimlet]]></itunes:summary>
+      <itunes:duration>1802</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/205548180]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/qSCtXKny4LY/GLT7281322169.mp3" fileSize="24993123" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/qSCtXKny4LY/GLT7281322169.mp3" length="24993123" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT7281322169.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Another Side Of The Story (S2 Ep3)</title>
+      <description>Welcome to fundraising</description>
+      <pubDate>Wed, 06 May 2015 01:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Welcome to fundraising</itunes:subtitle>
+      <itunes:summary><![CDATA[Welcome to fundraising]]></itunes:summary>
+      <itunes:duration>1952</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/204451712]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/b0crNYqq-eE/GLT9049974834.mp3" fileSize="27397224" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/b0crNYqq-eE/GLT9049974834.mp3" length="27397224" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT9049974834.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Grow Big Or Go Home (S2 Ep2)</title>
+      <description>Inside the Startup School Y Combinator&amp;nbsp;</description>
+      <pubDate>Thu, 30 Apr 2015 13:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Inside the Startup School Y Combinator</itunes:subtitle>
+      <itunes:summary><![CDATA[Inside the Startup School Y Combinator&nbsp;]]></itunes:summary>
+      <itunes:duration>1996</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/203357473]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/ErGdgfvSGtY/GLT1482140454.mp3" fileSize="28110680" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/ErGdgfvSGtY/GLT1482140454.mp3" length="28110680" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT1482140454.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>Origin Story (S2 Ep1)</title>
+      <description>First comes love...then comes equity&amp;nbsp;&lt;br&gt;&lt;br&gt;StartUp is a podcast series about what it’s really like to get a business off the ground. In Season 1, Alex Blumberg told the story of launching this business, Gimlet Media, a podcast network.&amp;nbsp;&lt;br&gt;&lt;br&gt;In Season 2, Alex is joined by co-Host Lisa Chow, to follow an entirely new company. The business is Dating Ring, a dating company that combines technology with old-fashioned matchmaking. The founders are women in their 20s, outsiders in the male-dominated world of Silicon Valley. And over the 10 episodes, we'll take you inside that world. Some of the challenges they face are different from Alex’s: founder disagreements, hellish fundraising, and sexism. But just like Gimlet's story, theirs is also a transparent account of something that happens everyday in America, but we rarely get to see firsthand: starting a business.&amp;nbsp;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Thu, 23 Apr 2015 13:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>First comes love...then comes equity StartUp is…</itunes:subtitle>
+      <itunes:summary><![CDATA[First comes love...then comes equity&nbsp;<br><br>StartUp is a podcast series about what it’s really like to get a business off the ground. In Season 1, Alex Blumberg told the story of launching this business, Gimlet Media, a podcast network.&nbsp;<br><br>In Season 2, Alex is joined by co-Host Lisa Chow, to follow an entirely new company. The business is Dating Ring, a dating company that combines technology with old-fashioned matchmaking. The founders are women in their 20s, outsiders in the male-dominated world of Silicon Valley. And over the 10 episodes, we'll take you inside that world. Some of the challenges they face are different from Alex’s: founder disagreements, hellish fundraising, and sexism. But just like Gimlet's story, theirs is also a transparent account of something that happens everyday in America, but we rarely get to see firsthand: starting a business.&nbsp;<br><br><br><br>]]></itunes:summary>
+      <itunes:duration>2010</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/202208246]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/TnWsuVLFidk/GLT6732031595.mp3" fileSize="28322586" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/TnWsuVLFidk/GLT6732031595.mp3" length="28322586" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT6732031595.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>#14 Where We Are</title>
+      <description>An end and a beginning&amp;nbsp;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;</description>
+      <pubDate>Sun, 15 Feb 2015 01:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>An end and a beginning</itunes:subtitle>
+      <itunes:summary><![CDATA[An end and a beginning&nbsp;<br><br><br><br><br>]]></itunes:summary>
+      <itunes:duration>2305</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/191508217]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/odkRu3NR4vA/GLT5995614380.mp3" fileSize="33048868" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/odkRu3NR4vA/GLT5995614380.mp3" length="33048868" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT5995614380.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>#13 Fake It Til You Make It</title>
+      <description>Episode 13 addresses a question that has been dogging us since the company’s beginnings: Are we a technology company or a content company?&lt;br&gt;&lt;br&gt;This question led to months of debate. Many voices weighed in on either side, including Marco Arment, the lead developer of Tumblr and creator of Instapaper, who came in surprisingly anti-tech.&lt;br&gt;&lt;br&gt;A few weeks back, we had a breakthrough when one of the most successful tech companies in the world paid a visit to the Gimlet Media headquarters.&lt;br&gt;&lt;br&gt;SPOILER: Check out the video demo of the app prototype we built with Google Ventures on this week’s episode of StartUp: https://www.youtube.com/watch?v=iqGLrMjBLZ4&amp;nbsp;&lt;br&gt;&lt;br&gt;We should caveat that this is not a real app, it’s just a prototype - a series of images stitched together to give the appearance of an app. You can’t download it in the App store, or anywhere else.&lt;br&gt;&lt;br&gt;After you watch the video, we’d love your feedback. Fill out our survey about the prototype here: http://bit.ly/1HPFFWu&lt;br&gt;&lt;br&gt;For more about design sprints, how they work, and how you can do one yourself -- check out this tutorial from the Google Ventures team: http://www.gv.com/sprint</description>
+      <pubDate>Sun, 01 Feb 2015 01:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Episode 13 addresses a question that has been dog…</itunes:subtitle>
+      <itunes:summary><![CDATA[Episode 13 addresses a question that has been dogging us since the company’s beginnings: Are we a technology company or a content company?<br><br>This question led to months of debate. Many voices weighed in on either side, including Marco Arment, the lead developer of Tumblr and creator of Instapaper, who came in surprisingly anti-tech.<br><br>A few weeks back, we had a breakthrough when one of the most successful tech companies in the world paid a visit to the Gimlet Media headquarters.<br><br>SPOILER: Check out the video demo of the app prototype we built with Google Ventures on this week’s episode of StartUp: https://www.youtube.com/watch?v=iqGLrMjBLZ4&nbsp;<br><br>We should caveat that this is not a real app, it’s just a prototype - a series of images stitched together to give the appearance of an app. You can’t download it in the App store, or anywhere else.<br><br>After you watch the video, we’d love your feedback. Fill out our survey about the prototype here: http://bit.ly/1HPFFWu<br><br>For more about design sprints, how they work, and how you can do one yourself -- check out this tutorial from the Google Ventures team: http://www.gv.com/sprint]]></itunes:summary>
+      <itunes:duration>1751</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/189223270]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/--VF_gjNrsI/GLT5355342153.mp3" fileSize="24191477" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/--VF_gjNrsI/GLT5355342153.mp3" length="24191477" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT5355342153.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>#12 Burnout</title>
+      <description>Recovering from a breaking point&lt;br&gt;&lt;br&gt;Thanks to everyone who took our listener survey last week. To see the results, visit: https://hearstartup.typeform.com/report/ofUGcO/wheU&amp;nbsp;</description>
+      <pubDate>Mon, 19 Jan 2015 01:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Recovering from a breaking pointThanks to every…</itunes:subtitle>
+      <itunes:summary><![CDATA[Recovering from a breaking point<br><br>Thanks to everyone who took our listener survey last week. To see the results, visit: https://hearstartup.typeform.com/report/ofUGcO/wheU&nbsp;]]></itunes:summary>
+      <itunes:duration>1558</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/186920380]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/K9tV4ycM5pY/GLT4671407482.mp3" fileSize="21099833" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/K9tV4ycM5pY/GLT4671407482.mp3" length="21099833" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT4671407482.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>#11 Know Your Customer</title>
+      <description>Lessons on building an audience&amp;nbsp;&lt;br&gt;&lt;br&gt;While working on this episode, we realized we want to know more about our audience. So, we created a survey. It takes about two minutes to complete, and you can find it at startuplistener.com&amp;nbsp; We would be very grateful if you took the time to help us learn more about our listeners. Thanks!</description>
+      <pubDate>Mon, 05 Jan 2015 01:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Lessons on building an audience While working o…</itunes:subtitle>
+      <itunes:summary><![CDATA[Lessons on building an audience&nbsp;<br><br>While working on this episode, we realized we want to know more about our audience. So, we created a survey. It takes about two minutes to complete, and you can find it at startuplistener.com&nbsp; We would be very grateful if you took the time to help us learn more about our listeners. Thanks!]]></itunes:summary>
+      <itunes:duration>1478</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/184695569]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/83PmLvvBXK8/GLT8981238628.mp3" fileSize="19817952" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/83PmLvvBXK8/GLT8981238628.mp3" length="19817952" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT8981238628.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>#10 Mixing Art And Business</title>
+      <description>Lessons on outgrowing your business plan&amp;nbsp;</description>
+      <pubDate>Mon, 22 Dec 2014 13:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Lessons on outgrowing your business plan</itunes:subtitle>
+      <itunes:summary><![CDATA[Lessons on outgrowing your business plan&nbsp;]]></itunes:summary>
+      <itunes:duration>1789</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/182742155]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/Y3wA-t1qB0o/GLT3695416453.mp3" fileSize="24794592" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/Y3wA-t1qB0o/GLT3695416453.mp3" length="24794592" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT3695416453.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>#9 We Made A Mistake</title>
+      <description>Gimlet Media addresses a company mistake.</description>
+      <pubDate>Sun, 07 Dec 2014 01:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Gimlet Media addresses a company mistake.</itunes:subtitle>
+      <itunes:summary><![CDATA[Gimlet Media addresses a company mistake.]]></itunes:summary>
+      <itunes:duration>1662</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/180646134]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/N9_QFGW-NSU/GLT9516092940.mp3" fileSize="22759549" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/N9_QFGW-NSU/GLT9516092940.mp3" length="22759549" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT9516092940.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>#8 Our New Show</title>
+      <description>Welcome, Reply All&amp;nbsp;</description>
+      <pubDate>Sun, 23 Nov 2014 01:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Welcome, Reply All</itunes:subtitle>
+      <itunes:summary><![CDATA[Welcome, Reply All&nbsp;]]></itunes:summary>
+      <itunes:duration>1582</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/178503526]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/lyfYCZhnGJE/GLT1817056551.mp3" fileSize="21487281" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/lyfYCZhnGJE/GLT1817056551.mp3" length="21487281" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT1817056551.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>#7 How Listeners Become Owners</title>
+      <description>Are you ready to invest in Gimlet Media?</description>
+      <pubDate>Sun, 09 Nov 2014 01:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Are you ready to invest in Gimlet Media?</itunes:subtitle>
+      <itunes:summary><![CDATA[Are you ready to invest in Gimlet Media?]]></itunes:summary>
+      <itunes:duration>1978</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/176185715]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/U-LwPhyQJQY/GLT3818282921.mp3" fileSize="27818945" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/U-LwPhyQJQY/GLT3818282921.mp3" length="27818945" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT3818282921.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>#6 How To Value Your Startup</title>
+      <description>It's all about your story.&amp;nbsp;</description>
+      <pubDate>Sun, 26 Oct 2014 01:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>It's all about your story.</itunes:subtitle>
+      <itunes:summary><![CDATA[It's all about your story.&nbsp;]]></itunes:summary>
+      <itunes:duration>1916</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/174179641]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/r6lzKf1APvk/GLT2186088774.mp3" fileSize="26824620" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/r6lzKf1APvk/GLT2186088774.mp3" length="26824620" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT2186088774.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>#5 How To Name Your Company</title>
+      <description>Choosing a favorite is only the beginning.&amp;nbsp;</description>
+      <pubDate>Mon, 13 Oct 2014 13:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Choosing a favorite is only the beginning.</itunes:subtitle>
+      <itunes:summary><![CDATA[Choosing a favorite is only the beginning.&nbsp;]]></itunes:summary>
+      <itunes:duration>1599</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/172008630]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/CE5n2y7vfL8/GLT6609892851.mp3" fileSize="21754775" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/CE5n2y7vfL8/GLT6609892851.mp3" length="21754775" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT6609892851.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>#4 Startups are a Risky Business</title>
+      <description>StartUps are a risky business, but there's lots of reasons to write a check.&amp;nbsp;</description>
+      <pubDate>Sun, 28 Sep 2014 01:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>StartUps are a risky business, but there's lots o…</itunes:subtitle>
+      <itunes:summary><![CDATA[StartUps are a risky business, but there's lots of reasons to write a check.&nbsp;]]></itunes:summary>
+      <itunes:duration>1675</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/169954282]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/HYOwfQtofKg/GLT5172136015.mp3" fileSize="22964767" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/HYOwfQtofKg/GLT5172136015.mp3" length="22964767" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT5172136015.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>#3 How To Divide An Imaginary Pie</title>
+      <description>How much of your company should you give up when you bring on a partner?</description>
+      <pubDate>Wed, 17 Sep 2014 13:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>How much of your company should you give up when …</itunes:subtitle>
+      <itunes:summary><![CDATA[How much of your company should you give up when you bring on a partner?]]></itunes:summary>
+      <itunes:duration>1859</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/168182483]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/-5ysZvkmXVU/GLT1728211632.mp3" fileSize="25905110" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/-5ysZvkmXVU/GLT1728211632.mp3" length="25905110" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT1728211632.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>#2 Is Podcasting the Future or the Past?</title>
+      <description>Dreaming big is harder than you'd think.&amp;nbsp;</description>
+      <pubDate>Fri, 05 Sep 2014 13:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>Dreaming big is harder than you'd think.</itunes:subtitle>
+      <itunes:summary><![CDATA[Dreaming big is harder than you'd think.&nbsp;]]></itunes:summary>
+      <itunes:duration>1467</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/166357477]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/T81O0I0GqQU/GLT8744564157.mp3" fileSize="19634468" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/T81O0I0GqQU/GLT8744564157.mp3" length="19634468" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT8744564157.mp3</feedburner:origEnclosureLink>
+    </item>
+    <item>
+      <title>#1 How Not to Pitch a Billionaire</title>
+      <description>This is a series about what happens when someone who knows nothing about business starts one. It's called StartUp.&amp;nbsp; In episode one, Alex Blumberg botches his pitch to Silicon Valley billionaire Chris Sacca.</description>
+      <pubDate>Sun, 06 Apr 2014 00:00:00 -0000</pubDate>
+      <itunes:author>Gimlet</itunes:author>
+      <itunes:episodeType>full</itunes:episodeType>
+      <itunes:subtitle>This is a series about what happens when someone …</itunes:subtitle>
+      <itunes:summary><![CDATA[This is a series about what happens when someone who knows nothing about business starts one. It's called StartUp.&nbsp; In episode one, Alex Blumberg botches his pitch to Silicon Valley billionaire Chris Sacca.]]></itunes:summary>
+      <itunes:duration>1646</itunes:duration>
+      <itunes:explicit>yes</itunes:explicit>
+      <guid isPermaLink="false"><![CDATA[tag:soundcloud,2010:tracks/165352308]]></guid>
+      <author>hearstartup@gmail.com (Gimlet)</author>
+      <media:content url="http://feeds.hearstartup.com/~r/hearstartup/~5/8WY8gs_EiG0/GLT6739184420.mp3" fileSize="22497906" type="audio/mpeg" />
+      <itunes:keywords>startup,Blumberg,Alex,Blumberg,business,entrepreneurship,podcast,company,podcast,network</itunes:keywords>
+      <enclosure url="http://feeds.hearstartup.com/~r/hearstartup/~5/8WY8gs_EiG0/GLT6739184420.mp3" length="22497906" type="audio/mpeg" />
+      <feedburner:origEnclosureLink>http://traffic.megaphone.fm/GLT6739184420.mp3</feedburner:origEnclosureLink>
+    </item>
+    <media:credit role="author">Gimlet</media:credit>
+    <media:rating>nonadult</media:rating>
+    <media:description type="plain">The business origin story you never get to hear</media:description>
+  </channel>
+</rss>

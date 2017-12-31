@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd" version="2.0">
+  <channel>
+    <title>Eaten By A Grue: Infocom, Text Adventures, and Interactive Fiction</title>
+    <link>http://monsterfeet.com/</link>
+    <language>en-us</language>
+    <copyright>Public Domain</copyright>
+    <itunes:subtitle>Co-hosted by Kevin Savetz and Carrington Vanston</itunes:subtitle>
+    <itunes:author>Monster Feet</itunes:author>
+    <itunes:summary>Kevin Savetz and Carrington Vanston discuss and review classic Infocom games, text adventures, and interactive fiction.</itunes:summary>
+    <description>Kevin Savetz and Carrington Vanston discuss and review classic Infocom games, text adventures, and interactive fiction.</description>
+    <itunes:keywords>Infocom,text adventure,interactive fiction,retrocomputer,retro-computer,vintage,adventure games,1980s,1980,80s,Carrington Vanston,Kevin Savetz</itunes:keywords>
+    <itunes:owner>
+      <itunes:name>Monster Feet</itunes:name>
+      <itunes:email>grue@monsterfeet.com</itunes:email>
+    </itunes:owner>
+    <itunes:image href="http://monsterfeet.com/itunes/itunes_grue.png" />
+    <itunes:category text="Games &amp; Hobbies">
+      <itunes:category text="Video Games" />
+    </itunes:category>
+    <itunes:explicit>no</itunes:explicit>
+    <atom:link href="http://monsterfeet.com/grue.rss" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Sorcerer</title>
+      <itunes:subtitle>Infocom's Second Spellslinger</itunes:subtitle>
+      <itunes:author>Monster Feet</itunes:author>
+      <itunes:image href="http://monsterfeet.com/itunes/itunes_grue.png" />
+      <itunes:summary>Venture forth with the middle child of Infocom's Enchanter series, where food is unnecessary, sleep is unwelcome, and a glass maze can drive you batty.</itunes:summary>
+      <description>Venture forth with the middle child of Infocom's Enchanter series, where food is unnecessary, sleep is unwelcome, and a glass maze can drive you batty.</description>
+      <content:encoded><![CDATA[<p>Venture forth with the middle child of Infocom's Enchanter series, where food is unnecessary, sleep is unwelcome, and a glass maze can drive you batty.</p>
+
+<p>Hosts: <a href="http://www.savetz.com">Kevin Savetz</a> and <a href="http://carringtonvanston.net">Carrington Vanston</a></p>
+
+<p>Theme tune: "It Is Pitch Dark" by <a href="http://frontalot.com">MC Frontalot</a></p>
+
+<p>Find links, notes, and more episodes of Eaten By A Grue at <a href="http://monsterfeet.com">MonsterFeet.com</a></p>
+
+<p>Next episode: Plundered Hearts</p>]]></content:encoded>
+      <enclosure url="http://traffic.libsyn.com/monsterfeet/grue_014.mp3" length="55265194" type="audio/mpeg" />
+      <guid isPermaLink="false">http://monsterfeet.com/grue/#14</guid>
+      <link>http://monsterfeet.com/grue/#14</link>
+      <pubDate>Thu, 28 Dec 2017 08:00:00 GMT</pubDate>
+      <itunes:duration>01:16:29</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:keywords>Sorcerer,Infocom,text adventure,interactive fiction,retrocomputer,retro-computer,vintage,adventure games,1980s,1980,80s,Carrington Vanston,Kevin Savetz</itunes:keywords>
+    </item>
+    <item>
+      <title>Suspended</title>
+      <itunes:subtitle>Infocom's Universal Robots</itunes:subtitle>
+      <itunes:author>Monster Feet</itunes:author>
+      <itunes:image href="http://monsterfeet.com/itunes/itunes_grue.png" />
+      <itunes:summary>Removed from society, frozen in time, and fumbling to interact with the outside world only through remote electronics, Suspended might as well have been called Podcasters.</itunes:summary>
+      <description>Removed from society, frozen in time, and fumbling to interact with the outside world only through remote electronics, Suspended might as well have been called Podcasters.</description>
+      <content:encoded><![CDATA[<p>Removed from society, frozen in time, and fumbling to interact with the outside world only through remote electronics, Suspended might as well have been called Podcasters.</p>
+
+<p>Hosts: <a href="http://www.savetz.com">Kevin Savetz</a> and <a href="http://carringtonvanston.net">Carrington Vanston</a></p>
+
+<p>Theme tune: "It Is Pitch Dark" by <a href="http://frontalot.com">MC Frontalot</a></p>
+
+<p>Find links, notes, and more episodes of Eaten By A Grue at <a href="http://monsterfeet.com">MonsterFeet.com</a></p>
+
+<p>Next episode: Sorcerer</p>]]></content:encoded>
+      <enclosure url="http://traffic.libsyn.com/monsterfeet/grue_013.mp3" length="67021865" type="audio/mpeg" />
+      <guid isPermaLink="false">http://monsterfeet.com/grue/#13</guid>
+      <link>http://monsterfeet.com/grue/#13</link>
+      <pubDate>Sat, 25 Nov 2017 08:00:00 GMT</pubDate>
+      <itunes:duration>01:32:49</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:keywords>Suspended,Infocom,text adventure,interactive fiction,retrocomputer,retro-computer,vintage,adventure games,1980s,1980,80s,Carrington Vanston,Kevin Savetz</itunes:keywords>
+    </item>
+    <item>
+      <title>Zork II</title>
+      <itunes:subtitle>Infocom's Supernatural Sequel</itunes:subtitle>
+      <itunes:author>Monster Feet</itunes:author>
+      <itunes:image href="http://monsterfeet.com/itunes/itunes_grue.png" />
+      <itunes:summary>Delve once more into the underground world of Zork where only things you can count on are your low cunning and your high number of saved games.</itunes:summary>
+      <description>Delve once more into the underground world of Zork where only things you can count on are your low cunning and your high number of saved games.</description>
+      <content:encoded><![CDATA[<p>Delve once more into the underground world of Zork where only things you can count on are your low cunning and your high number of saved games.</p>
+
+<p>Hosts: <a href="http://www.savetz.com">Kevin Savetz</a> and <a href="http://carringtonvanston.net">Carrington Vanston</a></p>
+
+<p>Theme tune: "It Is Pitch Dark" by <a href="http://frontalot.com">MC Frontalot</a></p>
+
+<p>Find links, notes, and more episodes of Eaten By A Grue at <a href="http://monsterfeet.com">MonsterFeet.com</a></p>
+
+<p>Next episode: Suspended</p>]]></content:encoded>
+      <enclosure url="http://traffic.libsyn.com/monsterfeet/grue_012.mp3" length="60222713" type="audio/mpeg" />
+      <guid isPermaLink="false">http://monsterfeet.com/grue/#12</guid>
+      <link>http://monsterfeet.com/grue/#12</link>
+      <pubDate>Mon, 16 Oct 2017 08:00:00 GMT</pubDate>
+      <itunes:duration>01:23:22</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:keywords>Zork II,Infocom,text adventure,interactive fiction,retrocomputer,retro-computer,vintage,adventure games,1980s,1980,80s,Carrington Vanston,Kevin Savetz</itunes:keywords>
+    </item>
+    <item>
+      <title>Fooblitzky</title>
+      <itunes:subtitle>Infocom's Board Game</itunes:subtitle>
+      <itunes:author>Monster Feet</itunes:author>
+      <itunes:image href="http://monsterfeet.com/itunes/itunes_grue.png" />
+      <itunes:summary>Fooblitzky is a city of secrets where the crosswalks are deadly, a flasher is dropping pianos on people, and the only job is washing dishes. Oh, and everyone is a dog. This is not an April Fool's episode.</itunes:summary>
+      <description>Fooblitzky is a city of secrets where the crosswalks are deadly, a flasher is dropping pianos on people, and the only job is washing dishes. Oh, and everyone is a dog. This is not an April Fool's episode.</description>
+      <content:encoded><![CDATA[<p>Fooblitzky is a city of secrets where the crosswalks are deadly, a flasher is dropping pianos on people, and the only job is washing dishes. Oh, and everyone is a dog. This is not an April Fool's episode.</p>
+
+<p>Hosts: <a href="http://www.savetz.com">Kevin Savetz</a> and <a href="http://carringtonvanston.net">Carrington Vanston</a></p>
+
+<p>Theme tune: "It Is Pitch Dark" by <a href="http://frontalot.com">MC Frontalot</a></p>
+
+<p>Find links, notes, and more episodes of Eaten By A Grue at <a href="http://monsterfeet.com">MonsterFeet.com</a></p>
+
+<p>Next episode: Zork II</p>]]></content:encoded>
+      <enclosure url="http://traffic.libsyn.com/monsterfeet/grue_011.mp3" length="31750797" type="audio/mpeg" />
+      <guid isPermaLink="false">http://monsterfeet.com/grue/#11</guid>
+      <link>http://monsterfeet.com/grue/#11</link>
+      <pubDate>Sat, 22 Jul 2017 08:00:00 GMT</pubDate>
+      <itunes:duration>43:50</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:keywords>Fooblitzky,Infocom,text adventure,interactive fiction,retrocomputer,retro-computer,vintage,adventure games,1980s,1980,80s,Carrington Vanston,Kevin Savetz</itunes:keywords>
+    </item>
+    <item>
+      <title>Starcross</title>
+      <itunes:subtitle>Infocom's Space Adventure</itunes:subtitle>
+      <itunes:author>Monster Feet</itunes:author>
+      <itunes:image href="http://monsterfeet.com/itunes/itunes_grue.png" />
+      <itunes:summary>Two podcasters, both alike in indignity, at KansasFest, where unfair puzzles make unfair games unsolvable. In short, this is no Shakespeare and we are not Starcross lovers.</itunes:summary>
+      <description>Two podcasters, both alike in indignity, at KansasFest, where unfair puzzles make unfair games unsolvable. In short, this is no Shakespeare and we are not Starcross lovers.</description>
+      <content:encoded><![CDATA[<p>Two podcasters, both alike in indignity, at KansasFest, where unfair puzzles make unfair games unsolvable. In short, this is no Shakespeare and we are not Starcross lovers.</p>
+
+<p>Hosts: <a href="http://www.savetz.com">Kevin Savetz</a> and <a href="http://carringtonvanston.net">Carrington Vanston</a></p>
+
+<p>Theme tune: "It Is Pitch Dark" by <a href="http://frontalot.com">MC Frontalot</a></p>
+
+<p>Find links, notes, and more episodes of Eaten By A Grue at <a href="http://monsterfeet.com">MonsterFeet.com</a></p>
+
+<p>Next episode: Fooblitzky</p>]]></content:encoded>
+      <enclosure url="http://traffic.libsyn.com/monsterfeet/grue_010.mp3" length="54060440" type="audio/mpeg" />
+      <guid isPermaLink="false">http://monsterfeet.com/grue/#10</guid>
+      <link>http://monsterfeet.com/grue/#10</link>
+      <pubDate>Thu, 20 Jul 2017 08:00:00 GMT</pubDate>
+      <itunes:duration>01:14:50</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:keywords>Starcross,Infocom,text adventure,interactive fiction,retrocomputer,retro-computer,vintage,adventure games,1980s,1980,80s,Carrington Vanston,Kevin Savetz</itunes:keywords>
+    </item>
+    <item>
+      <title>Thimbleweed Park</title>
+      <itunes:subtitle>LucasArts' Spiritual Successor</itunes:subtitle>
+      <itunes:author>Monster Feet</itunes:author>
+      <itunes:image href="http://monsterfeet.com/itunes/itunes_grue.png" />
+      <itunes:summary>The Gruesome Twosome take a vacation from Infocom to visit Thimbleweed Park, where they solve a murder, discuss free will, and admire de lo res graphics.</itunes:summary>
+      <description>The Gruesome Twosome take a vacation from Infocom to visit Thimbleweed Park, where they solve a murder, discuss free will, and admire de lo res graphics.</description>
+      <content:encoded><![CDATA[<p>The Gruesome Twosome take a vacation from Infocom to visit Thimbleweed Park, where they solve a murder, discuss free will, and admire de lo res graphics.</p>
+
+<p>Hosts: <a href="http://www.savetz.com">Kevin Savetz</a> and <a href="http://carringtonvanston.net">Carrington Vanston</a></p>
+
+<p>Theme tune: "It Is Pitch Dark" by <a href="http://frontalot.com">MC Frontalot</a></p>
+
+<p>Find links, notes, and more episodes of Eaten By A Grue at <a href="http://monsterfeet.com">MonsterFeet.com</a></p>
+
+<p>Next episode: Starcross</p>]]></content:encoded>
+      <enclosure url="http://traffic.libsyn.com/monsterfeet/grue_009.mp3" length="50088243" type="audio/mpeg" />
+      <guid isPermaLink="false">http://monsterfeet.com/grue/#9</guid>
+      <link>http://monsterfeet.com/grue/#9</link>
+      <pubDate>Sat, 20 May 2017 08:00:00 GMT</pubDate>
+      <itunes:duration>01:09:23</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:keywords>Thimbleweed Park,LucasArts,Infocom,text adventure,interactive fiction,retrocomputer,retro-computer,vintage,adventure games,1980s,1980,80s,Carrington Vanston,Kevin Savetz</itunes:keywords>
+    </item>
+    <item>
+      <title>Sherlock: The Riddle of the Crown Jewels</title>
+      <itunes:subtitle>Infocom's Holmesian mystery</itunes:subtitle>
+      <itunes:author>Monster Feet</itunes:author>
+      <itunes:image href="http://monsterfeet.com/itunes/itunes_grue.png" />
+      <itunes:summary>It's 19th Century London, and Crown Jewels are missing! Solving the mystery will take all the skills of the world's greatest dectective! You are also there.</itunes:summary>
+      <description>It's 19th Century London, and Crown Jewels are missing! Solving the mystery will take all the skills of the world's greatest dectective! You are also there.</description>
+      <content:encoded><![CDATA[<p>It's 19th Century London, and Crown Jewels are missing! Solving the mystery will take all the skills of the world's greatest dectective! You are also there.</p>
+
+<p>Hosts: <a href="http://www.savetz.com">Kevin Savetz</a> and <a href="http://carringtonvanston.net">Carrington Vanston</a></p>
+
+<p>Theme tune: "It Is Pitch Dark" by <a href="http://frontalot.com">MC Frontalot</a></p>
+
+<p>Find links, notes, and more episodes of Eaten By A Grue at <a href="http://monsterfeet.com">MonsterFeet.com</a></p>
+
+<p>Next episode: Thimbleweed Park</p>]]></content:encoded>
+      <enclosure url="http://traffic.libsyn.com/monsterfeet/grue_008.mp3" length="53437035" type="audio/mpeg" />
+      <guid isPermaLink="false">http://monsterfeet.com/grue/#8</guid>
+      <link>http://monsterfeet.com/grue/#8</link>
+      <pubDate>Wed, 26 Apr 2017 08:00:00 GMT</pubDate>
+      <itunes:duration>01:14:03</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:keywords>Sherlock The Riddle of the Crown Jewels,Infocom,text adventure,interactive fiction,retrocomputer,retro-computer,vintage,adventure games,1980s,1980,80s,Carrington Vanston,Kevin Savetz</itunes:keywords>
+    </item>
+    <item>
+      <title>Enchanter</title>
+      <itunes:subtitle>Infocom's magical quest</itunes:subtitle>
+      <itunes:author>Monster Feet</itunes:author>
+      <itunes:image href="http://monsterfeet.com/itunes/itunes_grue.png" />
+      <itunes:summary>Enchanter is filled with magic spells, prophetic dreams, and even a talking turtle. Put on your robe and wizard hat, and prepare for adventure. Accio InvisiClues!</itunes:summary>
+      <description>Enchanter is filled with magic spells, prophetic dreams, and even a talking turtle. Put on your robe and wizard hat, and prepare for adventure. Accio InvisiClues!</description>
+      <content:encoded><![CDATA[<p>Enchanter is filled with magic spells, prophetic dreams, and even a talking turtle. Put on your robe and wizard hat, and prepare for adventure. Accio InvisiClues!</p>
+
+<p>Hosts: <a href="http://www.savetz.com">Kevin Savetz</a> and <a href="http://carringtonvanston.net">Carrington Vanston</a></p>
+
+<p>Theme tune: "It Is Pitch Dark" by <a href="http://frontalot.com">MC Frontalot</a></p>
+
+<p>Find links, notes, and more episodes of Eaten By A Grue at <a href="http://monsterfeet.com">MonsterFeet.com</a></p>
+
+<p>Next episode: Sherlock, The Riddle of the Crown Jewels</p>]]></content:encoded>
+      <enclosure url="http://traffic.libsyn.com/monsterfeet/grue_007.mp3" length="51306039" type="audio/mpeg" />
+      <guid isPermaLink="false">http://monsterfeet.com/grue/#7</guid>
+      <link>http://monsterfeet.com/grue/#7</link>
+      <pubDate>Fri, 24 Mar 2017 08:00:00 GMT</pubDate>
+      <itunes:duration>01:11:05</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:keywords>Enchanter,Infocom,text adventure,interactive fiction,retrocomputer,retro-computer,vintage,adventure games,1980s,1980,80s,Carrington Vanston,Kevin Savetz</itunes:keywords>
+    </item>
+    <item>
+      <title>Deadline</title>
+      <itunes:subtitle>Infocom's first mystery</itunes:subtitle>
+      <itunes:author>Monster Feet</itunes:author>
+      <itunes:image href="http://monsterfeet.com/itunes/itunes_grue.png" />
+      <itunes:summary>Infocom's first mystery: a locked room, six suspects, and a ticking clock. Can a pair of fumbling podcasters solve the murder in time? Probably not.</itunes:summary>
+      <description>Infocom's first mystery: a locked room, six suspects, and a ticking clock. Can a pair of fumbling podcasters solve the murder in time? Probably not.</description>
+      <content:encoded><![CDATA[<p>Infocom's first mystery: a locked room, six suspects, and a ticking clock. Can a pair of fumbling podcasters solve the murder in time? Probably not.</p>
+
+<p>Hosts: <a href="http://www.savetz.com">Kevin Savetz</a> and <a href="http://carringtonvanston.net">Carrington Vanston</a></p>
+
+<p>Theme tune: "It Is Pitch Dark" by <a href="http://frontalot.com">MC Frontalot</a></p>
+
+<p>Find links, notes, and more episodes of Eaten By A Grue at <a href="http://monsterfeet.com">MonsterFeet.com</a></p>
+
+<p>Next episode: Enchanter</p>]]></content:encoded>
+      <enclosure url="http://traffic.libsyn.com/monsterfeet/grue_006.mp3" length="58918115" type="audio/mpeg" />
+      <guid isPermaLink="false">http://monsterfeet.com/grue/#6</guid>
+      <link>http://monsterfeet.com/grue/#6</link>
+      <pubDate>Fri, 17 Feb 2017 08:00:00 GMT</pubDate>
+      <itunes:duration>01:21:40</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:keywords>Deadline,Infocom,text adventure,interactive fiction,retrocomputer,retro-computer,vintage,adventure games,1980s,1980,80s,Carrington Vanston,Kevin Savetz</itunes:keywords>
+    </item>
+    <item>
+      <title>Border Zone</title>
+      <itunes:subtitle>Infocom's spy thriller</itunes:subtitle>
+      <itunes:author>Monster Feet</itunes:author>
+      <itunes:image href="http://monsterfeet.com/itunes/itunes_grue.png" />
+      <itunes:summary>Infocom's only espionage story, Border Zone is filled with intrigue and danger in a constantly moving world that doesn't wait while the player types. Tune in to see if our heroes achieve success by stealth, or death by typo.</itunes:summary>
+      <description>Infocom's only espionage story, Border Zone is filled with intrigue and danger in a constantly moving world that doesn't wait while the player types. Tune in to see if our heroes achieve success by stealth, or death by typo.</description>
+      <content:encoded><![CDATA[<p>Infocom's only espionage story, Border Zone is filled with intrigue and danger in a constantly moving world that doesn't wait while the player types. Tune in to see if our heroes achieve success by stealth, or death by typo.</p>
+
+<p>Hosts: <a href="http://www.savetz.com">Kevin Savetz</a> and <a href="http://carringtonvanston.net">Carrington Vanston</a></p>
+
+<p>Theme tune: "It Is Pitch Dark" by <a href="http://frontalot.com">MC Frontalot</a></p>
+
+<p>Find links, notes, and more episodes of Eaten By A Grue at <a href="http://monsterfeet.com">MonsterFeet.com</a></p>
+
+<p>Next episode: Deadline</p>]]></content:encoded>
+      <enclosure url="http://traffic.libsyn.com/monsterfeet/grue_005.mp3" length="48985218" type="audio/mpeg" />
+      <guid isPermaLink="false">http://monsterfeet.com/grue/#5</guid>
+      <link>http://monsterfeet.com/grue/#5</link>
+      <pubDate>Tue, 17 Jan 2017 08:00:00 GMT</pubDate>
+      <itunes:duration>01:07:52</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:keywords>Border Zone,Infocom,text adventure,interactive fiction,retrocomputer,retro-computer,vintage,adventure games,1980s,1980,80s,Carrington Vanston,Kevin Savetz</itunes:keywords>
+    </item>
+    <item>
+      <title>Seastalker</title>
+      <itunes:subtitle>Infocom's nautical adventure</itunes:subtitle>
+      <itunes:author>Monster Feet</itunes:author>
+      <itunes:image href="http://monsterfeet.com/itunes/itunes_grue.png" />
+      <itunes:summary>Ahoy! Kevin and Carrington dive into Seastalker, Infocom's junior gee-whiz submarine adventure. Set course for adventure, as we raise our sails and lower our expectations.</itunes:summary>
+      <description>Ahoy! Kevin and Carrington dive into Seastalker, Infocom's junior gee-whiz submarine adventure. Set course for adventure, as we raise our sails and lower our expectations.</description>
+      <content:encoded><![CDATA[<p>Ahoy! Kevin and Carrington dive into Seastalker, Infocom's junior gee-whiz submarine adventure. Set course for adventure, as we raise our sails and lower our expectations.</p>
+
+<p>Hosts: <a href="http://www.savetz.com">Kevin Savetz</a> and <a href="http://carringtonvanston.net">Carrington Vanston</a></p>
+
+<p>Theme tune: "It Is Pitch Dark" by <a href="http://frontalot.com">MC Frontalot</a></p>
+
+<p>Find links, notes, and more episodes of Eaten By A Grue at <a href="http://monsterfeet.com">MonsterFeet.com</a></p>
+
+<p>Next episode: Border Zone</p>]]></content:encoded>
+      <enclosure url="http://traffic.libsyn.com/monsterfeet/grue_004.mp3" length="45827696" type="audio/mpeg" />
+      <guid isPermaLink="false">http://monsterfeet.com/grue/#4</guid>
+      <link>http://monsterfeet.com/grue/#4</link>
+      <pubDate>Tue, 10 Jan 2017 08:00:00 GMT</pubDate>
+      <itunes:duration>01:01:58</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:keywords>Seastalker,Infocom,text adventure,interactive fiction,retrocomputer,retro-computer,vintage,adventure games,1980s,1980,80s,Carrington Vanston,Kevin Savetz</itunes:keywords>
+    </item>
+    <item>
+      <title>Trinity</title>
+      <itunes:subtitle>Infocom's atomic classic</itunes:subtitle>
+      <itunes:author>Monster Feet</itunes:author>
+      <itunes:image href="http://monsterfeet.com/itunes/itunes_grue.png" />
+      <itunes:summary>Trinity is Infocom's classic game about the dangers of the Atomic Age, and it's a blast! Get it? Get it? A blast? Hilarious.</itunes:summary>
+      <description>Trinity is Infocom's classic game about the dangers of the Atomic Age, and it's a blast! Get it? Get it? A blast? Hilarious.</description>
+      <content:encoded><![CDATA[<p>Trinity is Infocom's classic game about the dangers of the Atomic Age, and it's a blast! Get it? Get it? A blast? Hilarious.</p>
+
+<p>Hosts: <a href="http://www.savetz.com">Kevin Savetz</a> and <a href="http://carringtonvanston.net">Carrington Vanston</a></p>
+
+<p>Theme tune: "It Is Pitch Dark" by <a href="http://frontalot.com">MC Frontalot</a></p>
+
+<p>Find links, notes, and more episodes of Eaten By A Grue at <a href="http://monsterfeet.com">MonsterFeet.com</a></p>
+
+<p>Next episode: Seastalker</p>]]></content:encoded>
+      <enclosure url="http://traffic.libsyn.com/monsterfeet/grue_003.mp3" length="57141741" type="audio/mpeg" />
+      <guid isPermaLink="false">http://monsterfeet.com/grue/#3</guid>
+      <link>http://monsterfeet.com/grue/#3</link>
+      <pubDate>Sun, 8 Jan 2017 08:00:00 GMT</pubDate>
+      <itunes:duration>01:17:41</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:keywords>Trinity,Infocom,text adventure,interactive fiction,retrocomputer,retro-computer,vintage,adventure games,1980s,1980,80s,Carrington Vanston,Kevin Savetz</itunes:keywords>
+    </item>
+    <item>
+      <title>Ballyhoo</title>
+      <itunes:subtitle>Infocom's circus mystery</itunes:subtitle>
+      <itunes:author>Monster Feet</itunes:author>
+      <itunes:image href="http://monsterfeet.com/itunes/itunes_grue.png" />
+      <itunes:summary>Welcome to Ballyhoo, Infocom's circus mystery. Can these johnny tin plates foil the grift and save the circus? Or is the cherry pie just too much for a pair of side-walling lot loafers?</itunes:summary>
+      <description>Welcome to Ballyhoo, Infocom's circus mystery. Can these johnny tin plates foil the grift and save the circus? Or is the cherry pie just too much for a pair of side-walling lot loafers?</description>
+      <content:encoded><![CDATA[<p>Welcome to Ballyhoo, Infocom's circus mystery. Can these johnny tin plates foil the grift and save the circus? Or is the cherry pie just too much for a pair of side-walling lot loafers?</p>
+
+<p>Hosts: <a href="http://www.savetz.com">Kevin Savetz</a> and <a href="http://carringtonvanston.net">Carrington Vanston</a></p>
+
+<p>Theme tune: "It Is Pitch Dark" by <a href="http://frontalot.com">MC Frontalot</a></p>
+
+<p>Find links, notes, and more episodes of Eaten By A Grue at <a href="http://monsterfeet.com">MonsterFeet.com</a></p>
+
+<p>Next episode: Trinity</p>]]></content:encoded>
+      <enclosure url="http://traffic.libsyn.com/monsterfeet/grue_002.mp3" length="47183134" type="audio/mpeg" />
+      <guid isPermaLink="false">http://monsterfeet.com/grue/#2</guid>
+      <link>http://monsterfeet.com/grue/#2</link>
+      <pubDate>Wed, 14 Dec 2016 08:00:00 GMT</pubDate>
+      <itunes:duration>01:03:52</itunes:duration>
+      <itunes:explicit>no</itunes:explicit>
+      <itunes:keywords>Ballyhoo,Infocom,text adventure,interactive fiction,retrocomputer,retro-computer,vintage,adventure games,1980s,1980,80s,Carrington Vanston,Kevin Savetz</itunes:keywords>
+    </item>
+    <item>
+      <title>Zork I: The Underground Empire</title>
+      <itunes:subtitle>Infocom's first adventure</itunes:subtitle>
+      <itunes:author>Monster Feet</itunes:author>
+      <itunes:image href="http://monsterfeet.com/itunes/itunes_grue.png" />
+      <itunes:summary>Kevin and Carrington discuss Zork I, the first text adventure from Infocom. From the highs of its incredible parser to the lows of its unfair puzzles, it all comes down to one burning question: are you a TAKE person or a GET person?</itunes:summary>
+      <description>Kevin and Carrington discuss Zork I, the first text adventure from Infocom. From the highs of its incredible parser to the lows of its unfair puzzles, it all comes down to one burning question: are you a TAKE person or a GET person?</description>
+      <content:encoded><![CDATA[<p>Kevin and Carrington discuss Zork I, the first text adventure from Infocom. From the highs of its incredible parser to the lows of its unfair puzzles, it all comes down to one burning question: are you a TAKE person or a GET person?</p>
+
+<p>Hosts: <a href="http://www.savetz.com">Kevin Savetz</a> and <a href="http://carringtonvanston.net">Carrington Vanston</a></p>
+
+<p>Theme tune: "It Is Pitch Dark" by <a href="http://frontalot.com">MC Frontalot</a></p>
+
+<p>Find links, notes, and more episodes of Eaten By A Grue at <a href="http://monsterfeet.com">MonsterFeet.com</a></p>
+
+<p>Next episode: Ballyhoo</p>]]></content:encoded>
+      <enclosure url="http://traffic.libsyn.com/monsterfeet/grue_001.mp3" length="24321020" type="audio/mpeg" />
+      <guid isPermaLink="false">http://monsterfeet.com/grue/#1</guid>
+      <link>http://monsterfeet.com/grue/#1</link>
+      <pubDate>Fri, 2 Dec 2016 08:00:00 GMT</pubDate>
+      <itunes:duration>48:09</itunes:duration>
+      <itunes:keywords>Zork I,The Underground Empire,Infocom,text adventure,interactive fiction,retrocomputer,retro-computer,vintage,adventure games,1980s,1980,80s,Carrington Vanston,Kevin Savetz</itunes:keywords>
+    </item>
+  </channel>
+</rss>
