@@ -19,16 +19,6 @@ use std::str::FromStr;
 use time::precise_time_ns;
 use tokio_core::reactor::Core;
 
-pub struct URLFetcherStub<F: Fn(&str) -> Result<Vec<u8>>> {
-    f: F,
-}
-
-impl<F: Fn(&str) -> Result<Vec<u8>>> URLFetcher for URLFetcherStub<F> {
-    fn fetch(&mut self, raw_url: &str) -> Result<Vec<u8>> {
-        (self.f)(raw_url)
-    }
-}
-
 pub struct DirectoryPodcastUpdater<'a> {
     pub conn:        &'a PgConnection,
     pub dir_podcast: &'a mut model::DirectoryPodcast,
@@ -430,16 +420,13 @@ mod tests {
     use mediators::*;
     use model;
     use schema::directories_podcasts;
+    use std::collections::HashMap;
     use test_helpers;
 
     #[test]
     fn test_ideal_feed() {
-        let conn = test_helpers::connection();
-        let log = test_helpers::log();
-
-        let mut url_fetcher = URLFetcherStub {
-            f: (|u| match u {
-                "http://feeds.feedburner.com/RoderickOnTheLine" => Ok(br#"
+        let mut bootstrap = bootstrap(
+            br#"
 <?xml version="1.0" encoding="UTF-8"?>
 <rss>
   <channel>
@@ -456,30 +443,17 @@ mod tests {
       <title>Item 1 Title</title>
     </item>
   </channel>
-</rss>"#.to_vec()),
-                _ => bail!("Unexpected url: {}", u),
-            }),
-        };
+</rss>"#,
+        );
+        let log = test_helpers::log();
 
-        let itunes = model::Directory::itunes(&conn).unwrap();
-        let dir_podcast_ins = model::DirectoryPodcastIns {
-            directory_id: itunes.id,
-            feed_url:     Some("http://feeds.feedburner.com/RoderickOnTheLine".to_owned()),
-            podcast_id:   None,
-            vendor_id:    "471418144".to_owned(),
+        let mut med = DirectoryPodcastUpdater {
+            conn:        &bootstrap.conn,
+            dir_podcast: &mut bootstrap.dir_podcast,
+            url_fetcher: &mut bootstrap.url_fetcher,
         };
-        let mut dir_podcast = diesel::insert_into(directories_podcasts::table)
-            .values(&dir_podcast_ins)
-            .get_result(&conn)
-            .unwrap();
+        let res = med.run(&log).unwrap();
 
-        let mut updater = DirectoryPodcastUpdater {
-            conn:        &conn,
-            dir_podcast: &mut dir_podcast,
-            url_fetcher: &mut url_fetcher,
-        };
-
-        let res = updater.run(&log).unwrap();
         assert_ne!(0, res.podcast.id);
         assert_eq!(
             Some("https://example.com/podcast-image-url.jpg".to_owned()),
@@ -509,6 +483,54 @@ mod tests {
 
     #[test]
     fn test_real_feed() {}
+
+    //
+    // Test helpers
+    //
+
+    struct TestBootstrap {
+        conn:        PgConnection,
+        dir_podcast: model::DirectoryPodcast,
+        url_fetcher: URLFetcherStub,
+    }
+
+    pub struct URLFetcherStub {
+        map: HashMap<&'static str, Vec<u8>>,
+    }
+
+    impl URLFetcher for URLFetcherStub {
+        fn fetch(&mut self, url: &str) -> Result<Vec<u8>> {
+            Ok(self.map.get(url).unwrap().clone())
+        }
+    }
+
+    fn bootstrap(data: &[u8]) -> TestBootstrap {
+        let conn = test_helpers::connection();
+        let url = "https://example.com/feed.xml";
+
+        let mut url_fetcher = URLFetcherStub {
+            map: HashMap::new(),
+        };
+        url_fetcher.map.insert(url, data.to_vec());
+
+        let itunes = model::Directory::itunes(&conn).unwrap();
+        let dir_podcast_ins = model::DirectoryPodcastIns {
+            directory_id: itunes.id,
+            feed_url:     Some(url.to_owned()),
+            podcast_id:   None,
+            vendor_id:    "471418144".to_owned(),
+        };
+        let dir_podcast = diesel::insert_into(directories_podcasts::table)
+            .values(&dir_podcast_ins)
+            .get_result(&conn)
+            .unwrap();
+
+        TestBootstrap {
+            conn:        conn,
+            dir_podcast: dir_podcast,
+            url_fetcher: url_fetcher,
+        }
+    }
 }
 
 /*
