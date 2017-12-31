@@ -425,17 +425,21 @@ fn parse_date_time(s: &str) -> Result<DateTime<Utc>> {
         .with_timezone(&Utc))
 }
 
-#[test]
-fn test_ideal_feed() {
+#[cfg(test)]
+mod tests {
+    use mediators::*;
+    use model;
     use schema::directories_podcasts;
     use test_helpers;
 
-    let conn = test_helpers::connection();
-    let log = test_helpers::log();
+    #[test]
+    fn test_ideal_feed() {
+        let conn = test_helpers::connection();
+        let log = test_helpers::log();
 
-    let mut url_fetcher = URLFetcherStub {
-        f: (|u| match u {
-            "http://feeds.feedburner.com/RoderickOnTheLine" => Ok(br#"
+        let mut url_fetcher = URLFetcherStub {
+            f: (|u| match u {
+                "http://feeds.feedburner.com/RoderickOnTheLine" => Ok(br#"
 <?xml version="1.0" encoding="UTF-8"?>
 <rss>
   <channel>
@@ -453,58 +457,59 @@ fn test_ideal_feed() {
     </item>
   </channel>
 </rss>"#.to_vec()),
-            _ => bail!("Unexpected url: {}", u),
-        }),
-    };
+                _ => bail!("Unexpected url: {}", u),
+            }),
+        };
 
-    let itunes = model::Directory::itunes(&conn).unwrap();
-    let dir_podcast_ins = model::DirectoryPodcastIns {
-        directory_id: itunes.id,
-        feed_url:     Some("http://feeds.feedburner.com/RoderickOnTheLine".to_owned()),
-        podcast_id:   None,
-        vendor_id:    "471418144".to_owned(),
-    };
-    let mut dir_podcast = diesel::insert_into(directories_podcasts::table)
-        .values(&dir_podcast_ins)
-        .get_result(&conn)
-        .unwrap();
+        let itunes = model::Directory::itunes(&conn).unwrap();
+        let dir_podcast_ins = model::DirectoryPodcastIns {
+            directory_id: itunes.id,
+            feed_url:     Some("http://feeds.feedburner.com/RoderickOnTheLine".to_owned()),
+            podcast_id:   None,
+            vendor_id:    "471418144".to_owned(),
+        };
+        let mut dir_podcast = diesel::insert_into(directories_podcasts::table)
+            .values(&dir_podcast_ins)
+            .get_result(&conn)
+            .unwrap();
 
-    let mut updater = DirectoryPodcastUpdater {
-        conn:        &conn,
-        dir_podcast: &mut dir_podcast,
-        url_fetcher: &mut url_fetcher,
-    };
+        let mut updater = DirectoryPodcastUpdater {
+            conn:        &conn,
+            dir_podcast: &mut dir_podcast,
+            url_fetcher: &mut url_fetcher,
+        };
 
-    let res = updater.run(&log).unwrap();
-    assert_ne!(0, res.podcast.id);
-    assert_eq!(
-        Some("https://example.com/podcast-image-url.jpg".to_owned()),
-        res.podcast.image_url
-    );
-    assert_eq!(Some("en-US".to_owned()), res.podcast.language);
-    assert_eq!(
-        Some("https://example.com/podcast".to_owned()),
-        res.podcast.link_url
-    );
-    assert_eq!("Title", res.podcast.title);
+        let res = updater.run(&log).unwrap();
+        assert_ne!(0, res.podcast.id);
+        assert_eq!(
+            Some("https://example.com/podcast-image-url.jpg".to_owned()),
+            res.podcast.image_url
+        );
+        assert_eq!(Some("en-US".to_owned()), res.podcast.language);
+        assert_eq!(
+            Some("https://example.com/podcast".to_owned()),
+            res.podcast.link_url
+        );
+        assert_eq!("Title", res.podcast.title);
 
-    assert_eq!(1, res.episodes.len());
+        assert_eq!(1, res.episodes.len());
 
-    let episode = &res.episodes[0];
-    assert_ne!(0, episode.id);
-    assert_eq!(Some("Item 1 description".to_owned()), episode.description);
-    assert_eq!(Some(true), episode.explicit);
-    assert_eq!("1", episode.guid);
-    assert_eq!(Some("audio/mpeg".to_owned()), episode.media_type);
-    assert_eq!("https://example.com/item-1", episode.media_url);
-    assert_eq!(res.podcast.id, episode.podcast_id);
+        let episode = &res.episodes[0];
+        assert_ne!(0, episode.id);
+        assert_eq!(Some("Item 1 description".to_owned()), episode.description);
+        assert_eq!(Some(true), episode.explicit);
+        assert_eq!("1", episode.guid);
+        assert_eq!(Some("audio/mpeg".to_owned()), episode.media_type);
+        assert_eq!("https://example.com/item-1", episode.media_url);
+        assert_eq!(res.podcast.id, episode.podcast_id);
+    }
+
+    #[test]
+    fn test_minimal_feed() {}
+
+    #[test]
+    fn test_real_feed() {}
 }
-
-#[test]
-fn test_minimal_feed() {}
-
-#[test]
-fn test_real_feed() {}
 
 /*
 struct PodcastUpdater {
