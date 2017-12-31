@@ -70,8 +70,12 @@ where
     res
 }
 
+pub struct RunResult {
+    pub podcast: model::Podcast,
+}
+
 impl<'a> DirectoryPodcastUpdater<'a> {
-    pub fn run(&mut self, log: &Logger) -> Result<()> {
+    pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
         log_timed(&log.new(o!("step" => file!())), |ref log| {
             self.conn
                 .transaction::<_, Error, _>(|| self.run_inner(&log))
@@ -101,7 +105,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         })
     }
 
-    fn run_inner(&mut self, log: &Logger) -> Result<()> {
+    fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
         let raw_url = self.dir_podcast.feed_url.clone().unwrap();
 
         let body = log_timed(&log.new(o!("step" => "fetch_feed")), |ref _log| {
@@ -156,7 +160,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                 .chain_err(|| "Error saving changes to directory podcast")
         })?;
 
-        Ok(())
+        Ok(RunResult { podcast: podcast })
     }
 
     fn parse_feed(log: &Logger, data: &str) -> Result<(XMLPodcast, Vec<XMLEpisode>)> {
@@ -395,7 +399,7 @@ fn parse_date_time(s: &str) -> Result<DateTime<Utc>> {
 }
 
 #[test]
-fn test_run() {
+fn test_ideal_feed() {
     use schema::directories_podcasts;
     use test_helpers;
 
@@ -408,8 +412,10 @@ fn test_run() {
 <?xml version="1.0" encoding="UTF-8"?>
 <rss>
   <channel>
-    <title>Title</title>
+    <language>en-US</language>
     <link>https://example.com/podcast</link>
+    <media:thumbnail url="https://example.com/podcast-image-url.jpg"/>
+    <title>Title</title>
     <item>
       <title>Item 1 Title</title>
       <pubDate>Sun, 24 Dec 2017 21:37:32 +0000</pubDate>
@@ -440,8 +446,26 @@ fn test_run() {
         dir_podcast: &mut dir_podcast,
         url_fetcher: &mut url_fetcher,
     };
-    updater.run(&log).unwrap();
+
+    let res = updater.run(&log).unwrap();
+    assert_ne!(0, res.podcast.id);
+    assert_eq!(
+        Some("https://example.com/podcast-image-url.jpg".to_owned()),
+        res.podcast.image_url
+    );
+    assert_eq!(Some("en-US".to_owned()), res.podcast.language);
+    assert_eq!(
+        Some("https://example.com/podcast".to_owned()),
+        res.podcast.link_url
+    );
+    assert_eq!("Title", res.podcast.title);
 }
+
+#[test]
+fn test_minimal_feed() {}
+
+#[test]
+fn test_real_feed() {}
 
 /*
 struct PodcastUpdater {
