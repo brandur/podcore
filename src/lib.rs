@@ -12,10 +12,13 @@ extern crate iron;
 #[macro_use]
 extern crate juniper;
 extern crate juniper_iron;
+#[macro_use]
+extern crate lazy_static;
 extern crate mount;
 extern crate quick_xml;
 extern crate r2d2;
 extern crate r2d2_diesel;
+extern crate regex;
 #[macro_use]
 extern crate slog;
 extern crate slog_async;

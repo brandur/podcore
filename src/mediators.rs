@@ -12,6 +12,7 @@ use hyper;
 use hyper::{Client, Uri};
 use quick_xml::events::{BytesText, Event};
 use quick_xml::reader::Reader;
+use regex::Regex;
 use schema::{episodes, podcast_feed_contents, podcasts};
 use slog::Logger;
 use std::io::BufRead;
@@ -442,20 +443,31 @@ impl XMLEpisode {
 }
 
 fn parse_date_time(s: &str) -> Result<DateTime<Utc>> {
+    lazy_static! {
+        static ref FINDS: Vec<Regex> = vec!(
+            Regex::new(r"-0000$").unwrap(),
+            Regex::new(r"\b0:").unwrap(),
+        );
+        static ref REPLACES: Vec<String> = vec!(
+            "+0000".to_owned(),
+            "00:".to_owned(),
+        );
+    }
+
+    // Try to parse a valid datetime first, then fall back and start moving into various known
+    // problem cases.
     match DateTime::parse_from_rfc2822(s) {
         Ok(d) => Ok(d.with_timezone(&Utc)),
-        res => {
+        _ => {
             let mut s = s.to_owned();
-            let res = if s.ends_with("-0000") {
-                s = s.replace("-0000", "+0000");
-                DateTime::parse_from_rfc2822(s.as_str())
-            } else {
-                res
-            };
-            Ok(
-                res.chain_err(|| format!("Error parsing publishing date {:?} from feed item", s))?
-                    .with_timezone(&Utc),
-            )
+            for i in 0..FINDS.len() {
+                s = FINDS[i]
+                    .replace(s.as_str(), REPLACES[i].as_str())
+                    .into_owned();
+            }
+            Ok(DateTime::parse_from_rfc2822(s.as_str())
+                .chain_err(|| format!("Error parsing publishing date {:?} from feed item", s))?
+                .with_timezone(&Utc))
         }
     }
 }
@@ -564,12 +576,30 @@ mod tests {
             parse_date_time("Sun, 24 Dec 2017 21:37:32 +0000").unwrap()
         );
 
+        // Also valid -- check use of named timezones
+        assert_eq!(
+            FixedOffset::west(5 * 3600) // EST-0500
+                .ymd(2017, 12, 24)
+                .and_hms(21, 37, 32)
+                .with_timezone(&Utc),
+            parse_date_time("Sun, 24 Dec 2017 21:37:32 EST").unwrap()
+        );
+
         // Never forget how uselessly pedantic Rust programmers are. A "-0000" is technically
         // considered missing even though it's obvious to anyone on Earth what should be done with
         // it. Our special implementation handles it, so test this case specifically.
         assert_eq!(
             Utc.ymd(2017, 12, 24).and_hms(21, 37, 32),
             parse_date_time("Sun, 24 Dec 2017 21:37:32 -0000").unwrap()
+        );
+
+        // Notice the truncated "0:" -- seen on Communion After Dark
+        assert_eq!(
+            FixedOffset::west(5 * 3600) // EST-0500
+                .ymd(2017, 12, 24)
+                .and_hms(0, 37, 32)
+                .with_timezone(&Utc),
+            parse_date_time("Sun, 24 Dec 2017 0:37:32 EST").unwrap()
         );
     }
 
@@ -591,6 +621,39 @@ mod tests {
 
         {
             let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_adventure_zone.xml"));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_atp.xml"));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_bike_shed.xml"));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_common_sense.xml"));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap = bootstrap(include_bytes!(
+                "test_documents/feed_communion_after_dark.xml"
+            ));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap =
+                bootstrap(include_bytes!("test_documents/feed_eaten_by_a_grue.xml"));
             let mut mediator = bootstrap.mediator();
             mediator.run(&test_helpers::log()).unwrap();
         }
