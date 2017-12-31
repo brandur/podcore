@@ -479,7 +479,38 @@ mod tests {
     }
 
     #[test]
-    fn test_minimal_feed() {}
+    fn test_minimal_feed() {
+        let mut bootstrap = bootstrap(
+            br#"
+<?xml version="1.0" encoding="UTF-8"?>
+<rss>
+  <channel>
+    <title>Title</title>
+    <item>
+      <guid>1</guid>
+      <media:content url="https://example.com/item-1" type="audio/mpeg"/>
+      <pubDate>Sun, 24 Dec 2017 21:37:32 +0000</pubDate>
+      <title>Item 1 Title</title>
+    </item>
+  </channel>
+</rss>"#,
+        );
+
+        let mut med = DirectoryPodcastUpdater {
+            conn:        &bootstrap.conn,
+            dir_podcast: &mut bootstrap.dir_podcast,
+            url_fetcher: &mut bootstrap.url_fetcher,
+        };
+        let res = med.run(&test_helpers::log()).unwrap();
+
+        assert_eq!("Title", res.podcast.title);
+
+        assert_eq!(1, res.episodes.len());
+
+        let episode = &res.episodes[0];
+        assert_eq!("1", episode.guid);
+        assert_eq!("https://example.com/item-1", episode.media_url);
+    }
 
     #[test]
     fn test_real_feed() {}
