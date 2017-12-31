@@ -162,6 +162,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
     // The idea here is to produce a tolerant form of quick-xml's function that is tolerant to as
     // wide of a variety of possibly misencoded podcast feeds as possible.
     pub fn safe_unescape_and_decode<'b, B: BufRead>(
+        log: &Logger,
         bytes: &BytesText<'b>,
         reader: &Reader<B>,
     ) -> String {
@@ -180,7 +181,10 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         // HTML.
         match bytes.unescaped() {
             Ok(bytes) => reader.decode(&*bytes).into_owned(),
-            _ => reader.decode(&*bytes).into_owned(),
+            Err(e) => {
+                error!(log, "Unescape failed"; "error" => e.description());
+                reader.decode(&*bytes).into_owned()
+            }
         }
     }
 
@@ -231,7 +235,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                     }
                     Ok(Event::Text(ref e)) => {
                         if in_rss && in_channel {
-                            let val = Self::safe_unescape_and_decode(e, &reader);
+                            let val = Self::safe_unescape_and_decode(log, e, &reader);
                             if !in_item {
                                 match tag_name.clone().unwrap().as_str() {
                                     "language" => podcast.language = Some(val),
@@ -256,7 +260,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                     // Totally duplicated from "Text" above: modularize
                     Ok(Event::CData(ref e)) => {
                         if in_rss && in_channel {
-                            let val = Self::safe_unescape_and_decode(e, &reader);
+                            let val = Self::safe_unescape_and_decode(log, e, &reader);
                             if !in_item {
                                 match tag_name.clone().unwrap().as_str() {
                                     "language" => podcast.language = Some(val),
