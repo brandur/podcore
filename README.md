@@ -41,6 +41,9 @@ Tests:
 ```
 cargo test
 
+# run a single test (matches on name)
+cargo test test_minimal_feed
+
 # show stdout
 cargo test -- --nocapture
 ```
