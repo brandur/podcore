@@ -404,9 +404,21 @@ fn test_run() {
 
     let mut url_fetcher = URLFetcherStub {
         f: (|u| match u {
-            "http://feeds.feedburner.com/RoderickOnTheLine" => {
-                Ok(include_bytes!("test_documents/feed.xml").to_vec())
-            }
+            "http://feeds.feedburner.com/RoderickOnTheLine" => Ok(br#"
+<?xml version="1.0" encoding="UTF-8"?>
+<rss>
+  <channel>
+    <title>Title</title>
+    <link>https://example.com/podcast</link>
+    <item>
+      <title>Item 1 Title</title>
+      <pubDate>Sun, 24 Dec 2017 21:37:32 +0000</pubDate>
+      <guid>1</guid>
+      <description>Item 1 Description</description>
+      <media:content url="https://example.com/item-1" type="audio/mpeg"/>
+    </item>
+  </channel>
+</rss>"#.to_vec()),
             _ => bail!("Unexpected url: {}", u),
         }),
     };
