@@ -25,6 +25,9 @@ extern crate tokio_core;
 
 mod errors;
 pub mod graphql;
+#[cfg(test)]
+#[macro_use]
+mod macros;
 pub mod mediators;
 mod model;
 

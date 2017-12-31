@@ -420,8 +420,9 @@ mod tests {
     use mediators::*;
     use model;
     use schema::directories_podcasts;
-    use std::collections::HashMap;
     use test_helpers;
+
+    use std::collections::HashMap;
 
     #[test]
     fn test_ideal_feed() {
@@ -510,10 +511,9 @@ mod tests {
         let conn = test_helpers::connection();
         let url = "https://example.com/feed.xml";
 
-        let mut url_fetcher = URLFetcherStub {
-            map: HashMap::new(),
+        let url_fetcher = URLFetcherStub {
+            map: map!(url => data.to_vec()),
         };
-        url_fetcher.map.insert(url, data.to_vec());
 
         let itunes = model::Directory::itunes(&conn).unwrap();
         let dir_podcast_ins = model::DirectoryPodcastIns {
