@@ -422,6 +422,7 @@ mod tests {
     use schema::directories_podcasts;
     use test_helpers;
 
+    use chrono::prelude::*;
     use std::collections::HashMap;
 
     #[test]
@@ -476,6 +477,10 @@ mod tests {
         assert_eq!(Some("audio/mpeg".to_owned()), episode.media_type);
         assert_eq!("https://example.com/item-1", episode.media_url);
         assert_eq!(res.podcast.id, episode.podcast_id);
+        assert_eq!(
+            Utc.ymd(2017, 12, 24).and_hms(21, 37, 32),
+            episode.published_at
+        );
     }
 
     #[test]
@@ -510,6 +515,10 @@ mod tests {
         let episode = &res.episodes[0];
         assert_eq!("1", episode.guid);
         assert_eq!("https://example.com/item-1", episode.media_url);
+        assert_eq!(
+            Utc.ymd(2017, 12, 24).and_hms(21, 37, 32),
+            episode.published_at
+        );
     }
 
     #[test]
