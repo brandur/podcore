@@ -237,6 +237,31 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                             }
                         }
                     }
+                    // Totally duplicated from "Text" above: modularize
+                    Ok(Event::CData(ref e)) => {
+                        if in_rss && in_channel {
+                            let val = e.unescape_and_decode(&reader).unwrap();
+                            if !in_item {
+                                match tag_name.clone().unwrap().as_str() {
+                                    "language" => podcast.language = Some(val),
+                                    "link" => podcast.link_url = Some(val),
+                                    "title" => podcast.title = Some(val),
+                                    _ => (),
+                                };
+                            } else {
+                                let episode = episodes.last_mut().unwrap();
+                                match tag_name.clone().unwrap().as_str() {
+                                    "description" => episode.description = Some(val),
+                                    "guid" => episode.guid = Some(val),
+                                    "itunes:explicit" => episode.explicit = Some(val == "yes"),
+                                    "link" => episode.link_url = Some(val),
+                                    "pubDate" => episode.published_at = Some(val),
+                                    "title" => episode.title = Some(val),
+                                    _ => (),
+                                };
+                            }
+                        }
+                    }
                     Ok(Event::Empty(ref e)) => {
                         if in_channel {
                             if !in_item {
@@ -419,7 +444,7 @@ fn test_ideal_feed() {
     <media:thumbnail url="https://example.com/podcast-image-url.jpg"/>
     <title>Title</title>
     <item>
-      <description>Item 1 description</description>
+      <description><![CDATA[Item 1 description]]></description>
       <guid>1</guid>
       <itunes:explicit>yes</itunes:explicit>
       <media:content url="https://example.com/item-1" type="audio/mpeg"/>
