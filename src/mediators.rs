@@ -479,13 +479,8 @@ mod tests {
   </channel>
 </rss>"#,
         );
-
-        let mut med = DirectoryPodcastUpdater {
-            conn:        &bootstrap.conn,
-            dir_podcast: &mut bootstrap.dir_podcast,
-            url_fetcher: &mut bootstrap.url_fetcher,
-        };
-        let res = med.run(&test_helpers::log()).unwrap();
+        let mut mediator = bootstrap.mediator();
+        let res = mediator.run(&test_helpers::log()).unwrap();
 
         assert_ne!(0, res.podcast.id);
         assert_eq!(
@@ -532,13 +527,8 @@ mod tests {
   </channel>
 </rss>"#,
         );
-
-        let mut med = DirectoryPodcastUpdater {
-            conn:        &bootstrap.conn,
-            dir_podcast: &mut bootstrap.dir_podcast,
-            url_fetcher: &mut bootstrap.url_fetcher,
-        };
-        let res = med.run(&test_helpers::log()).unwrap();
+        let mut mediator = bootstrap.mediator();
+        let res = mediator.run(&test_helpers::log()).unwrap();
 
         assert_eq!("Title", res.podcast.title);
 
@@ -556,13 +546,8 @@ mod tests {
     #[test]
     fn test_real_feed() {
         let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_waking_up.xml"));
-
-        let mut med = DirectoryPodcastUpdater {
-            conn:        &bootstrap.conn,
-            dir_podcast: &mut bootstrap.dir_podcast,
-            url_fetcher: &mut bootstrap.url_fetcher,
-        };
-        med.run(&test_helpers::log()).unwrap();
+        let mut mediator = bootstrap.mediator();
+        mediator.run(&test_helpers::log()).unwrap();
     }
 
     //
@@ -575,6 +560,16 @@ mod tests {
         conn:        PgConnection,
         dir_podcast: model::DirectoryPodcast,
         url_fetcher: URLFetcherStub,
+    }
+
+    impl TestBootstrap {
+        fn mediator(&mut self) -> DirectoryPodcastUpdater {
+            DirectoryPodcastUpdater {
+                conn:        &self.conn,
+                dir_podcast: &mut self.dir_podcast,
+                url_fetcher: &mut self.url_fetcher,
+            }
+        }
     }
 
     pub struct URLFetcherStub {
