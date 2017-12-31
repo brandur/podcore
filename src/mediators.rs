@@ -445,14 +445,13 @@ mod tests {
   </channel>
 </rss>"#,
         );
-        let log = test_helpers::log();
 
         let mut med = DirectoryPodcastUpdater {
             conn:        &bootstrap.conn,
             dir_podcast: &mut bootstrap.dir_podcast,
             url_fetcher: &mut bootstrap.url_fetcher,
         };
-        let res = med.run(&log).unwrap();
+        let res = med.run(&test_helpers::log()).unwrap();
 
         assert_ne!(0, res.podcast.id);
         assert_eq!(
@@ -488,6 +487,8 @@ mod tests {
     // Test helpers
     //
 
+    // Encapsulates the structures that are needed for tests to run. One should only be obtained by
+    // invoking bootstrap().
     struct TestBootstrap {
         conn:        PgConnection,
         dir_podcast: model::DirectoryPodcast,
@@ -504,6 +505,7 @@ mod tests {
         }
     }
 
+    // Initializes the data required to get tests running.
     fn bootstrap(data: &[u8]) -> TestBootstrap {
         let conn = test_helpers::connection();
         let url = "https://example.com/feed.xml";
