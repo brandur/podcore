@@ -4,6 +4,8 @@ use futures::Stream;
 use hyper;
 use hyper::{Client, Uri};
 use slog::Logger;
+#[cfg(test)]
+use std::collections::HashMap;
 use std::str;
 use std::str::FromStr;
 use time::precise_time_ns;
@@ -38,6 +40,18 @@ impl<'a> URLFetcher for URLFetcherLive<'a> {
             .run(res.body().concat2())
             .chain_err(|| format!("Error reading body from URL: {}", raw_url))?;
         Ok((*body).to_vec())
+    }
+}
+
+#[cfg(test)]
+pub struct URLFetcherStub {
+    pub map: HashMap<&'static str, Vec<u8>>,
+}
+
+#[cfg(test)]
+impl URLFetcher for URLFetcherStub {
+    fn fetch(&mut self, url: &str) -> Result<Vec<u8>> {
+        Ok(self.map.get(url).unwrap().clone())
     }
 }
 

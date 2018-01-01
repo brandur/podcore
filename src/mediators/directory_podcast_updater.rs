@@ -452,7 +452,6 @@ mod tests {
     use test_helpers;
 
     use chrono::prelude::*;
-    use std::collections::HashMap;
 
     #[test]
     fn test_ideal_feed() {
@@ -709,7 +708,7 @@ mod tests {
     struct TestBootstrap {
         conn:        PgConnection,
         dir_podcast: model::DirectoryPodcast,
-        url_fetcher: URLFetcherStub,
+        url_fetcher: common::URLFetcherStub,
     }
 
     impl TestBootstrap {
@@ -722,22 +721,12 @@ mod tests {
         }
     }
 
-    pub struct URLFetcherStub {
-        map: HashMap<&'static str, Vec<u8>>,
-    }
-
-    impl common::URLFetcher for URLFetcherStub {
-        fn fetch(&mut self, url: &str) -> Result<Vec<u8>> {
-            Ok(self.map.get(url).unwrap().clone())
-        }
-    }
-
     // Initializes the data required to get tests running.
     fn bootstrap(data: &[u8]) -> TestBootstrap {
         let conn = test_helpers::connection();
         let url = "https://example.com/feed.xml";
 
-        let url_fetcher = URLFetcherStub {
+        let url_fetcher = common::URLFetcherStub {
             map: map!(url => data.to_vec()),
         };
 
