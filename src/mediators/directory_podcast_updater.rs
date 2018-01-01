@@ -204,8 +204,9 @@ fn convert_episodes(
     podcast: &model::Podcast,
     episode_xmls: Vec<XMLEpisode>,
 ) -> Result<Vec<model::EpisodeIns>> {
-    common::log_timed(&log.new(o!("step" => "convert_episodes")), |ref _log| {
-        let mut episodes = Vec::with_capacity(episode_xmls.len());
+    common::log_timed(&log.new(o!("step" => "convert_episodes")), |ref log| {
+        let num_candidates = episode_xmls.len();
+        let mut episodes = Vec::with_capacity(num_candidates);
 
         for episode_xml in episode_xmls {
             match episode_xml
@@ -221,6 +222,9 @@ fn convert_episodes(
                             "podcast_title" => podcast.title.clone()),
             }
         }
+        info!(log, "Converted episodes";
+            "num_valid" => episodes.len(), "num_invalid" => num_candidates - episodes.len());
+
         Ok(episodes)
     })
 }
