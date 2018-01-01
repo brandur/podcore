@@ -44,8 +44,9 @@ cargo test
 # run a single test (matches on name)
 cargo test test_minimal_feed
 
-# show stdout
-cargo test -- --nocapture
+# show stdout (note that `cargo test -- --nocapture` doesn't work because it
+# only affects print! and println! macros)
+RUST_TEST_NOCAPTURE=1 cargo test
 ```
 
 <!--

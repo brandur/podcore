@@ -16,8 +16,19 @@ pub fn connection() -> PgConnection {
 }
 
 pub fn log() -> Logger {
-    let decorator = slog_term::PlainSyncDecorator::new(std::io::stdout());
-    let drain = slog_term::CompactFormat::new(decorator).build().fuse();
-    let async_drain = slog_async::Async::new(drain).build().fuse();
-    slog::Logger::root(async_drain, o!("env" => "test"))
+    if nocapture() {
+        let decorator = slog_term::PlainSyncDecorator::new(std::io::stdout());
+        let drain = slog_term::CompactFormat::new(decorator).build().fuse();
+        let async_drain = slog_async::Async::new(drain).build().fuse();
+        slog::Logger::root(async_drain, o!("env" => "test"))
+    } else {
+        slog::Logger::root(slog::Discard, o!())
+    }
+}
+
+fn nocapture() -> bool {
+    match env::var("RUST_TEST_NOCAPTURE") {
+        Ok(val) => &val != "0",
+        Err(_) => false,
+    }
 }
