@@ -45,7 +45,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
 
         let podcast_ins = common::log_timed(
             &log.new(o!("step" => "convert_podcast")),
-            |ref _log| podcast_xml.to_model(),
+            |ref _log| validate_podcast(&podcast_xml),
         )?;
 
         let podcast: model::Podcast =
@@ -72,7 +72,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
             },
         )?;
 
-        let episodes_ins = convert_episodes(&log, &podcast, episode_xmls)?;
+        let episodes_ins = validate_episodes(&log, episode_xmls, &podcast)?;
         let episodes: Vec<model::Episode> =
             common::log_timed(&log.new(o!("step" => "insert_episodes")), |ref _log| {
                 diesel::insert_into(episodes::table)
@@ -131,48 +131,7 @@ struct XMLEpisode {
     pub title:        Option<String>,
 }
 
-impl XMLEpisode {
-    fn to_model(&self, podcast: &model::Podcast) -> Result<EpisodeInsOrInvalid> {
-        if self.guid.is_none() {
-            return Ok(EpisodeInsOrInvalid::Invalid {
-                message: "Missing GUID from feed item",
-                guid:    None,
-            });
-        }
-
-        let guid = self.guid.clone().unwrap();
-        if self.media_url.is_none() {
-            return Ok(EpisodeInsOrInvalid::Invalid {
-                message: "Missing media URL from feed item",
-                guid:    Some(guid.clone()),
-            });
-        }
-        if self.published_at.is_none() {
-            return Ok(EpisodeInsOrInvalid::Invalid {
-                message: "Missing publishing date from feed item",
-                guid:    Some(guid.clone()),
-            });
-        }
-        if self.title.is_none() {
-            return Ok(EpisodeInsOrInvalid::Invalid {
-                message: "Missing title from feed item",
-                guid:    Some(guid.clone()),
-            });
-        }
-
-        Ok(EpisodeInsOrInvalid::Valid(model::EpisodeIns {
-            description:  self.description.clone(),
-            explicit:     self.explicit.clone(),
-            guid:         guid,
-            link_url:     self.link_url.clone(),
-            media_url:    self.media_url.clone().unwrap(),
-            media_type:   self.media_type.clone(),
-            podcast_id:   podcast.id,
-            published_at: parse_date_time(self.published_at.clone().unwrap().as_str())?,
-            title:        self.title.clone().unwrap(),
-        }))
-    }
-}
+impl XMLEpisode {}
 
 #[derive(Debug)]
 struct XMLPodcast {
@@ -182,52 +141,9 @@ struct XMLPodcast {
     pub title:     Option<String>,
 }
 
-impl XMLPodcast {
-    fn to_model(&self) -> Result<model::PodcastIns> {
-        Ok(model::PodcastIns {
-            image_url: self.image_url.clone(),
-            language:  self.language.clone(),
-            link_url:  self.link_url.clone(),
-            title:     self.title
-                .clone()
-                .chain_err(|| "Error extracting title from podcast feed")?,
-        })
-    }
-}
-
 //
 // Private functions
 //
-
-fn convert_episodes(
-    log: &Logger,
-    podcast: &model::Podcast,
-    episode_xmls: Vec<XMLEpisode>,
-) -> Result<Vec<model::EpisodeIns>> {
-    common::log_timed(&log.new(o!("step" => "convert_episodes")), |ref log| {
-        let num_candidates = episode_xmls.len();
-        let mut episodes = Vec::with_capacity(num_candidates);
-
-        for episode_xml in episode_xmls {
-            match episode_xml
-                .to_model(&podcast)
-                .chain_err(|| format!("Failed to convert: {:?}", episode_xml))?
-            {
-                EpisodeInsOrInvalid::Valid(e) => episodes.push(e),
-                EpisodeInsOrInvalid::Invalid {
-                    message: m,
-                    guid: g,
-                } => error!(log, "Invalid episode in feed: {}", m;
-                            "episode-guid" => g, "podcast" => podcast.id.clone(),
-                            "podcast_title" => podcast.title.clone()),
-            }
-        }
-        info!(log, "Converted episodes";
-            "num_valid" => episodes.len(), "num_invalid" => num_candidates - episodes.len());
-
-        Ok(episodes)
-    })
-}
 
 fn content_hash(content: &Vec<u8>) -> String {
     let mut sha = Sha256::new();
@@ -452,6 +368,87 @@ pub fn safe_unescape_and_decode<'b, B: BufRead>(
             reader.decode(&*bytes).into_owned()
         }
     }
+}
+
+fn validate_episode(raw: &XMLEpisode, podcast: &model::Podcast) -> Result<EpisodeInsOrInvalid> {
+    if raw.guid.is_none() {
+        return Ok(EpisodeInsOrInvalid::Invalid {
+            message: "Missing GUID from feed item",
+            guid:    None,
+        });
+    }
+
+    let guid = raw.guid.clone().unwrap();
+    if raw.media_url.is_none() {
+        return Ok(EpisodeInsOrInvalid::Invalid {
+            message: "Missing media URL from feed item",
+            guid:    Some(guid.clone()),
+        });
+    }
+    if raw.published_at.is_none() {
+        return Ok(EpisodeInsOrInvalid::Invalid {
+            message: "Missing publishing date from feed item",
+            guid:    Some(guid.clone()),
+        });
+    }
+    if raw.title.is_none() {
+        return Ok(EpisodeInsOrInvalid::Invalid {
+            message: "Missing title from feed item",
+            guid:    Some(guid.clone()),
+        });
+    }
+
+    Ok(EpisodeInsOrInvalid::Valid(model::EpisodeIns {
+        description:  raw.description.clone(),
+        explicit:     raw.explicit.clone(),
+        guid:         guid,
+        link_url:     raw.link_url.clone(),
+        media_url:    raw.media_url.clone().unwrap(),
+        media_type:   raw.media_type.clone(),
+        podcast_id:   podcast.id,
+        published_at: parse_date_time(raw.published_at.clone().unwrap().as_str())?,
+        title:        raw.title.clone().unwrap(),
+    }))
+}
+
+fn validate_episodes(
+    log: &Logger,
+    raws: Vec<XMLEpisode>,
+    podcast: &model::Podcast,
+) -> Result<Vec<model::EpisodeIns>> {
+    common::log_timed(&log.new(o!("step" => "validate_episodes")), |ref log| {
+        let num_candidates = raws.len();
+        let mut episodes = Vec::with_capacity(num_candidates);
+
+        for raw in raws {
+            match validate_episode(&raw, &podcast)
+                .chain_err(|| format!("Failed to convert: {:?}", raw))?
+            {
+                EpisodeInsOrInvalid::Valid(e) => episodes.push(e),
+                EpisodeInsOrInvalid::Invalid {
+                    message: m,
+                    guid: g,
+                } => error!(log, "Invalid episode in feed: {}", m;
+                            "episode-guid" => g, "podcast" => podcast.id.clone(),
+                            "podcast_title" => podcast.title.clone()),
+            }
+        }
+        info!(log, "Converted episodes";
+            "num_valid" => episodes.len(), "num_invalid" => num_candidates - episodes.len());
+
+        Ok(episodes)
+    })
+}
+
+fn validate_podcast(raw: &XMLPodcast) -> Result<model::PodcastIns> {
+    Ok(model::PodcastIns {
+        image_url: raw.image_url.clone(),
+        language:  raw.language.clone(),
+        link_url:  raw.link_url.clone(),
+        title:     raw.title
+            .clone()
+            .chain_err(|| "Error extracting title from podcast feed")?,
+    })
 }
 
 //
