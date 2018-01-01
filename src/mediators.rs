@@ -62,6 +62,15 @@ where
     res
 }
 
+//#[derive(Copy)]
+enum EpisodeInsOrInvalid {
+    Valid(model::EpisodeIns),
+    Invalid {
+        message: &'static str,
+        guid:    Option<String>,
+    },
+}
+
 pub struct RunResult {
     pub episodes: Vec<model::Episode>,
     pub podcast:  model::Podcast,
@@ -88,13 +97,22 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         episode_xmls: Vec<XMLEpisode>,
     ) -> Result<Vec<model::EpisodeIns>> {
         log_timed(&log.new(o!("step" => "convert_episodes")), |ref _log| {
-            let mut episodes_ins = Vec::with_capacity(episode_xmls.len());
+            let mut episodes = Vec::with_capacity(episode_xmls.len());
+
             for episode_xml in episode_xmls {
-                episodes_ins.push(episode_xml
+                match episode_xml
                     .to_model(&podcast)
-                    .chain_err(|| format!("Failed to convert: {:?}", episode_xml))?);
+                    .chain_err(|| format!("Failed to convert: {:?}", episode_xml))?
+                {
+                    EpisodeInsOrInvalid::Valid(e) => episodes.push(e),
+                    EpisodeInsOrInvalid::Invalid {
+                        message: m,
+                        guid: g,
+                    } => error!(log, "Invalid episode in feed: {}", m;
+                            "episode-guid" => g, "podcast" => podcast.id.clone(), "podcast_title" => podcast.title.clone()),
+                }
             }
-            Ok(episodes_ins)
+            Ok(episodes)
         })
     }
 
@@ -416,29 +434,45 @@ struct XMLEpisode {
 }
 
 impl XMLEpisode {
-    fn to_model(&self, podcast: &model::Podcast) -> Result<model::EpisodeIns> {
-        Ok(model::EpisodeIns {
+    fn to_model(&self, podcast: &model::Podcast) -> Result<EpisodeInsOrInvalid> {
+        if self.guid.is_none() {
+            return Ok(EpisodeInsOrInvalid::Invalid {
+                message: "Missing GUID from feed item",
+                guid:    None,
+            });
+        }
+
+        let guid = self.guid.clone().unwrap();
+        if self.media_url.is_none() {
+            return Ok(EpisodeInsOrInvalid::Invalid {
+                message: "Missing media URL from feed item",
+                guid:    Some(guid.clone()),
+            });
+        }
+        if self.published_at.is_none() {
+            return Ok(EpisodeInsOrInvalid::Invalid {
+                message: "Missing publishing date from feed item",
+                guid:    Some(guid.clone()),
+            });
+        }
+        if self.title.is_none() {
+            return Ok(EpisodeInsOrInvalid::Invalid {
+                message: "Missing title from feed item",
+                guid:    Some(guid.clone()),
+            });
+        }
+
+        Ok(EpisodeInsOrInvalid::Valid(model::EpisodeIns {
             description:  self.description.clone(),
             explicit:     self.explicit.clone(),
-            guid:         self.guid
-                .clone()
-                .chain_err(|| "Missing GUID from feed item")?,
+            guid:         guid,
             link_url:     self.link_url.clone(),
-            media_url:    self.media_url
-                .clone()
-                .chain_err(|| "Missing media URL from feed item")?,
+            media_url:    self.media_url.clone().unwrap(),
             media_type:   self.media_type.clone(),
             podcast_id:   podcast.id,
-            published_at: parse_date_time(
-                self.published_at
-                    .clone()
-                    .chain_err(|| "Missing publishing date from feed item")?
-                    .as_str(),
-            )?,
-            title:        self.title
-                .clone()
-                .chain_err(|| "Missing title from feed item")?,
-        })
+            published_at: parse_date_time(self.published_at.clone().unwrap().as_str())?,
+            title:        self.title.clone().unwrap(),
+        }))
     }
 }
 
@@ -659,6 +693,38 @@ mod tests {
         {
             let mut bootstrap =
                 bootstrap(include_bytes!("test_documents/feed_eaten_by_a_grue.xml"));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_flop_house.xml"));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap =
+                bootstrap(include_bytes!("test_documents/feed_hardcore_history.xml"));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap =
+                bootstrap(include_bytes!("test_documents/feed_history_of_rome.xml"));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_planet_money.xml"));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_radiolab.xml"));
             let mut mediator = bootstrap.mediator();
             mediator.run(&test_helpers::log()).unwrap();
         }
