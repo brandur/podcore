@@ -22,19 +22,6 @@ pub struct DirectoryPodcastUpdater<'a> {
     pub url_fetcher: &'a mut common::URLFetcher,
 }
 
-enum EpisodeInsOrInvalid {
-    Valid(model::EpisodeIns),
-    Invalid {
-        message: &'static str,
-        guid:    Option<String>,
-    },
-}
-
-pub struct RunResult {
-    pub episodes: Vec<model::Episode>,
-    pub podcast:  model::Podcast,
-}
-
 impl<'a> DirectoryPodcastUpdater<'a> {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
         common::log_timed(&log.new(o!("step" => file!())), |ref log| {
@@ -333,25 +320,28 @@ impl<'a> DirectoryPodcastUpdater<'a> {
     }
 }
 
-#[derive(Debug)]
-struct XMLPodcast {
-    pub image_url: Option<String>,
-    pub language:  Option<String>,
-    pub link_url:  Option<String>,
-    pub title:     Option<String>,
+pub struct RunResult {
+    pub episodes: Vec<model::Episode>,
+    pub podcast:  model::Podcast,
 }
 
-impl XMLPodcast {
-    fn to_model(&self) -> Result<model::PodcastIns> {
-        Ok(model::PodcastIns {
-            image_url: self.image_url.clone(),
-            language:  self.language.clone(),
-            link_url:  self.link_url.clone(),
-            title:     self.title
-                .clone()
-                .chain_err(|| "Error extracting title from podcast feed")?,
-        })
-    }
+//
+// Private types
+//
+
+// Represents a regex find and replac rule that we use to coerce datetime formats that are not
+// technically valid RFC 2822 into ones that are and which we can parse.
+struct DateTimeReplaceRule {
+    find:    Regex,
+    replace: &'static str,
+}
+
+enum EpisodeInsOrInvalid {
+    Valid(model::EpisodeIns),
+    Invalid {
+        message: &'static str,
+        guid:    Option<String>,
+    },
 }
 
 #[derive(Debug)]
@@ -409,12 +399,30 @@ impl XMLEpisode {
     }
 }
 
-// Represents a regex find and replac rule that we use to coerce datetime formats that are not
-// technically valid RFC 2822 into ones that are and which we can parse.
-struct DateTimeReplaceRule {
-    find:    Regex,
-    replace: &'static str,
+#[derive(Debug)]
+struct XMLPodcast {
+    pub image_url: Option<String>,
+    pub language:  Option<String>,
+    pub link_url:  Option<String>,
+    pub title:     Option<String>,
 }
+
+impl XMLPodcast {
+    fn to_model(&self) -> Result<model::PodcastIns> {
+        Ok(model::PodcastIns {
+            image_url: self.image_url.clone(),
+            language:  self.language.clone(),
+            link_url:  self.link_url.clone(),
+            title:     self.title
+                .clone()
+                .chain_err(|| "Error extracting title from podcast feed")?,
+        })
+    }
+}
+
+//
+// Private functions
+//
 
 fn parse_date_time(s: &str) -> Result<DateTime<Utc>> {
     lazy_static! {
@@ -443,6 +451,10 @@ fn parse_date_time(s: &str) -> Result<DateTime<Utc>> {
         }
     }
 }
+
+//
+// Tests
+//
 
 #[cfg(test)]
 mod tests {
@@ -700,7 +712,7 @@ mod tests {
     }
 
     //
-    // Test helpers
+    // Private types/functions
     //
 
     // Encapsulates the structures that are needed for tests to run. One should only be obtained by
