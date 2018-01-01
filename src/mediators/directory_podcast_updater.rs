@@ -1,3 +1,4 @@
+use mediators::common;
 use errors::*;
 use model;
 
@@ -7,9 +8,6 @@ use crypto::sha2::Sha256;
 use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
-use futures::Stream;
-use hyper;
-use hyper::{Client, Uri};
 use quick_xml::events::{BytesText, Event};
 use quick_xml::reader::Reader;
 use regex::Regex;
@@ -17,52 +15,13 @@ use schema::{episodes, podcast_feed_contents, podcasts};
 use slog::Logger;
 use std::io::BufRead;
 use std::str;
-use std::str::FromStr;
-use time::precise_time_ns;
-use tokio_core::reactor::Core;
 
 pub struct DirectoryPodcastUpdater<'a> {
     pub conn:        &'a PgConnection,
     pub dir_podcast: &'a mut model::DirectoryPodcast,
-    pub url_fetcher: &'a mut URLFetcher,
+    pub url_fetcher: &'a mut common::URLFetcher,
 }
 
-#[inline]
-fn unit(ns: u64) -> (f64, &'static str) {
-    if ns >= 1_000_000_000 {
-        (1_000_000_000_f64, "s")
-    } else if ns >= 1_000_000 {
-        (1_000_000_f64, "ms")
-    } else if ns >= 1_000 {
-        (1_000_f64, "µs")
-    } else {
-        (1_f64, "ns")
-    }
-}
-
-#[test]
-fn test_unit() {
-    assert_eq!((1_f64, "ns"), unit(2_u64));
-    assert_eq!((1_000_f64, "µs"), unit(2_000_u64));
-    assert_eq!((1_000_000_f64, "ms"), unit(2_000_000_u64));
-    assert_eq!((1_000_000_000_f64, "s"), unit(2_000_000_000_u64));
-}
-
-#[inline]
-fn log_timed<T, F>(log: &Logger, f: F) -> T
-where
-    F: FnOnce(&Logger) -> T,
-{
-    let start = precise_time_ns();
-    info!(log, "Start");
-    let res = f(&log);
-    let elapsed = precise_time_ns() - start;
-    let (div, unit) = unit(elapsed);
-    info!(log, "Finish"; "elapsed" => format!("{:.*}{}", 3, ((elapsed as f64) / div), unit));
-    res
-}
-
-//#[derive(Copy)]
 enum EpisodeInsOrInvalid {
     Valid(model::EpisodeIns),
     Invalid {
@@ -78,7 +37,7 @@ pub struct RunResult {
 
 impl<'a> DirectoryPodcastUpdater<'a> {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
-        log_timed(&log.new(o!("step" => file!())), |ref log| {
+        common::log_timed(&log.new(o!("step" => file!())), |ref log| {
             self.conn
                 .transaction::<_, Error, _>(|| self.run_inner(&log))
                 .chain_err(|| "Error in database transaction")
@@ -96,7 +55,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         podcast: &model::Podcast,
         episode_xmls: Vec<XMLEpisode>,
     ) -> Result<Vec<model::EpisodeIns>> {
-        log_timed(&log.new(o!("step" => "convert_episodes")), |ref _log| {
+        common::log_timed(&log.new(o!("step" => "convert_episodes")), |ref _log| {
             let mut episodes = Vec::with_capacity(episode_xmls.len());
 
             for episode_xml in episode_xmls {
@@ -120,7 +79,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
         let raw_url = self.dir_podcast.feed_url.clone().unwrap();
 
-        let body = log_timed(&log.new(o!("step" => "fetch_feed")), |ref _log| {
+        let body = common::log_timed(&log.new(o!("step" => "fetch_feed")), |ref _log| {
             self.url_fetcher.fetch(raw_url.as_str())
         })?;
 
@@ -129,12 +88,13 @@ impl<'a> DirectoryPodcastUpdater<'a> {
 
         let (podcast_xml, episode_xmls) = Self::parse_feed(&log, body_str.as_str())?;
 
-        let podcast_ins = log_timed(&log.new(o!("step" => "convert_podcast")), |ref _log| {
-            podcast_xml.to_model()
-        })?;
+        let podcast_ins = common::log_timed(
+            &log.new(o!("step" => "convert_podcast")),
+            |ref _log| podcast_xml.to_model(),
+        )?;
 
         let podcast: model::Podcast =
-            log_timed(&log.new(o!("step" => "insert_podcast")), |ref _log| {
+            common::log_timed(&log.new(o!("step" => "insert_podcast")), |ref _log| {
                 diesel::insert_into(podcasts::table)
                     .values(&podcast_ins)
                     .get_result(self.conn)
@@ -147,7 +107,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
             retrieved_at: Utc::now(),
             sha256_hash:  sha256_hash,
         };
-        log_timed(
+        common::log_timed(
             &log.new(o!("step" => "insert_podcast_feed_contents")),
             |ref _log| {
                 diesel::insert_into(podcast_feed_contents::table)
@@ -159,14 +119,14 @@ impl<'a> DirectoryPodcastUpdater<'a> {
 
         let episodes_ins = Self::convert_episodes(&log, &podcast, episode_xmls)?;
         let episodes: Vec<model::Episode> =
-            log_timed(&log.new(o!("step" => "insert_episodes")), |ref _log| {
+            common::log_timed(&log.new(o!("step" => "insert_episodes")), |ref _log| {
                 diesel::insert_into(episodes::table)
                     .values(&episodes_ins)
                     .get_results(self.conn)
                     .chain_err(|| "Error inserting podcast episodes")
             })?;
 
-        log_timed(&log.new(o!("step" => "save_dir_podcast")), |ref _log| {
+        common::log_timed(&log.new(o!("step" => "save_dir_podcast")), |ref _log| {
             self.dir_podcast.feed_url = None;
             self.dir_podcast
                 .save_changes::<model::DirectoryPodcast>(&self.conn)
@@ -209,7 +169,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
     }
 
     fn parse_feed(log: &Logger, data: &str) -> Result<(XMLPodcast, Vec<XMLEpisode>)> {
-        log_timed(&log.new(o!("step" => "parse_feed")), |ref _log| {
+        common::log_timed(&log.new(o!("step" => "parse_feed")), |ref _log| {
             let mut episodes: Vec<XMLEpisode> = Vec::new();
             let mut podcast = XMLPodcast {
                 image_url: None,
@@ -373,37 +333,6 @@ impl<'a> DirectoryPodcastUpdater<'a> {
     }
 }
 
-pub trait URLFetcher {
-    fn fetch(&mut self, raw_url: &str) -> Result<Vec<u8>>;
-}
-
-/*
-let mut core = Core::new().unwrap();
-let client = Client::new(&core.handle());
-let mut url_fetcher = URLFetcherLive {
-    client: &client,
-    core:   &mut core,
-};
-*/
-pub struct URLFetcherLive<'a> {
-    client: &'a Client<hyper::client::HttpConnector, hyper::Body>,
-    core:   &'a mut Core,
-}
-
-impl<'a> URLFetcher for URLFetcherLive<'a> {
-    fn fetch(&mut self, raw_url: &str) -> Result<Vec<u8>> {
-        let feed_url =
-            Uri::from_str(raw_url).chain_err(|| format!("Error parsing feed URL: {}", raw_url))?;
-        let res = self.core
-            .run(self.client.get(feed_url))
-            .chain_err(|| format!("Error fetching feed URL: {}", raw_url))?;
-        let body = self.core
-            .run(res.body().concat2())
-            .chain_err(|| format!("Error reading body from URL: {}", raw_url))?;
-        Ok((*body).to_vec())
-    }
-}
-
 #[derive(Debug)]
 struct XMLPodcast {
     pub image_url: Option<String>,
@@ -517,7 +446,7 @@ fn parse_date_time(s: &str) -> Result<DateTime<Utc>> {
 
 #[cfg(test)]
 mod tests {
-    use mediators::*;
+    use mediators::directory_podcast_updater::*;
     use model;
     use schema::directories_podcasts;
     use test_helpers;
@@ -649,46 +578,14 @@ mod tests {
     #[test]
     fn test_real_feed() {
         {
-            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_8_4_play.xml"));
+            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_8_4_play.xml"));
             let mut mediator = bootstrap.mediator();
             mediator.run(&test_helpers::log()).unwrap();
         }
 
         {
             let mut bootstrap = bootstrap(include_bytes!(
-                "test_documents/feed_99_percent_invisible.xml"
-            ));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
-        }
-
-        {
-            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_adventure_zone.xml"));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
-        }
-
-        {
-            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_atp.xml"));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
-        }
-
-        {
-            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_bike_shed.xml"));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
-        }
-
-        {
-            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_common_sense.xml"));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
-        }
-
-        {
-            let mut bootstrap = bootstrap(include_bytes!(
-                "test_documents/feed_communion_after_dark.xml"
+                "../test_documents/feed_99_percent_invisible.xml"
             ));
             let mut mediator = bootstrap.mediator();
             mediator.run(&test_helpers::log()).unwrap();
@@ -696,71 +593,108 @@ mod tests {
 
         {
             let mut bootstrap =
-                bootstrap(include_bytes!("test_documents/feed_eaten_by_a_grue.xml"));
+                bootstrap(include_bytes!("../test_documents/feed_adventure_zone.xml"));
             let mut mediator = bootstrap.mediator();
             mediator.run(&test_helpers::log()).unwrap();
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_flop_house.xml"));
+            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_atp.xml"));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_bike_shed.xml"));
             let mut mediator = bootstrap.mediator();
             mediator.run(&test_helpers::log()).unwrap();
         }
 
         {
             let mut bootstrap =
-                bootstrap(include_bytes!("test_documents/feed_hardcore_history.xml"));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
-        }
-
-        {
-            let mut bootstrap =
-                bootstrap(include_bytes!("test_documents/feed_history_of_rome.xml"));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
-        }
-
-        {
-            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_planet_money.xml"));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
-        }
-
-        {
-            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_radiolab.xml"));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
-        }
-
-        {
-            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_road_work.xml"));
+                bootstrap(include_bytes!("../test_documents/feed_common_sense.xml"));
             let mut mediator = bootstrap.mediator();
             mediator.run(&test_helpers::log()).unwrap();
         }
 
         {
             let mut bootstrap = bootstrap(include_bytes!(
-                "test_documents/feed_roderick_on_the_line.xml"
+                "../test_documents/feed_communion_after_dark.xml"
             ));
             let mut mediator = bootstrap.mediator();
             mediator.run(&test_helpers::log()).unwrap();
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_song_exploder.xml"));
+            let mut bootstrap =
+                bootstrap(include_bytes!("../test_documents/feed_eaten_by_a_grue.xml"));
             let mut mediator = bootstrap.mediator();
             mediator.run(&test_helpers::log()).unwrap();
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_startup.xml"));
+            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_flop_house.xml"));
             let mut mediator = bootstrap.mediator();
             mediator.run(&test_helpers::log()).unwrap();
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_waking_up.xml"));
+            let mut bootstrap = bootstrap(include_bytes!(
+                "../test_documents/feed_hardcore_history.xml"
+            ));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap =
+                bootstrap(include_bytes!("../test_documents/feed_history_of_rome.xml"));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap =
+                bootstrap(include_bytes!("../test_documents/feed_planet_money.xml"));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_radiolab.xml"));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_road_work.xml"));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap = bootstrap(include_bytes!(
+                "../test_documents/feed_roderick_on_the_line.xml"
+            ));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap =
+                bootstrap(include_bytes!("../test_documents/feed_song_exploder.xml"));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_startup.xml"));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_waking_up.xml"));
             let mut mediator = bootstrap.mediator();
             mediator.run(&test_helpers::log()).unwrap();
         }
@@ -792,7 +726,7 @@ mod tests {
         map: HashMap<&'static str, Vec<u8>>,
     }
 
-    impl URLFetcher for URLFetcherStub {
+    impl common::URLFetcher for URLFetcherStub {
         fn fetch(&mut self, url: &str) -> Result<Vec<u8>> {
             Ok(self.map.get(url).unwrap().clone())
         }
@@ -826,13 +760,3 @@ mod tests {
         }
     }
 }
-
-/*
-struct PodcastUpdater {
-    pub podcast: &Podcast,
-}
-
-impl PodcastUpdater {
-    fn run(&self) {}
-}
-*/
