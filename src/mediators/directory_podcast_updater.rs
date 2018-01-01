@@ -187,6 +187,58 @@ fn content_hash(content: &Vec<u8>) -> String {
     sha.result_str()
 }
 
+fn element_text<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<String> {
+    let mut buf = Vec::new();
+    match reader.read_event(&mut buf) {
+        Ok(Event::CData(ref e)) | Ok(Event::Text(ref e)) => {
+            let val = safe_unescape_and_decode(log, e, &reader);
+            return Ok(val.clone());
+        }
+        _ => {}
+    }
+
+    Err("No content found".into())
+}
+
+fn parse_channel<R: BufRead>(
+    log: &Logger,
+    reader: &mut Reader<R>,
+) -> Result<(PodcastRaw, Vec<EpisodeRaw>)> {
+    let mut buf = Vec::new();
+    let mut episodes: Vec<EpisodeRaw> = Vec::new();
+    let mut podcast = PodcastRaw::new();
+
+    loop {
+        match reader.read_event(&mut buf) {
+            Ok(Event::Start(ref e)) => match e.name() {
+                b"item" => episodes.push(parse_item(&log, reader)?),
+                b"language" => podcast.language = Some(element_text(log, reader)?),
+                b"link" => podcast.link_url = Some(element_text(log, reader)?),
+                b"media:thumbnail" => for attr in e.attributes().with_checks(false) {
+                    if let Ok(attr) = attr {
+                        match attr.key {
+                            b"url" => {
+                                podcast.image_url = Some(attr.unescape_and_decode_value(&reader)
+                                    .chain_err(|| "Error unescaping and decoding attribute")?);
+                            }
+                            _ => (),
+                        }
+                    }
+                },
+                b"title" => {
+                    podcast.title = Some(element_text(log, reader)?);
+                    info!(log, "Parsed title"; "title" => podcast.title.clone());
+                }
+                _ => (),
+            },
+            Ok(Event::Eof) => break,
+            _ => {}
+        }
+    }
+
+    Ok((podcast, episodes))
+}
+
 fn parse_date_time(s: &str) -> Result<DateTime<Utc>> {
     lazy_static! {
         static ref RULES: Vec<DateTimeReplaceRule> = vec!(
@@ -259,58 +311,6 @@ fn parse_rss<R: BufRead>(
     }
 
     Err("No channel tag found".into())
-}
-
-fn parse_channel<R: BufRead>(
-    log: &Logger,
-    reader: &mut Reader<R>,
-) -> Result<(PodcastRaw, Vec<EpisodeRaw>)> {
-    let mut buf = Vec::new();
-    let mut episodes: Vec<EpisodeRaw> = Vec::new();
-    let mut podcast = PodcastRaw::new();
-
-    loop {
-        match reader.read_event(&mut buf) {
-            Ok(Event::Start(ref e)) => match e.name() {
-                b"item" => episodes.push(parse_item(&log, reader)?),
-                b"language" => podcast.language = Some(element_text(log, reader)?),
-                b"link" => podcast.link_url = Some(element_text(log, reader)?),
-                b"media:thumbnail" => for attr in e.attributes().with_checks(false) {
-                    if let Ok(attr) = attr {
-                        match attr.key {
-                            b"url" => {
-                                podcast.image_url = Some(attr.unescape_and_decode_value(&reader)
-                                    .chain_err(|| "Error unescaping and decoding attribute")?);
-                            }
-                            _ => (),
-                        }
-                    }
-                },
-                b"title" => {
-                    podcast.title = Some(element_text(log, reader)?);
-                    info!(log, "Parsed title"; "title" => podcast.title.clone());
-                }
-                _ => (),
-            },
-            Ok(Event::Eof) => break,
-            _ => {}
-        }
-    }
-
-    Ok((podcast, episodes))
-}
-
-fn element_text<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<String> {
-    let mut buf = Vec::new();
-    match reader.read_event(&mut buf) {
-        Ok(Event::CData(ref e)) | Ok(Event::Text(ref e)) => {
-            let val = safe_unescape_and_decode(log, e, &reader);
-            return Ok(val.clone());
-        }
-        _ => {}
-    }
-
-    Err("No content found".into())
 }
 
 fn parse_item<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<EpisodeRaw> {
