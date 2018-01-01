@@ -31,38 +31,6 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         })
     }
 
-    fn content_hash(content: &Vec<u8>) -> String {
-        let mut sha = Sha256::new();
-        sha.input(content.clone().as_slice());
-        sha.result_str()
-    }
-
-    fn convert_episodes(
-        log: &Logger,
-        podcast: &model::Podcast,
-        episode_xmls: Vec<XMLEpisode>,
-    ) -> Result<Vec<model::EpisodeIns>> {
-        common::log_timed(&log.new(o!("step" => "convert_episodes")), |ref _log| {
-            let mut episodes = Vec::with_capacity(episode_xmls.len());
-
-            for episode_xml in episode_xmls {
-                match episode_xml
-                    .to_model(&podcast)
-                    .chain_err(|| format!("Failed to convert: {:?}", episode_xml))?
-                {
-                    EpisodeInsOrInvalid::Valid(e) => episodes.push(e),
-                    EpisodeInsOrInvalid::Invalid {
-                        message: m,
-                        guid: g,
-                    } => error!(log, "Invalid episode in feed: {}", m;
-                            "episode-guid" => g, "podcast" => podcast.id.clone(),
-                            "podcast_title" => podcast.title.clone()),
-                }
-            }
-            Ok(episodes)
-        })
-    }
-
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
         let raw_url = self.dir_podcast.feed_url.clone().unwrap();
 
@@ -70,10 +38,10 @@ impl<'a> DirectoryPodcastUpdater<'a> {
             self.url_fetcher.fetch(raw_url.as_str())
         })?;
 
-        let sha256_hash = Self::content_hash(&body);
+        let sha256_hash = content_hash(&body);
         let body_str = String::from_utf8(body).unwrap();
 
-        let (podcast_xml, episode_xmls) = Self::parse_feed(&log, body_str.as_str())?;
+        let (podcast_xml, episode_xmls) = parse_feed(&log, body_str.as_str())?;
 
         let podcast_ins = common::log_timed(
             &log.new(o!("step" => "convert_podcast")),
@@ -104,7 +72,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
             },
         )?;
 
-        let episodes_ins = Self::convert_episodes(&log, &podcast, episode_xmls)?;
+        let episodes_ins = convert_episodes(&log, &podcast, episode_xmls)?;
         let episodes: Vec<model::Episode> =
             common::log_timed(&log.new(o!("step" => "insert_episodes")), |ref _log| {
                 diesel::insert_into(episodes::table)
@@ -123,199 +91,6 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         Ok(RunResult {
             episodes: episodes,
             podcast:  podcast,
-        })
-    }
-
-    // The idea here is to produce a tolerant form of quick-xml's function that is tolerant to as
-    // wide of a variety of possibly misencoded podcast feeds as possible.
-    pub fn safe_unescape_and_decode<'b, B: BufRead>(
-        log: &Logger,
-        bytes: &BytesText<'b>,
-        reader: &Reader<B>,
-    ) -> String {
-        // quick-xml's unescape might fail if it runs into an improperly encoded '&' with something
-        // like this:
-        //
-        //     Some(Error(Escape("Cannot find \';\' after \'&\'", 486..1124) ...
-        //
-        // The idea here is that we try to unescape: If we can, great, continue to decode. If we
-        // can't, then we just ignore the error (it goes to logs, but nothing else) and continue to
-        // decode.
-        //
-        // Eventually this would probably be better served by completely reimplementing quick-xml's
-        // unescaped so that we just don't balk when we see certain things that we know to be
-        // problems. Just do as good of a job as possible in the same style as a web browser with
-        // HTML.
-        match bytes.unescaped() {
-            Ok(bytes) => reader.decode(&*bytes).into_owned(),
-            Err(e) => {
-                error!(log, "Unescape failed"; "error" => e.description());
-                reader.decode(&*bytes).into_owned()
-            }
-        }
-    }
-
-    fn parse_feed(log: &Logger, data: &str) -> Result<(XMLPodcast, Vec<XMLEpisode>)> {
-        common::log_timed(&log.new(o!("step" => "parse_feed")), |ref _log| {
-            let mut episodes: Vec<XMLEpisode> = Vec::new();
-            let mut podcast = XMLPodcast {
-                image_url: None,
-                language:  None,
-                link_url:  None,
-                title:     None,
-            };
-
-            let mut reader = Reader::from_str(data);
-            reader.trim_text(true);
-
-            let mut depth = 0;
-            let mut in_channel = false;
-            let mut in_item = false;
-            let mut in_rss = false;
-            let mut buf = Vec::new();
-            let mut tag_name: Option<String> = None;
-
-            loop {
-                match reader.read_event(&mut buf) {
-                    Ok(Event::Start(ref e)) => {
-                        match (depth, e.name()) {
-                            (0, b"rss") => in_rss = true,
-                            (1, b"channel") => in_channel = true,
-                            (2, b"item") => {
-                                in_item = true;
-
-                                episodes.push(XMLEpisode {
-                                    description:  None,
-                                    explicit:     None,
-                                    media_type:   None,
-                                    media_url:    None,
-                                    guid:         None,
-                                    link_url:     None,
-                                    published_at: None,
-                                    title:        None,
-                                });
-                            }
-                            _ => (),
-                        }
-                        depth += 1;
-                        tag_name = Some(str::from_utf8(e.name()).unwrap().to_owned());
-                    }
-                    Ok(Event::Text(ref e)) => {
-                        if in_rss && in_channel {
-                            let val = Self::safe_unescape_and_decode(log, e, &reader);
-                            if !in_item {
-                                match tag_name.clone().unwrap().as_str() {
-                                    "language" => podcast.language = Some(val),
-                                    "link" => podcast.link_url = Some(val),
-                                    "title" => {
-                                        info!(log, "Parsed title"; "title" => val.clone());
-                                        podcast.title = Some(val)
-                                    }
-                                    _ => (),
-                                };
-                            } else {
-                                let episode = episodes.last_mut().unwrap();
-                                match tag_name.clone().unwrap().as_str() {
-                                    "description" => episode.description = Some(val),
-                                    "guid" => episode.guid = Some(val),
-                                    "itunes:explicit" => episode.explicit = Some(val == "yes"),
-                                    "link" => episode.link_url = Some(val),
-                                    "pubDate" => episode.published_at = Some(val),
-                                    "title" => episode.title = Some(val),
-                                    _ => (),
-                                };
-                            }
-                        }
-                    }
-                    // Totally duplicated from "Text" above: modularize
-                    Ok(Event::CData(ref e)) => {
-                        if in_rss && in_channel {
-                            let val = Self::safe_unescape_and_decode(log, e, &reader);
-                            if !in_item {
-                                match tag_name.clone().unwrap().as_str() {
-                                    "language" => podcast.language = Some(val),
-                                    "link" => podcast.link_url = Some(val),
-                                    "title" => podcast.title = Some(val),
-                                    _ => (),
-                                };
-                            } else {
-                                let episode = episodes.last_mut().unwrap();
-                                match tag_name.clone().unwrap().as_str() {
-                                    "description" => episode.description = Some(val),
-                                    "guid" => episode.guid = Some(val),
-                                    "itunes:explicit" => episode.explicit = Some(val == "yes"),
-                                    "link" => episode.link_url = Some(val),
-                                    "pubDate" => episode.published_at = Some(val),
-                                    "title" => episode.title = Some(val),
-                                    _ => (),
-                                };
-                            }
-                        }
-                    }
-                    Ok(Event::Empty(ref e)) => {
-                        if in_channel {
-                            if !in_item {
-                                if e.name() == b"media:thumbnail" {
-                                    for r in e.attributes() {
-                                        let kv = r.chain_err(|| "Error parsing XML attributes")?;
-                                        if kv.key == b"url" {
-                                            podcast.image_url = Some(
-                                                String::from_utf8(kv.value.into_owned())
-                                                    .unwrap()
-                                                    .to_owned(),
-                                            );
-                                        }
-                                    }
-                                }
-                            } else {
-                                // Either of these tags might be used for a media URL in podcast
-                                // feeds that you see around.
-                                if e.name() == b"enclosure" || e.name() == b"media:content" {
-                                    let episode = episodes.last_mut().unwrap();
-                                    for r in e.attributes() {
-                                        let kv = r.chain_err(|| "Error parsing XML attributes")?;
-                                        match kv.key {
-                                            b"type" => {
-                                                episode.media_type = Some(
-                                                    String::from_utf8(kv.value.into_owned())
-                                                        .unwrap()
-                                                        .to_owned(),
-                                                );
-                                            }
-                                            b"url" => {
-                                                episode.media_url = Some(
-                                                    String::from_utf8(kv.value.into_owned())
-                                                        .unwrap()
-                                                        .to_owned(),
-                                                );
-                                            }
-                                            _ => (),
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    Ok(Event::End(ref e)) => {
-                        match (depth, e.name()) {
-                            (0, b"rss") => in_rss = false,
-                            (1, b"channel") => in_channel = false,
-                            (2, b"item") => in_item = false,
-                            _ => (),
-                        }
-                        depth -= 1;
-                        tag_name = None;
-                    }
-                    Ok(Event::Eof) => break,
-                    Err(e) => bail!("Error at position {}: {:?}", reader.buffer_position(), e),
-                    _ => (),
-                };
-            }
-            buf.clear();
-            //println!("podcast = {:?}", podcast);
-            //println!("episodes = {:?}", episodes);
-
-            Ok((podcast, episodes))
         })
     }
 }
@@ -424,6 +199,38 @@ impl XMLPodcast {
 // Private functions
 //
 
+fn convert_episodes(
+    log: &Logger,
+    podcast: &model::Podcast,
+    episode_xmls: Vec<XMLEpisode>,
+) -> Result<Vec<model::EpisodeIns>> {
+    common::log_timed(&log.new(o!("step" => "convert_episodes")), |ref _log| {
+        let mut episodes = Vec::with_capacity(episode_xmls.len());
+
+        for episode_xml in episode_xmls {
+            match episode_xml
+                .to_model(&podcast)
+                .chain_err(|| format!("Failed to convert: {:?}", episode_xml))?
+            {
+                EpisodeInsOrInvalid::Valid(e) => episodes.push(e),
+                EpisodeInsOrInvalid::Invalid {
+                    message: m,
+                    guid: g,
+                } => error!(log, "Invalid episode in feed: {}", m;
+                            "episode-guid" => g, "podcast" => podcast.id.clone(),
+                            "podcast_title" => podcast.title.clone()),
+            }
+        }
+        Ok(episodes)
+    })
+}
+
+fn content_hash(content: &Vec<u8>) -> String {
+    let mut sha = Sha256::new();
+    sha.input(content.clone().as_slice());
+    sha.result_str()
+}
+
 fn parse_date_time(s: &str) -> Result<DateTime<Utc>> {
     lazy_static! {
         static ref RULES: Vec<DateTimeReplaceRule> = vec!(
@@ -448,6 +255,197 @@ fn parse_date_time(s: &str) -> Result<DateTime<Utc>> {
             Ok(DateTime::parse_from_rfc2822(s.as_str())
                 .chain_err(|| format!("Error parsing publishing date {:?} from feed item", s))?
                 .with_timezone(&Utc))
+        }
+    }
+}
+
+fn parse_feed(log: &Logger, data: &str) -> Result<(XMLPodcast, Vec<XMLEpisode>)> {
+    common::log_timed(&log.new(o!("step" => "parse_feed")), |ref _log| {
+        let mut episodes: Vec<XMLEpisode> = Vec::new();
+        let mut podcast = XMLPodcast {
+            image_url: None,
+            language:  None,
+            link_url:  None,
+            title:     None,
+        };
+
+        let mut reader = Reader::from_str(data);
+        reader.trim_text(true);
+
+        let mut depth = 0;
+        let mut in_channel = false;
+        let mut in_item = false;
+        let mut in_rss = false;
+        let mut buf = Vec::new();
+        let mut tag_name: Option<String> = None;
+
+        loop {
+            match reader.read_event(&mut buf) {
+                Ok(Event::Start(ref e)) => {
+                    match (depth, e.name()) {
+                        (0, b"rss") => in_rss = true,
+                        (1, b"channel") => in_channel = true,
+                        (2, b"item") => {
+                            in_item = true;
+
+                            episodes.push(XMLEpisode {
+                                description:  None,
+                                explicit:     None,
+                                media_type:   None,
+                                media_url:    None,
+                                guid:         None,
+                                link_url:     None,
+                                published_at: None,
+                                title:        None,
+                            });
+                        }
+                        _ => (),
+                    }
+                    depth += 1;
+                    tag_name = Some(str::from_utf8(e.name()).unwrap().to_owned());
+                }
+                Ok(Event::Text(ref e)) => {
+                    if in_rss && in_channel {
+                        let val = safe_unescape_and_decode(log, e, &reader);
+                        if !in_item {
+                            match tag_name.clone().unwrap().as_str() {
+                                "language" => podcast.language = Some(val),
+                                "link" => podcast.link_url = Some(val),
+                                "title" => {
+                                    info!(log, "Parsed title"; "title" => val.clone());
+                                    podcast.title = Some(val)
+                                }
+                                _ => (),
+                            };
+                        } else {
+                            let episode = episodes.last_mut().unwrap();
+                            match tag_name.clone().unwrap().as_str() {
+                                "description" => episode.description = Some(val),
+                                "guid" => episode.guid = Some(val),
+                                "itunes:explicit" => episode.explicit = Some(val == "yes"),
+                                "link" => episode.link_url = Some(val),
+                                "pubDate" => episode.published_at = Some(val),
+                                "title" => episode.title = Some(val),
+                                _ => (),
+                            };
+                        }
+                    }
+                }
+                // Totally duplicated from "Text" above: modularize
+                Ok(Event::CData(ref e)) => {
+                    if in_rss && in_channel {
+                        let val = safe_unescape_and_decode(log, e, &reader);
+                        if !in_item {
+                            match tag_name.clone().unwrap().as_str() {
+                                "language" => podcast.language = Some(val),
+                                "link" => podcast.link_url = Some(val),
+                                "title" => podcast.title = Some(val),
+                                _ => (),
+                            };
+                        } else {
+                            let episode = episodes.last_mut().unwrap();
+                            match tag_name.clone().unwrap().as_str() {
+                                "description" => episode.description = Some(val),
+                                "guid" => episode.guid = Some(val),
+                                "itunes:explicit" => episode.explicit = Some(val == "yes"),
+                                "link" => episode.link_url = Some(val),
+                                "pubDate" => episode.published_at = Some(val),
+                                "title" => episode.title = Some(val),
+                                _ => (),
+                            };
+                        }
+                    }
+                }
+                Ok(Event::Empty(ref e)) => {
+                    if in_channel {
+                        if !in_item {
+                            if e.name() == b"media:thumbnail" {
+                                for r in e.attributes() {
+                                    let kv = r.chain_err(|| "Error parsing XML attributes")?;
+                                    if kv.key == b"url" {
+                                        podcast.image_url = Some(
+                                            String::from_utf8(kv.value.into_owned())
+                                                .unwrap()
+                                                .to_owned(),
+                                        );
+                                    }
+                                }
+                            }
+                        } else {
+                            // Either of these tags might be used for a media URL in podcast
+                            // feeds that you see around.
+                            if e.name() == b"enclosure" || e.name() == b"media:content" {
+                                let episode = episodes.last_mut().unwrap();
+                                for r in e.attributes() {
+                                    let kv = r.chain_err(|| "Error parsing XML attributes")?;
+                                    match kv.key {
+                                        b"type" => {
+                                            episode.media_type = Some(
+                                                String::from_utf8(kv.value.into_owned())
+                                                    .unwrap()
+                                                    .to_owned(),
+                                            );
+                                        }
+                                        b"url" => {
+                                            episode.media_url = Some(
+                                                String::from_utf8(kv.value.into_owned())
+                                                    .unwrap()
+                                                    .to_owned(),
+                                            );
+                                        }
+                                        _ => (),
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Ok(Event::End(ref e)) => {
+                    match (depth, e.name()) {
+                        (0, b"rss") => in_rss = false,
+                        (1, b"channel") => in_channel = false,
+                        (2, b"item") => in_item = false,
+                        _ => (),
+                    }
+                    depth -= 1;
+                    tag_name = None;
+                }
+                Ok(Event::Eof) => break,
+                Err(e) => bail!("Error at position {}: {:?}", reader.buffer_position(), e),
+                _ => (),
+            };
+        }
+        buf.clear();
+        //println!("podcast = {:?}", podcast);
+        //println!("episodes = {:?}", episodes);
+
+        Ok((podcast, episodes))
+    })
+}
+
+// The idea here is to produce a tolerant form of quick-xml's function that is tolerant to as wide
+// of a variety of possibly misencoded podcast feeds as possible.
+pub fn safe_unescape_and_decode<'b, B: BufRead>(
+    log: &Logger,
+    bytes: &BytesText<'b>,
+    reader: &Reader<B>,
+) -> String {
+    // quick-xml's unescape might fail if it runs into an improperly encoded '&' with something
+    // like this:
+    //
+    //     Some(Error(Escape("Cannot find \';\' after \'&\'", 486..1124) ...
+    //
+    // The idea here is that we try to unescape: If we can, great, continue to decode. If we can't,
+    // then we just ignore the error (it goes to logs, but nothing else) and continue to decode.
+    //
+    // Eventually this would probably be better served by completely reimplementing quick-xml's
+    // unescaped so that we just don't balk when we see certain things that we know to be problems.
+    // Just do as good of a job as possible in the same style as a web browser with HTML.
+    match bytes.unescaped() {
+        Ok(bytes) => reader.decode(&*bytes).into_owned(),
+        Err(e) => {
+            error!(log, "Unescape failed"; "error" => e.description());
+            reader.decode(&*bytes).into_owned()
         }
     }
 }
