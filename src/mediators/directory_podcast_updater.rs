@@ -41,11 +41,11 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         let sha256_hash = content_hash(&body);
         let body_str = String::from_utf8(body).unwrap();
 
-        let (podcast_xml, episode_xmls) = parse_feed(&log, body_str.as_str())?;
+        let (podcast_raw, episode_raws) = parse_feed(&log, body_str.as_str())?;
 
         let podcast_ins = common::log_timed(
             &log.new(o!("step" => "convert_podcast")),
-            |ref _log| validate_podcast(&podcast_xml),
+            |ref _log| validate_podcast(&podcast_raw),
         )?;
 
         let podcast: model::Podcast =
@@ -72,7 +72,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
             },
         )?;
 
-        let episodes_ins = validate_episodes(&log, episode_xmls, &podcast)?;
+        let episodes_ins = validate_episodes(&log, episode_raws, &podcast)?;
         let episodes: Vec<model::Episode> =
             common::log_timed(&log.new(o!("step" => "insert_episodes")), |ref _log| {
                 diesel::insert_into(episodes::table)
@@ -120,7 +120,7 @@ enum EpisodeInsOrInvalid {
 }
 
 #[derive(Debug)]
-struct XMLEpisode {
+struct EpisodeRaw {
     pub description:  Option<String>,
     pub explicit:     Option<bool>,
     pub guid:         Option<String>,
@@ -131,10 +131,10 @@ struct XMLEpisode {
     pub title:        Option<String>,
 }
 
-impl XMLEpisode {}
+impl EpisodeRaw {}
 
 #[derive(Debug)]
-struct XMLPodcast {
+struct PodcastRaw {
     pub image_url: Option<String>,
     pub language:  Option<String>,
     pub link_url:  Option<String>,
@@ -179,10 +179,10 @@ fn parse_date_time(s: &str) -> Result<DateTime<Utc>> {
     }
 }
 
-fn parse_feed(log: &Logger, data: &str) -> Result<(XMLPodcast, Vec<XMLEpisode>)> {
+fn parse_feed(log: &Logger, data: &str) -> Result<(PodcastRaw, Vec<EpisodeRaw>)> {
     common::log_timed(&log.new(o!("step" => "parse_feed")), |ref _log| {
-        let mut episodes: Vec<XMLEpisode> = Vec::new();
-        let mut podcast = XMLPodcast {
+        let mut episodes: Vec<EpisodeRaw> = Vec::new();
+        let mut podcast = PodcastRaw {
             image_url: None,
             language:  None,
             link_url:  None,
@@ -208,7 +208,7 @@ fn parse_feed(log: &Logger, data: &str) -> Result<(XMLPodcast, Vec<XMLEpisode>)>
                         (2, b"item") => {
                             in_item = true;
 
-                            episodes.push(XMLEpisode {
+                            episodes.push(EpisodeRaw {
                                 description:  None,
                                 explicit:     None,
                                 media_type:   None,
@@ -370,7 +370,7 @@ pub fn safe_unescape_and_decode<'b, B: BufRead>(
     }
 }
 
-fn validate_episode(raw: &XMLEpisode, podcast: &model::Podcast) -> Result<EpisodeInsOrInvalid> {
+fn validate_episode(raw: &EpisodeRaw, podcast: &model::Podcast) -> Result<EpisodeInsOrInvalid> {
     if raw.guid.is_none() {
         return Ok(EpisodeInsOrInvalid::Invalid {
             message: "Missing GUID from feed item",
@@ -413,7 +413,7 @@ fn validate_episode(raw: &XMLEpisode, podcast: &model::Podcast) -> Result<Episod
 
 fn validate_episodes(
     log: &Logger,
-    raws: Vec<XMLEpisode>,
+    raws: Vec<EpisodeRaw>,
     podcast: &model::Podcast,
 ) -> Result<Vec<model::EpisodeIns>> {
     common::log_timed(&log.new(o!("step" => "validate_episodes")), |ref log| {
@@ -440,7 +440,7 @@ fn validate_episodes(
     })
 }
 
-fn validate_podcast(raw: &XMLPodcast) -> Result<model::PodcastIns> {
+fn validate_podcast(raw: &PodcastRaw) -> Result<model::PodcastIns> {
     Ok(model::PodcastIns {
         image_url: raw.image_url.clone(),
         language:  raw.language.clone(),
