@@ -45,7 +45,14 @@ impl<'a> DirectoryPodcastUpdater<'a> {
 
         let podcast_ins = common::log_timed(
             &log.new(o!("step" => "convert_podcast")),
-            |ref _log| validate_podcast(&podcast_raw),
+            |ref _log| -> Result<model::PodcastIns> {
+                match validate_podcast(&podcast_raw)
+                    .chain_err(|| format!("Failed to convert: {:?}", podcast_raw))?
+                {
+                    PodcastInsOrInvalid::Valid(p) => Ok(p),
+                    PodcastInsOrInvalid::Invalid { message: m } => Err(m.into()),
+                }
+            },
         )?;
 
         let podcast: model::Podcast =
@@ -131,7 +138,25 @@ struct EpisodeRaw {
     pub title:        Option<String>,
 }
 
-impl EpisodeRaw {}
+impl EpisodeRaw {
+    fn new() -> EpisodeRaw {
+        EpisodeRaw {
+            description:  None,
+            explicit:     None,
+            media_type:   None,
+            media_url:    None,
+            guid:         None,
+            link_url:     None,
+            published_at: None,
+            title:        None,
+        }
+    }
+}
+
+enum PodcastInsOrInvalid {
+    Valid(model::PodcastIns),
+    Invalid { message: &'static str },
+}
 
 #[derive(Debug)]
 struct PodcastRaw {
@@ -139,6 +164,17 @@ struct PodcastRaw {
     pub language:  Option<String>,
     pub link_url:  Option<String>,
     pub title:     Option<String>,
+}
+
+impl PodcastRaw {
+    fn new() -> PodcastRaw {
+        PodcastRaw {
+            image_url: None,
+            language:  None,
+            link_url:  None,
+            title:     None,
+        }
+    }
 }
 
 //
@@ -180,167 +216,139 @@ fn parse_date_time(s: &str) -> Result<DateTime<Utc>> {
 }
 
 fn parse_feed(log: &Logger, data: &str) -> Result<(PodcastRaw, Vec<EpisodeRaw>)> {
-    common::log_timed(&log.new(o!("step" => "parse_feed")), |ref _log| {
-        let mut episodes: Vec<EpisodeRaw> = Vec::new();
-        let mut podcast = PodcastRaw {
-            image_url: None,
-            language:  None,
-            link_url:  None,
-            title:     None,
-        };
+    common::log_timed(&log.new(o!("step" => "parse_feed")), |ref log| {
+        let mut buf = Vec::new();
 
         let mut reader = Reader::from_str(data);
-        reader.trim_text(true);
-
-        let mut depth = 0;
-        let mut in_channel = false;
-        let mut in_item = false;
-        let mut in_rss = false;
-        let mut buf = Vec::new();
-        let mut tag_name: Option<String> = None;
+        reader.trim_text(true).expand_empty_elements(true);
 
         loop {
             match reader.read_event(&mut buf) {
-                Ok(Event::Start(ref e)) => {
-                    match (depth, e.name()) {
-                        (0, b"rss") => in_rss = true,
-                        (1, b"channel") => in_channel = true,
-                        (2, b"item") => {
-                            in_item = true;
-
-                            episodes.push(EpisodeRaw {
-                                description:  None,
-                                explicit:     None,
-                                media_type:   None,
-                                media_url:    None,
-                                guid:         None,
-                                link_url:     None,
-                                published_at: None,
-                                title:        None,
-                            });
-                        }
-                        _ => (),
+                Ok(Event::Start(ref e)) => match e.name() {
+                    b"rss" => {
+                        return parse_rss(&log, &mut reader);
                     }
-                    depth += 1;
-                    tag_name = Some(str::from_utf8(e.name()).unwrap().to_owned());
-                }
-                Ok(Event::Text(ref e)) => {
-                    if in_rss && in_channel {
-                        let val = safe_unescape_and_decode(log, e, &reader);
-                        if !in_item {
-                            match tag_name.clone().unwrap().as_str() {
-                                "language" => podcast.language = Some(val),
-                                "link" => podcast.link_url = Some(val),
-                                "title" => {
-                                    info!(log, "Parsed title"; "title" => val.clone());
-                                    podcast.title = Some(val)
-                                }
-                                _ => (),
-                            };
-                        } else {
-                            let episode = episodes.last_mut().unwrap();
-                            match tag_name.clone().unwrap().as_str() {
-                                "description" => episode.description = Some(val),
-                                "guid" => episode.guid = Some(val),
-                                "itunes:explicit" => episode.explicit = Some(val == "yes"),
-                                "link" => episode.link_url = Some(val),
-                                "pubDate" => episode.published_at = Some(val),
-                                "title" => episode.title = Some(val),
-                                _ => (),
-                            };
-                        }
-                    }
-                }
-                // Totally duplicated from "Text" above: modularize
-                Ok(Event::CData(ref e)) => {
-                    if in_rss && in_channel {
-                        let val = safe_unescape_and_decode(log, e, &reader);
-                        if !in_item {
-                            match tag_name.clone().unwrap().as_str() {
-                                "language" => podcast.language = Some(val),
-                                "link" => podcast.link_url = Some(val),
-                                "title" => podcast.title = Some(val),
-                                _ => (),
-                            };
-                        } else {
-                            let episode = episodes.last_mut().unwrap();
-                            match tag_name.clone().unwrap().as_str() {
-                                "description" => episode.description = Some(val),
-                                "guid" => episode.guid = Some(val),
-                                "itunes:explicit" => episode.explicit = Some(val == "yes"),
-                                "link" => episode.link_url = Some(val),
-                                "pubDate" => episode.published_at = Some(val),
-                                "title" => episode.title = Some(val),
-                                _ => (),
-                            };
-                        }
-                    }
-                }
-                Ok(Event::Empty(ref e)) => {
-                    if in_channel {
-                        if !in_item {
-                            if e.name() == b"media:thumbnail" {
-                                for r in e.attributes() {
-                                    let kv = r.chain_err(|| "Error parsing XML attributes")?;
-                                    if kv.key == b"url" {
-                                        podcast.image_url = Some(
-                                            String::from_utf8(kv.value.into_owned())
-                                                .unwrap()
-                                                .to_owned(),
-                                        );
-                                    }
-                                }
-                            }
-                        } else {
-                            // Either of these tags might be used for a media URL in podcast
-                            // feeds that you see around.
-                            if e.name() == b"enclosure" || e.name() == b"media:content" {
-                                let episode = episodes.last_mut().unwrap();
-                                for r in e.attributes() {
-                                    let kv = r.chain_err(|| "Error parsing XML attributes")?;
-                                    match kv.key {
-                                        b"type" => {
-                                            episode.media_type = Some(
-                                                String::from_utf8(kv.value.into_owned())
-                                                    .unwrap()
-                                                    .to_owned(),
-                                            );
-                                        }
-                                        b"url" => {
-                                            episode.media_url = Some(
-                                                String::from_utf8(kv.value.into_owned())
-                                                    .unwrap()
-                                                    .to_owned(),
-                                            );
-                                        }
-                                        _ => (),
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                Ok(Event::End(ref e)) => {
-                    match (depth, e.name()) {
-                        (0, b"rss") => in_rss = false,
-                        (1, b"channel") => in_channel = false,
-                        (2, b"item") => in_item = false,
-                        _ => (),
-                    }
-                    depth -= 1;
-                    tag_name = None;
-                }
+                    _ => (),
+                },
                 Ok(Event::Eof) => break,
-                Err(e) => bail!("Error at position {}: {:?}", reader.buffer_position(), e),
-                _ => (),
-            };
+                _ => {}
+            }
         }
-        buf.clear();
-        //println!("podcast = {:?}", podcast);
-        //println!("episodes = {:?}", episodes);
 
-        Ok((podcast, episodes))
+        Err("No rss tag found".into())
     })
+}
+
+fn parse_rss<R: BufRead>(
+    log: &Logger,
+    reader: &mut Reader<R>,
+) -> Result<(PodcastRaw, Vec<EpisodeRaw>)> {
+    let mut buf = Vec::new();
+
+    loop {
+        match reader.read_event(&mut buf) {
+            Ok(Event::Start(ref e)) => match e.name() {
+                b"channel" => {
+                    return parse_channel(&log, reader);
+                }
+                _ => (),
+            },
+            Ok(Event::Eof) => break,
+            _ => {}
+        }
+    }
+
+    Err("No channel tag found".into())
+}
+
+fn parse_channel<R: BufRead>(
+    log: &Logger,
+    reader: &mut Reader<R>,
+) -> Result<(PodcastRaw, Vec<EpisodeRaw>)> {
+    let mut buf = Vec::new();
+    let mut episodes: Vec<EpisodeRaw> = Vec::new();
+    let mut podcast = PodcastRaw::new();
+
+    loop {
+        match reader.read_event(&mut buf) {
+            Ok(Event::Start(ref e)) => match e.name() {
+                b"item" => episodes.push(parse_item(&log, reader)?),
+                b"language" => podcast.language = Some(element_text(log, reader)?),
+                b"link" => podcast.link_url = Some(element_text(log, reader)?),
+                b"media:thumbnail" => for attr in e.attributes().with_checks(false) {
+                    if let Ok(attr) = attr {
+                        match attr.key {
+                            b"url" => {
+                                podcast.image_url = Some(attr.unescape_and_decode_value(&reader)
+                                    .chain_err(|| "Error unescaping and decoding attribute")?);
+                            }
+                            _ => (),
+                        }
+                    }
+                },
+                b"title" => {
+                    podcast.title = Some(element_text(log, reader)?);
+                    info!(log, "Parsed title"; "title" => podcast.title.clone());
+                }
+                _ => (),
+            },
+            Ok(Event::Eof) => break,
+            _ => {}
+        }
+    }
+
+    Ok((podcast, episodes))
+}
+
+fn element_text<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<String> {
+    let mut buf = Vec::new();
+    match reader.read_event(&mut buf) {
+        Ok(Event::CData(ref e)) | Ok(Event::Text(ref e)) => {
+            let val = safe_unescape_and_decode(log, e, &reader);
+            return Ok(val.clone());
+        }
+        _ => {}
+    }
+
+    Err("No content found".into())
+}
+
+fn parse_item<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<EpisodeRaw> {
+    let mut buf = Vec::new();
+    let mut episode = EpisodeRaw::new();
+
+    loop {
+        match reader.read_event(&mut buf) {
+            Ok(Event::Start(ref e)) => match e.name() {
+                b"description" => episode.description = Some(element_text(log, reader)?),
+                b"enclosure" | b"media:content" => for attr in e.attributes().with_checks(false) {
+                    if let Ok(attr) = attr {
+                        match attr.key {
+                            b"type" => {
+                                episode.media_type = Some(attr.unescape_and_decode_value(&reader)
+                                    .chain_err(|| "Error unescaping and decoding attribute")?);
+                            }
+                            b"url" => {
+                                episode.media_url = Some(attr.unescape_and_decode_value(&reader)
+                                    .chain_err(|| "Error unescaping and decoding attribute")?);
+                            }
+                            _ => (),
+                        }
+                    }
+                },
+                b"guid" => episode.guid = Some(element_text(log, reader)?),
+                b"itunes:explicit" => episode.explicit = Some(element_text(log, reader)? == "yes"),
+                b"link" => episode.link_url = Some(element_text(log, reader)?),
+                b"pubDate" => episode.published_at = Some(element_text(log, reader)?),
+                b"title" => episode.title = Some(element_text(log, reader)?),
+                _ => (),
+            },
+            Ok(Event::Eof) => break,
+            _ => {}
+        }
+    }
+
+    Ok(episode)
 }
 
 // The idea here is to produce a tolerant form of quick-xml's function that is tolerant to as wide
@@ -440,15 +448,19 @@ fn validate_episodes(
     })
 }
 
-fn validate_podcast(raw: &PodcastRaw) -> Result<model::PodcastIns> {
-    Ok(model::PodcastIns {
+fn validate_podcast(raw: &PodcastRaw) -> Result<PodcastInsOrInvalid> {
+    if raw.title.is_none() {
+        return Ok(PodcastInsOrInvalid::Invalid {
+            message: "Missing title from podcast feed",
+        });
+    }
+
+    Ok(PodcastInsOrInvalid::Valid(model::PodcastIns {
         image_url: raw.image_url.clone(),
         language:  raw.language.clone(),
         link_url:  raw.link_url.clone(),
-        title:     raw.title
-            .clone()
-            .chain_err(|| "Error extracting title from podcast feed")?,
-    })
+        title:     raw.title.clone().unwrap(),
+    }))
 }
 
 //
