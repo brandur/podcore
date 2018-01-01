@@ -109,7 +109,8 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                         message: m,
                         guid: g,
                     } => error!(log, "Invalid episode in feed: {}", m;
-                            "episode-guid" => g, "podcast" => podcast.id.clone(), "podcast_title" => podcast.title.clone()),
+                            "episode-guid" => g, "podcast" => podcast.id.clone(),
+                            "podcast_title" => podcast.title.clone()),
                 }
             }
             Ok(episodes)
@@ -259,7 +260,10 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                                 match tag_name.clone().unwrap().as_str() {
                                     "language" => podcast.language = Some(val),
                                     "link" => podcast.link_url = Some(val),
-                                    "title" => podcast.title = Some(val),
+                                    "title" => {
+                                        info!(log, "Parsed title"; "title" => val.clone());
+                                        podcast.title = Some(val)
+                                    }
                                     _ => (),
                                 };
                             } else {
@@ -730,9 +734,27 @@ mod tests {
         }
 
         {
+            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_road_work.xml"));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
             let mut bootstrap = bootstrap(include_bytes!(
                 "test_documents/feed_roderick_on_the_line.xml"
             ));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_song_exploder.xml"));
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        {
+            let mut bootstrap = bootstrap(include_bytes!("test_documents/feed_startup.xml"));
             let mut mediator = bootstrap.mediator();
             mediator.run(&test_helpers::log()).unwrap();
         }
