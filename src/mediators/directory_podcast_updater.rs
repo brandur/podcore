@@ -88,12 +88,12 @@ impl<'a> DirectoryPodcastUpdater<'a> {
             last_retrieved_at: Utc::now(),
             podcast_id:        podcast.id,
         };
-        common::log_timed(
+        let location: model::PodcastFeedLocation = common::log_timed(
             &log.new(o!("step" => "insert_podcast_feed_location")),
             |ref _log| {
                 diesel::insert_into(podcast_feed_locations::table)
                     .values(&location_ins)
-                    .execute(self.conn)
+                    .get_result(self.conn)
                     .chain_err(|| "Error inserting podcast feed location")
             },
         )?;
@@ -116,6 +116,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
 
         Ok(RunResult {
             episodes: episodes,
+            location: location,
             podcast:  podcast,
         })
     }
@@ -123,6 +124,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
 
 pub struct RunResult {
     pub episodes: Vec<model::Episode>,
+    pub location: model::PodcastFeedLocation,
     pub podcast:  model::Podcast,
 }
 
@@ -551,6 +553,10 @@ mod tests {
         let mut mediator = bootstrap.mediator();
         let res = mediator.run(&test_helpers::log()).unwrap();
 
+        //
+        // Podcast
+        //
+
         assert_ne!(0, res.podcast.id);
         assert_eq!(
             Some("https://example.com/podcast-image-url.jpg".to_owned()),
@@ -562,6 +568,17 @@ mod tests {
             res.podcast.link_url
         );
         assert_eq!("Title", res.podcast.title);
+
+        //
+        // Podcast feed location
+        //
+
+        assert_eq!(res.podcast.id, res.location.podcast_id);
+        assert_eq!(bootstrap.feed_url.to_owned(), res.location.feed_url);
+
+        //
+        // Episode
+        //
 
         assert_eq!(1, res.episodes.len());
 
@@ -895,6 +912,7 @@ mod tests {
     struct TestBootstrap {
         conn:        PgConnection,
         dir_podcast: model::DirectoryPodcast,
+        feed_url:    &'static str,
         url_fetcher: common::URLFetcherStub,
     }
 
@@ -932,6 +950,7 @@ mod tests {
         TestBootstrap {
             conn:        conn,
             dir_podcast: dir_podcast,
+            feed_url:    url,
             url_fetcher: url_fetcher,
         }
     }
