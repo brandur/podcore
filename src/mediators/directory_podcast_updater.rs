@@ -1,6 +1,7 @@
 use mediators::common;
 use errors::*;
 use model;
+use model::insertable;
 
 use chrono::{DateTime, Utc};
 use crypto::digest::Digest;
@@ -45,7 +46,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
 
         let podcast_ins = common::log_timed(
             &log.new(o!("step" => "convert_podcast")),
-            |ref _log| -> Result<model::PodcastIns> {
+            |ref _log| -> Result<insertable::Podcast> {
                 match validate_podcast(&podcast_raw)
                     .chain_err(|| format!("Failed to convert: {:?}", podcast_raw))?
                 {
@@ -63,7 +64,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                     .chain_err(|| "Error inserting podcast")
             })?;
 
-        let content_ins = model::PodcastFeedContentIns {
+        let content_ins = insertable::PodcastFeedContent {
             content:      body_str,
             podcast_id:   podcast.id,
             retrieved_at: Utc::now(),
@@ -160,7 +161,7 @@ struct DateTimeReplaceRule {
 }
 
 enum EpisodeInsOrInvalid {
-    Valid(model::EpisodeIns),
+    Valid(insertable::Episode),
     Invalid {
         message: &'static str,
         guid:    Option<String>,
@@ -168,7 +169,7 @@ enum EpisodeInsOrInvalid {
 }
 
 enum PodcastInsOrInvalid {
-    Valid(model::PodcastIns),
+    Valid(insertable::Podcast),
     Invalid { message: &'static str },
 }
 
@@ -431,7 +432,7 @@ fn validate_episode(raw: &raw::Episode, podcast: &model::Podcast) -> Result<Epis
     require_episode_field!(raw.published_at, "publishing date", raw.guid.clone());
     require_episode_field!(raw.title, "title", raw.guid.clone());
 
-    Ok(EpisodeInsOrInvalid::Valid(model::EpisodeIns {
+    Ok(EpisodeInsOrInvalid::Valid(insertable::Episode {
         description:  raw.description.clone(),
         explicit:     raw.explicit.clone(),
         guid:         raw.guid.clone().unwrap(),
@@ -448,7 +449,7 @@ fn validate_episodes(
     log: &Logger,
     raws: Vec<raw::Episode>,
     podcast: &model::Podcast,
-) -> Result<Vec<model::EpisodeIns>> {
+) -> Result<Vec<insertable::Episode>> {
     common::log_timed(&log.new(o!("step" => "validate_episodes")), |ref log| {
         let num_candidates = raws.len();
         let mut episodes = Vec::with_capacity(num_candidates);
@@ -476,7 +477,7 @@ fn validate_episodes(
 fn validate_podcast(raw: &raw::Podcast) -> Result<PodcastInsOrInvalid> {
     require_podcast_field!(raw.title, "title");
 
-    Ok(PodcastInsOrInvalid::Valid(model::PodcastIns {
+    Ok(PodcastInsOrInvalid::Valid(insertable::Podcast {
         image_url: raw.image_url.clone(),
         language:  raw.language.clone(),
         link_url:  raw.link_url.clone(),
@@ -775,7 +776,7 @@ mod tests {
         };
 
         let itunes = model::Directory::itunes(&conn).unwrap();
-        let dir_podcast_ins = model::DirectoryPodcastIns {
+        let dir_podcast_ins = insertable::DirectoryPodcast {
             directory_id: itunes.id,
             feed_url:     Some(url.to_owned()),
             podcast_id:   None,
