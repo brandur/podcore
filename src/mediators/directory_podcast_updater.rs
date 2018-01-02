@@ -12,7 +12,7 @@ use diesel::pg::PgConnection;
 use quick_xml::events::{BytesText, Event};
 use quick_xml::reader::Reader;
 use regex::Regex;
-use schema::{episodes, podcast_feed_contents, podcasts};
+use schema::{episodes, podcast_feed_contents, podcast_feed_locations, podcasts};
 use slog::Logger;
 use std::io::BufRead;
 use std::str;
@@ -33,11 +33,13 @@ impl<'a> DirectoryPodcastUpdater<'a> {
     }
 
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
-        let raw_url = self.dir_podcast.feed_url.clone().unwrap();
+        let url = self.dir_podcast.feed_url.clone().unwrap();
 
-        let body = common::log_timed(&log.new(o!("step" => "fetch_feed")), |ref _log| {
-            self.url_fetcher.fetch(raw_url.as_str())
-        })?;
+        // the "final URL" is one that might include a permanent redirect
+        let (body, final_url) = common::log_timed(
+            &log.new(o!("step" => "fetch_feed")),
+            |ref _log| self.url_fetcher.fetch(url),
+        )?;
 
         let sha256_hash = content_hash(&body);
         let body_str = String::from_utf8(body).unwrap();
@@ -71,12 +73,28 @@ impl<'a> DirectoryPodcastUpdater<'a> {
             sha256_hash:  sha256_hash,
         };
         common::log_timed(
-            &log.new(o!("step" => "insert_podcast_feed_contents")),
+            &log.new(o!("step" => "insert_podcast_feed_content")),
             |ref _log| {
                 diesel::insert_into(podcast_feed_contents::table)
                     .values(&content_ins)
                     .execute(self.conn)
-                    .chain_err(|| "Error inserting podcast feed contents")
+                    .chain_err(|| "Error inserting podcast feed content")
+            },
+        )?;
+
+        let location_ins = insertable::PodcastFeedLocation {
+            discovered_at:     Utc::now(),
+            feed_url:          final_url,
+            last_retrieved_at: Utc::now(),
+            podcast_id:        podcast.id,
+        };
+        common::log_timed(
+            &log.new(o!("step" => "insert_podcast_feed_location")),
+            |ref _log| {
+                diesel::insert_into(podcast_feed_locations::table)
+                    .values(&location_ins)
+                    .execute(self.conn)
+                    .chain_err(|| "Error inserting podcast feed location")
             },
         )?;
 

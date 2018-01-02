@@ -92,10 +92,11 @@ pub struct PodcastFeedContent {
 #[allow(dead_code)]
 #[derive(Queryable)]
 pub struct PodcastFeedLocation {
-    pub id:            i64,
-    pub discovered_at: DateTime<Utc>,
-    pub feed_url:      String,
-    pub podcast_id:    i64,
+    pub id:                i64,
+    pub discovered_at:     DateTime<Utc>,
+    pub feed_url:          String,
+    pub last_retrieved_at: DateTime<Utc>,
+    pub podcast_id:        i64,
 }
 
 pub mod insertable {
@@ -155,12 +156,12 @@ pub mod insertable {
         pub sha256_hash:  String,
     }
 
-    #[allow(dead_code)]
     #[derive(Insertable)]
     #[table_name = "podcast_feed_locations"]
     pub struct PodcastFeedLocation {
-        pub discovered_at: DateTime<Utc>,
-        pub feed_url:      String,
-        pub podcast_id:    i64,
+        pub discovered_at:     DateTime<Utc>,
+        pub feed_url:          String,
+        pub last_retrieved_at: DateTime<Utc>,
+        pub podcast_id:        i64,
     }
 }

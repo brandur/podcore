@@ -61,6 +61,7 @@ CREATE TABLE podcast_feed_locations (
     discovered_at TIMESTAMPTZ NOT NULL,
     feed_url TEXT NOT NULL
         CHECK (char_length(feed_url) <= 500),
+    last_retrieved_at TIMESTAMPTZ NOT NULL,
     podcast_id BIGINT NOT NULL
         REFERENCES podcasts (id) ON DELETE RESTRICT
 );

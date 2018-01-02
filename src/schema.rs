@@ -62,6 +62,7 @@ table! {
         id -> Int8,
         discovered_at -> Timestamptz,
         feed_url -> Text,
+        last_retrieved_at -> Timestamptz,
         podcast_id -> Int8,
     }
 }

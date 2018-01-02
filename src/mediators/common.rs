@@ -12,7 +12,7 @@ use time::precise_time_ns;
 use tokio_core::reactor::Core;
 
 pub trait URLFetcher {
-    fn fetch(&mut self, raw_url: &str) -> Result<Vec<u8>>;
+    fn fetch(&mut self, raw_url: String) -> Result<(Vec<u8>, String)>;
 }
 
 /*
@@ -30,16 +30,19 @@ pub struct URLFetcherLive<'a> {
 }
 
 impl<'a> URLFetcher for URLFetcherLive<'a> {
-    fn fetch(&mut self, raw_url: &str) -> Result<Vec<u8>> {
-        let feed_url =
-            Uri::from_str(raw_url).chain_err(|| format!("Error parsing feed URL: {}", raw_url))?;
+    fn fetch(&mut self, raw_url: String) -> Result<(Vec<u8>, String)> {
+        let feed_url = Uri::from_str(raw_url.as_str())
+            .chain_err(|| format!("Error parsing feed URL: {}", raw_url))?;
         let res = self.core
             .run(self.client.get(feed_url))
             .chain_err(|| format!("Error fetching feed URL: {}", raw_url))?;
+
+        // TODO: Follow redirects
+
         let body = self.core
             .run(res.body().concat2())
             .chain_err(|| format!("Error reading body from URL: {}", raw_url))?;
-        Ok((*body).to_vec())
+        Ok(((*body).to_vec(), raw_url))
     }
 }
 
@@ -50,8 +53,8 @@ pub struct URLFetcherStub {
 
 #[cfg(test)]
 impl URLFetcher for URLFetcherStub {
-    fn fetch(&mut self, url: &str) -> Result<Vec<u8>> {
-        Ok(self.map.get(url).unwrap().clone())
+    fn fetch(&mut self, raw_url: String) -> Result<(Vec<u8>, String)> {
+        Ok((self.map.get(raw_url.as_str()).unwrap().clone(), raw_url))
     }
 }
 
