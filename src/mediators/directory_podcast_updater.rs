@@ -50,8 +50,8 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                 match validate_podcast(&podcast_raw)
                     .chain_err(|| format!("Failed to convert: {:?}", podcast_raw))?
                 {
-                    PodcastInsOrInvalid::Valid(p) => Ok(p),
-                    PodcastInsOrInvalid::Invalid { message: m } => Err(m.into()),
+                    PodcastOrInvalid::Valid(p) => Ok(p),
+                    PodcastOrInvalid::Invalid { message: m } => Err(m.into()),
                 }
             },
         )?;
@@ -120,7 +120,7 @@ macro_rules! require_episode_field {
     // Variation for a check without including an episode GUID.
     ($raw_field:expr, $message:expr) => (
         if $raw_field.is_none() {
-            return Ok(EpisodeInsOrInvalid::Invalid {
+            return Ok(EpisodeOrInvalid::Invalid {
                 message: concat!("Missing ", $message, " from episode"),
                 guid:    None,
             });
@@ -130,7 +130,7 @@ macro_rules! require_episode_field {
     // Variation for a check that does include an episode GUID. Use this wherever possible.
     ($raw_field:expr, $message:expr, $guid:expr) => (
         if $raw_field.is_none() {
-            return Ok(EpisodeInsOrInvalid::Invalid {
+            return Ok(EpisodeOrInvalid::Invalid {
                 message: concat!("Missing ", $message, " from episode"),
                 guid:    $guid,
             });
@@ -142,7 +142,7 @@ macro_rules! require_episode_field {
 macro_rules! require_podcast_field {
     ($raw_field:expr, $message:expr) => (
         if $raw_field.is_none() {
-            return Ok(PodcastInsOrInvalid::Invalid {
+            return Ok(PodcastOrInvalid::Invalid {
                 message: concat!("Missing ", $message, " from podcast"),
             });
         }
@@ -153,14 +153,23 @@ macro_rules! require_podcast_field {
 // Private types
 //
 
-// Represents a regex find and replac rule that we use to coerce datetime formats that are not
-// technically valid RFC 2822 into ones that are and which we can parse.
+/// Represents a regex find and replac rule that we use to coerce datetime formats that are not
+/// technically valid RFC 2822 into ones that are and which we can parse.
 struct DateTimeReplaceRule {
     find:    Regex,
     replace: &'static str,
 }
 
-enum EpisodeInsOrInvalid {
+/// Represents the result of an attempt to turn a raw episode (`raw::episode`) parsed from a third
+/// party data source into a valid one that we can insert into our database. An insertable episode
+/// is returned if the minimum set of required fields was found, otherwise a value indicating an
+/// invalid episode is returned along with an error message.
+///
+/// Note that we use this instead of the `Result` type because running into an invalid episode in a
+/// feed is something that we should expect with some frequency in the real world and shouldn't
+/// produce an error. Instead, we should note it and proceed to parse the episodes from the same
+/// field that were valid.
+enum EpisodeOrInvalid {
     Valid(insertable::Episode),
     Invalid {
         message: &'static str,
@@ -168,15 +177,16 @@ enum EpisodeInsOrInvalid {
     },
 }
 
-enum PodcastInsOrInvalid {
+/// See comment on EpisodeOrInvalid.
+enum PodcastOrInvalid {
     Valid(insertable::Podcast),
     Invalid { message: &'static str },
 }
 
-// Contains database record equivalents that have been parsed from third party sources and which
-// are not necessarily valid and therefore have more lax constraints on some field compared to
-// their model:: counterparts. Another set of functions attempts to coerce these data types into
-// insertable rows and indicate that the data source is invalid if it's not possible.
+/// Contains database record equivalents that have been parsed from third party sources and which
+/// are not necessarily valid and therefore have more lax constraints on some field compared to
+/// their model:: counterparts. Another set of functions attempts to coerce these data types into
+/// insertable rows and indicate that the data source is invalid if it's not possible.
 mod raw {
     #[derive(Debug)]
     pub struct Episode {
@@ -426,13 +436,13 @@ pub fn safe_unescape_and_decode<'b, B: BufRead>(
     }
 }
 
-fn validate_episode(raw: &raw::Episode, podcast: &model::Podcast) -> Result<EpisodeInsOrInvalid> {
+fn validate_episode(raw: &raw::Episode, podcast: &model::Podcast) -> Result<EpisodeOrInvalid> {
     require_episode_field!(raw.guid, "GUID");
     require_episode_field!(raw.media_url, "media URL", raw.guid.clone());
     require_episode_field!(raw.published_at, "publishing date", raw.guid.clone());
     require_episode_field!(raw.title, "title", raw.guid.clone());
 
-    Ok(EpisodeInsOrInvalid::Valid(insertable::Episode {
+    Ok(EpisodeOrInvalid::Valid(insertable::Episode {
         description:  raw.description.clone(),
         explicit:     raw.explicit.clone(),
         guid:         raw.guid.clone().unwrap(),
@@ -458,8 +468,8 @@ fn validate_episodes(
             match validate_episode(&raw, &podcast)
                 .chain_err(|| format!("Failed to convert: {:?}", raw))?
             {
-                EpisodeInsOrInvalid::Valid(e) => episodes.push(e),
-                EpisodeInsOrInvalid::Invalid {
+                EpisodeOrInvalid::Valid(e) => episodes.push(e),
+                EpisodeOrInvalid::Invalid {
                     message: m,
                     guid: g,
                 } => error!(log, "Invalid episode in feed: {}", m;
@@ -474,10 +484,10 @@ fn validate_episodes(
     })
 }
 
-fn validate_podcast(raw: &raw::Podcast) -> Result<PodcastInsOrInvalid> {
+fn validate_podcast(raw: &raw::Podcast) -> Result<PodcastOrInvalid> {
     require_podcast_field!(raw.title, "title");
 
-    Ok(PodcastInsOrInvalid::Valid(insertable::Podcast {
+    Ok(PodcastOrInvalid::Valid(insertable::Podcast {
         image_url: raw.image_url.clone(),
         language:  raw.language.clone(),
         link_url:  raw.link_url.clone(),
