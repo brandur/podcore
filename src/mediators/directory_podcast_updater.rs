@@ -754,6 +754,30 @@ mod tests {
         }
     }
 
+    #[test]
+    fn test_validate_podcast() {
+        {
+            let raw = valid_raw_podcast();
+            match validate_podcast(&raw).unwrap() {
+                PodcastOrInvalid::Valid(p) => assert_eq!(raw.title.unwrap(), p.title),
+                PodcastOrInvalid::Invalid { message: m } => {
+                    panic!("Unexpected invalid podcast; message: {}", m)
+                }
+            }
+        }
+
+        {
+            let mut raw = valid_raw_podcast();
+            raw.title = None;
+            match validate_podcast(&raw).unwrap() {
+                PodcastOrInvalid::Valid(_) => panic!("Unexpected valid podcast"),
+                PodcastOrInvalid::Invalid { message: m } => {
+                    assert_eq!("Missing title from podcast", m);
+                }
+            }
+        }
+    }
+
     //
     // Private types/functions
     //
@@ -802,5 +826,11 @@ mod tests {
             dir_podcast: dir_podcast,
             url_fetcher: url_fetcher,
         }
+    }
+
+    fn valid_raw_podcast() -> raw::Podcast {
+        let mut raw = raw::Podcast::new();
+        raw.title = Some("Title".to_owned());
+        raw
     }
 }
