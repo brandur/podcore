@@ -1,3 +1,5 @@
+use schema;
+
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use slog;
@@ -12,6 +14,7 @@ pub fn connection() -> PgConnection {
         env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set in order to run tests");
     let conn = PgConnection::establish(&database_url).unwrap();
     conn.begin_test_transaction().unwrap();
+    check_database(&conn);
     conn
 }
 
@@ -23,6 +26,20 @@ pub fn log() -> Logger {
         slog::Logger::root(async_drain, o!("env" => "test"))
     } else {
         slog::Logger::root(slog::Discard, o!())
+    }
+}
+
+//
+// Private types/functions
+//
+
+fn check_database(conn: &PgConnection) {
+    // Note that we only check one table's count as a proxy for the state of the entire database.
+    // This isn't bullet proof, but will hopefully be enough to avoid most stupid problems.
+    match schema::podcasts::table.count().first(conn) {
+        Ok(0) => (),
+        Ok(_) => panic!("Expected test database to be empty. Please reset it."),
+        Err(e) => panic!("Error testing database connection: {}", e),
     }
 }
 

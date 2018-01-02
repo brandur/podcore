@@ -37,6 +37,7 @@ impl Directory {
     }
 }
 
+#[changeset_options(treat_none_as_null = "true")]
 #[derive(AsChangeset, Identifiable, Queryable)]
 #[table_name = "directories_podcasts"]
 pub struct DirectoryPodcast {
@@ -137,7 +138,8 @@ pub mod insertable {
         pub title:        String,
     }
 
-    #[derive(Insertable)]
+    #[changeset_options(treat_none_as_null = "true")]
+    #[derive(AsChangeset, Insertable)]
     #[table_name = "podcasts"]
     pub struct Podcast {
         pub image_url: Option<String>,

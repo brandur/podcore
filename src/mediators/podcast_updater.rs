@@ -9,6 +9,7 @@ use crypto::sha2::Sha256;
 use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
+use diesel::pg::upsert::excluded;
 use quick_xml::events::{BytesText, Event};
 use quick_xml::reader::Reader;
 use regex::Regex;
@@ -56,13 +57,36 @@ impl<'a> PodcastUpdater<'a> {
             },
         )?;
 
-        let podcast: model::Podcast =
+        let podcast_id: Option<i64> =
+            common::log_timed(&log.new(o!("step" => "query_podcast")), |ref _log| {
+                podcasts::table
+                    .left_join(
+                        podcast_feed_locations::table
+                            .on(podcasts::id.eq(podcast_feed_locations::podcast_id)),
+                    )
+                    .filter(podcast_feed_locations::feed_url.eq(final_url.as_str()))
+                    .select((podcasts::id))
+                    .first(self.conn)
+                    .optional()
+            })?;
+
+        let podcast: model::Podcast = if let Some(podcast_id) = podcast_id {
+            info!(log, "Found existing podcast ID {}", podcast_id);
+            common::log_timed(&log.new(o!("step" => "update_podcast")), |ref _log| {
+                diesel::update(podcasts::table.filter(podcasts::id.eq(podcast_id)))
+                    .set(&podcast_ins)
+                    .get_result(self.conn)
+                    .chain_err(|| "Error updating podcast")
+            })?
+        } else {
+            info!(log, "No existing podcast found; inserting new");
             common::log_timed(&log.new(o!("step" => "insert_podcast")), |ref _log| {
                 diesel::insert_into(podcasts::table)
                     .values(&podcast_ins)
                     .get_result(self.conn)
                     .chain_err(|| "Error inserting podcast")
-            })?;
+            })?
+        };
 
         let content_ins = insertable::PodcastFeedContent {
             content:      body_str,
@@ -71,12 +95,21 @@ impl<'a> PodcastUpdater<'a> {
             sha256_hash:  sha256_hash,
         };
         common::log_timed(
-            &log.new(o!("step" => "insert_podcast_feed_content")),
+            &log.new(o!("step" => "upsert_podcast_feed_content")),
             |ref _log| {
                 diesel::insert_into(podcast_feed_contents::table)
                     .values(&content_ins)
+                    .on_conflict((
+                        podcast_feed_contents::podcast_id,
+                        podcast_feed_contents::sha256_hash,
+                    ))
+                    .do_update()
+                    .set(
+                        podcast_feed_contents::retrieved_at
+                            .eq(excluded(podcast_feed_contents::retrieved_at)),
+                    )
                     .execute(self.conn)
-                    .chain_err(|| "Error inserting podcast feed content")
+                    .chain_err(|| "Error upserting podcast feed content")
             },
         )?;
 
@@ -87,22 +120,43 @@ impl<'a> PodcastUpdater<'a> {
             podcast_id:        podcast.id,
         };
         let location: model::PodcastFeedLocation = common::log_timed(
-            &log.new(o!("step" => "insert_podcast_feed_location")),
+            &log.new(o!("step" => "upsert_podcast_feed_location")),
             |ref _log| {
                 diesel::insert_into(podcast_feed_locations::table)
                     .values(&location_ins)
+                    .on_conflict((
+                        podcast_feed_locations::podcast_id,
+                        podcast_feed_locations::feed_url,
+                    ))
+                    .do_update()
+                    .set(
+                        podcast_feed_locations::last_retrieved_at
+                            .eq(excluded(podcast_feed_locations::last_retrieved_at)),
+                    )
                     .get_result(self.conn)
-                    .chain_err(|| "Error inserting podcast feed location")
+                    .chain_err(|| "Error upserting podcast feed location")
             },
         )?;
 
         let episodes_ins = validate_episodes(&log, episode_raws, &podcast)?;
         let episodes: Vec<model::Episode> =
-            common::log_timed(&log.new(o!("step" => "insert_episodes")), |ref _log| {
+            common::log_timed(&log.new(o!("step" => "upsert_episodes")), |ref _log| {
                 diesel::insert_into(episodes::table)
                     .values(&episodes_ins)
+                    .on_conflict((episodes::podcast_id, episodes::guid))
+                    .do_update()
+                    .set((
+                        episodes::description.eq(excluded(episodes::description)),
+                        episodes::explicit.eq(excluded(episodes::explicit)),
+                        episodes::link_url.eq(excluded(episodes::link_url)),
+                        episodes::media_type.eq(excluded(episodes::media_type)),
+                        episodes::media_url.eq(excluded(episodes::media_url)),
+                        episodes::podcast_id.eq(excluded(episodes::podcast_id)),
+                        episodes::published_at.eq(excluded(episodes::published_at)),
+                        episodes::title.eq(excluded(episodes::title)),
+                    ))
                     .get_results(self.conn)
-                    .chain_err(|| "Error inserting podcast episodes")
+                    .chain_err(|| "Error upserting podcast episodes")
             })?;
 
         Ok(RunResult {
@@ -514,32 +568,14 @@ fn validate_podcast(raw: &raw::Podcast) -> Result<PodcastOrInvalid> {
 mod tests {
     use mediators::podcast_updater::*;
     use model;
+    use schema;
     use test_helpers;
 
     use chrono::prelude::*;
 
     #[test]
     fn test_ideal_feed() {
-        let mut bootstrap = bootstrap(
-            br#"
-<?xml version="1.0" encoding="UTF-8"?>
-<rss>
-  <channel>
-    <language>en-US</language>
-    <link>https://example.com/podcast</link>
-    <media:thumbnail url="https://example.com/podcast-image-url.jpg"/>
-    <title>Title</title>
-    <item>
-      <description><![CDATA[Item 1 description]]></description>
-      <guid>1</guid>
-      <itunes:explicit>yes</itunes:explicit>
-      <media:content url="https://example.com/item-1" type="audio/mpeg"/>
-      <pubDate>Sun, 24 Dec 2017 21:37:32 +0000</pubDate>
-      <title>Item 1 Title</title>
-    </item>
-  </channel>
-</rss>"#,
-        );
+        let mut bootstrap = bootstrap(IDEAL_FEED);
         let mut mediator = bootstrap.mediator();
         let res = mediator.run(&test_helpers::log()).unwrap();
 
@@ -588,21 +624,7 @@ mod tests {
 
     #[test]
     fn test_minimal_feed() {
-        let mut bootstrap = bootstrap(
-            br#"
-<?xml version="1.0" encoding="UTF-8"?>
-<rss>
-  <channel>
-    <title>Title</title>
-    <item>
-      <guid>1</guid>
-      <media:content url="https://example.com/item-1" type="audio/mpeg"/>
-      <pubDate>Sun, 24 Dec 2017 21:37:32 +0000</pubDate>
-      <title>Item 1 Title</title>
-    </item>
-  </channel>
-</rss>"#,
-        );
+        let mut bootstrap = bootstrap(MINIMAL_FEED);
         let mut mediator = bootstrap.mediator();
         let res = mediator.run(&test_helpers::log()).unwrap();
 
@@ -616,6 +638,39 @@ mod tests {
         assert_eq!(
             Utc.ymd(2017, 12, 24).and_hms(21, 37, 32),
             episode.published_at
+        );
+    }
+
+    #[test]
+    fn test_idempotency() {
+        let mut bootstrap = bootstrap(MINIMAL_FEED);
+
+        {
+            let mut mediator = bootstrap.mediator();
+            let _res = mediator.run(&test_helpers::log()).unwrap();
+            let _res = mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        // Make sure that we ended up with one of everything
+        assert_eq!(
+            Ok(1),
+            schema::episodes::table.count().first(&bootstrap.conn)
+        );
+        assert_eq!(
+            Ok(1),
+            schema::podcasts::table.count().first(&bootstrap.conn)
+        );
+        assert_eq!(
+            Ok(1),
+            schema::podcast_feed_contents::table
+                .count()
+                .first(&bootstrap.conn)
+        );
+        assert_eq!(
+            Ok(1),
+            schema::podcast_feed_locations::table
+                .count()
+                .first(&bootstrap.conn)
         );
     }
 
@@ -896,6 +951,39 @@ mod tests {
     //
     // Private types/functions
     //
+
+    const IDEAL_FEED: &[u8] = br#"
+<?xml version="1.0" encoding="UTF-8"?>
+<rss>
+  <channel>
+    <language>en-US</language>
+    <link>https://example.com/podcast</link>
+    <media:thumbnail url="https://example.com/podcast-image-url.jpg"/>
+    <title>Title</title>
+    <item>
+      <description><![CDATA[Item 1 description]]></description>
+      <guid>1</guid>
+      <itunes:explicit>yes</itunes:explicit>
+      <media:content url="https://example.com/item-1" type="audio/mpeg"/>
+      <pubDate>Sun, 24 Dec 2017 21:37:32 +0000</pubDate>
+      <title>Item 1 Title</title>
+    </item>
+  </channel>
+</rss>"#;
+
+    const MINIMAL_FEED: &[u8] = br#"
+<?xml version="1.0" encoding="UTF-8"?>
+<rss>
+  <channel>
+    <title>Title</title>
+    <item>
+      <guid>1</guid>
+      <media:content url="https://example.com/item-1" type="audio/mpeg"/>
+      <pubDate>Sun, 24 Dec 2017 21:37:32 +0000</pubDate>
+      <title>Item 1 Title</title>
+    </item>
+  </channel>
+</rss>"#;
 
     // Encapsulates the structures that are needed for tests to run. One should only be obtained by
     // invoking bootstrap().

@@ -94,6 +94,8 @@ COMMENT ON COLUMN podcast_feed_contents.content
 
 CREATE INDEX podcast_feed_contents_podcast_id_retrieved_at
     ON podcast_feed_contents (podcast_id, retrieved_at);
+CREATE UNIQUE INDEX podcast_feed_contents_podcast_id_sha256_hash
+    ON podcast_feed_contents (podcast_id, sha256_hash);
 
 --
 -- directories_podcasts
@@ -167,14 +169,3 @@ COMMENT ON TABLE episodes
 
 CREATE UNIQUE INDEX episodes_podcast_id_guid
     ON episodes (podcast_id, guid);
-
---
--- sample data
---
-
-INSERT INTO podcasts
-    (title, image_url, language, link_url)
-VALUES
-    ('Hardcore History', 'http://example.com/hardcore-history', 'en-US', ''),
-    ('Road Work', 'http://example.com/road-work', 'en-US', ''),
-    ('Waking Up', 'http://example.com/waking-up', 'en-US', '');
