@@ -167,53 +167,59 @@ enum EpisodeInsOrInvalid {
     },
 }
 
-#[derive(Debug)]
-struct EpisodeRaw {
-    pub description:  Option<String>,
-    pub explicit:     Option<bool>,
-    pub guid:         Option<String>,
-    pub link_url:     Option<String>,
-    pub media_type:   Option<String>,
-    pub media_url:    Option<String>,
-    pub published_at: Option<String>,
-    pub title:        Option<String>,
-}
-
-impl EpisodeRaw {
-    fn new() -> EpisodeRaw {
-        EpisodeRaw {
-            description:  None,
-            explicit:     None,
-            media_type:   None,
-            media_url:    None,
-            guid:         None,
-            link_url:     None,
-            published_at: None,
-            title:        None,
-        }
-    }
-}
-
 enum PodcastInsOrInvalid {
     Valid(model::PodcastIns),
     Invalid { message: &'static str },
 }
 
-#[derive(Debug)]
-struct PodcastRaw {
-    pub image_url: Option<String>,
-    pub language:  Option<String>,
-    pub link_url:  Option<String>,
-    pub title:     Option<String>,
-}
+// Contains database record equivalents that have been parsed from third party sources and which
+// are not necessarily valid and therefore have more lax constraints on some field compared to
+// their model:: counterparts. Another set of functions attempts to coerce these data types into
+// insertable rows and indicate that the data source is invalid if it's not possible.
+mod raw {
+    #[derive(Debug)]
+    pub struct Episode {
+        pub description:  Option<String>,
+        pub explicit:     Option<bool>,
+        pub guid:         Option<String>,
+        pub link_url:     Option<String>,
+        pub media_type:   Option<String>,
+        pub media_url:    Option<String>,
+        pub published_at: Option<String>,
+        pub title:        Option<String>,
+    }
 
-impl PodcastRaw {
-    fn new() -> PodcastRaw {
-        PodcastRaw {
-            image_url: None,
-            language:  None,
-            link_url:  None,
-            title:     None,
+    impl Episode {
+        pub fn new() -> Episode {
+            Episode {
+                description:  None,
+                explicit:     None,
+                media_type:   None,
+                media_url:    None,
+                guid:         None,
+                link_url:     None,
+                published_at: None,
+                title:        None,
+            }
+        }
+    }
+
+    #[derive(Debug)]
+    pub struct Podcast {
+        pub image_url: Option<String>,
+        pub language:  Option<String>,
+        pub link_url:  Option<String>,
+        pub title:     Option<String>,
+    }
+
+    impl Podcast {
+        pub fn new() -> Podcast {
+            Podcast {
+                image_url: None,
+                language:  None,
+                link_url:  None,
+                title:     None,
+            }
         }
     }
 }
@@ -244,10 +250,10 @@ fn element_text<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<Stri
 fn parse_channel<R: BufRead>(
     log: &Logger,
     reader: &mut Reader<R>,
-) -> Result<(PodcastRaw, Vec<EpisodeRaw>)> {
+) -> Result<(raw::Podcast, Vec<raw::Episode>)> {
     let mut buf = Vec::new();
-    let mut episodes: Vec<EpisodeRaw> = Vec::new();
-    let mut podcast = PodcastRaw::new();
+    let mut episodes: Vec<raw::Episode> = Vec::new();
+    let mut podcast = raw::Podcast::new();
 
     loop {
         match reader.read_event(&mut buf) {
@@ -308,7 +314,7 @@ fn parse_date_time(s: &str) -> Result<DateTime<Utc>> {
     }
 }
 
-fn parse_feed(log: &Logger, data: &str) -> Result<(PodcastRaw, Vec<EpisodeRaw>)> {
+fn parse_feed(log: &Logger, data: &str) -> Result<(raw::Podcast, Vec<raw::Episode>)> {
     common::log_timed(&log.new(o!("step" => "parse_feed")), |ref log| {
         let mut buf = Vec::new();
 
@@ -335,7 +341,7 @@ fn parse_feed(log: &Logger, data: &str) -> Result<(PodcastRaw, Vec<EpisodeRaw>)>
 fn parse_rss<R: BufRead>(
     log: &Logger,
     reader: &mut Reader<R>,
-) -> Result<(PodcastRaw, Vec<EpisodeRaw>)> {
+) -> Result<(raw::Podcast, Vec<raw::Episode>)> {
     let mut buf = Vec::new();
 
     loop {
@@ -354,9 +360,9 @@ fn parse_rss<R: BufRead>(
     Err("No channel tag found".into())
 }
 
-fn parse_item<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<EpisodeRaw> {
+fn parse_item<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<raw::Episode> {
     let mut buf = Vec::new();
-    let mut episode = EpisodeRaw::new();
+    let mut episode = raw::Episode::new();
 
     loop {
         match reader.read_event(&mut buf) {
@@ -419,7 +425,7 @@ pub fn safe_unescape_and_decode<'b, B: BufRead>(
     }
 }
 
-fn validate_episode(raw: &EpisodeRaw, podcast: &model::Podcast) -> Result<EpisodeInsOrInvalid> {
+fn validate_episode(raw: &raw::Episode, podcast: &model::Podcast) -> Result<EpisodeInsOrInvalid> {
     require_episode_field!(raw.guid, "GUID");
     require_episode_field!(raw.media_url, "media URL", raw.guid.clone());
     require_episode_field!(raw.published_at, "publishing date", raw.guid.clone());
@@ -440,7 +446,7 @@ fn validate_episode(raw: &EpisodeRaw, podcast: &model::Podcast) -> Result<Episod
 
 fn validate_episodes(
     log: &Logger,
-    raws: Vec<EpisodeRaw>,
+    raws: Vec<raw::Episode>,
     podcast: &model::Podcast,
 ) -> Result<Vec<model::EpisodeIns>> {
     common::log_timed(&log.new(o!("step" => "validate_episodes")), |ref log| {
@@ -467,7 +473,7 @@ fn validate_episodes(
     })
 }
 
-fn validate_podcast(raw: &PodcastRaw) -> Result<PodcastInsOrInvalid> {
+fn validate_podcast(raw: &raw::Podcast) -> Result<PodcastInsOrInvalid> {
     require_podcast_field!(raw.title, "title");
 
     Ok(PodcastInsOrInvalid::Valid(model::PodcastIns {
