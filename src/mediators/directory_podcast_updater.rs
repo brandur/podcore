@@ -108,6 +108,47 @@ pub struct RunResult {
 }
 
 //
+// Private macros
+//
+
+// A macro that shortens the number of lines of code required to validate that a field is present
+// in a raw episode and t return an "invalid" enum record if it isn't. It's probably not a good
+// idea to use macros for a fairly trivial operation like this, but I'll unwind them if this gets
+// any more complicated.
+macro_rules! require_episode_field {
+    // Variation for a check without including an episode GUID.
+    ($raw_field:expr, $message:expr) => (
+        if $raw_field.is_none() {
+            return Ok(EpisodeInsOrInvalid::Invalid {
+                message: concat!("Missing ", $message, " from episode"),
+                guid:    None,
+            });
+        }
+    );
+
+    // Variation for a check that does include an episode GUID. Use this wherever possible.
+    ($raw_field:expr, $message:expr, $guid:expr) => (
+        if $raw_field.is_none() {
+            return Ok(EpisodeInsOrInvalid::Invalid {
+                message: concat!("Missing ", $message, " from episode"),
+                guid:    $guid,
+            });
+        }
+    )
+}
+
+// See comment on require_episode_field! above.
+macro_rules! require_podcast_field {
+    ($raw_field:expr, $message:expr) => (
+        if $raw_field.is_none() {
+            return Ok(PodcastInsOrInvalid::Invalid {
+                message: concat!("Missing ", $message, " from podcast"),
+            });
+        }
+    );
+}
+
+//
 // Private types
 //
 
@@ -379,37 +420,15 @@ pub fn safe_unescape_and_decode<'b, B: BufRead>(
 }
 
 fn validate_episode(raw: &EpisodeRaw, podcast: &model::Podcast) -> Result<EpisodeInsOrInvalid> {
-    if raw.guid.is_none() {
-        return Ok(EpisodeInsOrInvalid::Invalid {
-            message: "Missing GUID from feed item",
-            guid:    None,
-        });
-    }
-
-    let guid = raw.guid.clone().unwrap();
-    if raw.media_url.is_none() {
-        return Ok(EpisodeInsOrInvalid::Invalid {
-            message: "Missing media URL from feed item",
-            guid:    Some(guid.clone()),
-        });
-    }
-    if raw.published_at.is_none() {
-        return Ok(EpisodeInsOrInvalid::Invalid {
-            message: "Missing publishing date from feed item",
-            guid:    Some(guid.clone()),
-        });
-    }
-    if raw.title.is_none() {
-        return Ok(EpisodeInsOrInvalid::Invalid {
-            message: "Missing title from feed item",
-            guid:    Some(guid.clone()),
-        });
-    }
+    require_episode_field!(raw.guid, "GUID");
+    require_episode_field!(raw.media_url, "media URL", raw.guid.clone());
+    require_episode_field!(raw.published_at, "publishing date", raw.guid.clone());
+    require_episode_field!(raw.title, "title", raw.guid.clone());
 
     Ok(EpisodeInsOrInvalid::Valid(model::EpisodeIns {
         description:  raw.description.clone(),
         explicit:     raw.explicit.clone(),
-        guid:         guid,
+        guid:         raw.guid.clone().unwrap(),
         link_url:     raw.link_url.clone(),
         media_url:    raw.media_url.clone().unwrap(),
         media_type:   raw.media_type.clone(),
@@ -449,11 +468,7 @@ fn validate_episodes(
 }
 
 fn validate_podcast(raw: &PodcastRaw) -> Result<PodcastInsOrInvalid> {
-    if raw.title.is_none() {
-        return Ok(PodcastInsOrInvalid::Invalid {
-            message: "Missing title from podcast feed",
-        });
-    }
+    require_podcast_field!(raw.title, "title");
 
     Ok(PodcastInsOrInvalid::Valid(model::PodcastIns {
         image_url: raw.image_url.clone(),
