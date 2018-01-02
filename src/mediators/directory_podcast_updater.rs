@@ -439,7 +439,7 @@ pub fn safe_unescape_and_decode<'b, B: BufRead>(
 fn validate_episode(raw: &raw::Episode, podcast: &model::Podcast) -> Result<EpisodeOrInvalid> {
     require_episode_field!(raw.guid, "GUID");
     require_episode_field!(raw.media_url, "media URL", raw.guid.clone());
-    require_episode_field!(raw.published_at, "publishing date", raw.guid.clone());
+    require_episode_field!(raw.published_at, "publish date", raw.guid.clone());
     require_episode_field!(raw.title, "title", raw.guid.clone());
 
     Ok(EpisodeOrInvalid::Valid(insertable::Episode {
@@ -755,6 +755,96 @@ mod tests {
     }
 
     #[test]
+    fn test_validate_episode() {
+        let podcast = model::Podcast {
+            id:        1,
+            image_url: None,
+            language:  None,
+            link_url:  None,
+            title:     "Title".to_owned(),
+        };
+
+        {
+            let raw = valid_raw_episode();
+            match validate_episode(&raw, &podcast).unwrap() {
+                EpisodeOrInvalid::Valid(p) => {
+                    assert_eq!(raw.guid.unwrap(), p.guid);
+                    assert_eq!(raw.media_url.unwrap(), p.media_url);
+                    assert_eq!(
+                        parse_date_time(raw.published_at.unwrap().as_str()).unwrap(),
+                        p.published_at
+                    );
+                    assert_eq!(raw.title.unwrap(), p.title);
+                }
+                EpisodeOrInvalid::Invalid {
+                    message: m,
+                    guid: _,
+                } => panic!("Unexpected invalid episode; message: {}", m),
+            }
+        }
+
+        {
+            let mut raw = valid_raw_episode();
+            raw.guid = None;
+            match validate_episode(&raw, &podcast).unwrap() {
+                EpisodeOrInvalid::Valid(_) => panic!("Unexpected valid episode"),
+                EpisodeOrInvalid::Invalid {
+                    message: m,
+                    guid: g,
+                } => {
+                    assert_eq!("Missing GUID from episode", m);
+                    assert_eq!(None, g);
+                }
+            }
+        }
+
+        {
+            let mut raw = valid_raw_episode();
+            raw.media_url = None;
+            match validate_episode(&raw, &podcast).unwrap() {
+                EpisodeOrInvalid::Valid(_) => panic!("Unexpected valid episode"),
+                EpisodeOrInvalid::Invalid {
+                    message: m,
+                    guid: g,
+                } => {
+                    assert_eq!("Missing media URL from episode", m);
+                    assert_eq!(raw.guid, g);
+                }
+            }
+        }
+
+        {
+            let mut raw = valid_raw_episode();
+            raw.published_at = None;
+            match validate_episode(&raw, &podcast).unwrap() {
+                EpisodeOrInvalid::Valid(_) => panic!("Unexpected valid episode"),
+                EpisodeOrInvalid::Invalid {
+                    message: m,
+                    guid: g,
+                } => {
+                    assert_eq!("Missing publish date from episode", m);
+                    assert_eq!(raw.guid, g);
+                }
+            }
+        }
+
+        {
+            let mut raw = valid_raw_episode();
+            raw.title = None;
+            match validate_episode(&raw, &podcast).unwrap() {
+                EpisodeOrInvalid::Valid(_) => panic!("Unexpected valid episode"),
+                EpisodeOrInvalid::Invalid {
+                    message: m,
+                    guid: g,
+                } => {
+                    assert_eq!("Missing title from episode", m);
+                    assert_eq!(raw.guid, g);
+                }
+            }
+        }
+    }
+
+    #[test]
     fn test_validate_podcast() {
         {
             let raw = valid_raw_podcast();
@@ -826,6 +916,15 @@ mod tests {
             dir_podcast: dir_podcast,
             url_fetcher: url_fetcher,
         }
+    }
+
+    fn valid_raw_episode() -> raw::Episode {
+        let mut raw = raw::Episode::new();
+        raw.guid = Some("unique-guid".to_owned());
+        raw.media_url = Some("https://example.com/podcast-url".to_owned());
+        raw.published_at = Some("Sun, 24 Dec 2017 21:37:32 +0000".to_owned());
+        raw.title = Some("Title".to_owned());
+        raw
     }
 
     fn valid_raw_podcast() -> raw::Podcast {
