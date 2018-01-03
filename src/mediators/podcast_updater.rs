@@ -135,7 +135,15 @@ impl<'a> PodcastUpdater<'a> {
                     .first(self.conn)
             },
         )?;
-        if matching_content_count > 0 {}
+
+        // Feed has already been processed
+        if matching_content_count > 0 {
+            return Ok(RunResult {
+                episodes: None,
+                location: location,
+                podcast:  podcast,
+            });
+        }
 
         let content_ins = insertable::PodcastFeedContent {
             content:      body_str,
@@ -184,7 +192,7 @@ impl<'a> PodcastUpdater<'a> {
             })?;
 
         Ok(RunResult {
-            episodes: episodes,
+            episodes: Some(episodes),
             location: location,
             podcast:  podcast,
         })
@@ -192,7 +200,12 @@ impl<'a> PodcastUpdater<'a> {
 }
 
 pub struct RunResult {
-    pub episodes: Vec<model::Episode>,
+    /// Episodes that were inserted or updated by the mediator.
+    ///
+    /// This value is optional because if the mediator has detected that the feed has already been
+    /// processed, it may skip processing episodes.
+    pub episodes: Option<Vec<model::Episode>>,
+
     pub location: model::PodcastFeedLocation,
     pub podcast:  model::Podcast,
 }
@@ -630,9 +643,10 @@ mod tests {
         // Episode
         //
 
-        assert_eq!(1, res.episodes.len());
+        let episodes = res.episodes.unwrap();
+        assert_eq!(1, episodes.len());
 
-        let episode = &res.episodes[0];
+        let episode = &episodes[0];
         assert_ne!(0, episode.id);
         assert_eq!(Some("Item 1 description".to_owned()), episode.description);
         assert_eq!(Some(true), episode.explicit);
@@ -654,9 +668,10 @@ mod tests {
 
         assert_eq!("Title", res.podcast.title);
 
-        assert_eq!(1, res.episodes.len());
+        let episodes = res.episodes.unwrap();
+        assert_eq!(1, episodes.len());
 
-        let episode = &res.episodes[0];
+        let episode = &episodes[0];
         assert_eq!("1", episode.guid);
         assert_eq!("https://example.com/item-1", episode.media_url);
         assert_eq!(
