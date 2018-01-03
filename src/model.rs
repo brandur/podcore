@@ -73,11 +73,12 @@ pub struct Episode {
 
 #[derive(Queryable)]
 pub struct Podcast {
-    pub id:        i64,
-    pub image_url: Option<String>,
-    pub language:  Option<String>,
-    pub link_url:  Option<String>,
-    pub title:     String,
+    pub id:                i64,
+    pub image_url:         Option<String>,
+    pub language:          Option<String>,
+    pub last_retrieved_at: DateTime<Utc>,
+    pub link_url:          Option<String>,
+    pub title:             String,
 }
 
 #[allow(dead_code)]
@@ -142,10 +143,11 @@ pub mod insertable {
     #[derive(AsChangeset, Insertable)]
     #[table_name = "podcasts"]
     pub struct Podcast {
-        pub image_url: Option<String>,
-        pub language:  Option<String>,
-        pub link_url:  Option<String>,
-        pub title:     String,
+        pub image_url:         Option<String>,
+        pub language:          Option<String>,
+        pub last_retrieved_at: DateTime<Utc>,
+        pub link_url:          Option<String>,
+        pub title:             String,
     }
 
     #[allow(dead_code)]

@@ -72,6 +72,7 @@ table! {
         id -> Int8,
         image_url -> Nullable<Text>,
         language -> Nullable<Text>,
+        last_retrieved_at -> Timestamptz,
         link_url -> Nullable<Text>,
         title -> Text,
     }

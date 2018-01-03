@@ -658,10 +658,11 @@ fn validate_podcast(raw: &raw::Podcast) -> Result<PodcastOrInvalid> {
     require_podcast_field!(raw.title, "title");
 
     Ok(PodcastOrInvalid::Valid(insertable::Podcast {
-        image_url: raw.image_url.clone(),
-        language:  raw.language.clone(),
-        link_url:  raw.link_url.clone(),
-        title:     raw.title.clone().unwrap(),
+        image_url:         raw.image_url.clone(),
+        language:          raw.language.clone(),
+        last_retrieved_at: Utc::now(),
+        link_url:          raw.link_url.clone(),
+        title:             raw.title.clone().unwrap(),
     }))
 }
 
@@ -983,11 +984,12 @@ mod tests {
     #[test]
     fn test_validate_episode() {
         let podcast = model::Podcast {
-            id:        1,
-            image_url: None,
-            language:  None,
-            link_url:  None,
-            title:     "Title".to_owned(),
+            id:                1,
+            image_url:         None,
+            language:          None,
+            last_retrieved_at: Utc::now(),
+            link_url:          None,
+            title:             "Title".to_owned(),
         };
 
         {

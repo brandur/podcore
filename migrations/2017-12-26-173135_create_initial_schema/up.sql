@@ -43,6 +43,7 @@ CREATE TABLE podcasts (
         CHECK (char_length(image_url) <= 500),
     language TEXT
         CHECK (char_length(language) <= 10),
+    last_retrieved_at TIMESTAMPTZ NOT NULL,
     link_url TEXT
         CHECK (char_length(link_url) <= 500),
     title TEXT NOT NULL
