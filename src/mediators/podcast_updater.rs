@@ -46,10 +46,10 @@ impl<'a> PodcastUpdater<'a> {
         let sha256_hash = content_hash(&body);
 
         let body = String::from_utf8(body).unwrap();
-        let (podcast_raw, episode_raws) = Self::parse_feed(&log, body.as_str())?;
+        let (raw_podcast, raw_episodes) = Self::parse_feed(&log, body.as_str())?;
 
         // Convert raw podcast data into something that's database compatible.
-        let podcast_ins = Self::convert_podcast(&log, &podcast_raw)?;
+        let ins_podcast = Self::convert_podcast(&log, &raw_podcast)?;
 
         // To make runs of this mediator idempotent we first check whether there's an existing
         // podcast record that has a URL that matches the one we're processing.
@@ -57,7 +57,7 @@ impl<'a> PodcastUpdater<'a> {
         // Note that we keep a record of all a podcast's historical URLs, so even if two
         // directories have two entries for the same podcast with different URLs (say one is the
         // newer version that old one 301s to), this should still work.
-        let podcast = self.upsert_podcast(&log, &podcast_ins, final_url.as_str())?;
+        let podcast = self.upsert_podcast(&log, &ins_podcast, final_url.as_str())?;
 
         // The final URL of the feed may be different than what a directory gave us. Whatever it
         // is, make sure that it's associated with the podcast.
@@ -78,9 +78,9 @@ impl<'a> PodcastUpdater<'a> {
         // because a feed's body can be quite large.
         self.upsert_podcast_feed_content(log, &podcast, body, sha256_hash)?;
 
-        let episodes_ins = Self::convert_episodes(&log, episode_raws, &podcast)?;
+        let ins_episodes = Self::convert_episodes(&log, raw_episodes, &podcast)?;
 
-        let episodes = self.upsert_episodes(&log, episodes_ins)?;
+        let episodes = self.upsert_episodes(&log, ins_episodes)?;
 
         Ok(RunResult {
             episodes: Some(episodes),
@@ -145,12 +145,12 @@ impl<'a> PodcastUpdater<'a> {
         })
     }
 
-    fn convert_podcast(log: &Logger, podcast_raw: &raw::Podcast) -> Result<insertable::Podcast> {
+    fn convert_podcast(log: &Logger, raw_podcast: &raw::Podcast) -> Result<insertable::Podcast> {
         common::log_timed(
             &log.new(o!("step" => "convert_podcast")),
             |ref _log| -> Result<insertable::Podcast> {
-                match validate_podcast(&podcast_raw)
-                    .chain_err(|| format!("Failed to convert: {:?}", podcast_raw))?
+                match validate_podcast(&raw_podcast)
+                    .chain_err(|| format!("Failed to convert: {:?}", raw_podcast))?
                 {
                     PodcastOrInvalid::Valid(p) => Ok(p),
                     PodcastOrInvalid::Invalid { message: m } => Err(m.into()),
@@ -192,11 +192,11 @@ impl<'a> PodcastUpdater<'a> {
     fn upsert_episodes(
         &mut self,
         log: &Logger,
-        episodes_ins: Vec<insertable::Episode>,
+        ins_episodes: Vec<insertable::Episode>,
     ) -> Result<Vec<model::Episode>> {
         common::log_timed(&log.new(o!("step" => "upsert_episodes")), |ref _log| {
             Ok(diesel::insert_into(episodes::table)
-                .values(&episodes_ins)
+                .values(&ins_episodes)
                 .on_conflict((episodes::podcast_id, episodes::guid))
                 .do_update()
                 .set((
@@ -217,7 +217,7 @@ impl<'a> PodcastUpdater<'a> {
     fn upsert_podcast(
         &mut self,
         log: &Logger,
-        podcast_ins: &insertable::Podcast,
+        ins_podcast: &insertable::Podcast,
         final_url: &str,
     ) -> Result<model::Podcast> {
         let podcast_id: Option<i64> =
@@ -237,7 +237,7 @@ impl<'a> PodcastUpdater<'a> {
             info!(log, "Found existing podcast ID {}", podcast_id);
             common::log_timed(&log.new(o!("step" => "update_podcast")), |ref _log| {
                 diesel::update(podcasts::table.filter(podcasts::id.eq(podcast_id)))
-                    .set(podcast_ins)
+                    .set(ins_podcast)
                     .get_result(self.conn)
                     .chain_err(|| "Error updating podcast")
             })
@@ -245,7 +245,7 @@ impl<'a> PodcastUpdater<'a> {
             info!(log, "No existing podcast found; inserting new");
             common::log_timed(&log.new(o!("step" => "insert_podcast")), |ref _log| {
                 diesel::insert_into(podcasts::table)
-                    .values(podcast_ins)
+                    .values(ins_podcast)
                     .get_result(self.conn)
                     .chain_err(|| "Error inserting podcast")
             })
