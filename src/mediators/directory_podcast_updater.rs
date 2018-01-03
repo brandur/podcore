@@ -32,6 +32,18 @@ impl<'a> DirectoryPodcastUpdater<'a> {
             url_fetcher:      self.url_fetcher,
         }.run(&log)?;
 
+        self.save_dir_podcast(&log)?;
+
+        Ok(RunResult {
+            dir_podcast: self.dir_podcast,
+        })
+    }
+
+    //
+    // Steps
+    //
+
+    fn save_dir_podcast(&mut self, log: &Logger) -> Result<()> {
         common::log_timed(&log.new(o!("step" => "save_dir_podcast")), |ref _log| {
             self.dir_podcast.feed_url = None;
             self.dir_podcast
@@ -39,9 +51,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                 .chain_err(|| "Error saving changes to directory podcast")
         })?;
 
-        Ok(RunResult {
-            dir_podcast: self.dir_podcast,
-        })
+        Ok(())
     }
 }
 
