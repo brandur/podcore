@@ -9,7 +9,7 @@ path = "src/lib.rs"
 
 [[bin]]
 name = "podcore-serve"
-path = "src/podcore-serve/main.rs"
+path = "src/bin/podcore-serve/main.rs"
 
 [dependencies]
 chrono = "0.4"
