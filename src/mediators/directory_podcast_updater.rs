@@ -26,9 +26,10 @@ impl<'a> DirectoryPodcastUpdater<'a> {
         let feed_url = self.dir_podcast.feed_url.clone().unwrap();
 
         PodcastUpdater {
-            conn:        self.conn,
-            feed_url:    feed_url,
-            url_fetcher: self.url_fetcher,
+            conn:             self.conn,
+            disable_shortcut: false,
+            feed_url:         feed_url,
+            url_fetcher:      self.url_fetcher,
         }.run(&log)?;
 
         common::log_timed(&log.new(o!("step" => "save_dir_podcast")), |ref _log| {

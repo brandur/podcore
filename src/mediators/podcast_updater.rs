@@ -19,7 +19,13 @@ use std::io::BufRead;
 use std::str;
 
 pub struct PodcastUpdater<'a> {
-    pub conn:        &'a PgConnection,
+    pub conn: &'a PgConnection,
+
+    /// The mediator may skip some parts of processing if it detects that this exact feed has
+    /// already been processed. Setting this value to `true` will skip this check and force all
+    /// processing.
+    pub disable_shortcut: bool,
+
     pub feed_url:    String,
     pub url_fetcher: &'a mut common::URLFetcher,
 }
@@ -122,27 +128,29 @@ impl<'a> PodcastUpdater<'a> {
         // Check to see if we already have a content record that matches our calculated hash. If
         // so, that means that we've already successfully processed this podcast in the past and
         // can save ourselves some work by skipping it.
-        let matching_content_count: i64 = common::log_timed(
-            &log.new(o!("step" => "query_podcast_feed_content")),
-            |ref _log| {
-                podcast_feed_contents::table
-                    .filter(
-                        podcast_feed_contents::podcast_id
-                            .eq(podcast.id)
-                            .and(podcast_feed_contents::sha256_hash.eq(sha256_hash.as_str())),
-                    )
-                    .count()
-                    .first(self.conn)
-            },
-        )?;
+        if !self.disable_shortcut {
+            let matching_content_count: i64 = common::log_timed(
+                &log.new(o!("step" => "query_podcast_feed_content")),
+                |ref _log| {
+                    podcast_feed_contents::table
+                        .filter(
+                            podcast_feed_contents::podcast_id
+                                .eq(podcast.id)
+                                .and(podcast_feed_contents::sha256_hash.eq(sha256_hash.as_str())),
+                        )
+                        .count()
+                        .first(self.conn)
+                },
+            )?;
 
-        // Feed has already been processed
-        if matching_content_count > 0 {
-            return Ok(RunResult {
-                episodes: None,
-                location: location,
-                podcast:  podcast,
-            });
+            // Feed has already been processed
+            if matching_content_count > 0 {
+                return Ok(RunResult {
+                    episodes: None,
+                    location: location,
+                    podcast:  podcast,
+                });
+            }
         }
 
         let content_ins = insertable::PodcastFeedContent {
@@ -681,11 +689,50 @@ mod tests {
     }
 
     #[test]
-    fn test_idempotency() {
+    fn test_idempotency_with_shortcut() {
         let mut bootstrap = bootstrap(MINIMAL_FEED);
 
         {
             let mut mediator = bootstrap.mediator();
+            let _res = mediator.run(&test_helpers::log()).unwrap();
+            let _res = mediator.run(&test_helpers::log()).unwrap();
+        }
+
+        // Make sure that we ended up with one of everything
+        assert_eq!(
+            Ok(1),
+            schema::episodes::table.count().first(&bootstrap.conn)
+        );
+        assert_eq!(
+            Ok(1),
+            schema::podcasts::table.count().first(&bootstrap.conn)
+        );
+        assert_eq!(
+            Ok(1),
+            schema::podcast_feed_contents::table
+                .count()
+                .first(&bootstrap.conn)
+        );
+        assert_eq!(
+            Ok(1),
+            schema::podcast_feed_locations::table
+                .count()
+                .first(&bootstrap.conn)
+        );
+    }
+
+    #[test]
+    fn test_idempotency_without_shortcut() {
+        let mut bootstrap = bootstrap(MINIMAL_FEED);
+
+        {
+            let mut mediator = bootstrap.mediator();
+
+            // Disable the shortcut that checks to see if content has already been processed so
+            // that we can verify idempotency even if the mediator is doing a complete end-to-end
+            // run.
+            mediator.disable_shortcut = true;
+
             let _res = mediator.run(&test_helpers::log()).unwrap();
             let _res = mediator.run(&test_helpers::log()).unwrap();
         }
@@ -1035,9 +1082,10 @@ mod tests {
     impl TestBootstrap {
         fn mediator(&mut self) -> PodcastUpdater {
             PodcastUpdater {
-                conn:        &self.conn,
-                feed_url:    self.feed_url.to_owned(),
-                url_fetcher: &mut self.url_fetcher,
+                conn:             &self.conn,
+                disable_shortcut: false,
+                feed_url:         self.feed_url.to_owned(),
+                url_fetcher:      &mut self.url_fetcher,
             }
         }
     }
