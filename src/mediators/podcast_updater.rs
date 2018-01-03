@@ -57,6 +57,12 @@ impl<'a> PodcastUpdater<'a> {
             },
         )?;
 
+        // To make runs of this mediator idempotent we first check whether there's an existing
+        // podcast record that has a URL that matches the one we're processing.
+        //
+        // Note that we keep a record of all a podcast's historical URLs, so even if two
+        // directories have two entries for the same podcast with different URLs (say one is the
+        // newer version that old one 301s to), this should still work.
         let podcast_id: Option<i64> =
             common::log_timed(&log.new(o!("step" => "query_podcast")), |ref _log| {
                 podcasts::table
@@ -87,6 +93,24 @@ impl<'a> PodcastUpdater<'a> {
                     .chain_err(|| "Error inserting podcast")
             })?
         };
+
+        // Check to see if we already have a content record that matches our calculated hash. If
+        // so, that means that we've already successfully processed this podcast in the past and
+        // can save ourselves some work by skipping it.
+        let matching_content_count: i64 = common::log_timed(
+            &log.new(o!("step" => "query_podcast_feed_content")),
+            |ref _log| {
+                podcast_feed_contents::table
+                    .filter(
+                        podcast_feed_contents::podcast_id
+                            .eq(podcast.id)
+                            .and(podcast_feed_contents::sha256_hash.eq(sha256_hash.as_str())),
+                    )
+                    .count()
+                    .first(self.conn)
+            },
+        )?;
+        if matching_content_count > 0 {}
 
         let content_ins = insertable::PodcastFeedContent {
             content:      body_str,
