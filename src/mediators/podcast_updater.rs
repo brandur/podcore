@@ -94,6 +94,31 @@ impl<'a> PodcastUpdater<'a> {
             })?
         };
 
+        let location_ins = insertable::PodcastFeedLocation {
+            discovered_at:     Utc::now(),
+            feed_url:          final_url,
+            last_retrieved_at: Utc::now(),
+            podcast_id:        podcast.id,
+        };
+        let location: model::PodcastFeedLocation = common::log_timed(
+            &log.new(o!("step" => "upsert_podcast_feed_location")),
+            |ref _log| {
+                diesel::insert_into(podcast_feed_locations::table)
+                    .values(&location_ins)
+                    .on_conflict((
+                        podcast_feed_locations::podcast_id,
+                        podcast_feed_locations::feed_url,
+                    ))
+                    .do_update()
+                    .set(
+                        podcast_feed_locations::last_retrieved_at
+                            .eq(excluded(podcast_feed_locations::last_retrieved_at)),
+                    )
+                    .get_result(self.conn)
+                    .chain_err(|| "Error upserting podcast feed location")
+            },
+        )?;
+
         // Check to see if we already have a content record that matches our calculated hash. If
         // so, that means that we've already successfully processed this podcast in the past and
         // can save ourselves some work by skipping it.
@@ -134,31 +159,6 @@ impl<'a> PodcastUpdater<'a> {
                     )
                     .execute(self.conn)
                     .chain_err(|| "Error upserting podcast feed content")
-            },
-        )?;
-
-        let location_ins = insertable::PodcastFeedLocation {
-            discovered_at:     Utc::now(),
-            feed_url:          final_url,
-            last_retrieved_at: Utc::now(),
-            podcast_id:        podcast.id,
-        };
-        let location: model::PodcastFeedLocation = common::log_timed(
-            &log.new(o!("step" => "upsert_podcast_feed_location")),
-            |ref _log| {
-                diesel::insert_into(podcast_feed_locations::table)
-                    .values(&location_ins)
-                    .on_conflict((
-                        podcast_feed_locations::podcast_id,
-                        podcast_feed_locations::feed_url,
-                    ))
-                    .do_update()
-                    .set(
-                        podcast_feed_locations::last_retrieved_at
-                            .eq(excluded(podcast_feed_locations::last_retrieved_at)),
-                    )
-                    .get_result(self.conn)
-                    .chain_err(|| "Error upserting podcast feed location")
             },
         )?;
 
