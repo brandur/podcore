@@ -45,7 +45,7 @@ impl<'a> PodcastUpdater<'a> {
 
         let sha256_hash = content_hash(&body);
 
-        let body = String::from_utf8(body).unwrap();
+        let body = String::from_utf8(body).chain_err(|| "Error decoding to UTF-8")?;
         let (raw_podcast, raw_episodes) = Self::parse_feed(&log, body.as_str())?;
 
         // Convert raw podcast data into something that's database compatible.
