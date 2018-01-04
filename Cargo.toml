@@ -11,10 +11,6 @@ path = "src/lib.rs"
 name = "podcore"
 path = "src/bin/podcore/main.rs"
 
-[[bin]]
-name = "podcore-serve"
-path = "src/bin/podcore-serve/main.rs"
-
 [dependencies]
 chrono = "0.4"
 clap = "*"

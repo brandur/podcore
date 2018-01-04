@@ -26,6 +26,7 @@ extern crate slog_term;
 extern crate time;
 extern crate tokio_core;
 
+pub mod api;
 mod errors;
 pub mod graphql;
 #[cfg(test)]
