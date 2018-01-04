@@ -1,11 +1,20 @@
 # podcore [![Build Status](https://travis-ci.org/brandur/podcore.svg?branch=master)](https://travis-ci.org/brandur/podcore)
 
 ```
+brew install direnv
 cargo install diesel_cli --no-default-features --features postgres
-createdb podcore
-echo "export DATABASE_URL=postgres://localhost/podcore" > .envrc
+```
+
+```
 direnv allow
+
+# $DATABASE_URL
+createdb podcore
 diesel migration run
+
+# $TEST_DATABASE_URL
+createdb podcore-test
+DATABASE_URL=$TEST_DATABASE_URL diesel migration run
 ```
 
 ```
