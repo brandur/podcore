@@ -59,7 +59,7 @@ COMMENT ON TABLE podcasts
 CREATE TABLE podcast_feed_locations (
     id BIGSERIAL PRIMARY KEY,
 
-    discovered_at TIMESTAMPTZ NOT NULL,
+    first_retrieved_at TIMESTAMPTZ NOT NULL,
     feed_url TEXT NOT NULL
         CHECK (char_length(feed_url) <= 500),
     last_retrieved_at TIMESTAMPTZ NOT NULL,
@@ -69,8 +69,8 @@ CREATE TABLE podcast_feed_locations (
 COMMENT ON TABLE podcast_feed_locations
     IS 'Historical records of podcast feed URLs.';
 
-CREATE INDEX podcast_feed_locations_podcast_id_discovered_at
-    ON podcast_feed_locations (podcast_id, discovered_at);
+CREATE INDEX podcast_feed_locations_podcast_id_first_retrieved_at
+    ON podcast_feed_locations (podcast_id, first_retrieved_at);
 CREATE UNIQUE INDEX podcast_feed_locations_podcast_id_feed_url
     ON podcast_feed_locations (podcast_id, feed_url);
 

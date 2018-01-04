@@ -295,10 +295,10 @@ impl<'a> PodcastUpdater<'a> {
         final_url: String,
     ) -> Result<model::PodcastFeedLocation> {
         let location_ins = insertable::PodcastFeedLocation {
-            discovered_at:     Utc::now(),
-            feed_url:          final_url,
-            last_retrieved_at: Utc::now(),
-            podcast_id:        podcast.id,
+            first_retrieved_at: Utc::now(),
+            feed_url:           final_url,
+            last_retrieved_at:  Utc::now(),
+            podcast_id:         podcast.id,
         };
         common::log_timed(
             &log.new(o!("step" => "upsert_podcast_feed_location")),

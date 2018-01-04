@@ -60,7 +60,7 @@ table! {
 table! {
     podcast_feed_locations (id) {
         id -> Int8,
-        discovered_at -> Timestamptz,
+        first_retrieved_at -> Timestamptz,
         feed_url -> Text,
         last_retrieved_at -> Timestamptz,
         podcast_id -> Int8,
