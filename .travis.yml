@@ -10,8 +10,7 @@ sudo: false
 
 env:
   global:
-    - DATABASE_URL=postgres://localhost/pod_core
-    - TEST_DATABASE_URL=postgres://localhost/pod_core
+    - TEST_DATABASE_URL=postgres://localhost/podcore-test
 
 matrix:
   include:
@@ -24,8 +23,8 @@ matrix:
 
 before_script:
   - which diesel || cargo install diesel_cli --no-default-features --features postgres
-  - createdb pod_core
-  - diesel migration run
+  - createdb podcore-test
+  - DATABASE_URL=$TEST_DATABASE_URL diesel migration run
   - if [[ $RUSTFMT == 'true' ]]; then cargo install rustfmt-nightly --force; fi
   # For some reason `which rustfmt` may show success even if `cargo fmt` fails.
   # Add this back after this whole nightly-required disaster has ended.
