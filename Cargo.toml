@@ -8,8 +8,8 @@ name = "podcore"
 path = "src/lib.rs"
 
 [[bin]]
-name = "podcore-add-feed"
-path = "src/bin/podcore-add-feed/main.rs"
+name = "podcore"
+path = "src/bin/podcore/main.rs"
 
 [[bin]]
 name = "podcore-serve"
