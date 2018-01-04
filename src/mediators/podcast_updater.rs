@@ -2,6 +2,7 @@ use mediators::common;
 use errors::*;
 use model;
 use model::insertable;
+use url_fetcher::URLFetcher;
 
 use chrono::{DateTime, Utc};
 use crypto::digest::Digest;
@@ -27,7 +28,7 @@ pub struct PodcastUpdater<'a> {
     pub disable_shortcut: bool,
 
     pub feed_url:    String,
-    pub url_fetcher: &'a mut common::URLFetcher,
+    pub url_fetcher: &'a mut URLFetcher,
 }
 
 impl<'a> PodcastUpdater<'a> {
@@ -676,6 +677,7 @@ mod tests {
     use model;
     use schema;
     use test_helpers;
+    use url_fetcher::URLFetcherStub;
 
     use chrono::prelude::*;
 
@@ -1138,7 +1140,7 @@ mod tests {
     struct TestBootstrap {
         conn:        PgConnection,
         feed_url:    &'static str,
-        url_fetcher: common::URLFetcherStub,
+        url_fetcher: URLFetcherStub,
     }
 
     impl TestBootstrap {
@@ -1157,7 +1159,7 @@ mod tests {
         let conn = test_helpers::connection();
         let url = "https://example.com/feed.xml";
 
-        let url_fetcher = common::URLFetcherStub {
+        let url_fetcher = URLFetcherStub {
             map: map!(url => data.to_vec()),
         };
 

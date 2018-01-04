@@ -33,6 +33,7 @@ pub mod graphql;
 mod macros;
 pub mod mediators;
 mod model;
+pub mod url_fetcher;
 
 // Generated file: skip rustfmt
 #[cfg_attr(rustfmt, rustfmt_skip)]

@@ -2,6 +2,7 @@ use mediators::common;
 use mediators::podcast_updater::PodcastUpdater;
 use errors::*;
 use model;
+use url_fetcher::URLFetcher;
 
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -10,7 +11,7 @@ use slog::Logger;
 pub struct DirectoryPodcastUpdater<'a> {
     pub conn:        &'a PgConnection,
     pub dir_podcast: &'a mut model::DirectoryPodcast,
-    pub url_fetcher: &'a mut common::URLFetcher,
+    pub url_fetcher: &'a mut URLFetcher,
 }
 
 impl<'a> DirectoryPodcastUpdater<'a> {
@@ -70,6 +71,7 @@ mod tests {
     use model::insertable;
     use schema::directories_podcasts;
     use test_helpers;
+    use url_fetcher::URLFetcherStub;
 
     use diesel;
 
@@ -107,7 +109,7 @@ mod tests {
     struct TestBootstrap {
         conn:        PgConnection,
         dir_podcast: model::DirectoryPodcast,
-        url_fetcher: common::URLFetcherStub,
+        url_fetcher: URLFetcherStub,
     }
 
     impl TestBootstrap {
@@ -125,7 +127,7 @@ mod tests {
         let conn = test_helpers::connection();
         let url = "https://example.com/feed.xml";
 
-        let url_fetcher = common::URLFetcherStub {
+        let url_fetcher = URLFetcherStub {
             map: map!(url => data.to_vec()),
         };
 

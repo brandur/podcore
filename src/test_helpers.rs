@@ -1,7 +1,7 @@
 use schema;
 
-use diesel::prelude::*;
 use diesel::pg::PgConnection;
+use diesel::prelude::*;
 use slog;
 use slog::{Drain, Logger};
 use slog_async;
