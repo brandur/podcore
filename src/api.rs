@@ -4,10 +4,15 @@ use mount::Mount;
 use slog::Logger;
 use time::precise_time_ns;
 
-pub fn chain(_log: &Logger, mount: Mount) -> Chain {
+pub fn chain(log: &Logger, mount: Mount) -> Chain {
     let mut chain = Chain::new(mount);
-    chain.link_before(ResponseTime);
-    chain.link_after(ResponseTime);
+
+    // Tried to pass in `log` as a reference here, but ran into serious trouble giving a middleware
+    // a lifetime like 'a because all the Iron traits require a static lifetime. I don't really
+    // understand why.
+    chain.link_before(ResponseTime { log: log.clone() });
+    chain.link_after(ResponseTime { log: log.clone() });
+
     chain
 }
 
@@ -15,7 +20,9 @@ pub fn chain(_log: &Logger, mount: Mount) -> Chain {
 // HTTP abstractions
 //
 
-struct ResponseTime;
+struct ResponseTime {
+    log: Logger,
+}
 
 impl typemap::Key for ResponseTime {
     type Value = u64;
@@ -31,7 +38,7 @@ impl BeforeMiddleware for ResponseTime {
 impl AfterMiddleware for ResponseTime {
     fn after(&self, req: &mut Request, res: Response) -> IronResult<Response> {
         let delta = precise_time_ns() - *req.extensions.get::<ResponseTime>().unwrap();
-        println!("Request took: {} ms", (delta as f64) / 1000000.0);
+        info!(self.log, "Request finished"; "time_ms" => (delta as f64) / 1000000.0);
         Ok(res)
     }
 }
