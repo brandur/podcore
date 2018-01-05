@@ -36,6 +36,7 @@ use tokio_core::reactor::Core;
 //
 
 fn main() {
+    // Note that when using `arg_from_usage`, `<arg>` is required and `[arg]` is optional.
     let mut app = App::new("podcore")
         .version("0.1")
         .about("A general utility command for the podcore project")
@@ -43,7 +44,11 @@ fn main() {
         .subcommand(
             SubCommand::with_name("add")
                 .about("Fetches a podcast and adds it to the database")
-                // <arg> is required and [arg] is optional
+                .arg_from_usage("<URL>... 'URL(s) to fetch'"),
+        )
+        .subcommand(
+            SubCommand::with_name("reingest")
+                .about("Reingests podcasts by reusing their stored raw feeds")
                 .arg_from_usage("<URL>... 'URL(s) to fetch'"),
         )
         .subcommand(
@@ -55,6 +60,7 @@ fn main() {
     let matches = app.clone().get_matches();
     match matches.subcommand_name() {
         Some("add") => add_podcast(matches),
+        Some("reingest") => reingest_podcasts(matches),
         Some("serve") => serve_http(matches),
         None => {
             app.print_help().unwrap();
@@ -71,6 +77,28 @@ fn main() {
 fn add_podcast(matches: ArgMatches) {
     let quiet = matches.is_present("quiet");
     let matches = matches.subcommand_matches("add").unwrap();
+
+    let mut core = Core::new().unwrap();
+    let client = Client::new(&core.handle());
+    let mut url_fetcher = URLFetcherLive {
+        client: &client,
+        core:   &mut core,
+    };
+
+    for url in matches.values_of("URL").unwrap().collect::<Vec<_>>().iter() {
+        PodcastUpdater {
+            conn:             &connection(),
+            disable_shortcut: false,
+            feed_url:         url.to_owned().to_owned(),
+            url_fetcher:      &mut url_fetcher,
+        }.run(&log(quiet))
+            .unwrap();
+    }
+}
+
+fn reingest_podcasts(matches: ArgMatches) {
+    let quiet = matches.is_present("quiet");
+    let matches = matches.subcommand_matches("reingest").unwrap();
 
     let mut core = Core::new().unwrap();
     let client = Client::new(&core.handle());
