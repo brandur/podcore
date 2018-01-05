@@ -101,15 +101,15 @@ fn serve_http(matches: ArgMatches) {
 
     let mut mount = Mount::new();
 
-    let graphiql_endpoint = Box::new(GraphiQLHandler::new("/graphql"));
-    mount.mount("/", *graphiql_endpoint);
+    let graphiql_endpoint = GraphiQLHandler::new("/graphql");
+    mount.mount("/", graphiql_endpoint);
 
-    let graphql_endpoint = Box::new(GraphQLHandler::new(
+    let graphql_endpoint = GraphQLHandler::new(
         move |_: &mut Request| -> graphql::Context { graphql::Context::new(pool()) },
         graphql::Query::new(),
         graphql::Mutation::new(),
-    ));
-    mount.mount("/graphql", *graphql_endpoint);
+    );
+    mount.mount("/graphql", graphql_endpoint);
 
     info!(log, "API starting on: {}", host);
     Iron::new(api::chain(&log, mount))
