@@ -15,6 +15,7 @@ extern crate tokio_core;
 
 use podcore::api;
 use podcore::graphql;
+use podcore::mediators::podcast_reingester::PodcastReingester;
 use podcore::mediators::podcast_updater::PodcastUpdater;
 use podcore::url_fetcher::URLFetcherLive;
 
@@ -97,24 +98,12 @@ fn add_podcast(matches: ArgMatches) {
 
 fn reingest_podcasts(matches: ArgMatches) {
     let quiet = matches.is_present("quiet");
-    let matches = matches.subcommand_matches("reingest").unwrap();
+    let _matches = matches.subcommand_matches("reingest").unwrap();
 
-    let mut core = Core::new().unwrap();
-    let client = Client::new(&core.handle());
-    let mut url_fetcher = URLFetcherLive {
-        client: &client,
-        core:   &mut core,
-    };
-
-    for url in matches.values_of("URL").unwrap().collect::<Vec<_>>().iter() {
-        PodcastUpdater {
-            conn:             &*connection(),
-            disable_shortcut: false,
-            feed_url:         url.to_owned().to_owned(),
-            url_fetcher:      &mut url_fetcher,
-        }.run(&log(quiet))
-            .unwrap();
-    }
+    PodcastReingester {
+        pool: pool().clone(),
+    }.run(&log(quiet))
+        .unwrap();
 }
 
 fn serve_http(matches: ArgMatches) {
