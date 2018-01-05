@@ -20,12 +20,11 @@ use podcore::url_fetcher::URLFetcherLive;
 
 use clap::{App, ArgMatches, SubCommand};
 use diesel::pg::PgConnection;
-use diesel::prelude::*;
 use hyper::Client;
 use iron::prelude::*;
 use juniper_iron::{GraphQLHandler, GraphiQLHandler};
 use mount::Mount;
-use r2d2::Pool;
+use r2d2::{Pool, PooledConnection};
 use r2d2_diesel::ConnectionManager;
 use slog::{Drain, Logger};
 use std::env;
@@ -87,7 +86,7 @@ fn add_podcast(matches: ArgMatches) {
 
     for url in matches.values_of("URL").unwrap().collect::<Vec<_>>().iter() {
         PodcastUpdater {
-            conn:             &connection(),
+            conn:             &*connection(),
             disable_shortcut: false,
             feed_url:         url.to_owned().to_owned(),
             url_fetcher:      &mut url_fetcher,
@@ -109,7 +108,7 @@ fn reingest_podcasts(matches: ArgMatches) {
 
     for url in matches.values_of("URL").unwrap().collect::<Vec<_>>().iter() {
         PodcastUpdater {
-            conn:             &connection(),
+            conn:             &*connection(),
             disable_shortcut: false,
             feed_url:         url.to_owned().to_owned(),
             url_fetcher:      &mut url_fetcher,
@@ -149,10 +148,12 @@ fn serve_http(matches: ArgMatches) {
 // Private types/functions
 //
 
-fn connection() -> PgConnection {
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let conn = PgConnection::establish(&database_url).unwrap();
-    conn
+/// Acquires a single connection from a connection pool. This is suitable for use a shortcut by
+/// subcommands that only need to run one single-threaded task.
+fn connection() -> PooledConnection<ConnectionManager<PgConnection>> {
+    pool()
+        .get()
+        .expect("Error acquiring connection from connection pool")
 }
 
 fn log(quiet: bool) -> Logger {
@@ -166,6 +167,7 @@ fn log(quiet: bool) -> Logger {
     }
 }
 
+/// Initializes and returns a connection pool suitable for use across threads.
 fn pool() -> Pool<ConnectionManager<PgConnection>> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let manager = ConnectionManager::<PgConnection>::new(database_url);

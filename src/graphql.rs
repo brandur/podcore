@@ -26,7 +26,7 @@ impl Context {
     fn get_conn(&self) -> Result<DieselConnection> {
         self.pool
             .get()
-            .chain_err(|| "Error acquiring connection from database pool")
+            .chain_err(|| "Error acquiring connection from connection pool")
     }
 }
 
