@@ -25,34 +25,29 @@ impl PodcastReingester {
             .get()
             .chain_err(|| "Error acquiring connection from connection pool"))?;
         let res = common::log_timed(&log.new(o!("step" => "query_podcasts")), |ref _log| {
+            // Note that although in SQL a subselect can be coerced into a single value, Diesel's
+            // type system cannot support this. We workaround by storing these values to Vec<_>.
             podcasts::table
-                .left_outer_join(podcast_feed_contents::table)
-                .left_outer_join(podcast_feed_locations::table)
-                .order((
-                    podcasts::id,
-                    podcast_feed_contents::retrieved_at.desc(),
-                    podcast_feed_locations::last_retrieved_at.desc(),
-                ))
-                .select((podcasts::id))
-                .load::<(i64)>(conn)
-            /*
-                .load::<Vec<i64>>(
-                    &*(self.pool
-                        .get()
-                        .chain_err(|| "Error acquiring connection from connection pool")?),
-                )
                 .select((
                     podcasts::id,
-                    podcast_feed_contents::content,
-                    podcast_feed_locations::feed_url,
+                    podcast_feed_contents::table
+                        .filter(podcast_feed_contents::podcast_id.eq(podcasts::id))
+                        .order(podcast_feed_contents::retrieved_at.desc())
+                        .limit(1)
+                        .select(podcast_feed_contents::content),
+                    podcast_feed_locations::table
+                        .filter(podcast_feed_locations::podcast_id.eq(podcasts::id))
+                        .order(podcast_feed_locations::last_retrieved_at.desc())
+                        .limit(1)
+                        .select(podcast_feed_locations::feed_url),
                 ))
-                .load::<Vec<(i64, String, String)>>(
-                    &*(self.pool
-                        .get()
-                        .chain_err(|| "Error acquiring connection from connection pool")?),
-                )
-                */
+                .load::<(i64, Vec<String>, Vec<String>)>(conn)
         })?;
+
+        for (_podcast_id, content_vec, feed_url_vec) in res {
+            assert_eq!(1, content_vec.len());
+            assert_eq!(1, feed_url_vec.len());
+        }
 
         Ok(RunResult {})
     }
