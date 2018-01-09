@@ -34,6 +34,16 @@ impl<'a> URLFetcher for URLFetcherLive<'a> {
     }
 }
 
+pub struct URLFetcherPassThrough {
+    pub data: Vec<u8>,
+}
+
+impl URLFetcher for URLFetcherPassThrough {
+    fn fetch(&mut self, raw_url: String) -> Result<(Vec<u8>, String)> {
+        return Ok((self.data.clone(), raw_url));
+    }
+}
+
 #[cfg(test)]
 pub struct URLFetcherStub {
     pub map: HashMap<&'static str, Vec<u8>>,

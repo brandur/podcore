@@ -1,7 +1,8 @@
 use errors::*;
 use mediators::common;
+use mediators::podcast_updater::PodcastUpdater;
 use schema::{podcast_feed_contents, podcast_feed_locations, podcasts};
-//use url_fetcher::URLFetcher;
+use url_fetcher::URLFetcherPassThrough;
 
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -25,7 +26,27 @@ impl PodcastReingester {
             .get()
             .chain_err(|| "Error acquiring connection from connection pool"))?;
 
-        let _podcast_tuples = Self::select_podcasts(&log, &*conn);
+        let podcast_tuples = Self::select_podcasts(&log, &*conn)?;
+
+        for &(ref _podcast_id, ref content_vec, ref feed_url_vec) in &podcast_tuples {
+            let content = (&content_vec[0]).as_bytes().to_vec();
+            let feed_url = (&feed_url_vec[0]).to_string();
+
+            {
+                let mut url_fetcher = URLFetcherPassThrough { data: content };
+
+                PodcastUpdater {
+                    conn: &*conn,
+
+                    // The whole purpose of this mediator is to redo past work, so we need to make
+                    // sure that we've disabled any shortcuts that might otherwise be enabled.
+                    disable_shortcut: true,
+
+                    feed_url:    feed_url,
+                    url_fetcher: &mut url_fetcher,
+                }.run(&log)?;
+            }
+        }
 
         Ok(RunResult {})
     }
