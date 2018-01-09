@@ -24,6 +24,20 @@ impl PodcastReingester {
         let conn = &*(self.pool
             .get()
             .chain_err(|| "Error acquiring connection from connection pool"))?;
+
+        let _podcast_tuples = Self::select_podcasts(&log, &*conn);
+
+        Ok(RunResult {})
+    }
+
+    //
+    // Steps
+    //
+
+    fn select_podcasts(
+        log: &Logger,
+        conn: &PgConnection,
+    ) -> Result<Vec<(i64, Vec<String>, Vec<String>)>> {
         let res = common::log_timed(&log.new(o!("step" => "query_podcasts")), |ref _log| {
             // Note that although in SQL a subselect can be coerced into a single value, Diesel's
             // type system cannot support this. We workaround by storing these values to Vec<_>.
@@ -44,12 +58,12 @@ impl PodcastReingester {
                 .load::<(i64, Vec<String>, Vec<String>)>(conn)
         })?;
 
-        for (_podcast_id, content_vec, feed_url_vec) in res {
+        for &(ref _podcast_id, ref content_vec, ref feed_url_vec) in &res {
             assert_eq!(1, content_vec.len());
             assert_eq!(1, feed_url_vec.len());
         }
 
-        Ok(RunResult {})
+        Ok(res)
     }
 }
 
