@@ -48,8 +48,7 @@ fn main() {
         )
         .subcommand(
             SubCommand::with_name("reingest")
-                .about("Reingests podcasts by reusing their stored raw feeds")
-                .arg_from_usage("<URL>... 'URL(s) to fetch'"),
+                .about("Reingests podcasts by reusing their stored raw feeds"),
         )
         .subcommand(
             SubCommand::with_name("serve")

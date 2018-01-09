@@ -32,20 +32,16 @@ impl PodcastReingester {
             let content = (&content_vec[0]).as_bytes().to_vec();
             let feed_url = (&feed_url_vec[0]).to_string();
 
-            {
-                let mut url_fetcher = URLFetcherPassThrough { data: content };
+            PodcastUpdater {
+                conn: &*conn,
 
-                PodcastUpdater {
-                    conn: &*conn,
+                // The whole purpose of this mediator is to redo past work, so we need to make
+                // sure that we've disabled any shortcuts that might otherwise be enabled.
+                disable_shortcut: true,
 
-                    // The whole purpose of this mediator is to redo past work, so we need to make
-                    // sure that we've disabled any shortcuts that might otherwise be enabled.
-                    disable_shortcut: true,
-
-                    feed_url:    feed_url,
-                    url_fetcher: &mut url_fetcher,
-                }.run(&log)?;
-            }
+                feed_url:    feed_url,
+                url_fetcher: &mut URLFetcherPassThrough { data: content },
+            }.run(&log)?;
         }
 
         Ok(RunResult {})
