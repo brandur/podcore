@@ -1,13 +1,12 @@
 use errors::*;
 use mediators::common;
 use mediators::podcast_updater::PodcastUpdater;
-use schema::{podcast_feed_contents, podcast_feed_locations, podcasts};
 use url_fetcher::URLFetcherPassThrough;
 
 use diesel;
-use diesel::pg::Pg;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
+use diesel::types::{BigInt, Text};
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use slog::Logger;
@@ -30,9 +29,9 @@ impl PodcastReingester {
 
         let podcast_tuples = Self::select_podcasts(&log, &*conn)?;
 
-        for &(ref _podcast_id, ref content_vec, ref feed_url_vec) in &podcast_tuples {
-            let content = (&content_vec[0]).as_bytes().to_vec();
-            let feed_url = (&feed_url_vec[0]).to_string();
+        for ref tuple in &podcast_tuples {
+            let content = (&tuple.content).as_bytes().to_vec();
+            let feed_url = (&tuple.feed_url).to_string();
 
             PodcastUpdater {
                 conn: &*conn,
@@ -53,40 +52,66 @@ impl PodcastReingester {
     // Steps
     //
 
-    fn select_podcasts(
-        log: &Logger,
-        conn: &PgConnection,
-    ) -> Result<Vec<(i64, Vec<String>, Vec<String>)>> {
+    fn select_podcasts(log: &Logger, conn: &PgConnection) -> Result<Vec<PodcastTuple>> {
         let res = common::log_timed(&log.new(o!("step" => "query_podcasts")), |ref _log| {
-            // Note that although in SQL a subselect can be coerced into a single value, Diesel's
-            // type system cannot support this. We workaround by storing these values to Vec<_>.
-            let query = podcasts::table.select((
-                podcasts::id,
-                (podcast_feed_contents::table
-                    .filter(podcast_feed_contents::podcast_id.eq(podcasts::id))
-                    .order(podcast_feed_contents::retrieved_at.desc())
-                    .limit(1)
-                    .select(podcast_feed_contents::content)),
-                (podcast_feed_locations::table
-                    .filter(podcast_feed_locations::podcast_id.eq(podcasts::id))
-                    .order(podcast_feed_locations::last_retrieved_at.desc())
-                    .limit(1)
-                    .select(podcast_feed_locations::feed_url)),
-            ));
-
-            let debug = diesel::debug_query::<Pg, _>(&query).to_string();
-            info!(log, "Debug query"; "query" => debug);
-
-            query.load::<(i64, Vec<String>, Vec<String>)>(conn)
+            // Fell back to `sql_query` because implementing this in Diesel's query language has
+            // proven to be somewhere between frustrating difficult to impossible.
+            //
+            // First of all, Diesel cannot properly implement taking a single result from a
+            // subselect -- it can only take results as `Vec<_>`. I asked in the Gitter channel the
+            // reponse confirmed the problem, but quite relunctant to, so I wouldn't expect this to
+            // get fixed anytime soon.
+            //
+            // Secondly, even using the `Vec<_>` workaround, I was able to get the subselects to a
+            // state where they'd successfully compile, but produce an invalid query at runtime.
+            // On debug it turned out that the query was invalid because neither subselect was
+            // being wrapped in parentheses (`SELECT ...` instead of `(SELECT ...)`). This might be
+            // solvable somehow, but examples in tests and documentation are quite poor, so I gave
+            // up and fell back to this.
+            diesel::sql_query(
+                "
+                SELECT id,
+                    (
+                        SELECT content
+                        FROM podcast_feed_contents
+                        WHERE podcast_feed_contents.podcast_id = podcasts.id
+                        ORDER BY retrieved_at DESC
+                        LIMIT 1
+                    ),
+                    (
+                        SELECT feed_url
+                        FROM podcast_feed_locations
+                        WHERE podcast_feed_locations.podcast_id = podcasts.id
+                        ORDER BY last_retrieved_at DESC
+                        LIMIT 1
+                    )
+                FROM podcasts",
+            ).load::<PodcastTuple>(conn)
         })?;
-
-        for &(ref _podcast_id, ref content_vec, ref feed_url_vec) in &res {
-            assert_eq!(1, content_vec.len());
-            assert_eq!(1, feed_url_vec.len());
-        }
 
         Ok(res)
     }
 }
 
 pub struct RunResult {}
+
+//
+// Private types
+//
+
+// Exists because `sql_query` doesn't support querying into a tuple, only a struct.
+#[derive(Debug, QueryableByName)]
+struct PodcastTuple {
+    #[sql_type = "BigInt"]
+    id: i64,
+
+    #[sql_type = "Text"]
+    content: String,
+
+    #[sql_type = "Text"]
+    feed_url: String,
+}
+
+//
+// Private functions
+//

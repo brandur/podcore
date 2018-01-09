@@ -1,4 +1,5 @@
 extern crate clap;
+#[macro_use]
 extern crate diesel;
 extern crate hyper;
 extern crate iron;
