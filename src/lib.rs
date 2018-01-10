@@ -1,5 +1,7 @@
 #![recursion_limit = "128"]
 
+#[macro_use]
+extern crate chan;
 extern crate chrono;
 extern crate crypto;
 #[macro_use]

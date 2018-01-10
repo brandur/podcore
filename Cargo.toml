@@ -12,6 +12,7 @@ name = "podcore"
 path = "src/bin/podcore/main.rs"
 
 [dependencies]
+chan = "*"
 chrono = "0.4"
 clap = "*"
 diesel = { version = "1.0.0-rc1", features = ["chrono", "postgres"] }
