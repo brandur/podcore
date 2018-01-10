@@ -4,8 +4,7 @@ use time::precise_time_ns;
 
 #[inline]
 pub fn log_timed<T, F>(log: &Logger, f: F) -> T
-where
-    F: FnOnce(&Logger) -> T,
+    where F: FnOnce(&Logger) -> T
 {
     let start = precise_time_ns();
     info!(log, "Start");
@@ -16,7 +15,6 @@ where
     res
 }
 
-//
 // Private functions
 //
 
@@ -33,7 +31,6 @@ fn unit(ns: u64) -> (f64, &'static str) {
     }
 }
 
-//
 // Tests
 //
 

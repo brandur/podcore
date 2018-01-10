@@ -33,7 +33,7 @@ pub fn log() -> Logger {
 }
 
 /// Initializes and returns a connection pool suitable for use across threads.
-fn pool() -> Pool<ConnectionManager<PgConnection>> {
+pub fn pool() -> Pool<ConnectionManager<PgConnection>> {
     let database_url = env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set");
     let manager = ConnectionManager::<PgConnection>::new(database_url);
     let pool = Pool::builder()

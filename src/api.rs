@@ -16,7 +16,6 @@ pub fn chain(log: &Logger, mount: Mount) -> Chain {
     chain
 }
 
-//
 // HTTP abstractions
 //
 

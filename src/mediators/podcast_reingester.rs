@@ -117,7 +117,7 @@ pub struct RunResult {}
 
 // Put an upper bound on the number of threads to use just so that we don't blow up Postgres with
 // inbound connections.
-static NUM_THREADS: usize = 3;
+static NUM_THREADS: usize = 100;
 
 // Private types
 //
@@ -179,18 +179,36 @@ fn work(log: &Logger,
 
 #[cfg(test)]
 mod tests {
-    // use mediators::podcast_updater::*;
-    // use model;
-    // use r2d2::{Pool, PooledConnection};
-    // use r2d2_diesel::ConnectionManager;
-    // use schema;
-    // use test_helpers;
-    // use url_fetcher::URLFetcherStub;
+    extern crate rand;
 
-    // use chrono::prelude::*;
+    use mediators::podcast_reingester::*;
+    use mediators::podcast_updater::PodcastUpdater;
+    // use model;
+    use rand::Rng;
+    use r2d2::Pool;
+    use r2d2_diesel::ConnectionManager;
+    // use schema;
+    use test_helpers;
+    use url_fetcher::URLFetcherPassThrough;
 
     #[test]
-    fn test_basic() {}
+    fn test_basic() {
+        let mut bootstrap = TestBootstrap::new();
+        {
+            let conn = bootstrap.pool
+                .get()
+                .expect("Error acquiring connection from connection pool");
+            let log = test_helpers::log();
+
+            // Insert lots of data to be reingested
+            for _i in 0..(NUM_THREADS * 5) {
+                insert_podcast(&log, &*conn);
+            }
+
+            let mut mediator = bootstrap.mediator();
+            mediator.run(&log).unwrap();
+        }
+    }
 
     // Private types/functions
     //
@@ -208,4 +226,43 @@ mod tests {
     </item>
   </channel>
 </rss>"#;
+
+    struct TestBootstrap {
+        pool: Pool<ConnectionManager<PgConnection>>,
+    }
+
+    impl TestBootstrap {
+        fn new() -> TestBootstrap {
+            TestBootstrap { pool: test_helpers::pool() }
+        }
+
+        fn mediator(&mut self) -> PodcastReingester {
+            PodcastReingester { pool: self.pool.clone() }
+        }
+    }
+
+    impl Drop for TestBootstrap {
+        fn drop(&mut self) {
+            let conn = self.pool
+                .get()
+                .expect("Error acquiring connection from connection pool");
+            (*conn).execute("TRUNCATE TABLE podcasts CASCADE").unwrap();
+        }
+    }
+
+    fn insert_podcast(log: &Logger, conn: &PgConnection) {
+        let mut rng = rand::thread_rng();
+        PodcastUpdater {
+                conn: conn,
+                disable_shortcut: false,
+
+                // Add a little randomness to feed URLs so that w don't just insert one podcast and
+                // update it over and over.
+                feed_url: format!("https://example.com/feed-{}.xml", rng.gen::<u64>()).to_string(),
+
+                url_fetcher: &mut URLFetcherPassThrough { data: MINIMAL_FEED.to_vec() },
+            }
+            .run(log)
+            .unwrap();
+    }
 }

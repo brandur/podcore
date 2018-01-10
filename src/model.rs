@@ -5,7 +5,6 @@ use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 
-//
 // Database models for the application.
 //
 // Note that models are separately into `Queryable` and `Insertable` versions (with the latter
@@ -18,7 +17,7 @@ use diesel::pg::PgConnection;
 #[allow(dead_code)]
 #[derive(Queryable)]
 pub struct Directory {
-    pub id:   i64,
+    pub id: i64,
     pub name: String,
 }
 
@@ -30,8 +29,7 @@ impl Directory {
 
     #[allow(dead_code)]
     fn load_dir(conn: &PgConnection, name: &str) -> Result<Self> {
-        directories::table
-            .filter(directories::name.eq(name))
+        directories::table.filter(directories::name.eq(name))
             .first::<Directory>(conn)
             .chain_err(|| format!("Error loading {} directory record", name))
     }
@@ -41,64 +39,64 @@ impl Directory {
 #[derive(AsChangeset, Identifiable, Queryable)]
 #[table_name = "directories_podcasts"]
 pub struct DirectoryPodcast {
-    pub id:           i64,
+    pub id: i64,
     pub directory_id: i64,
-    pub feed_url:     Option<String>,
-    pub podcast_id:   Option<i64>,
-    pub vendor_id:    String,
+    pub feed_url: Option<String>,
+    pub podcast_id: Option<i64>,
+    pub vendor_id: String,
 }
 
 #[allow(dead_code)]
 #[derive(Queryable)]
 pub struct DirectorySearch {
-    pub id:           i64,
+    pub id: i64,
     pub directory_id: i64,
-    pub query:        String,
+    pub query: String,
     pub retrieved_at: DateTime<Utc>,
 }
 
 #[derive(Queryable)]
 pub struct Episode {
-    pub id:           i64,
-    pub description:  Option<String>,
-    pub explicit:     Option<bool>,
-    pub guid:         String,
-    pub link_url:     Option<String>,
-    pub media_type:   Option<String>,
-    pub media_url:    String,
-    pub podcast_id:   i64,
+    pub id: i64,
+    pub description: Option<String>,
+    pub explicit: Option<bool>,
+    pub guid: String,
+    pub link_url: Option<String>,
+    pub media_type: Option<String>,
+    pub media_url: String,
+    pub podcast_id: i64,
     pub published_at: DateTime<Utc>,
-    pub title:        String,
+    pub title: String,
 }
 
 #[derive(Queryable)]
 pub struct Podcast {
-    pub id:                i64,
-    pub image_url:         Option<String>,
-    pub language:          Option<String>,
+    pub id: i64,
+    pub image_url: Option<String>,
+    pub language: Option<String>,
     pub last_retrieved_at: DateTime<Utc>,
-    pub link_url:          Option<String>,
-    pub title:             String,
+    pub link_url: Option<String>,
+    pub title: String,
 }
 
 #[allow(dead_code)]
 #[derive(Queryable)]
 pub struct PodcastFeedContent {
-    pub id:           i64,
-    pub content:      String,
-    pub podcast_id:   i64,
+    pub id: i64,
+    pub content: String,
+    pub podcast_id: i64,
     pub retrieved_at: DateTime<Utc>,
-    pub sha256_hash:  String,
+    pub sha256_hash: String,
 }
 
 #[allow(dead_code)]
 #[derive(Queryable)]
 pub struct PodcastFeedLocation {
-    pub id:                 i64,
+    pub id: i64,
     pub first_retrieved_at: DateTime<Utc>,
-    pub feed_url:           String,
-    pub last_retrieved_at:  DateTime<Utc>,
-    pub podcast_id:         i64,
+    pub feed_url: String,
+    pub last_retrieved_at: DateTime<Utc>,
+    pub podcast_id: i64,
 }
 
 pub mod insertable {
@@ -111,9 +109,9 @@ pub mod insertable {
     #[table_name = "directories_podcasts"]
     pub struct DirectoryPodcast {
         pub directory_id: i64,
-        pub feed_url:     Option<String>,
-        pub podcast_id:   Option<i64>,
-        pub vendor_id:    String,
+        pub feed_url: Option<String>,
+        pub podcast_id: Option<i64>,
+        pub vendor_id: String,
     }
 
     #[allow(dead_code)]
@@ -121,51 +119,51 @@ pub mod insertable {
     #[table_name = "directory_searches"]
     pub struct DirectorySearch {
         pub directory_id: i64,
-        pub query:        String,
+        pub query: String,
         pub retrieved_at: DateTime<Utc>,
     }
 
     #[derive(Insertable)]
     #[table_name = "episodes"]
     pub struct Episode {
-        pub description:  Option<String>,
-        pub explicit:     Option<bool>,
-        pub guid:         String,
-        pub link_url:     Option<String>,
-        pub media_type:   Option<String>,
-        pub media_url:    String,
-        pub podcast_id:   i64,
+        pub description: Option<String>,
+        pub explicit: Option<bool>,
+        pub guid: String,
+        pub link_url: Option<String>,
+        pub media_type: Option<String>,
+        pub media_url: String,
+        pub podcast_id: i64,
         pub published_at: DateTime<Utc>,
-        pub title:        String,
+        pub title: String,
     }
 
     #[changeset_options(treat_none_as_null = "true")]
     #[derive(AsChangeset, Insertable)]
     #[table_name = "podcasts"]
     pub struct Podcast {
-        pub image_url:         Option<String>,
-        pub language:          Option<String>,
+        pub image_url: Option<String>,
+        pub language: Option<String>,
         pub last_retrieved_at: DateTime<Utc>,
-        pub link_url:          Option<String>,
-        pub title:             String,
+        pub link_url: Option<String>,
+        pub title: String,
     }
 
     #[allow(dead_code)]
     #[derive(Insertable)]
     #[table_name = "podcast_feed_contents"]
     pub struct PodcastFeedContent {
-        pub content:      String,
-        pub podcast_id:   i64,
+        pub content: String,
+        pub podcast_id: i64,
         pub retrieved_at: DateTime<Utc>,
-        pub sha256_hash:  String,
+        pub sha256_hash: String,
     }
 
     #[derive(Insertable)]
     #[table_name = "podcast_feed_locations"]
     pub struct PodcastFeedLocation {
         pub first_retrieved_at: DateTime<Utc>,
-        pub feed_url:           String,
-        pub last_retrieved_at:  DateTime<Utc>,
-        pub podcast_id:         i64,
+        pub feed_url: String,
+        pub last_retrieved_at: DateTime<Utc>,
+        pub podcast_id: i64,
     }
 }
