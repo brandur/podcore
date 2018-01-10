@@ -27,7 +27,7 @@ pub struct PodcastUpdater<'a> {
     /// processing.
     pub disable_shortcut: bool,
 
-    pub feed_url:    String,
+    pub feed_url: String,
     pub url_fetcher: &'a mut URLFetcher,
 }
 
@@ -71,7 +71,7 @@ impl<'a> PodcastUpdater<'a> {
             return Ok(RunResult {
                 episodes: None,
                 location: location,
-                podcast:  podcast,
+                podcast: podcast,
             });
         }
 
@@ -86,42 +86,34 @@ impl<'a> PodcastUpdater<'a> {
         Ok(RunResult {
             episodes: Some(episodes),
             location: location,
-            podcast:  podcast,
+            podcast: podcast,
         })
     }
 
-    //
     // Steps
     //
 
-    fn already_processed(
-        &mut self,
-        log: &Logger,
-        podcast: &model::Podcast,
-        sha256_hash: &str,
-    ) -> Result<bool> {
-        let matching_content_count: i64 = common::log_timed(
-            &log.new(o!("step" => "query_podcast_feed_content")),
-            |ref _log| {
-                podcast_feed_contents::table
-                    .filter(
-                        podcast_feed_contents::podcast_id
-                            .eq(podcast.id)
-                            .and(podcast_feed_contents::sha256_hash.eq(sha256_hash)),
-                    )
+    fn already_processed(&mut self,
+                         log: &Logger,
+                         podcast: &model::Podcast,
+                         sha256_hash: &str)
+                         -> Result<bool> {
+        let matching_content_count: i64 =
+            common::log_timed(&log.new(o!("step" => "query_podcast_feed_content")),
+                              |ref _log| {
+                                  podcast_feed_contents::table.filter(podcast_feed_contents::podcast_id.eq(podcast.id)
+                        .and(podcast_feed_contents::sha256_hash.eq(sha256_hash)))
                     .count()
                     .first(self.conn)
-            },
-        )?;
+                              })?;
 
         Ok(matching_content_count > 0)
     }
 
-    fn convert_episodes(
-        log: &Logger,
-        raws: Vec<raw::Episode>,
-        podcast: &model::Podcast,
-    ) -> Result<Vec<insertable::Episode>> {
+    fn convert_episodes(log: &Logger,
+                        raws: Vec<raw::Episode>,
+                        podcast: &model::Podcast)
+                        -> Result<Vec<insertable::Episode>> {
         common::log_timed(&log.new(o!("step" => "convert_episodes")), |ref log| {
             let num_candidates = raws.len();
             let mut episodes = Vec::with_capacity(num_candidates);
@@ -147,23 +139,20 @@ impl<'a> PodcastUpdater<'a> {
     }
 
     fn convert_podcast(log: &Logger, raw_podcast: &raw::Podcast) -> Result<insertable::Podcast> {
-        common::log_timed(
-            &log.new(o!("step" => "convert_podcast")),
-            |ref _log| -> Result<insertable::Podcast> {
-                match validate_podcast(&raw_podcast)
+        common::log_timed(&log.new(o!("step" => "convert_podcast")),
+                          |ref _log| -> Result<insertable::Podcast> {
+            match validate_podcast(&raw_podcast)
                     .chain_err(|| format!("Failed to convert: {:?}", raw_podcast))?
                 {
                     PodcastOrInvalid::Valid(p) => Ok(p),
                     PodcastOrInvalid::Invalid { message: m } => Err(m.into()),
                 }
-            },
-        )
+        })
     }
 
     fn fetch_feed(&mut self, log: &Logger) -> Result<(Vec<u8>, String)> {
-        common::log_timed(&log.new(o!("step" => "fetch_feed")), |ref _log| {
-            self.url_fetcher.fetch(self.feed_url.clone())
-        })
+        common::log_timed(&log.new(o!("step" => "fetch_feed")),
+                          |ref _log| self.url_fetcher.fetch(self.feed_url.clone()))
     }
 
     fn parse_feed(log: &Logger, data: &str) -> Result<(raw::Podcast, Vec<raw::Episode>)> {
@@ -175,12 +164,14 @@ impl<'a> PodcastUpdater<'a> {
 
             loop {
                 match reader.read_event(&mut buf) {
-                    Ok(Event::Start(ref e)) => match e.name() {
-                        b"rss" => {
-                            return parse_rss(&log, &mut reader);
+                    Ok(Event::Start(ref e)) => {
+                        match e.name() {
+                            b"rss" => {
+                                return parse_rss(&log, &mut reader);
+                            }
+                            _ => (),
                         }
-                        _ => (),
-                    },
+                    }
                     Ok(Event::Eof) => break,
                     _ => {}
                 }
@@ -190,40 +181,35 @@ impl<'a> PodcastUpdater<'a> {
         })
     }
 
-    fn upsert_episodes(
-        &mut self,
-        log: &Logger,
-        ins_episodes: Vec<insertable::Episode>,
-    ) -> Result<Vec<model::Episode>> {
+    fn upsert_episodes(&mut self,
+                       log: &Logger,
+                       ins_episodes: Vec<insertable::Episode>)
+                       -> Result<Vec<model::Episode>> {
         common::log_timed(&log.new(o!("step" => "upsert_episodes")), |ref _log| {
-            Ok(diesel::insert_into(episodes::table)
-                .values(&ins_episodes)
+            Ok(diesel::insert_into(episodes::table).values(&ins_episodes)
                 .on_conflict((episodes::podcast_id, episodes::guid))
                 .do_update()
-                .set((
-                    episodes::description.eq(excluded(episodes::description)),
-                    episodes::explicit.eq(excluded(episodes::explicit)),
-                    episodes::link_url.eq(excluded(episodes::link_url)),
-                    episodes::media_type.eq(excluded(episodes::media_type)),
-                    episodes::media_url.eq(excluded(episodes::media_url)),
-                    episodes::podcast_id.eq(excluded(episodes::podcast_id)),
-                    episodes::published_at.eq(excluded(episodes::published_at)),
-                    episodes::title.eq(excluded(episodes::title)),
-                ))
+                .set((episodes::description.eq(excluded(episodes::description)),
+                      episodes::explicit.eq(excluded(episodes::explicit)),
+                      episodes::link_url.eq(excluded(episodes::link_url)),
+                      episodes::media_type.eq(excluded(episodes::media_type)),
+                      episodes::media_url.eq(excluded(episodes::media_url)),
+                      episodes::podcast_id.eq(excluded(episodes::podcast_id)),
+                      episodes::published_at.eq(excluded(episodes::published_at)),
+                      episodes::title.eq(excluded(episodes::title))))
                 .get_results(self.conn)
                 .chain_err(|| "Error upserting podcast episodes")?)
         })
     }
 
-    fn upsert_podcast(
-        &mut self,
-        log: &Logger,
-        ins_podcast: &insertable::Podcast,
-        final_url: &str,
-    ) -> Result<model::Podcast> {
-        let podcast_id: Option<i64> =
-            common::log_timed(&log.new(o!("step" => "query_podcast")), |ref _log| {
-                podcasts::table
+    fn upsert_podcast(&mut self,
+                      log: &Logger,
+                      ins_podcast: &insertable::Podcast,
+                      final_url: &str)
+                      -> Result<model::Podcast> {
+        let podcast_id: Option<i64> = common::log_timed(&log.new(o!("step" => "query_podcast")),
+                                                        |ref _log| {
+            podcasts::table
                     .left_join(
                         podcast_feed_locations::table
                             .on(podcasts::id.eq(podcast_feed_locations::podcast_id)),
@@ -232,7 +218,7 @@ impl<'a> PodcastUpdater<'a> {
                     .select((podcasts::id))
                     .first(self.conn)
                     .optional()
-            })?;
+        })?;
 
         if let Some(podcast_id) = podcast_id {
             info!(log, "Found existing podcast ID {}", podcast_id);
@@ -253,23 +239,21 @@ impl<'a> PodcastUpdater<'a> {
         }
     }
 
-    fn upsert_podcast_feed_content(
-        &mut self,
-        log: &Logger,
-        podcast: &model::Podcast,
-        body: String,
-        sha256_hash: String,
-    ) -> Result<()> {
+    fn upsert_podcast_feed_content(&mut self,
+                                   log: &Logger,
+                                   podcast: &model::Podcast,
+                                   body: String,
+                                   sha256_hash: String)
+                                   -> Result<()> {
         let content_ins = insertable::PodcastFeedContent {
-            content:      body,
-            podcast_id:   podcast.id,
+            content: body,
+            podcast_id: podcast.id,
             retrieved_at: Utc::now(),
-            sha256_hash:  sha256_hash,
+            sha256_hash: sha256_hash,
         };
-        common::log_timed(
-            &log.new(o!("step" => "upsert_podcast_feed_content")),
-            |ref _log| {
-                diesel::insert_into(podcast_feed_contents::table)
+        common::log_timed(&log.new(o!("step" => "upsert_podcast_feed_content")),
+                          |ref _log| {
+            diesel::insert_into(podcast_feed_contents::table)
                     .values(&content_ins)
                     .on_conflict((
                         podcast_feed_contents::podcast_id,
@@ -282,28 +266,25 @@ impl<'a> PodcastUpdater<'a> {
                     )
                     .execute(self.conn)
                     .chain_err(|| "Error upserting podcast feed content")
-            },
-        )?;
+        })?;
 
         Ok(())
     }
 
-    fn upsert_podcast_feed_location(
-        &mut self,
-        log: &Logger,
-        podcast: &model::Podcast,
-        final_url: String,
-    ) -> Result<model::PodcastFeedLocation> {
+    fn upsert_podcast_feed_location(&mut self,
+                                    log: &Logger,
+                                    podcast: &model::Podcast,
+                                    final_url: String)
+                                    -> Result<model::PodcastFeedLocation> {
         let location_ins = insertable::PodcastFeedLocation {
             first_retrieved_at: Utc::now(),
-            feed_url:           final_url,
-            last_retrieved_at:  Utc::now(),
-            podcast_id:         podcast.id,
+            feed_url: final_url,
+            last_retrieved_at: Utc::now(),
+            podcast_id: podcast.id,
         };
-        common::log_timed(
-            &log.new(o!("step" => "upsert_podcast_feed_location")),
-            |ref _log| {
-                diesel::insert_into(podcast_feed_locations::table)
+        common::log_timed(&log.new(o!("step" => "upsert_podcast_feed_location")),
+                          |ref _log| {
+            diesel::insert_into(podcast_feed_locations::table)
                     .values(&location_ins)
                     .on_conflict((
                         podcast_feed_locations::podcast_id,
@@ -316,8 +297,7 @@ impl<'a> PodcastUpdater<'a> {
                     )
                     .get_result(self.conn)
                     .chain_err(|| "Error upserting podcast feed location")
-            },
-        )
+        })
     }
 }
 
@@ -329,10 +309,9 @@ pub struct RunResult {
     pub episodes: Option<Vec<model::Episode>>,
 
     pub location: model::PodcastFeedLocation,
-    pub podcast:  model::Podcast,
+    pub podcast: model::Podcast,
 }
 
-//
 // Private macros
 //
 
@@ -373,14 +352,13 @@ macro_rules! require_podcast_field {
     );
 }
 
-//
 // Private types
 //
 
 /// Represents a regex find and replac rule that we use to coerce datetime formats that are not
 /// technically valid RFC 2822 into ones that are and which we can parse.
 struct DateTimeReplaceRule {
-    find:    Regex,
+    find: Regex,
     replace: &'static str,
 }
 
@@ -397,7 +375,7 @@ enum EpisodeOrInvalid {
     Valid(insertable::Episode),
     Invalid {
         message: &'static str,
-        guid:    Option<String>,
+        guid: Option<String>,
     },
 }
 
@@ -414,27 +392,27 @@ enum PodcastOrInvalid {
 mod raw {
     #[derive(Debug)]
     pub struct Episode {
-        pub description:  Option<String>,
-        pub explicit:     Option<bool>,
-        pub guid:         Option<String>,
-        pub link_url:     Option<String>,
-        pub media_type:   Option<String>,
-        pub media_url:    Option<String>,
+        pub description: Option<String>,
+        pub explicit: Option<bool>,
+        pub guid: Option<String>,
+        pub link_url: Option<String>,
+        pub media_type: Option<String>,
+        pub media_url: Option<String>,
         pub published_at: Option<String>,
-        pub title:        Option<String>,
+        pub title: Option<String>,
     }
 
     impl Episode {
         pub fn new() -> Episode {
             Episode {
-                description:  None,
-                explicit:     None,
-                media_type:   None,
-                media_url:    None,
-                guid:         None,
-                link_url:     None,
+                description: None,
+                explicit: None,
+                media_type: None,
+                media_url: None,
+                guid: None,
+                link_url: None,
                 published_at: None,
-                title:        None,
+                title: None,
             }
         }
     }
@@ -442,24 +420,23 @@ mod raw {
     #[derive(Debug)]
     pub struct Podcast {
         pub image_url: Option<String>,
-        pub language:  Option<String>,
-        pub link_url:  Option<String>,
-        pub title:     Option<String>,
+        pub language: Option<String>,
+        pub link_url: Option<String>,
+        pub title: Option<String>,
     }
 
     impl Podcast {
         pub fn new() -> Podcast {
             Podcast {
                 image_url: None,
-                language:  None,
-                link_url:  None,
-                title:     None,
+                language: None,
+                link_url: None,
+                title: None,
             }
         }
     }
 }
 
-//
 // Private functions
 //
 
@@ -472,7 +449,8 @@ fn content_hash(content: &Vec<u8>) -> String {
 fn element_text<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<String> {
     let mut buf = Vec::new();
     match reader.read_event(&mut buf) {
-        Ok(Event::CData(ref e)) | Ok(Event::Text(ref e)) => {
+        Ok(Event::CData(ref e)) |
+        Ok(Event::Text(ref e)) => {
             let val = safe_unescape_and_decode(log, e, &reader);
             return Ok(val.clone());
         }
@@ -482,37 +460,43 @@ fn element_text<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<Stri
     Err("No content found".into())
 }
 
-fn parse_channel<R: BufRead>(
-    log: &Logger,
-    reader: &mut Reader<R>,
-) -> Result<(raw::Podcast, Vec<raw::Episode>)> {
+fn parse_channel<R: BufRead>(log: &Logger,
+                             reader: &mut Reader<R>)
+                             -> Result<(raw::Podcast, Vec<raw::Episode>)> {
     let mut buf = Vec::new();
     let mut episodes: Vec<raw::Episode> = Vec::new();
     let mut podcast = raw::Podcast::new();
 
     loop {
         match reader.read_event(&mut buf) {
-            Ok(Event::Start(ref e)) => match e.name() {
-                b"item" => episodes.push(parse_item(&log, reader)?),
-                b"language" => podcast.language = Some(element_text(log, reader)?),
-                b"link" => podcast.link_url = Some(element_text(log, reader)?),
-                b"media:thumbnail" => for attr in e.attributes().with_checks(false) {
-                    if let Ok(attr) = attr {
-                        match attr.key {
-                            b"url" => {
-                                podcast.image_url = Some(attr.unescape_and_decode_value(&reader)
-                                    .chain_err(|| "Error unescaping and decoding attribute")?);
+            Ok(Event::Start(ref e)) => {
+                match e.name() {
+                    b"item" => episodes.push(parse_item(&log, reader)?),
+                    b"language" => podcast.language = Some(element_text(log, reader)?),
+                    b"link" => podcast.link_url = Some(element_text(log, reader)?),
+                    b"media:thumbnail" => {
+                        for attr in e.attributes().with_checks(false) {
+                            if let Ok(attr) = attr {
+                                match attr.key {
+                                    b"url" => {
+                                        podcast.image_url =
+                                            Some(attr.unescape_and_decode_value(&reader)
+                                                .chain_err(|| {
+                                                    "Error unescaping and decoding attribute"
+                                                })?);
+                                    }
+                                    _ => (),
+                                }
                             }
-                            _ => (),
                         }
                     }
-                },
-                b"title" => {
-                    podcast.title = Some(element_text(log, reader)?);
-                    info!(log, "Parsed title"; "title" => podcast.title.clone());
+                    b"title" => {
+                        podcast.title = Some(element_text(log, reader)?);
+                        info!(log, "Parsed title"; "title" => podcast.title.clone());
+                    }
+                    _ => (),
                 }
-                _ => (),
-            },
+            }
             Ok(Event::Eof) => break,
             _ => {}
         }
@@ -549,20 +533,21 @@ fn parse_date_time(s: &str) -> Result<DateTime<Utc>> {
     }
 }
 
-fn parse_rss<R: BufRead>(
-    log: &Logger,
-    reader: &mut Reader<R>,
-) -> Result<(raw::Podcast, Vec<raw::Episode>)> {
+fn parse_rss<R: BufRead>(log: &Logger,
+                         reader: &mut Reader<R>)
+                         -> Result<(raw::Podcast, Vec<raw::Episode>)> {
     let mut buf = Vec::new();
 
     loop {
         match reader.read_event(&mut buf) {
-            Ok(Event::Start(ref e)) => match e.name() {
-                b"channel" => {
-                    return parse_channel(&log, reader);
+            Ok(Event::Start(ref e)) => {
+                match e.name() {
+                    b"channel" => {
+                        return parse_channel(&log, reader);
+                    }
+                    _ => (),
                 }
-                _ => (),
-            },
+            }
             Ok(Event::Eof) => break,
             _ => {}
         }
@@ -577,30 +562,42 @@ fn parse_item<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<raw::E
 
     loop {
         match reader.read_event(&mut buf) {
-            Ok(Event::Start(ref e)) => match e.name() {
-                b"description" => episode.description = Some(element_text(log, reader)?),
-                b"enclosure" | b"media:content" => for attr in e.attributes().with_checks(false) {
-                    if let Ok(attr) = attr {
-                        match attr.key {
-                            b"type" => {
-                                episode.media_type = Some(attr.unescape_and_decode_value(&reader)
-                                    .chain_err(|| "Error unescaping and decoding attribute")?);
+            Ok(Event::Start(ref e)) => {
+                match e.name() {
+                    b"description" => episode.description = Some(element_text(log, reader)?),
+                    b"enclosure" | b"media:content" => {
+                        for attr in e.attributes().with_checks(false) {
+                            if let Ok(attr) = attr {
+                                match attr.key {
+                                    b"type" => {
+                                        episode.media_type =
+                                            Some(attr.unescape_and_decode_value(&reader)
+                                                .chain_err(|| {
+                                                    "Error unescaping and decoding attribute"
+                                                })?);
+                                    }
+                                    b"url" => {
+                                        episode.media_url =
+                                            Some(attr.unescape_and_decode_value(&reader)
+                                                .chain_err(|| {
+                                                    "Error unescaping and decoding attribute"
+                                                })?);
+                                    }
+                                    _ => (),
+                                }
                             }
-                            b"url" => {
-                                episode.media_url = Some(attr.unescape_and_decode_value(&reader)
-                                    .chain_err(|| "Error unescaping and decoding attribute")?);
-                            }
-                            _ => (),
                         }
                     }
-                },
-                b"guid" => episode.guid = Some(element_text(log, reader)?),
-                b"itunes:explicit" => episode.explicit = Some(element_text(log, reader)? == "yes"),
-                b"link" => episode.link_url = Some(element_text(log, reader)?),
-                b"pubDate" => episode.published_at = Some(element_text(log, reader)?),
-                b"title" => episode.title = Some(element_text(log, reader)?),
-                _ => (),
-            },
+                    b"guid" => episode.guid = Some(element_text(log, reader)?),
+                    b"itunes:explicit" => {
+                        episode.explicit = Some(element_text(log, reader)? == "yes")
+                    }
+                    b"link" => episode.link_url = Some(element_text(log, reader)?),
+                    b"pubDate" => episode.published_at = Some(element_text(log, reader)?),
+                    b"title" => episode.title = Some(element_text(log, reader)?),
+                    _ => (),
+                }
+            }
             Ok(Event::Eof) => break,
             _ => {}
         }
@@ -611,11 +608,10 @@ fn parse_item<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<raw::E
 
 // The idea here is to produce a tolerant form of quick-xml's function that is tolerant to as wide
 // of a variety of possibly misencoded podcast feeds as possible.
-pub fn safe_unescape_and_decode<'b, B: BufRead>(
-    log: &Logger,
-    bytes: &BytesText<'b>,
-    reader: &Reader<B>,
-) -> String {
+pub fn safe_unescape_and_decode<'b, B: BufRead>(log: &Logger,
+                                                bytes: &BytesText<'b>,
+                                                reader: &Reader<B>)
+                                                -> String {
     // quick-xml's unescape might fail if it runs into an improperly encoded '&' with something
     // like this:
     //
@@ -643,15 +639,15 @@ fn validate_episode(raw: &raw::Episode, podcast: &model::Podcast) -> Result<Epis
     require_episode_field!(raw.title, "title", raw.guid.clone());
 
     Ok(EpisodeOrInvalid::Valid(insertable::Episode {
-        description:  raw.description.clone(),
-        explicit:     raw.explicit.clone(),
-        guid:         raw.guid.clone().unwrap(),
-        link_url:     raw.link_url.clone(),
-        media_url:    raw.media_url.clone().unwrap(),
-        media_type:   raw.media_type.clone(),
-        podcast_id:   podcast.id,
+        description: raw.description.clone(),
+        explicit: raw.explicit.clone(),
+        guid: raw.guid.clone().unwrap(),
+        link_url: raw.link_url.clone(),
+        media_url: raw.media_url.clone().unwrap(),
+        media_type: raw.media_type.clone(),
+        podcast_id: podcast.id,
         published_at: parse_date_time(raw.published_at.clone().unwrap().as_str())?,
-        title:        raw.title.clone().unwrap(),
+        title: raw.title.clone().unwrap(),
     }))
 }
 
@@ -659,15 +655,14 @@ fn validate_podcast(raw: &raw::Podcast) -> Result<PodcastOrInvalid> {
     require_podcast_field!(raw.title, "title");
 
     Ok(PodcastOrInvalid::Valid(insertable::Podcast {
-        image_url:         raw.image_url.clone(),
-        language:          raw.language.clone(),
+        image_url: raw.image_url.clone(),
+        language: raw.language.clone(),
         last_retrieved_at: Utc::now(),
-        link_url:          raw.link_url.clone(),
-        title:             raw.title.clone().unwrap(),
+        link_url: raw.link_url.clone(),
+        title: raw.title.clone().unwrap(),
     }))
 }
 
-//
 // Tests
 //
 
@@ -675,6 +670,8 @@ fn validate_podcast(raw: &raw::Podcast) -> Result<PodcastOrInvalid> {
 mod tests {
     use mediators::podcast_updater::*;
     use model;
+    use r2d2::PooledConnection;
+    use r2d2_diesel::ConnectionManager;
     use schema;
     use test_helpers;
     use url_fetcher::URLFetcherStub;
@@ -687,30 +684,23 @@ mod tests {
         let mut mediator = bootstrap.mediator();
         let res = mediator.run(&test_helpers::log()).unwrap();
 
-        //
         // Podcast
         //
 
         assert_ne!(0, res.podcast.id);
-        assert_eq!(
-            Some("https://example.com/podcast-image-url.jpg".to_owned()),
-            res.podcast.image_url
-        );
+        assert_eq!(Some("https://example.com/podcast-image-url.jpg".to_owned()),
+                   res.podcast.image_url);
         assert_eq!(Some("en-US".to_owned()), res.podcast.language);
-        assert_eq!(
-            Some("https://example.com/podcast".to_owned()),
-            res.podcast.link_url
-        );
+        assert_eq!(Some("https://example.com/podcast".to_owned()),
+                   res.podcast.link_url);
         assert_eq!("Title", res.podcast.title);
 
-        //
         // Podcast feed location
         //
 
         assert_eq!(res.podcast.id, res.location.podcast_id);
         assert_eq!(bootstrap.feed_url.to_owned(), res.location.feed_url);
 
-        //
         // Episode
         //
 
@@ -725,10 +715,8 @@ mod tests {
         assert_eq!(Some("audio/mpeg".to_owned()), episode.media_type);
         assert_eq!("https://example.com/item-1", episode.media_url);
         assert_eq!(res.podcast.id, episode.podcast_id);
-        assert_eq!(
-            Utc.ymd(2017, 12, 24).and_hms(21, 37, 32),
-            episode.published_at
-        );
+        assert_eq!(Utc.ymd(2017, 12, 24).and_hms(21, 37, 32),
+                   episode.published_at);
     }
 
     #[test]
@@ -745,10 +733,8 @@ mod tests {
         let episode = &episodes[0];
         assert_eq!("1", episode.guid);
         assert_eq!("https://example.com/item-1", episode.media_url);
-        assert_eq!(
-            Utc.ymd(2017, 12, 24).and_hms(21, 37, 32),
-            episode.published_at
-        );
+        assert_eq!(Utc.ymd(2017, 12, 24).and_hms(21, 37, 32),
+                   episode.published_at);
     }
 
     #[test]
@@ -762,26 +748,16 @@ mod tests {
         }
 
         // Make sure that we ended up with one of everything
-        assert_eq!(
-            Ok(1),
-            schema::episodes::table.count().first(&bootstrap.conn)
-        );
-        assert_eq!(
-            Ok(1),
-            schema::podcasts::table.count().first(&bootstrap.conn)
-        );
-        assert_eq!(
-            Ok(1),
-            schema::podcast_feed_contents::table
-                .count()
-                .first(&bootstrap.conn)
-        );
-        assert_eq!(
-            Ok(1),
-            schema::podcast_feed_locations::table
-                .count()
-                .first(&bootstrap.conn)
-        );
+        assert_eq!(Ok(1),
+                   schema::episodes::table.count().first(&*bootstrap.conn));
+        assert_eq!(Ok(1),
+                   schema::podcasts::table.count().first(&*bootstrap.conn));
+        assert_eq!(Ok(1),
+                   schema::podcast_feed_contents::table.count()
+                       .first(&*bootstrap.conn));
+        assert_eq!(Ok(1),
+                   schema::podcast_feed_locations::table.count()
+                       .first(&*bootstrap.conn));
     }
 
     #[test]
@@ -801,61 +777,43 @@ mod tests {
         }
 
         // Make sure that we ended up with one of everything
-        assert_eq!(
-            Ok(1),
-            schema::episodes::table.count().first(&bootstrap.conn)
-        );
-        assert_eq!(
-            Ok(1),
-            schema::podcasts::table.count().first(&bootstrap.conn)
-        );
-        assert_eq!(
-            Ok(1),
-            schema::podcast_feed_contents::table
-                .count()
-                .first(&bootstrap.conn)
-        );
-        assert_eq!(
-            Ok(1),
-            schema::podcast_feed_locations::table
-                .count()
-                .first(&bootstrap.conn)
-        );
+        assert_eq!(Ok(1),
+                   schema::episodes::table.count().first(&*bootstrap.conn));
+        assert_eq!(Ok(1),
+                   schema::podcasts::table.count().first(&*bootstrap.conn));
+        assert_eq!(Ok(1),
+                   schema::podcast_feed_contents::table.count()
+                       .first(&*bootstrap.conn));
+        assert_eq!(Ok(1),
+                   schema::podcast_feed_locations::table.count()
+                       .first(&*bootstrap.conn));
     }
 
     #[test]
     fn test_parse_date_time() {
         // Valid RFC 2822
-        assert_eq!(
-            Utc.ymd(2017, 12, 24).and_hms(21, 37, 32),
-            parse_date_time("Sun, 24 Dec 2017 21:37:32 +0000").unwrap()
-        );
+        assert_eq!(Utc.ymd(2017, 12, 24).and_hms(21, 37, 32),
+                   parse_date_time("Sun, 24 Dec 2017 21:37:32 +0000").unwrap());
 
         // Also valid -- check use of named timezones
-        assert_eq!(
-            FixedOffset::west(5 * 3600) // EST-0500
+        assert_eq!(FixedOffset::west(5 * 3600) // EST-0500
                 .ymd(2017, 12, 24)
                 .and_hms(21, 37, 32)
                 .with_timezone(&Utc),
-            parse_date_time("Sun, 24 Dec 2017 21:37:32 EST").unwrap()
-        );
+                   parse_date_time("Sun, 24 Dec 2017 21:37:32 EST").unwrap());
 
         // Never forget how uselessly pedantic Rust programmers are. A "-0000" is technically
         // considered missing even though it's obvious to anyone on Earth what should be done with
         // it. Our special implementation handles it, so test this case specifically.
-        assert_eq!(
-            Utc.ymd(2017, 12, 24).and_hms(21, 37, 32),
-            parse_date_time("Sun, 24 Dec 2017 21:37:32 -0000").unwrap()
-        );
+        assert_eq!(Utc.ymd(2017, 12, 24).and_hms(21, 37, 32),
+                   parse_date_time("Sun, 24 Dec 2017 21:37:32 -0000").unwrap());
 
         // Notice the truncated "0:" -- seen on Communion After Dark
-        assert_eq!(
-            FixedOffset::west(5 * 3600) // EST-0500
+        assert_eq!(FixedOffset::west(5 * 3600) // EST-0500
                 .ymd(2017, 12, 24)
                 .and_hms(0, 37, 32)
                 .with_timezone(&Utc),
-            parse_date_time("Sun, 24 Dec 2017 0:37:32 EST").unwrap()
-        );
+                   parse_date_time("Sun, 24 Dec 2017 0:37:32 EST").unwrap());
     }
 
     #[test]
@@ -867,16 +825,15 @@ mod tests {
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!(
-                "../test_documents/feed_99_percent_invisible.xml"
-            ));
+            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_99_percent_invisible.\
+                                                          xml"));
             let mut mediator = bootstrap.mediator();
             mediator.run(&test_helpers::log()).unwrap();
         }
 
         {
-            let mut bootstrap =
-                bootstrap(include_bytes!("../test_documents/feed_adventure_zone.xml"));
+            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_adventure_zone.\
+                                                          xml"));
             let mut mediator = bootstrap.mediator();
             mediator.run(&test_helpers::log()).unwrap();
         }
@@ -894,23 +851,22 @@ mod tests {
         }
 
         {
-            let mut bootstrap =
-                bootstrap(include_bytes!("../test_documents/feed_common_sense.xml"));
+            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_common_sense.\
+                                                          xml"));
             let mut mediator = bootstrap.mediator();
             mediator.run(&test_helpers::log()).unwrap();
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!(
-                "../test_documents/feed_communion_after_dark.xml"
-            ));
+            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_communion_after_dark.\
+                                                          xml"));
             let mut mediator = bootstrap.mediator();
             mediator.run(&test_helpers::log()).unwrap();
         }
 
         {
-            let mut bootstrap =
-                bootstrap(include_bytes!("../test_documents/feed_eaten_by_a_grue.xml"));
+            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_eaten_by_a_grue.\
+                                                          xml"));
             let mut mediator = bootstrap.mediator();
             mediator.run(&test_helpers::log()).unwrap();
         }
@@ -922,23 +878,22 @@ mod tests {
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!(
-                "../test_documents/feed_hardcore_history.xml"
-            ));
+            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_hardcore_history.\
+                                                          xml"));
             let mut mediator = bootstrap.mediator();
             mediator.run(&test_helpers::log()).unwrap();
         }
 
         {
-            let mut bootstrap =
-                bootstrap(include_bytes!("../test_documents/feed_history_of_rome.xml"));
+            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_history_of_rome.\
+                                                          xml"));
             let mut mediator = bootstrap.mediator();
             mediator.run(&test_helpers::log()).unwrap();
         }
 
         {
-            let mut bootstrap =
-                bootstrap(include_bytes!("../test_documents/feed_planet_money.xml"));
+            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_planet_money.\
+                                                          xml"));
             let mut mediator = bootstrap.mediator();
             mediator.run(&test_helpers::log()).unwrap();
         }
@@ -956,16 +911,15 @@ mod tests {
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!(
-                "../test_documents/feed_roderick_on_the_line.xml"
-            ));
+            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_roderick_on_the_line.\
+                                                          xml"));
             let mut mediator = bootstrap.mediator();
             mediator.run(&test_helpers::log()).unwrap();
         }
 
         {
-            let mut bootstrap =
-                bootstrap(include_bytes!("../test_documents/feed_song_exploder.xml"));
+            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_song_exploder.\
+                                                          xml"));
             let mut mediator = bootstrap.mediator();
             mediator.run(&test_helpers::log()).unwrap();
         }
@@ -986,12 +940,12 @@ mod tests {
     #[test]
     fn test_validate_episode() {
         let podcast = model::Podcast {
-            id:                1,
-            image_url:         None,
-            language:          None,
+            id: 1,
+            image_url: None,
+            language: None,
             last_retrieved_at: Utc::now(),
-            link_url:          None,
-            title:             "Title".to_owned(),
+            link_url: None,
+            title: "Title".to_owned(),
         };
 
         {
@@ -1000,16 +954,13 @@ mod tests {
                 EpisodeOrInvalid::Valid(p) => {
                     assert_eq!(raw.guid.unwrap(), p.guid);
                     assert_eq!(raw.media_url.unwrap(), p.media_url);
-                    assert_eq!(
-                        parse_date_time(raw.published_at.unwrap().as_str()).unwrap(),
-                        p.published_at
-                    );
+                    assert_eq!(parse_date_time(raw.published_at.unwrap().as_str()).unwrap(),
+                               p.published_at);
                     assert_eq!(raw.title.unwrap(), p.title);
                 }
-                EpisodeOrInvalid::Invalid {
-                    message: m,
-                    guid: _,
-                } => panic!("Unexpected invalid episode; message: {}", m),
+                EpisodeOrInvalid::Invalid { message: m, guid: _ } => {
+                    panic!("Unexpected invalid episode; message: {}", m)
+                }
             }
         }
 
@@ -1018,10 +969,7 @@ mod tests {
             raw.guid = None;
             match validate_episode(&raw, &podcast).unwrap() {
                 EpisodeOrInvalid::Valid(_) => panic!("Unexpected valid episode"),
-                EpisodeOrInvalid::Invalid {
-                    message: m,
-                    guid: g,
-                } => {
+                EpisodeOrInvalid::Invalid { message: m, guid: g } => {
                     assert_eq!("Missing GUID from episode", m);
                     assert_eq!(None, g);
                 }
@@ -1033,10 +981,7 @@ mod tests {
             raw.media_url = None;
             match validate_episode(&raw, &podcast).unwrap() {
                 EpisodeOrInvalid::Valid(_) => panic!("Unexpected valid episode"),
-                EpisodeOrInvalid::Invalid {
-                    message: m,
-                    guid: g,
-                } => {
+                EpisodeOrInvalid::Invalid { message: m, guid: g } => {
                     assert_eq!("Missing media URL from episode", m);
                     assert_eq!(raw.guid, g);
                 }
@@ -1048,10 +993,7 @@ mod tests {
             raw.published_at = None;
             match validate_episode(&raw, &podcast).unwrap() {
                 EpisodeOrInvalid::Valid(_) => panic!("Unexpected valid episode"),
-                EpisodeOrInvalid::Invalid {
-                    message: m,
-                    guid: g,
-                } => {
+                EpisodeOrInvalid::Invalid { message: m, guid: g } => {
                     assert_eq!("Missing publish date from episode", m);
                     assert_eq!(raw.guid, g);
                 }
@@ -1063,10 +1005,7 @@ mod tests {
             raw.title = None;
             match validate_episode(&raw, &podcast).unwrap() {
                 EpisodeOrInvalid::Valid(_) => panic!("Unexpected valid episode"),
-                EpisodeOrInvalid::Invalid {
-                    message: m,
-                    guid: g,
-                } => {
+                EpisodeOrInvalid::Invalid { message: m, guid: g } => {
                     assert_eq!("Missing title from episode", m);
                     assert_eq!(raw.guid, g);
                 }
@@ -1098,7 +1037,6 @@ mod tests {
         }
     }
 
-    //
     // Private types/functions
     //
 
@@ -1138,18 +1076,18 @@ mod tests {
     // Encapsulates the structures that are needed for tests to run. One should only be obtained by
     // invoking bootstrap().
     struct TestBootstrap {
-        conn:        PgConnection,
-        feed_url:    &'static str,
+        conn: PooledConnection<ConnectionManager<PgConnection>>,
+        feed_url: &'static str,
         url_fetcher: URLFetcherStub,
     }
 
     impl TestBootstrap {
         fn mediator(&mut self) -> PodcastUpdater {
             PodcastUpdater {
-                conn:             &self.conn,
+                conn: &*self.conn,
                 disable_shortcut: false,
-                feed_url:         self.feed_url.to_owned(),
-                url_fetcher:      &mut self.url_fetcher,
+                feed_url: self.feed_url.to_owned(),
+                url_fetcher: &mut self.url_fetcher,
             }
         }
     }
@@ -1159,13 +1097,11 @@ mod tests {
         let conn = test_helpers::connection();
         let url = "https://example.com/feed.xml";
 
-        let url_fetcher = URLFetcherStub {
-            map: map!(url => data.to_vec()),
-        };
+        let url_fetcher = URLFetcherStub { map: map!(url => data.to_vec()) };
 
         TestBootstrap {
-            conn:        conn,
-            feed_url:    url,
+            conn: conn,
+            feed_url: url,
             url_fetcher: url_fetcher,
         }
     }

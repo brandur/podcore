@@ -176,3 +176,36 @@ fn work(log: &Logger,
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    // use mediators::podcast_updater::*;
+    // use model;
+    // use r2d2::{Pool, PooledConnection};
+    // use r2d2_diesel::ConnectionManager;
+    // use schema;
+    // use test_helpers;
+    // use url_fetcher::URLFetcherStub;
+
+    // use chrono::prelude::*;
+
+    #[test]
+    fn test_basic() {}
+
+    // Private types/functions
+    //
+
+    const MINIMAL_FEED: &[u8] = br#"
+<?xml version="1.0" encoding="UTF-8"?>
+<rss>
+  <channel>
+    <title>Title</title>
+    <item>
+      <guid>1</guid>
+      <media:content url="https://example.com/item-1" type="audio/mpeg"/>
+      <pubDate>Sun, 24 Dec 2017 21:37:32 +0000</pubDate>
+      <title>Item 1 Title</title>
+    </item>
+  </channel>
+</rss>"#;
+}

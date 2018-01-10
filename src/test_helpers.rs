@@ -2,6 +2,8 @@ use schema;
 
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
+use r2d2::{Pool, PooledConnection};
+use r2d2_diesel::ConnectionManager;
 use slog;
 use slog::{Drain, Logger};
 use slog_async;
@@ -9,12 +11,13 @@ use slog_term;
 use std;
 use std::env;
 
-pub fn connection() -> PgConnection {
-    let database_url =
-        env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set in order to run tests");
-    let conn = PgConnection::establish(&database_url).unwrap();
+/// Acquires a single connection from a connection pool and starts a test transaction on it. This
+/// is suitable for use a shortcut by subcommands that only need to run one single-threaded task.
+pub fn connection() -> PooledConnection<ConnectionManager<PgConnection>> {
+    let conn = pool()
+        .get()
+        .expect("Error acquiring connection from connection pool");
     conn.begin_test_transaction().unwrap();
-    check_database(&conn);
     conn
 }
 
@@ -29,7 +32,21 @@ pub fn log() -> Logger {
     }
 }
 
-//
+/// Initializes and returns a connection pool suitable for use across threads.
+fn pool() -> Pool<ConnectionManager<PgConnection>> {
+    let database_url = env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set");
+    let manager = ConnectionManager::<PgConnection>::new(database_url);
+    let pool = Pool::builder()
+        .build(manager)
+        .expect("Failed to create pool.");
+
+    let conn = pool.get()
+        .expect("Error acquiring connection from connection pool");
+    check_database(&*conn);
+
+    pool
+}
+
 // Private types/functions
 //
 
