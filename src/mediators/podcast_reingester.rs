@@ -4,6 +4,7 @@ use mediators::podcast_updater::PodcastUpdater;
 use url_fetcher::URLFetcherPassThrough;
 
 use chan;
+use chan::Receiver;
 use diesel;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -19,9 +20,8 @@ pub struct PodcastReingester {
 
 impl PodcastReingester {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
-        common::log_timed(&log.new(o!("step" => file!())), |ref log| {
-            self.run_inner(&log)
-        })
+        common::log_timed(&log.new(o!("step" => file!())),
+                          |ref log| self.run_inner(&log))
     }
 
     pub fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
@@ -31,42 +31,12 @@ impl PodcastReingester {
         let (work_send, work_recv) = chan::sync(100);
         for id in 0..NUM_THREADS {
             let log = log.new(o!("thread" => id));
-            let pool = self.pool.clone();
+            let pool_clone = self.pool.clone();
+            let done_recv_clone = done_recv.clone();
+            let work_recv_clone = work_recv.clone();
 
             workers.push(thread::spawn(move || {
-                // TODO: Something better than `unwrap()`.
-                let conn = &*(pool.get()
-                    .chain_err(|| "Error acquiring connection from connection pool"))
-                    .unwrap();
-
-                loop {
-                    chan_select! {
-                        done_recv.recv() => {
-                            break;
-                        },
-                        work_recv.recv() -> podcast_tuple => {
-                            let podcast_tuple: PodcastTuple = podcast_tuple.unwrap();
-
-                            let content = podcast_tuple.content.as_bytes().to_vec();
-                            let feed_url = podcast_tuple.feed_url.to_string();
-
-                            let res = PodcastUpdater {
-                                conn: &*conn,
-
-                                // The whole purpose of this mediator is to redo past work, so we need to make
-                                // sure that we've disabled any shortcuts that might otherwise be enabled.
-                                disable_shortcut: true,
-
-                                feed_url:    feed_url,
-                                url_fetcher: &mut URLFetcherPassThrough { data: content },
-                            }.run(&log);
-
-                            if let Err(e) = res {
-                                error!(log, "Error processing podcast: {}", e);
-                            }
-                        },
-                    }
-                }
+                work(&log, pool_clone, work_recv_clone, done_recv_clone);
             }));
         }
 
@@ -76,9 +46,8 @@ impl PodcastReingester {
 
         // TODO: Loop in pages.
         let podcast_tuples = Self::select_podcasts(&log, &*conn)?;
-        for ref podcast_tuple in &podcast_tuples {
-            let x = podcast_tuple.clone();
-            work_send.send(*x);
+        for podcast_tuple in &podcast_tuples {
+            work_send.send(podcast_tuple.clone());
         }
 
         // Signal done.
@@ -87,7 +56,7 @@ impl PodcastReingester {
         // other things are working ... (Chan's README sort of has an example of this. Look for
         // "sdone".)
         for _ in &workers {
-            done_send.send(true);
+            done_send.send(());
         }
 
         // Wait for threads to rejoin
@@ -98,7 +67,6 @@ impl PodcastReingester {
         Ok(RunResult {})
     }
 
-    //
     // Steps
     //
 
@@ -118,25 +86,24 @@ impl PodcastReingester {
             // being wrapped in parentheses (`SELECT ...` instead of `(SELECT ...)`). This might be
             // solvable somehow, but examples in tests and documentation are quite poor, so I gave
             // up and fell back to this.
-            diesel::sql_query(
-                "
+            diesel::sql_query("
                 SELECT id,
                     (
-                        SELECT content
-                        FROM podcast_feed_contents
-                        WHERE podcast_feed_contents.podcast_id = podcasts.id
-                        ORDER BY retrieved_at DESC
-                        LIMIT 1
+                       SELECT content
+                       FROM podcast_feed_contents
+                       WHERE podcast_feed_contents.podcast_id = podcasts.id
+                       ORDER BY retrieved_at DESC
+                       LIMIT 1
                     ),
                     (
-                        SELECT feed_url
-                        FROM podcast_feed_locations
-                        WHERE podcast_feed_locations.podcast_id = podcasts.id
-                        ORDER BY last_retrieved_at DESC
-                        LIMIT 1
+                       SELECT feed_url
+                       FROM podcast_feed_locations
+                       WHERE podcast_feed_locations.podcast_id = podcasts.id
+                       ORDER BY last_retrieved_at DESC
+                       LIMIT 1
                     )
-                FROM podcasts",
-            ).load::<PodcastTuple>(conn)
+                FROM podcasts")
+                .load::<PodcastTuple>(conn)
         })?;
 
         Ok(res)
@@ -145,7 +112,6 @@ impl PodcastReingester {
 
 pub struct RunResult {}
 
-//
 // Private statics
 //
 
@@ -153,7 +119,6 @@ pub struct RunResult {}
 // inbound connections.
 static NUM_THREADS: usize = 3;
 
-//
 // Private types
 //
 
@@ -170,6 +135,44 @@ struct PodcastTuple {
     feed_url: String,
 }
 
-//
 // Private functions
 //
+
+fn work(log: &Logger,
+        pool: Pool<ConnectionManager<PgConnection>>,
+        work_recv: Receiver<PodcastTuple>,
+        done_recv: Receiver<()>) {
+    // TODO: Something better than `unwrap()`.
+    let conn = &*(pool.get()
+            .chain_err(|| "Error acquiring connection from connection pool"))
+        .unwrap();
+
+    loop {
+        chan_select! {
+            work_recv.recv() -> podcast_tuple => {
+                let podcast_tuple: PodcastTuple = podcast_tuple.unwrap();
+
+                let content = podcast_tuple.content.as_bytes().to_vec();
+                let feed_url = podcast_tuple.feed_url.to_string();
+
+                let res = PodcastUpdater {
+                    conn: &*conn,
+
+                    // The whole purpose of this mediator is to redo past work, so we need to make
+                    // sure that we've disabled any shortcuts that might otherwise be enabled.
+                    disable_shortcut: true,
+
+                    feed_url:    feed_url,
+                    url_fetcher: &mut URLFetcherPassThrough { data: content },
+                }.run(&log);
+
+                if let Err(e) = res {
+                    error!(log, "Error processing podcast: {}", e);
+                }
+            },
+            done_recv.recv() => {
+                break;
+            },
+        }
+    }
+}

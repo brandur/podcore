@@ -1,5 +1,4 @@
 extern crate clap;
-#[macro_use]
 extern crate diesel;
 extern crate hyper;
 extern crate iron;
@@ -32,7 +31,6 @@ use slog::{Drain, Logger};
 use std::env;
 use tokio_core::reactor::Core;
 
-//
 // Main
 //
 
@@ -42,20 +40,14 @@ fn main() {
         .version("0.1")
         .about("A general utility command for the podcore project")
         .arg_from_usage("-q --quiet 'Quiets all output'")
-        .subcommand(
-            SubCommand::with_name("add")
-                .about("Fetches a podcast and adds it to the database")
-                .arg_from_usage("<URL>... 'URL(s) to fetch'"),
-        )
-        .subcommand(
-            SubCommand::with_name("reingest")
-                .about("Reingests podcasts by reusing their stored raw feeds"),
-        )
-        .subcommand(
-            SubCommand::with_name("serve")
-                .about("Starts the API server")
-                .arg_from_usage("-p, --port [PORT] 'Port to bind server to'"),
-        );
+        .subcommand(SubCommand::with_name("add")
+            .about("Fetches a podcast and adds it to the database")
+            .arg_from_usage("<URL>... 'URL(s) to fetch'"))
+        .subcommand(SubCommand::with_name("reingest")
+            .about("Reingests podcasts by reusing their stored raw feeds"))
+        .subcommand(SubCommand::with_name("serve")
+            .about("Starts the API server")
+            .arg_from_usage("-p, --port [PORT] 'Port to bind server to'"));
 
     let matches = app.clone().get_matches();
     match matches.subcommand_name() {
@@ -70,7 +62,6 @@ fn main() {
     }
 }
 
-//
 // Subcommands
 //
 
@@ -82,16 +73,17 @@ fn add_podcast(matches: ArgMatches) {
     let client = Client::new(&core.handle());
     let mut url_fetcher = URLFetcherLive {
         client: &client,
-        core:   &mut core,
+        core: &mut core,
     };
 
     for url in matches.values_of("URL").unwrap().collect::<Vec<_>>().iter() {
         PodcastUpdater {
-            conn:             &*connection(),
-            disable_shortcut: false,
-            feed_url:         url.to_owned().to_owned(),
-            url_fetcher:      &mut url_fetcher,
-        }.run(&log(quiet))
+                conn: &*connection(),
+                disable_shortcut: false,
+                feed_url: url.to_owned().to_owned(),
+                url_fetcher: &mut url_fetcher,
+            }
+            .run(&log(quiet))
             .unwrap();
     }
 }
@@ -100,9 +92,8 @@ fn reingest_podcasts(matches: ArgMatches) {
     let quiet = matches.is_present("quiet");
     let _matches = matches.subcommand_matches("reingest").unwrap();
 
-    PodcastReingester {
-        pool: pool().clone(),
-    }.run(&log(quiet))
+    PodcastReingester { pool: pool().clone() }
+        .run(&log(quiet))
         .unwrap();
 }
 
@@ -120,11 +111,11 @@ fn serve_http(matches: ArgMatches) {
     let graphiql_endpoint = GraphiQLHandler::new("/graphql");
     mount.mount("/", graphiql_endpoint);
 
-    let graphql_endpoint = GraphQLHandler::new(
-        move |_: &mut Request| -> graphql::Context { graphql::Context::new(pool()) },
-        graphql::Query::new(),
-        graphql::Mutation::new(),
-    );
+    let graphql_endpoint = GraphQLHandler::new(move |_: &mut Request| -> graphql::Context {
+                                                   graphql::Context::new(pool())
+                                               },
+                                               graphql::Query::new(),
+                                               graphql::Mutation::new());
     mount.mount("/graphql", graphql_endpoint);
 
     info!(log, "API starting on: {}", host);
@@ -133,7 +124,6 @@ fn serve_http(matches: ArgMatches) {
         .unwrap();
 }
 
-//
 // Private types/functions
 //
 
