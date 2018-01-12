@@ -15,29 +15,38 @@ use slog::Logger;
 use std::thread;
 
 pub struct PodcastReingester {
+    // Number of workers to use. Should generally be the size of the thread pool minus one for the
+    // control process.
+    pub num_workers: u32,
+
     pub pool: Pool<ConnectionManager<PgConnection>>,
 }
 
 impl PodcastReingester {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
-        common::log_timed(&log.new(o!("step" => file!())),
-                          |ref log| self.run_inner(&log))
+        common::log_timed(&log.new(o!("step" => file!())), |ref log| {
+            self.run_inner(&log)
+        })
     }
 
     pub fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
         let mut workers = vec![];
 
-        let (done_send, done_recv) = chan::sync(NUM_THREADS);
+        let (done_send, done_recv) = chan::sync(self.num_workers as usize);
         let (work_send, work_recv) = chan::sync(100);
-        for id in 0..NUM_THREADS {
-            let log = log.new(o!("thread" => id));
+        for i in 0..self.num_workers {
+            let thread_name = format!("thread_{:03}", i);
+            let log = log.new(o!("thread" => thread_name.clone()));
             let pool_clone = self.pool.clone();
             let done_recv_clone = done_recv.clone();
             let work_recv_clone = work_recv.clone();
 
-            workers.push(thread::spawn(move || {
-                work(&log, pool_clone, work_recv_clone, done_recv_clone);
-            }));
+            workers.push(thread::Builder::new()
+                .name(thread_name.to_string())
+                .spawn(move || {
+                    work(&log, pool_clone, work_recv_clone, done_recv_clone);
+                })
+                .chain_err(|| "Failed to spawn thread")?);
         }
 
         let conn = &*(self.pool
@@ -86,7 +95,8 @@ impl PodcastReingester {
             // being wrapped in parentheses (`SELECT ...` instead of `(SELECT ...)`). This might be
             // solvable somehow, but examples in tests and documentation are quite poor, so I gave
             // up and fell back to this.
-            diesel::sql_query("
+            diesel::sql_query(
+                "
                 SELECT id,
                     (
                        SELECT content
@@ -102,8 +112,8 @@ impl PodcastReingester {
                        ORDER BY last_retrieved_at DESC
                        LIMIT 1
                     )
-                FROM podcasts")
-                .load::<PodcastTuple>(conn)
+                FROM podcasts",
+            ).load::<PodcastTuple>(conn)
         })?;
 
         Ok(res)
@@ -114,10 +124,6 @@ pub struct RunResult {}
 
 // Private statics
 //
-
-// Put an upper bound on the number of threads to use just so that we don't blow up Postgres with
-// inbound connections.
-static NUM_THREADS: usize = 100;
 
 // Private types
 //
@@ -138,13 +144,15 @@ struct PodcastTuple {
 // Private functions
 //
 
-fn work(log: &Logger,
-        pool: Pool<ConnectionManager<PgConnection>>,
-        work_recv: Receiver<PodcastTuple>,
-        done_recv: Receiver<()>) {
+fn work(
+    log: &Logger,
+    pool: Pool<ConnectionManager<PgConnection>>,
+    work_recv: Receiver<PodcastTuple>,
+    done_recv: Receiver<()>,
+) {
     // TODO: Something better than `unwrap()`.
     let conn = &*(pool.get()
-            .chain_err(|| "Error acquiring connection from connection pool"))
+        .chain_err(|| "Error acquiring connection from connection pool"))
         .unwrap();
 
     loop {
@@ -195,13 +203,14 @@ mod tests {
     fn test_basic() {
         let mut bootstrap = TestBootstrap::new();
         {
-            let conn = bootstrap.pool
+            let conn = bootstrap
+                .pool
                 .get()
                 .expect("Error acquiring connection from connection pool");
             let log = test_helpers::log();
 
             // Insert lots of data to be reingested
-            for _i in 0..(NUM_THREADS * 5) {
+            for _i in 0..(test_helpers::NUM_CONNECTIONS * 10) {
                 insert_podcast(&log, &*conn);
             }
 
@@ -233,11 +242,16 @@ mod tests {
 
     impl TestBootstrap {
         fn new() -> TestBootstrap {
-            TestBootstrap { pool: test_helpers::pool() }
+            TestBootstrap {
+                pool: test_helpers::pool(),
+            }
         }
 
         fn mediator(&mut self) -> PodcastReingester {
-            PodcastReingester { pool: self.pool.clone() }
+            PodcastReingester {
+                num_workers: test_helpers::NUM_CONNECTIONS - 1,
+                pool:        self.pool.clone(),
+            }
         }
     }
 
@@ -253,16 +267,17 @@ mod tests {
     fn insert_podcast(log: &Logger, conn: &PgConnection) {
         let mut rng = rand::thread_rng();
         PodcastUpdater {
-                conn: conn,
-                disable_shortcut: false,
+            conn:             conn,
+            disable_shortcut: false,
 
-                // Add a little randomness to feed URLs so that w don't just insert one podcast and
-                // update it over and over.
-                feed_url: format!("https://example.com/feed-{}.xml", rng.gen::<u64>()).to_string(),
+            // Add a little randomness to feed URLs so that w don't just insert one podcast and
+            // update it over and over.
+            feed_url: format!("https://example.com/feed-{}.xml", rng.gen::<u64>()).to_string(),
 
-                url_fetcher: &mut URLFetcherPassThrough { data: MINIMAL_FEED.to_vec() },
-            }
-            .run(log)
+            url_fetcher: &mut URLFetcherPassThrough {
+                data: MINIMAL_FEED.to_vec(),
+            },
+        }.run(log)
             .unwrap();
     }
 }

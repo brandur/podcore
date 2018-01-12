@@ -4,7 +4,8 @@ use time::precise_time_ns;
 
 #[inline]
 pub fn log_timed<T, F>(log: &Logger, f: F) -> T
-    where F: FnOnce(&Logger) -> T
+where
+    F: FnOnce(&Logger) -> T,
 {
     let start = precise_time_ns();
     info!(log, "Start");

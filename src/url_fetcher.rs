@@ -14,7 +14,7 @@ pub trait URLFetcher {
 
 pub struct URLFetcherLive<'a> {
     pub client: &'a Client<hyper::client::HttpConnector, hyper::Body>,
-    pub core: &'a mut Core,
+    pub core:   &'a mut Core,
 }
 
 impl<'a> URLFetcher for URLFetcherLive<'a> {

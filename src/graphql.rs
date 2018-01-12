@@ -83,14 +83,14 @@ struct EpisodeObject {
 impl<'a> From<&'a model::Episode> for EpisodeObject {
     fn from(e: &model::Episode) -> Self {
         EpisodeObject {
-            id: e.id.to_string(),
-            description: e.description.clone(),
-            explicit: e.explicit.clone(),
-            link_url: e.link_url.clone(),
-            media_url: e.media_url.to_owned(),
-            podcast_id: e.podcast_id.to_string(),
+            id:           e.id.to_string(),
+            description:  e.description.clone(),
+            explicit:     e.explicit.clone(),
+            link_url:     e.link_url.clone(),
+            media_url:    e.media_url.to_owned(),
+            podcast_id:   e.podcast_id.to_string(),
             published_at: e.published_at.clone(),
-            title: e.title.to_owned(),
+            title:        e.title.to_owned(),
         }
     }
 }
@@ -118,11 +118,11 @@ struct PodcastObject {
 impl<'a> From<&'a model::Podcast> for PodcastObject {
     fn from(p: &model::Podcast) -> Self {
         PodcastObject {
-            id: p.id.to_string(),
+            id:        p.id.to_string(),
             image_url: p.image_url.clone(),
-            language: p.language.clone(),
-            link_url: p.link_url.clone(),
-            title: p.title.to_owned(),
+            language:  p.language.clone(),
+            link_url:  p.link_url.clone(),
+            title:     p.title.to_owned(),
         }
     }
 }

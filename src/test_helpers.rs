@@ -37,6 +37,7 @@ pub fn pool() -> Pool<ConnectionManager<PgConnection>> {
     let database_url = env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set");
     let manager = ConnectionManager::<PgConnection>::new(database_url);
     let pool = Pool::builder()
+        .max_size(NUM_CONNECTIONS)
         .build(manager)
         .expect("Failed to create pool.");
 
@@ -49,6 +50,8 @@ pub fn pool() -> Pool<ConnectionManager<PgConnection>> {
 
 // Private types/functions
 //
+
+pub static NUM_CONNECTIONS: u32 = 10;
 
 fn check_database(conn: &PgConnection) {
     // Note that we only check one table's count as a proxy for the state of the entire database.

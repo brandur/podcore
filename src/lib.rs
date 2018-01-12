@@ -18,9 +18,9 @@ extern crate juniper_iron;
 extern crate lazy_static;
 extern crate mount;
 extern crate quick_xml;
-extern crate rand;
 extern crate r2d2;
 extern crate r2d2_diesel;
+extern crate rand;
 extern crate regex;
 #[macro_use]
 extern crate slog;
