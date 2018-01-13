@@ -233,7 +233,7 @@ mod tests {
     use mediators::podcast_reingester::*;
     use mediators::podcast_updater::PodcastUpdater;
     use rand::Rng;
-    use r2d2::Pool;
+    use r2d2::{Pool, PooledConnection};
     use r2d2_diesel::ConnectionManager;
     use test_helpers;
     use url_fetcher::URLFetcherPassThrough;
@@ -242,15 +242,10 @@ mod tests {
     fn test_concurrency() {
         let mut bootstrap = TestBootstrap::new();
 
-        let conn = bootstrap
-            .pool
-            .get()
-            .expect("Error acquiring connection from connection pool");
-
         // Insert lots of data to be reingested
         let num_podcasts = (test_helpers::NUM_CONNECTIONS as i64) * 10;
         for _i in 0..num_podcasts {
-            insert_podcast(&bootstrap.log, &*conn);
+            insert_podcast(&bootstrap.log, &*bootstrap.conn);
         }
 
         info!(&bootstrap.log, "Finished setup (starting the real test)");
@@ -278,15 +273,19 @@ mod tests {
 </rss>"#;
 
     struct TestBootstrap {
+        conn: PooledConnection<ConnectionManager<PgConnection>>,
         log:  Logger,
         pool: Pool<ConnectionManager<PgConnection>>,
     }
 
     impl TestBootstrap {
         fn new() -> TestBootstrap {
+            let pool = test_helpers::pool();
             TestBootstrap {
+                conn: pool.get()
+                    .expect("Error acquiring connection from connection pool"),
                 log:  test_helpers::log_sync(),
-                pool: test_helpers::pool(),
+                pool: pool,
             }
         }
 
@@ -303,10 +302,9 @@ mod tests {
     impl Drop for TestBootstrap {
         fn drop(&mut self) {
             info!(&self.log, "Cleaning database on bootstrap drop");
-            let conn = self.pool
-                .get()
-                .expect("Error acquiring connection from connection pool");
-            (*conn).execute("TRUNCATE TABLE podcasts CASCADE").unwrap();
+            (*self.conn)
+                .execute("TRUNCATE TABLE podcasts CASCADE")
+                .unwrap();
         }
     }
 
