@@ -30,13 +30,18 @@ impl PodcastReingester {
     }
 
     pub fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
-        let mut workers = vec![];
+        let conn = &*(self.pool
+            .get()
+            .chain_err(|| "Error acquiring connection from connection pool"))?;
+        let log = log.new(o!("thread" => "control"));
 
+        let mut workers = vec![];
         let (done_send, done_recv) = chan::sync(self.num_workers as usize);
         let (work_send, work_recv) = chan::sync(100);
         for i in 0..self.num_workers {
             let thread_name = format!("thread_{:03}", i);
-            let log = log.new(o!("thread" => thread_name.clone()));
+            let log =
+                log.new(o!("thread" => thread_name.clone(), "num_threads" => self.num_workers));
             let pool_clone = self.pool.clone();
             let done_recv_clone = done_recv.clone();
             let work_recv_clone = work_recv.clone();
@@ -48,10 +53,6 @@ impl PodcastReingester {
                 })
                 .chain_err(|| "Failed to spawn thread")?);
         }
-
-        let conn = &*(self.pool
-            .get()
-            .chain_err(|| "Error acquiring connection from connection pool"))?;
 
         // TODO: Loop in pages.
         let podcast_tuples = Self::select_podcasts(&log, &*conn)?;
@@ -150,10 +151,17 @@ fn work(
     work_recv: Receiver<PodcastTuple>,
     done_recv: Receiver<()>,
 ) {
-    // TODO: Something better than `unwrap()`.
-    let conn = &*(pool.get()
-        .chain_err(|| "Error acquiring connection from connection pool"))
-        .unwrap();
+    let conn = match pool.try_get() {
+        Some(conn) => conn,
+        None => {
+            error!(
+                log,
+                "Error acquiring connection from connection pool (is num_workers misconfigured?)"
+            );
+            return;
+        }
+    };
+    info!(log, "Thread acquired a connection");
 
     loop {
         chan_select! {
@@ -200,23 +208,24 @@ mod tests {
     use url_fetcher::URLFetcherPassThrough;
 
     #[test]
-    fn test_basic() {
+    fn test_concurrency() {
         let mut bootstrap = TestBootstrap::new();
-        {
-            let conn = bootstrap
-                .pool
-                .get()
-                .expect("Error acquiring connection from connection pool");
-            let log = test_helpers::log();
 
-            // Insert lots of data to be reingested
-            for _i in 0..(test_helpers::NUM_CONNECTIONS * 10) {
-                insert_podcast(&log, &*conn);
-            }
+        let conn = bootstrap
+            .pool
+            .get()
+            .expect("Error acquiring connection from connection pool");
+        let log = test_helpers::log_sync();
 
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&log).unwrap();
+        // Insert lots of data to be reingested
+        for _i in 0..(test_helpers::NUM_CONNECTIONS * 10) {
+            insert_podcast(&log, &*conn);
         }
+
+        info!(log, "Finished setup (starting the real test)");
+
+        let mut mediator = bootstrap.mediator();
+        mediator.run(&log).unwrap();
     }
 
     // Private types/functions
@@ -249,7 +258,9 @@ mod tests {
 
         fn mediator(&mut self) -> PodcastReingester {
             PodcastReingester {
-                num_workers: test_helpers::NUM_CONNECTIONS - 1,
+                // Number of connections minus one for the reingester's control thread and minus
+                // another one for a connection that a test case might be using for setup.
+                num_workers: test_helpers::NUM_CONNECTIONS - 1 - 1,
                 pool:        self.pool.clone(),
             }
         }

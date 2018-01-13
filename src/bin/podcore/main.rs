@@ -29,6 +29,7 @@ use r2d2::{Pool, PooledConnection};
 use r2d2_diesel::ConnectionManager;
 use slog::{Drain, Logger};
 use std::env;
+use std::time::Duration;
 use tokio_core::reactor::Core;
 
 // Main
@@ -160,6 +161,7 @@ fn pool() -> Pool<ConnectionManager<PgConnection>> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let manager = ConnectionManager::<PgConnection>::new(database_url);
     Pool::builder()
+        .idle_timeout(Some(Duration::from_secs(5)))
         .max_size(NUM_CONNECTIONS)
         .build(manager)
         .expect("Failed to create pool.")
