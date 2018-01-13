@@ -30,43 +30,41 @@ impl PodcastReingester {
     }
 
     pub fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
-        let conn = &*(self.pool
-            .get()
-            .chain_err(|| "Error acquiring connection from connection pool"))?;
         let log = log.new(o!("thread" => "control"));
 
         let mut workers = vec![];
-        let (done_send, done_recv) = chan::sync(self.num_workers as usize);
-        let (work_send, work_recv) = chan::sync(100);
-        for i in 0..self.num_workers {
-            let thread_name = format!("thread_{:03}", i);
-            let log =
-                log.new(o!("thread" => thread_name.clone(), "num_threads" => self.num_workers));
-            let pool_clone = self.pool.clone();
-            let done_recv_clone = done_recv.clone();
-            let work_recv_clone = work_recv.clone();
 
-            workers.push(thread::Builder::new()
-                .name(thread_name.to_string())
-                .spawn(move || {
-                    work(&log, pool_clone, work_recv_clone, done_recv_clone);
-                })
-                .chain_err(|| "Failed to spawn thread")?);
-        }
+        {
+            let conn = &*(self.pool
+                .get()
+                .chain_err(|| "Error acquiring connection from connection pool"))?;
 
-        // TODO: Loop in pages.
-        let podcast_tuples = Self::select_podcasts(&log, &*conn)?;
-        for podcast_tuple in &podcast_tuples {
-            work_send.send(podcast_tuple.clone());
-        }
+            let (done_send, done_recv) = chan::sync(self.num_workers as usize);
+            let (work_send, work_recv) = chan::sync(100);
+            for i in 0..self.num_workers {
+                let thread_name = format!("thread_{:03}", i);
+                let log =
+                    log.new(o!("thread" => thread_name.clone(), "num_threads" => self.num_workers));
+                let pool_clone = self.pool.clone();
+                let done_recv_clone = done_recv.clone();
+                let work_recv_clone = work_recv.clone();
 
-        // Signal done.
-        //
-        // TODO: This is also possible by allowing the channel to drop. Investigate this later once
-        // other things are working ... (Chan's README sort of has an example of this. Look for
-        // "sdone".)
-        for _ in &workers {
-            done_send.send(());
+                workers.push(thread::Builder::new()
+                    .name(thread_name.to_string())
+                    .spawn(move || {
+                        work(&log, pool_clone, work_recv_clone, done_recv_clone);
+                    })
+                    .chain_err(|| "Failed to spawn thread")?);
+            }
+
+            // TODO: Loop in pages.
+            let podcast_tuples = Self::select_podcasts(&log, &*conn)?;
+            for podcast_tuple in &podcast_tuples {
+                work_send.send(podcast_tuple.clone());
+            }
+
+            // done_send is dropped, which unblocks our threads' select and allows them to drop
+            // back to main
         }
 
         // Wait for threads to rejoin
