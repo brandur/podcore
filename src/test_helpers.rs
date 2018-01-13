@@ -89,7 +89,10 @@ fn check_database(conn: &PgConnection) {
     // This isn't bullet proof, but will hopefully be enough to avoid most stupid problems.
     match schema::podcasts::table.count().first(conn) {
         Ok(0) => (),
-        Ok(_) => panic!("Expected test database to be empty. Please reset it."),
+        Ok(n) => panic!(
+            "Expected test database to be empty, but found {} podcast(s). Please reset it.",
+            n
+        ),
         Err(e) => panic!("Error testing database connection: {}", e),
     }
 }
