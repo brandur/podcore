@@ -4,7 +4,7 @@ use mediators::podcast_updater::PodcastUpdater;
 use url_fetcher::URLFetcherPassThrough;
 
 use chan;
-use chan::Receiver;
+use chan::{Receiver, Sender};
 use diesel;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -30,14 +30,9 @@ impl PodcastReingester {
     }
 
     pub fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
-        let control_log = log.new(o!("thread" => "control"));
         let mut workers = vec![];
 
         {
-            let conn = &*(self.pool
-                .get()
-                .chain_err(|| "Error acquiring connection from connection pool"))?;
-
             let (work_send, work_recv) = chan::sync(100);
             for i in 0..self.num_workers {
                 let thread_name = format!("thread_{:03}", i);
@@ -54,22 +49,7 @@ impl PodcastReingester {
                     .chain_err(|| "Failed to spawn thread")?);
             }
 
-            let mut last_id = 0;
-            loop {
-                let podcast_tuples = Self::select_podcasts(&log, &*conn, last_id)?;
-
-                // If no results came back, we're done
-                if podcast_tuples.len() == 0 {
-                    info!(control_log, "All podcasts consumed -- finishing");
-                    break;
-                }
-
-                for podcast_tuple in &podcast_tuples {
-                    work_send.send(podcast_tuple.clone());
-                }
-
-                last_id = podcast_tuples[podcast_tuples.len() - 1].id;
-            }
+            self.page_podcasts(log, work_send)?;
 
             // `work_send` is dropped, which unblocks our threads' select, passes them a `None`
             // result, and lets them to drop back to main
@@ -86,28 +66,58 @@ impl PodcastReingester {
     // Steps
     //
 
+    fn page_podcasts(&mut self, log: &Logger, work_send: Sender<PodcastTuple>) -> Result<()> {
+        let log = log.new(o!("thread" => "control"));
+        common::log_timed(&log.new(o!("step" => "page_podcasts")), |ref log| {
+            let conn = &*(self.pool
+                .get()
+                .chain_err(|| "Error acquiring connection from connection pool"))?;
+
+            let mut last_id = 0;
+            loop {
+                let podcast_tuples = Self::select_podcasts(&log, &*conn, last_id)?;
+
+                // If no results came back, we're done
+                if podcast_tuples.len() == 0 {
+                    info!(log, "All podcasts consumed -- finishing");
+                    break;
+                }
+
+                for podcast_tuple in &podcast_tuples {
+                    work_send.send(podcast_tuple.clone());
+                }
+
+                last_id = podcast_tuples[podcast_tuples.len() - 1].id;
+            }
+
+            Ok(())
+        })
+    }
+
     fn select_podcasts(
         log: &Logger,
         conn: &PgConnection,
         start_id: i64,
     ) -> Result<Vec<PodcastTuple>> {
-        let res = common::log_timed(&log.new(o!("step" => "query_podcasts")), |ref _log| {
-            // Fell back to `sql_query` because implementing this in Diesel's query language has
-            // proven to be somewhere between frustrating difficult to impossible.
-            //
-            // First of all, Diesel cannot properly implement taking a single result from a
-            // subselect -- it can only take results as `Vec<_>`. I asked in the Gitter channel the
-            // reponse confirmed the problem, but quite relunctant to, so I wouldn't expect this to
-            // get fixed anytime soon.
-            //
-            // Secondly, even using the `Vec<_>` workaround, I was able to get the subselects to a
-            // state where they'd successfully compile, but produce an invalid query at runtime.
-            // On debug it turned out that the query was invalid because neither subselect was
-            // being wrapped in parentheses (`SELECT ...` instead of `(SELECT ...)`). This might be
-            // solvable somehow, but examples in tests and documentation are quite poor, so I gave
-            // up and fell back to this.
-            diesel::sql_query(format!(
-                "
+        let res = common::log_timed(
+            &log.new(o!("step" => "query_podcasts", "start_id" => start_id)),
+            |ref _log| {
+                // Fell back to `sql_query` because implementing this in Diesel's query language
+                // has proven to be somewhere between frustrating difficult to impossible.
+                //
+                // First of all, Diesel cannot properly implement taking a single result from a
+                // subselect -- it can only take results as `Vec<_>`. I asked in the Gitter channel
+                // the reponse confirmed the problem, but quite relunctant to, so I wouldn't expect
+                // this to get fixed anytime soon.
+                //
+                // Secondly, even using the `Vec<_>` workaround, I was able to get the subselects
+                // to a state where they'd successfully compile, but produce an invalid query at
+                // runtime. On debug it turned out that the query was invalid because neither
+                // subselect was being wrapped in parentheses (`SELECT ...` instead of `(SELECT
+                // ...)`). This might be solvable somehow, but examples in tests and documentation
+                // are quite poor, so I gave up and fell back to this.
+                diesel::sql_query(format!(
+                    "
                 SELECT id,
                     (
                        SELECT content
@@ -127,9 +137,10 @@ impl PodcastReingester {
                 WHERE id > {}
                 ORDER BY id
                 LIMIT 100",
-                start_id
-            )).load::<PodcastTuple>(conn)
-        })?;
+                    start_id
+                )).load::<PodcastTuple>(conn)
+            },
+        )?;
 
         Ok(res)
     }
