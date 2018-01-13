@@ -30,7 +30,7 @@ impl PodcastReingester {
     }
 
     pub fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
-        let log = log.new(o!("thread" => "control"));
+        let control_log = log.new(o!("thread" => "control"));
         let mut workers = vec![];
 
         {
@@ -54,10 +54,21 @@ impl PodcastReingester {
                     .chain_err(|| "Failed to spawn thread")?);
             }
 
-            // TODO: Loop in pages.
-            let podcast_tuples = Self::select_podcasts(&log, &*conn)?;
-            for podcast_tuple in &podcast_tuples {
-                work_send.send(podcast_tuple.clone());
+            let mut last_id = 0;
+            loop {
+                let podcast_tuples = Self::select_podcasts(&log, &*conn, last_id)?;
+
+                // If no results came back, we're done
+                if podcast_tuples.len() == 0 {
+                    info!(control_log, "All podcasts consumed -- finishing");
+                    break;
+                }
+
+                for podcast_tuple in &podcast_tuples {
+                    work_send.send(podcast_tuple.clone());
+                }
+
+                last_id = podcast_tuples[podcast_tuples.len() - 1].id;
             }
 
             // `work_send` is dropped, which unblocks our threads' select, passes them a `None`
@@ -75,7 +86,11 @@ impl PodcastReingester {
     // Steps
     //
 
-    fn select_podcasts(log: &Logger, conn: &PgConnection) -> Result<Vec<PodcastTuple>> {
+    fn select_podcasts(
+        log: &Logger,
+        conn: &PgConnection,
+        start_id: i64,
+    ) -> Result<Vec<PodcastTuple>> {
         let res = common::log_timed(&log.new(o!("step" => "query_podcasts")), |ref _log| {
             // Fell back to `sql_query` because implementing this in Diesel's query language has
             // proven to be somewhere between frustrating difficult to impossible.
@@ -91,7 +106,7 @@ impl PodcastReingester {
             // being wrapped in parentheses (`SELECT ...` instead of `(SELECT ...)`). This might be
             // solvable somehow, but examples in tests and documentation are quite poor, so I gave
             // up and fell back to this.
-            diesel::sql_query(
+            diesel::sql_query(format!(
                 "
                 SELECT id,
                     (
@@ -108,8 +123,12 @@ impl PodcastReingester {
                        ORDER BY last_retrieved_at DESC
                        LIMIT 1
                     )
-                FROM podcasts",
-            ).load::<PodcastTuple>(conn)
+                FROM podcasts
+                WHERE id > {}
+                ORDER BY id
+                LIMIT 100",
+                start_id
+            )).load::<PodcastTuple>(conn)
         })?;
 
         Ok(res)
