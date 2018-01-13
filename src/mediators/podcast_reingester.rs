@@ -31,7 +31,6 @@ impl PodcastReingester {
 
     pub fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
         let log = log.new(o!("thread" => "control"));
-
         let mut workers = vec![];
 
         {
@@ -39,20 +38,18 @@ impl PodcastReingester {
                 .get()
                 .chain_err(|| "Error acquiring connection from connection pool"))?;
 
-            let (done_send, done_recv) = chan::sync(self.num_workers as usize);
             let (work_send, work_recv) = chan::sync(100);
             for i in 0..self.num_workers {
                 let thread_name = format!("thread_{:03}", i);
                 let log =
                     log.new(o!("thread" => thread_name.clone(), "num_threads" => self.num_workers));
                 let pool_clone = self.pool.clone();
-                let done_recv_clone = done_recv.clone();
                 let work_recv_clone = work_recv.clone();
 
                 workers.push(thread::Builder::new()
                     .name(thread_name.to_string())
                     .spawn(move || {
-                        work(&log, pool_clone, work_recv_clone, done_recv_clone);
+                        work(&log, pool_clone, work_recv_clone);
                     })
                     .chain_err(|| "Failed to spawn thread")?);
             }
@@ -63,8 +60,8 @@ impl PodcastReingester {
                 work_send.send(podcast_tuple.clone());
             }
 
-            // done_send is dropped, which unblocks our threads' select and allows them to drop
-            // back to main
+            // `work_send` is dropped, which unblocks our threads' select, passes them a `None`
+            // result, and lets them to drop back to main
         }
 
         // Wait for threads to rejoin
@@ -147,7 +144,6 @@ fn work(
     log: &Logger,
     pool: Pool<ConnectionManager<PgConnection>>,
     work_recv: Receiver<PodcastTuple>,
-    done_recv: Receiver<()>,
 ) {
     let conn = match pool.try_get() {
         Some(conn) => conn,
@@ -164,7 +160,13 @@ fn work(
     loop {
         chan_select! {
             work_recv.recv() -> podcast_tuple => {
-                let podcast_tuple: PodcastTuple = podcast_tuple.unwrap();
+                let podcast_tuple: PodcastTuple = match podcast_tuple {
+                    Some(t) => t,
+                    None => {
+                        info!(log, "Received empty data over channel -- dropping");
+                        break;
+                    }
+                };
 
                 let content = podcast_tuple.content.as_bytes().to_vec();
                 let feed_url = podcast_tuple.feed_url.to_string();
@@ -184,9 +186,6 @@ fn work(
                     error!(log, "Error processing podcast: {}", e);
                 }
             },
-            done_recv.recv() => {
-                break;
-            },
         }
     }
 }
@@ -197,11 +196,9 @@ mod tests {
 
     use mediators::podcast_reingester::*;
     use mediators::podcast_updater::PodcastUpdater;
-    // use model;
     use rand::Rng;
     use r2d2::Pool;
     use r2d2_diesel::ConnectionManager;
-    // use schema;
     use test_helpers;
     use url_fetcher::URLFetcherPassThrough;
 
