@@ -32,7 +32,7 @@ impl PodcastReingester {
     pub fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
         let mut workers = vec![];
 
-        {
+        let num_podcasts = {
             let (work_send, work_recv) = chan::sync(100);
             for i in 0..self.num_workers {
                 let thread_name = format!("thread_{:03}", i);
@@ -49,31 +49,34 @@ impl PodcastReingester {
                     .chain_err(|| "Failed to spawn thread")?);
             }
 
-            self.page_podcasts(log, work_send)?;
+            self.page_podcasts(log, work_send)?
 
             // `work_send` is dropped, which unblocks our threads' select, passes them a `None`
             // result, and lets them to drop back to main
-        }
+        };
 
         // Wait for threads to rejoin
         for worker in workers {
             let _ = worker.join();
         }
 
-        Ok(RunResult {})
+        Ok(RunResult {
+            num_podcasts: num_podcasts,
+        })
     }
 
     // Steps
     //
 
-    fn page_podcasts(&mut self, log: &Logger, work_send: Sender<PodcastTuple>) -> Result<()> {
+    fn page_podcasts(&mut self, log: &Logger, work_send: Sender<PodcastTuple>) -> Result<i64> {
         let log = log.new(o!("thread" => "control"));
         common::log_timed(&log.new(o!("step" => "page_podcasts")), |ref log| {
             let conn = &*(self.pool
                 .get()
                 .chain_err(|| "Error acquiring connection from connection pool"))?;
 
-            let mut last_id = 0;
+            let mut last_id = 0i64;
+            let mut num_podcasts = 0i64;
             loop {
                 let podcast_tuples = Self::select_podcasts(&log, &*conn, last_id)?;
 
@@ -88,9 +91,10 @@ impl PodcastReingester {
                 }
 
                 last_id = podcast_tuples[podcast_tuples.len() - 1].id;
+                num_podcasts += podcast_tuples.len() as i64;
             }
 
-            Ok(())
+            Ok(num_podcasts)
         })
     }
 
@@ -146,7 +150,9 @@ impl PodcastReingester {
     }
 }
 
-pub struct RunResult {}
+pub struct RunResult {
+    pub num_podcasts: i64,
+}
 
 // Private statics
 //
@@ -243,14 +249,16 @@ mod tests {
         let log = test_helpers::log_sync();
 
         // Insert lots of data to be reingested
-        for _i in 0..(test_helpers::NUM_CONNECTIONS * 10) {
+        let num_podcasts = (test_helpers::NUM_CONNECTIONS as i64) * 10;
+        for _i in 0..num_podcasts {
             insert_podcast(&log, &*conn);
         }
 
         info!(log, "Finished setup (starting the real test)");
 
         let mut mediator = bootstrap.mediator();
-        mediator.run(&log).unwrap();
+        let res = mediator.run(&log).unwrap();
+        assert_eq!(num_podcasts, res.num_podcasts);
     }
 
     // Private types/functions
