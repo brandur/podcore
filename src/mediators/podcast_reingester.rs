@@ -35,14 +35,14 @@ impl PodcastReingester {
         let num_podcasts = {
             let (work_send, work_recv) = chan::sync(100);
             for i in 0..self.num_workers {
-                let thread_name = format!("thread_{:03}", i);
+                let thread_name = common::thread_name(i);
                 let log =
                     log.new(o!("thread" => thread_name.clone(), "num_threads" => self.num_workers));
                 let pool_clone = self.pool.clone();
                 let work_recv_clone = work_recv.clone();
 
                 workers.push(thread::Builder::new()
-                    .name(thread_name.to_string())
+                    .name(thread_name)
                     .spawn(move || {
                         work(&log, pool_clone, work_recv_clone);
                     })

@@ -15,6 +15,7 @@ extern crate tokio_core;
 
 use podcore::api;
 use podcore::graphql;
+use podcore::mediators::podcast_crawler::PodcastCrawler;
 use podcore::mediators::podcast_reingester::PodcastReingester;
 use podcore::mediators::podcast_updater::PodcastUpdater;
 use podcore::url_fetcher::URLFetcherLive;
@@ -47,6 +48,10 @@ fn main() {
                 .arg_from_usage("<URL>... 'URL(s) to fetch'"),
         )
         .subcommand(
+            SubCommand::with_name("crawl")
+                .about("Crawls the web to retrieve podcasts that need to be updated"),
+        )
+        .subcommand(
             SubCommand::with_name("reingest")
                 .about("Reingests podcasts by reusing their stored raw feeds"),
         )
@@ -59,6 +64,7 @@ fn main() {
     let matches = app.clone().get_matches();
     match matches.subcommand_name() {
         Some("add") => add_podcast(matches),
+        Some("crawl") => crawl_podcasts(matches),
         Some("reingest") => reingest_podcasts(matches),
         Some("serve") => serve_http(matches),
         None => {
@@ -92,6 +98,17 @@ fn add_podcast(matches: ArgMatches) {
         }.run(&log(quiet))
             .unwrap();
     }
+}
+
+fn crawl_podcasts(matches: ArgMatches) {
+    let quiet = matches.is_present("quiet");
+    let _matches = matches.subcommand_matches("crawl").unwrap();
+
+    PodcastCrawler {
+        num_workers: NUM_CONNECTIONS - 1,
+        pool:        pool().clone(),
+    }.run(&log(quiet))
+        .unwrap();
 }
 
 fn reingest_podcasts(matches: ArgMatches) {

@@ -16,6 +16,10 @@ where
     res
 }
 
+pub fn thread_name(n: u32) -> String {
+    format!("thread_{:03}", n).to_string()
+}
+
 // Private functions
 //
 
@@ -38,6 +42,13 @@ fn unit(ns: u64) -> (f64, &'static str) {
 #[cfg(test)]
 mod tests {
     use mediators::common::*;
+
+    #[test]
+    fn test_thread_name() {
+        assert_eq!("thread_000".to_string(), thread_name(0));
+        assert_eq!("thread_999".to_string(), thread_name(999));
+        assert_eq!("thread_1000".to_string(), thread_name(1000));
+    }
 
     #[test]
     fn test_unit() {
