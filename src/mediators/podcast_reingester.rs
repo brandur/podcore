@@ -111,8 +111,8 @@ impl PodcastReingester {
                 //
                 // First of all, Diesel cannot properly implement taking a single result from a
                 // subselect -- it can only take results as `Vec<_>`. I asked in the Gitter channel
-                // the reponse confirmed the problem, but quite relunctant to, so I wouldn't expect
-                // this to get fixed anytime soon.
+                // and the response confirmed the problem, but only relunctantly so, and I wouldn't
+                // expect this to get fixed anytime soon.
                 //
                 // Secondly, even using the `Vec<_>` workaround, I was able to get the subselects
                 // to a state where they'd successfully compile, but produce an invalid query at
