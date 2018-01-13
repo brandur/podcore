@@ -246,18 +246,17 @@ mod tests {
             .pool
             .get()
             .expect("Error acquiring connection from connection pool");
-        let log = test_helpers::log_sync();
 
         // Insert lots of data to be reingested
         let num_podcasts = (test_helpers::NUM_CONNECTIONS as i64) * 10;
         for _i in 0..num_podcasts {
-            insert_podcast(&log, &*conn);
+            insert_podcast(&bootstrap.log, &*conn);
         }
 
-        info!(log, "Finished setup (starting the real test)");
+        info!(&bootstrap.log, "Finished setup (starting the real test)");
 
         let mut mediator = bootstrap.mediator();
-        let res = mediator.run(&log).unwrap();
+        let res = mediator.run(&bootstrap.log).unwrap();
         assert_eq!(num_podcasts, res.num_podcasts);
     }
 
@@ -279,12 +278,14 @@ mod tests {
 </rss>"#;
 
     struct TestBootstrap {
+        log:  Logger,
         pool: Pool<ConnectionManager<PgConnection>>,
     }
 
     impl TestBootstrap {
         fn new() -> TestBootstrap {
             TestBootstrap {
+                log:  test_helpers::log_sync(),
                 pool: test_helpers::pool(),
             }
         }
@@ -301,6 +302,7 @@ mod tests {
 
     impl Drop for TestBootstrap {
         fn drop(&mut self) {
+            info!(&self.log, "Cleaning database on bootstrap drop");
             let conn = self.pool
                 .get()
                 .expect("Error acquiring connection from connection pool");
