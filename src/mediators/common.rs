@@ -23,7 +23,7 @@ where
 pub fn set_snapshot(log: &Logger, conn: &PgConnection, snapshot_id: Option<String>) -> Result<()> {
     match snapshot_id {
         Some(id) => {
-            info!(log, "Setting snapshot ID"; "id" => id.clone());
+            info!(log, "Setting snapshot"; "id" => id.as_str());
             diesel::sql_query("BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ").execute(conn)?;
             diesel::sql_query(format!("SET TRANSACTION SNAPSHOT '{}'", id)).execute(conn)?;
         }

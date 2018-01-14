@@ -295,10 +295,11 @@ mod tests {
             let conn = pool.get()
                 .expect("Error acquiring connection from connection pool");
             conn.begin_test_transaction().unwrap();
-            let snapshot_id = test_helpers::export_snapshot_id(&*conn);
+            let log = test_helpers::log_sync();
+            let snapshot_id = test_helpers::export_snapshot_id(&log, &*conn);
             TestBootstrap {
                 conn:        conn,
-                log:         test_helpers::log_sync(),
+                log:         log,
                 pool:        pool,
                 snapshot_id: snapshot_id,
             }

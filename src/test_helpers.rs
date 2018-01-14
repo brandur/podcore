@@ -24,10 +24,11 @@ pub fn connection() -> PooledConnection<ConnectionManager<PgConnection>> {
     conn
 }
 
-pub fn export_snapshot_id(conn: &PgConnection) -> String {
+pub fn export_snapshot_id(log: &Logger, conn: &PgConnection) -> String {
     let snapshot: Snapshot = diesel::sql_query("SELECT pg_export_snapshot() AS id")
         .get_result(&*conn)
         .unwrap();
+    info!(log, "Exported snapshot"; "id" => snapshot.id.as_str());
     snapshot.id
 }
 
