@@ -1,7 +1,9 @@
 use schema;
 
+use diesel;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
+use diesel::types::Text;
 use r2d2::{HandleError, Pool, PooledConnection};
 use r2d2_diesel::ConnectionManager;
 use slog;
@@ -20,6 +22,13 @@ pub fn connection() -> PooledConnection<ConnectionManager<PgConnection>> {
         .expect("Error acquiring connection from connection pool");
     conn.begin_test_transaction().unwrap();
     conn
+}
+
+pub fn export_snapshot_id(conn: &PgConnection) -> String {
+    let snapshot: Snapshot = diesel::sql_query("SELECT pg_export_snapshot() AS id")
+        .get_result(&*conn)
+        .unwrap();
+    snapshot.id
 }
 
 pub fn log() -> Logger {
@@ -72,6 +81,12 @@ pub fn pool() -> Pool<ConnectionManager<PgConnection>> {
 /// An `r2d2::HandleError` implementation which logs at the error level.
 #[derive(Copy, Clone, Debug)]
 pub struct LoggingErrorHandler;
+
+#[derive(Clone, Debug, QueryableByName)]
+struct Snapshot {
+    #[sql_type = "Text"]
+    id: String,
+}
 
 impl<E> HandleError<E> for LoggingErrorHandler
 where

@@ -20,6 +20,11 @@ pub struct PodcastReingester {
     pub num_workers: u32,
 
     pub pool: Pool<ConnectionManager<PgConnection>>,
+
+    // An optional Postgres snapshot ID that workers will set their transaction to. Tests in Rust
+    // run on multiple threads by default, so this allows us to isolate an entire set of
+    // connections on a single transaction without interfering with other test results.
+    pub snapshot_id: Option<String>,
 }
 
 impl PodcastReingester {
@@ -39,12 +44,13 @@ impl PodcastReingester {
                 let log =
                     log.new(o!("thread" => thread_name.clone(), "num_threads" => self.num_workers));
                 let pool_clone = self.pool.clone();
+                let snapshot_id_clone = self.snapshot_id.clone();
                 let work_recv_clone = work_recv.clone();
 
                 workers.push(thread::Builder::new()
                     .name(thread_name)
                     .spawn(move || {
-                        work(&log, pool_clone, work_recv_clone);
+                        work(&log, pool_clone, snapshot_id_clone, work_recv_clone);
                     })
                     .chain_err(|| "Failed to spawn thread")?);
             }
@@ -74,6 +80,7 @@ impl PodcastReingester {
             let conn = &*(self.pool
                 .get()
                 .chain_err(|| "Error acquiring connection from connection pool"))?;
+            common::set_snapshot(log, conn, self.snapshot_id.clone()).unwrap();
 
             let mut last_id = 0i64;
             let mut num_podcasts = 0i64;
@@ -179,6 +186,7 @@ struct PodcastTuple {
 fn work(
     log: &Logger,
     pool: Pool<ConnectionManager<PgConnection>>,
+    snapshot_id: Option<String>,
     work_recv: Receiver<PodcastTuple>,
 ) {
     let conn = match pool.try_get() {
@@ -191,6 +199,8 @@ fn work(
             return;
         }
     };
+    common::set_snapshot(log, &*conn, snapshot_id).unwrap();
+
     info!(log, "Thread acquired a connection");
 
     loop {
@@ -273,19 +283,24 @@ mod tests {
 </rss>"#;
 
     struct TestBootstrap {
-        conn: PooledConnection<ConnectionManager<PgConnection>>,
-        log:  Logger,
-        pool: Pool<ConnectionManager<PgConnection>>,
+        conn:        PooledConnection<ConnectionManager<PgConnection>>,
+        log:         Logger,
+        pool:        Pool<ConnectionManager<PgConnection>>,
+        snapshot_id: String,
     }
 
     impl TestBootstrap {
         fn new() -> TestBootstrap {
             let pool = test_helpers::pool();
+            let conn = pool.get()
+                .expect("Error acquiring connection from connection pool");
+            conn.begin_test_transaction().unwrap();
+            let snapshot_id = test_helpers::export_snapshot_id(&*conn);
             TestBootstrap {
-                conn: pool.get()
-                    .expect("Error acquiring connection from connection pool"),
-                log:  test_helpers::log_sync(),
-                pool: pool,
+                conn:        conn,
+                log:         test_helpers::log_sync(),
+                pool:        pool,
+                snapshot_id: snapshot_id,
             }
         }
 
@@ -295,6 +310,7 @@ mod tests {
                 // another one for a connection that a test case might be using for setup.
                 num_workers: test_helpers::NUM_CONNECTIONS - 1 - 1,
                 pool:        self.pool.clone(),
+                snapshot_id: Some(self.snapshot_id.clone()),
             }
         }
     }
