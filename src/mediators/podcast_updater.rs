@@ -680,9 +680,9 @@ mod tests {
 
     #[test]
     fn test_ideal_feed() {
-        let mut bootstrap = bootstrap(IDEAL_FEED);
-        let mut mediator = bootstrap.mediator();
-        let res = mediator.run(&test_helpers::log()).unwrap();
+        let mut bootstrap = TestBootstrap::new(IDEAL_FEED);
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
 
         // Podcast
         //
@@ -727,9 +727,9 @@ mod tests {
 
     #[test]
     fn test_minimal_feed() {
-        let mut bootstrap = bootstrap(MINIMAL_FEED);
-        let mut mediator = bootstrap.mediator();
-        let res = mediator.run(&test_helpers::log()).unwrap();
+        let mut bootstrap = TestBootstrap::new(MINIMAL_FEED);
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
 
         assert_eq!("Title", res.podcast.title);
 
@@ -747,12 +747,12 @@ mod tests {
 
     #[test]
     fn test_idempotency_with_shortcut() {
-        let mut bootstrap = bootstrap(MINIMAL_FEED);
+        let mut bootstrap = TestBootstrap::new(MINIMAL_FEED);
 
         {
-            let mut mediator = bootstrap.mediator();
-            let _res = mediator.run(&test_helpers::log()).unwrap();
-            let _res = mediator.run(&test_helpers::log()).unwrap();
+            let (mut mediator, log) = bootstrap.mediator();
+            let _res = mediator.run(&log).unwrap();
+            let _res = mediator.run(&log).unwrap();
         }
 
         // Make sure that we ended up with one of everything
@@ -780,18 +780,18 @@ mod tests {
 
     #[test]
     fn test_idempotency_without_shortcut() {
-        let mut bootstrap = bootstrap(MINIMAL_FEED);
+        let mut bootstrap = TestBootstrap::new(MINIMAL_FEED);
 
         {
-            let mut mediator = bootstrap.mediator();
+            let (mut mediator, log) = bootstrap.mediator();
 
             // Disable the shortcut that checks to see if content has already been processed so
             // that we can verify idempotency even if the mediator is doing a complete end-to-end
             // run.
             mediator.disable_shortcut = true;
 
-            let _res = mediator.run(&test_helpers::log()).unwrap();
-            let _res = mediator.run(&test_helpers::log()).unwrap();
+            let _res = mediator.run(&log).unwrap();
+            let _res = mediator.run(&log).unwrap();
         }
 
         // Make sure that we ended up with one of everything
@@ -855,141 +855,149 @@ mod tests {
     #[test]
     fn test_real_feed() {
         {
-            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_8_4_play.xml"));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
+            let mut bootstrap =
+                TestBootstrap::new(include_bytes!("../test_documents/feed_8_4_play.xml"));
+            let (mut mediator, log) = bootstrap.mediator();
+            mediator.run(&log).unwrap();
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!(
+            let mut bootstrap = TestBootstrap::new(include_bytes!(
                 "../test_documents/feed_99_percent_invisible.\
                  xml"
             ));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
+            let (mut mediator, log) = bootstrap.mediator();
+            mediator.run(&log).unwrap();
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!(
+            let mut bootstrap = TestBootstrap::new(include_bytes!(
                 "../test_documents/feed_adventure_zone.\
                  xml"
             ));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
+            let (mut mediator, log) = bootstrap.mediator();
+            mediator.run(&log).unwrap();
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_atp.xml"));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
+            let mut bootstrap =
+                TestBootstrap::new(include_bytes!("../test_documents/feed_atp.xml"));
+            let (mut mediator, log) = bootstrap.mediator();
+            mediator.run(&log).unwrap();
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_bike_shed.xml"));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
+            let mut bootstrap =
+                TestBootstrap::new(include_bytes!("../test_documents/feed_bike_shed.xml"));
+            let (mut mediator, log) = bootstrap.mediator();
+            mediator.run(&log).unwrap();
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!(
+            let mut bootstrap = TestBootstrap::new(include_bytes!(
                 "../test_documents/feed_common_sense.\
                  xml"
             ));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
+            let (mut mediator, log) = bootstrap.mediator();
+            mediator.run(&log).unwrap();
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!(
+            let mut bootstrap = TestBootstrap::new(include_bytes!(
                 "../test_documents/feed_communion_after_dark.\
                  xml"
             ));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
+            let (mut mediator, log) = bootstrap.mediator();
+            mediator.run(&log).unwrap();
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!(
+            let mut bootstrap = TestBootstrap::new(include_bytes!(
                 "../test_documents/feed_eaten_by_a_grue.\
                  xml"
             ));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
+            let (mut mediator, log) = bootstrap.mediator();
+            mediator.run(&log).unwrap();
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_flop_house.xml"));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
+            let mut bootstrap =
+                TestBootstrap::new(include_bytes!("../test_documents/feed_flop_house.xml"));
+            let (mut mediator, log) = bootstrap.mediator();
+            mediator.run(&log).unwrap();
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!(
+            let mut bootstrap = TestBootstrap::new(include_bytes!(
                 "../test_documents/feed_hardcore_history.\
                  xml"
             ));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
+            let (mut mediator, log) = bootstrap.mediator();
+            mediator.run(&log).unwrap();
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!(
+            let mut bootstrap = TestBootstrap::new(include_bytes!(
                 "../test_documents/feed_history_of_rome.\
                  xml"
             ));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
+            let (mut mediator, log) = bootstrap.mediator();
+            mediator.run(&log).unwrap();
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!(
+            let mut bootstrap = TestBootstrap::new(include_bytes!(
                 "../test_documents/feed_planet_money.\
                  xml"
             ));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
+            let (mut mediator, log) = bootstrap.mediator();
+            mediator.run(&log).unwrap();
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_radiolab.xml"));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
+            let mut bootstrap =
+                TestBootstrap::new(include_bytes!("../test_documents/feed_radiolab.xml"));
+            let (mut mediator, log) = bootstrap.mediator();
+            mediator.run(&log).unwrap();
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_road_work.xml"));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
+            let mut bootstrap =
+                TestBootstrap::new(include_bytes!("../test_documents/feed_road_work.xml"));
+            let (mut mediator, log) = bootstrap.mediator();
+            mediator.run(&log).unwrap();
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!(
+            let mut bootstrap = TestBootstrap::new(include_bytes!(
                 "../test_documents/feed_roderick_on_the_line.\
                  xml"
             ));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
+            let (mut mediator, log) = bootstrap.mediator();
+            mediator.run(&log).unwrap();
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!(
+            let mut bootstrap = TestBootstrap::new(include_bytes!(
                 "../test_documents/feed_song_exploder.\
                  xml"
             ));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
+            let (mut mediator, log) = bootstrap.mediator();
+            mediator.run(&log).unwrap();
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_startup.xml"));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
+            let mut bootstrap =
+                TestBootstrap::new(include_bytes!("../test_documents/feed_startup.xml"));
+            let (mut mediator, log) = bootstrap.mediator();
+            mediator.run(&log).unwrap();
         }
 
         {
-            let mut bootstrap = bootstrap(include_bytes!("../test_documents/feed_waking_up.xml"));
-            let mut mediator = bootstrap.mediator();
-            mediator.run(&test_helpers::log()).unwrap();
+            let mut bootstrap =
+                TestBootstrap::new(include_bytes!("../test_documents/feed_waking_up.xml"));
+            let (mut mediator, log) = bootstrap.mediator();
+            mediator.run(&log).unwrap();
         }
     }
 
@@ -1149,33 +1157,39 @@ mod tests {
     struct TestBootstrap {
         conn:        PooledConnection<ConnectionManager<PgConnection>>,
         feed_url:    &'static str,
+        log:         Logger,
         url_fetcher: URLFetcherStub,
     }
 
     impl TestBootstrap {
-        fn mediator(&mut self) -> PodcastUpdater {
-            PodcastUpdater {
-                conn:             &*self.conn,
-                disable_shortcut: false,
-                feed_url:         self.feed_url.to_owned(),
-                url_fetcher:      &mut self.url_fetcher,
+        // Initializes the data required to get tests running.
+        fn new(data: &[u8]) -> TestBootstrap {
+            let conn = test_helpers::connection();
+            let url = "https://example.com/feed.xml";
+
+            let url_fetcher = URLFetcherStub {
+                map: map!(url => data.to_vec()),
+            };
+
+            TestBootstrap {
+                conn:        conn,
+                feed_url:    url,
+                log:         test_helpers::log(),
+                url_fetcher: url_fetcher,
             }
         }
-    }
 
-    // Initializes the data required to get tests running.
-    fn bootstrap(data: &[u8]) -> TestBootstrap {
-        let conn = test_helpers::connection();
-        let url = "https://example.com/feed.xml";
-
-        let url_fetcher = URLFetcherStub {
-            map: map!(url => data.to_vec()),
-        };
-
-        TestBootstrap {
-            conn:        conn,
-            feed_url:    url,
-            url_fetcher: url_fetcher,
+        fn mediator(&mut self) -> (PodcastUpdater, Logger) {
+            let log = self.log.clone();
+            (
+                PodcastUpdater {
+                    conn:             &*self.conn,
+                    disable_shortcut: false,
+                    feed_url:         self.feed_url.to_owned(),
+                    url_fetcher:      &mut self.url_fetcher,
+                },
+                log,
+            )
         }
     }
 
