@@ -251,8 +251,8 @@ mod tests {
 
         info!(&bootstrap.log, "Finished setup (starting the real test)");
 
-        let mut mediator = bootstrap.mediator();
-        let res = mediator.run(&bootstrap.log).unwrap();
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
         assert_eq!(num_podcasts, res.num_podcasts);
     }
 
@@ -291,13 +291,16 @@ mod tests {
             }
         }
 
-        fn mediator(&mut self) -> PodcastReingester {
-            PodcastReingester {
-                // Number of connections minus one for the reingester's control thread and minus
-                // another one for a connection that a test case might be using for setup.
-                num_workers: test_helpers::NUM_CONNECTIONS - 1 - 1,
-                pool:        self.pool.clone(),
-            }
+        fn mediator(&mut self) -> (PodcastReingester, Logger) {
+            (
+                PodcastReingester {
+                    // Number of connections minus one for the reingester's control thread and minus
+                    // another one for a connection that a test case might be using for setup.
+                    num_workers: test_helpers::NUM_CONNECTIONS - 1 - 1,
+                    pool:        self.pool.clone(),
+                },
+                self.log.clone(),
+            )
         }
     }
 
