@@ -142,14 +142,13 @@ mod tests {
         }
 
         fn mediator(&mut self) -> (DirectoryPodcastUpdater, Logger) {
-            let log = self.log.clone();
             (
                 DirectoryPodcastUpdater {
                     conn:        &*self.conn,
                     dir_podcast: &mut self.dir_podcast,
                     url_fetcher: &mut self.url_fetcher,
                 },
-                log,
+                self.log.clone(),
             )
         }
     }

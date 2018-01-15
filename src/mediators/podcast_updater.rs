@@ -1180,7 +1180,6 @@ mod tests {
         }
 
         fn mediator(&mut self) -> (PodcastUpdater, Logger) {
-            let log = self.log.clone();
             (
                 PodcastUpdater {
                     conn:             &*self.conn,
@@ -1188,7 +1187,7 @@ mod tests {
                     feed_url:         self.feed_url.to_owned(),
                     url_fetcher:      &mut self.url_fetcher,
                 },
-                log,
+                self.log.clone(),
             )
         }
     }
