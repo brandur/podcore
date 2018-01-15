@@ -249,6 +249,7 @@ mod tests {
     use url_fetcher::URLFetcherPassThrough;
 
     #[test]
+    #[ignore]
     fn test_concurrency() {
         let mut bootstrap = TestBootstrap::new();
 
