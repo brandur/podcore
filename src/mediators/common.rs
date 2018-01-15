@@ -1,7 +1,3 @@
-use diesel;
-use diesel::pg::PgConnection;
-use diesel::prelude::*;
-use errors::*;
 use slog::Logger;
 use std::str;
 use time::precise_time_ns;
@@ -18,20 +14,6 @@ where
     let (div, unit) = unit(elapsed);
     info!(log, "Finish"; "elapsed" => format!("{:.*}{}", 3, ((elapsed as f64) / div), unit));
     res
-}
-
-pub fn set_snapshot(log: &Logger, conn: &PgConnection, snapshot_id: Option<String>) -> Result<()> {
-    match snapshot_id {
-        Some(id) => {
-            info!(log, "Setting snapshot"; "id" => id.as_str());
-            diesel::sql_query("BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ").execute(conn)?;
-            diesel::sql_query(format!("SET TRANSACTION SNAPSHOT '{}'", id)).execute(conn)?;
-        }
-        None => {
-            info!(log, "Not setting snapshot ID");
-        }
-    }
-    Ok(())
 }
 
 pub fn thread_name(n: u32) -> String {

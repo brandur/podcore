@@ -118,7 +118,6 @@ fn reingest_podcasts(matches: ArgMatches) {
     PodcastReingester {
         num_workers: NUM_CONNECTIONS - 1,
         pool:        pool().clone(),
-        snapshot_id: None,
     }.run(&log(quiet))
         .unwrap();
 }

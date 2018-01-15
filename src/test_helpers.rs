@@ -1,6 +1,5 @@
 use schema;
 
-use diesel;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel::types::Text;
@@ -22,14 +21,6 @@ pub fn connection() -> PooledConnection<ConnectionManager<PgConnection>> {
         .expect("Error acquiring connection from connection pool");
     conn.begin_test_transaction().unwrap();
     conn
-}
-
-pub fn export_snapshot_id(log: &Logger, conn: &PgConnection) -> String {
-    let snapshot: Snapshot = diesel::sql_query("SELECT pg_export_snapshot() AS id")
-        .get_result(&*conn)
-        .unwrap();
-    info!(log, "Exported snapshot"; "id" => snapshot.id.as_str());
-    snapshot.id
 }
 
 pub fn log() -> Logger {

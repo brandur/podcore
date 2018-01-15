@@ -32,10 +32,12 @@ before_script:
 
 script:
   - cargo test --verbose
+
   # I'm basically using the `ignore` designation to tag tests that are
   # multi-threaded and need to write "permanent" state to the database which
   # might interfere with other tests. We run all normal tests in parallel on
   # one thread and then run the ignored ones separatately, making sure to
   # specify that we want only a single test thread.
   - cargo test --verbose -- --ignored --test-threads=1
+
   - if [[ $RUSTFMT == 'true' ]]; then cargo +nightly fmt -- --write-mode=diff; fi
