@@ -77,8 +77,19 @@ mod tests {
 
     #[test]
     fn test_minimal_feed() {
-        let mut bootstrap = TestBootstrap::new(
-            br#"
+        let mut bootstrap = TestBootstrap::new(MINIMAL_FEED);
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
+
+        // the mediator empties feed URL after the directory podcast has been handled and its moved
+        // to a more accurate property
+        assert_eq!(None, res.dir_podcast.feed_url);
+    }
+
+    // Private types/functions
+    //
+
+    const MINIMAL_FEED: &[u8] = br#"
 <?xml version="1.0" encoding="UTF-8"?>
 <rss>
   <channel>
@@ -90,19 +101,7 @@ mod tests {
       <title>Item 1 Title</title>
     </item>
   </channel>
-</rss>"#,
-        );
-        let log = bootstrap.log.new(o!());
-        let mut mediator = bootstrap.mediator();
-        let res = mediator.run(&log).unwrap();
-
-        // the mediator empties feed URL after the directory podcast has been handled and its moved
-        // to a more accurate property
-        assert_eq!(None, res.dir_podcast.feed_url);
-    }
-
-    // Private types/functions
-    //
+</rss>"#;
 
     // Encapsulates the structures that are needed for tests to run. One should only be obtained by
     // invoking bootstrap().
@@ -142,12 +141,16 @@ mod tests {
             }
         }
 
-        fn mediator(&mut self) -> DirectoryPodcastUpdater {
-            DirectoryPodcastUpdater {
-                conn:        &*self.conn,
-                dir_podcast: &mut self.dir_podcast,
-                url_fetcher: &mut self.url_fetcher,
-            }
+        fn mediator(&mut self) -> (DirectoryPodcastUpdater, Logger) {
+            let log = self.log.clone();
+            (
+                DirectoryPodcastUpdater {
+                    conn:        &*self.conn,
+                    dir_podcast: &mut self.dir_podcast,
+                    url_fetcher: &mut self.url_fetcher,
+                },
+                log,
+            )
         }
     }
 }
