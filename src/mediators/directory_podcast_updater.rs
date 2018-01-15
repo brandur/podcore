@@ -77,7 +77,7 @@ mod tests {
 
     #[test]
     fn test_minimal_feed() {
-        let mut bootstrap = bootstrap(
+        let mut bootstrap = TestBootstrap::new(
             br#"
 <?xml version="1.0" encoding="UTF-8"?>
 <rss>
@@ -92,8 +92,9 @@ mod tests {
   </channel>
 </rss>"#,
         );
+        let log = bootstrap.log.new(o!());
         let mut mediator = bootstrap.mediator();
-        let res = mediator.run(&test_helpers::log()).unwrap();
+        let res = mediator.run(&log).unwrap();
 
         // the mediator empties feed URL after the directory podcast has been handled and its moved
         // to a more accurate property
@@ -108,44 +109,45 @@ mod tests {
     struct TestBootstrap {
         conn:        PooledConnection<ConnectionManager<PgConnection>>,
         dir_podcast: model::DirectoryPodcast,
+        log:         Logger,
         url_fetcher: URLFetcherStub,
     }
 
     impl TestBootstrap {
+        fn new(data: &[u8]) -> TestBootstrap {
+            let conn = test_helpers::connection();
+            let url = "https://example.com/feed.xml";
+
+            let url_fetcher = URLFetcherStub {
+                map: map!(url => data.to_vec()),
+            };
+
+            let itunes = model::Directory::itunes(&conn).unwrap();
+            let dir_podcast_ins = insertable::DirectoryPodcast {
+                directory_id: itunes.id,
+                feed_url:     Some(url.to_owned()),
+                podcast_id:   None,
+                vendor_id:    "471418144".to_owned(),
+            };
+            let dir_podcast = diesel::insert_into(directories_podcasts::table)
+                .values(&dir_podcast_ins)
+                .get_result(&*conn)
+                .unwrap();
+
+            TestBootstrap {
+                conn:        conn,
+                dir_podcast: dir_podcast,
+                log:         test_helpers::log(),
+                url_fetcher: url_fetcher,
+            }
+        }
+
         fn mediator(&mut self) -> DirectoryPodcastUpdater {
             DirectoryPodcastUpdater {
                 conn:        &*self.conn,
                 dir_podcast: &mut self.dir_podcast,
                 url_fetcher: &mut self.url_fetcher,
             }
-        }
-    }
-
-    // Initializes the data required to get tests running.
-    fn bootstrap(data: &[u8]) -> TestBootstrap {
-        let conn = test_helpers::connection();
-        let url = "https://example.com/feed.xml";
-
-        let url_fetcher = URLFetcherStub {
-            map: map!(url => data.to_vec()),
-        };
-
-        let itunes = model::Directory::itunes(&conn).unwrap();
-        let dir_podcast_ins = insertable::DirectoryPodcast {
-            directory_id: itunes.id,
-            feed_url:     Some(url.to_owned()),
-            podcast_id:   None,
-            vendor_id:    "471418144".to_owned(),
-        };
-        let dir_podcast = diesel::insert_into(directories_podcasts::table)
-            .values(&dir_podcast_ins)
-            .get_result(&*conn)
-            .unwrap();
-
-        TestBootstrap {
-            conn:        conn,
-            dir_podcast: dir_podcast,
-            url_fetcher: url_fetcher,
         }
     }
 }
