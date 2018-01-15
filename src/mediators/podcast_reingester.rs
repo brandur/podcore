@@ -154,9 +154,6 @@ pub struct RunResult {
     pub num_podcasts: i64,
 }
 
-// Private statics
-//
-
 // Private types
 //
 
