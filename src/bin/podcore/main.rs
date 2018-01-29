@@ -42,6 +42,7 @@ fn main() {
     let mut app = App::new("podcore")
         .version("0.1")
         .about("A general utility command for the podcore project")
+        .arg_from_usage("-c, --num-connections [NUM_CONNECTIONS] 'Number of Postgres connections'")
         .arg_from_usage("-q --quiet 'Quiets all output'")
         .subcommand(
             SubCommand::with_name("add")
@@ -63,10 +64,12 @@ fn main() {
         );
 
     let matches = app.clone().get_matches();
+    let options = parse_global_options(&matches);
+
     match matches.subcommand_name() {
         Some("add") => add_podcast(matches),
-        Some("crawl") => crawl_podcasts(matches),
-        Some("reingest") => reingest_podcasts(matches),
+        Some("crawl") => crawl_podcasts(matches, options),
+        Some("reingest") => reingest_podcasts(matches, options),
         Some("serve") => serve_http(matches),
         None => {
             app.print_help().unwrap();
@@ -101,7 +104,7 @@ fn add_podcast(matches: ArgMatches) {
     }
 }
 
-fn crawl_podcasts(matches: ArgMatches) {
+fn crawl_podcasts(matches: ArgMatches, options: GlobalOptions) {
     let quiet = matches.is_present("quiet");
     let log = log(quiet);
     let _matches = matches.subcommand_matches("crawl").unwrap();
@@ -109,7 +112,7 @@ fn crawl_podcasts(matches: ArgMatches) {
 
     loop {
         let res = PodcastCrawler {
-            num_workers:         NUM_CONNECTIONS - 1,
+            num_workers:         options.num_connections - 1,
             pool:                pool().clone(),
             url_fetcher_factory: Box::new(URLFetcherFactoryLive {}),
         }.run(&log)
@@ -125,16 +128,12 @@ fn crawl_podcasts(matches: ArgMatches) {
     }
 }
 
-// For commands that loop, the number of seconds to sleep between iterations where no records were
-// processed.
-const SLEEP_SECONDS: u64 = 60;
-
-fn reingest_podcasts(matches: ArgMatches) {
+fn reingest_podcasts(matches: ArgMatches, options: GlobalOptions) {
     let quiet = matches.is_present("quiet");
     let _matches = matches.subcommand_matches("reingest").unwrap();
 
     PodcastReingester {
-        num_workers: NUM_CONNECTIONS - 1,
+        num_workers: options.num_connections - 1,
         pool:        pool().clone(),
     }.run(&log(quiet))
         .unwrap();
@@ -170,7 +169,15 @@ fn serve_http(matches: ArgMatches) {
 // Private types/functions
 //
 
-pub static NUM_CONNECTIONS: u32 = 50;
+const NUM_CONNECTIONS: u32 = 50;
+
+// For commands that loop, the number of seconds to sleep between iterations where no records were
+// processed.
+const SLEEP_SECONDS: u64 = 60;
+
+struct GlobalOptions {
+    num_connections: u32,
+}
 
 /// Acquires a single connection from a connection pool. This is suitable for use a shortcut by
 /// subcommands that only need to run one single-threaded task.
@@ -188,6 +195,19 @@ fn log(quiet: bool) -> Logger {
         slog::Logger::root(async_drain, o!())
     } else {
         slog::Logger::root(slog::Discard, o!())
+    }
+}
+
+fn parse_global_options(matches: &ArgMatches) -> GlobalOptions {
+    GlobalOptions {
+        num_connections: env::var("NUM_CONNECTIONS")
+            .map(|s| s.parse::<u32>().unwrap())
+            .unwrap_or(
+                matches
+                    .value_of("NUM_CONNECTIONS")
+                    .map(|s| s.parse::<u32>().unwrap())
+                    .unwrap_or(NUM_CONNECTIONS),
+            ),
     }
 }
 
