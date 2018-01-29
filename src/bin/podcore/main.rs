@@ -170,7 +170,7 @@ fn serve_http(matches: ArgMatches) {
 // Private types/functions
 //
 
-pub static NUM_CONNECTIONS: u32 = 10;
+pub static NUM_CONNECTIONS: u32 = 50;
 
 /// Acquires a single connection from a connection pool. This is suitable for use a shortcut by
 /// subcommands that only need to run one single-threaded task.
