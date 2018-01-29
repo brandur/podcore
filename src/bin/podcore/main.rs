@@ -102,14 +102,16 @@ fn add_podcast(matches: ArgMatches) {
 
 fn crawl_podcasts(matches: ArgMatches) {
     let quiet = matches.is_present("quiet");
+    let log = log(quiet);
     let _matches = matches.subcommand_matches("crawl").unwrap();
 
-    PodcastCrawler {
+    let res = PodcastCrawler {
         num_workers:         NUM_CONNECTIONS - 1,
         pool:                pool().clone(),
         url_fetcher_factory: Box::new(URLFetcherFactoryLive {}),
-    }.run(&log(quiet))
+    }.run(&log)
         .unwrap();
+    info!(log, "Finished work loop"; "num_podcasts" => res.num_podcasts);
 }
 
 fn reingest_podcasts(matches: ArgMatches) {
