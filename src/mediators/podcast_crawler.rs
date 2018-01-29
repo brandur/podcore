@@ -186,11 +186,9 @@ fn work(
 
                 let res = PodcastUpdater {
                     conn: &*conn,
-
-                    // The whole purpose of this mediator is to redo past work, so we need to make
-                    // sure that we've disabled any shortcuts that might otherwise be enabled.
-                    disable_shortcut: true,
-
+                    // Allow the updater to short circuit if it turns out the podcast doesn't need
+                    // to be updated
+                    disable_shortcut: false,
                     feed_url:    feed_url,
                     url_fetcher: &mut *url_fetcher,
                 }.run(&log);
