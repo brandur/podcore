@@ -194,7 +194,7 @@ fn work(
             return;
         }
     };
-    info!(log, "Thread acquired a connection");
+    debug!(log, "Thread acquired a connection");
 
     loop {
         chan_select! {
@@ -202,7 +202,7 @@ fn work(
                 let podcast_tuple: PodcastTuple = match podcast_tuple {
                     Some(t) => t,
                     None => {
-                        info!(log, "Received empty data over channel -- dropping");
+                        debug!(log, "Received empty data over channel -- dropping");
                         break;
                     }
                 };

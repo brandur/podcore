@@ -178,7 +178,7 @@ fn work(
             return;
         }
     };
-    info!(log, "Thread acquired a connection");
+    debug!(log, "Thread acquired a connection");
     let mut url_fetcher = url_fetcher_factory.create();
 
     loop {
@@ -187,7 +187,7 @@ fn work(
                 let podcast: PodcastTuple = match podcast {
                     Some(t) => t,
                     None => {
-                        info!(log, "Received empty data over channel -- dropping");
+                        debug!(log, "Received empty data over channel -- dropping");
                         break;
                     }
                 };

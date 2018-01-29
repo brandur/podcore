@@ -30,6 +30,7 @@ use r2d2::{Pool, PooledConnection};
 use r2d2_diesel::ConnectionManager;
 use slog::{Drain, Logger};
 use std::env;
+use std::thread;
 use std::time::Duration;
 use tokio_core::reactor::Core;
 
@@ -105,14 +106,25 @@ fn crawl_podcasts(matches: ArgMatches) {
     let log = log(quiet);
     let _matches = matches.subcommand_matches("crawl").unwrap();
 
-    let res = PodcastCrawler {
-        num_workers:         NUM_CONNECTIONS - 1,
-        pool:                pool().clone(),
-        url_fetcher_factory: Box::new(URLFetcherFactoryLive {}),
-    }.run(&log)
-        .unwrap();
-    info!(log, "Finished work loop"; "num_podcasts" => res.num_podcasts);
+    loop {
+        let res = PodcastCrawler {
+            num_workers:         NUM_CONNECTIONS - 1,
+            pool:                pool().clone(),
+            url_fetcher_factory: Box::new(URLFetcherFactoryLive {}),
+        }.run(&log)
+            .unwrap();
+        info!(log, "Finished work loop"; "num_podcasts" => res.num_podcasts);
+
+        if res.num_podcasts < 1 {
+            info!(log, "No podcasts processed -- sleeping"; "seconds" => SLEEP_SECONDS);
+            thread::sleep(Duration::from_secs(SLEEP_SECONDS));
+        }
+    }
 }
+
+// For commands that loop, the number of seconds to sleep between iterations where no records were
+// processed.
+const SLEEP_SECONDS: u64 = 60;
 
 fn reingest_podcasts(matches: ArgMatches) {
     let quiet = matches.is_present("quiet");
