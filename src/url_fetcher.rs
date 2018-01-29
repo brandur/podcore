@@ -8,7 +8,7 @@ use std::sync::Arc;
 use tokio_core::reactor::Core;
 
 //
-// URLFetcherFactory
+// URLFetcherFactory trait + implementations
 //
 
 pub trait URLFetcherFactory: Send {
@@ -56,7 +56,7 @@ impl URLFetcherFactory for URLFetcherFactoryPassThrough {
 }
 
 //
-// URLFetcher
+// URLFetcher trait + implementations
 //
 
 pub trait URLFetcher {
