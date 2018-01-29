@@ -1,3 +1,4 @@
+/*
 /// Initializes a map with an expression like `map!{ 1 => "one", 2 => "two" }`.
 macro_rules! map(
     { $($key:expr => $value:expr),+ } => {
@@ -10,3 +11,4 @@ macro_rules! map(
         }
      };
 );
+*/

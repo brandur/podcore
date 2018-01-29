@@ -3,10 +3,8 @@ use errors::*;
 use futures::Stream;
 use hyper;
 use hyper::{Client, Uri};
-#[cfg(test)]
-use std::collections::HashMap;
 use std::str::FromStr;
-//use std::sync::Arc;
+use std::sync::Arc;
 use tokio_core::reactor::Core;
 
 //
@@ -40,20 +38,19 @@ impl URLFetcherFactory for URLFetcherFactoryLive {
 
 #[derive(Clone, Debug)]
 pub struct URLFetcherFactoryPassThrough {
-    // This could be Arc<_>
-    pub data: Vec<u8>,
+    pub data: Arc<Vec<u8>>,
 }
 
 impl URLFetcherFactory for URLFetcherFactoryPassThrough {
     fn clone_box(&self) -> Box<URLFetcherFactory> {
         return Box::new(Self {
-            data: self.data.clone(),
+            data: Arc::clone(&self.data),
         });
     }
 
     fn create(&self) -> Box<URLFetcher> {
         Box::new(URLFetcherPassThrough {
-            data: self.data.clone(),
+            data: Arc::clone(&self.data),
         })
     }
 }
@@ -91,11 +88,11 @@ impl URLFetcher for URLFetcherLive {
 
 #[derive(Clone, Debug)]
 pub struct URLFetcherPassThrough {
-    pub data: Vec<u8>,
+    pub data: Arc<Vec<u8>>,
 }
 
 impl URLFetcher for URLFetcherPassThrough {
     fn fetch(&mut self, raw_url: String) -> Result<(Vec<u8>, String)> {
-        return Ok((self.data.clone(), raw_url));
+        return Ok(((*self.data).clone(), raw_url));
     }
 }

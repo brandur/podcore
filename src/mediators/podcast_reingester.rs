@@ -12,6 +12,7 @@ use diesel::types::{BigInt, Text};
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use slog::Logger;
+use std::sync::Arc;
 use std::thread;
 
 pub struct PodcastReingester {
@@ -212,7 +213,7 @@ fn work(
                     disable_shortcut: true,
 
                     feed_url:    feed_url,
-                    url_fetcher: &mut URLFetcherPassThrough { data: content },
+                    url_fetcher: &mut URLFetcherPassThrough { data: Arc::new(content) },
                 }.run(&log);
 
                 if let Err(e) = res {
@@ -321,7 +322,7 @@ mod tests {
             feed_url: format!("https://example.com/feed-{}.xml", rng.gen::<u64>()).to_string(),
 
             url_fetcher: &mut URLFetcherPassThrough {
-                data: MINIMAL_FEED.to_vec(),
+                data: Arc::new(MINIMAL_FEED.to_vec()),
             },
         }.run(log)
             .unwrap();

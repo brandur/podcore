@@ -670,13 +670,14 @@ fn validate_podcast(raw: &raw::Podcast) -> Result<PodcastOrInvalid> {
 mod tests {
     use mediators::podcast_updater::*;
     use model;
-    use r2d2::PooledConnection;
-    use r2d2_diesel::ConnectionManager;
     use schema;
     use test_helpers;
     use url_fetcher::URLFetcherPassThrough;
 
     use chrono::prelude::*;
+    use r2d2::PooledConnection;
+    use r2d2_diesel::ConnectionManager;
+    use std::sync::Arc;
 
     #[test]
     fn test_ideal_feed() {
@@ -1158,18 +1159,18 @@ mod tests {
         conn:        PooledConnection<ConnectionManager<PgConnection>>,
         feed_url:    &'static str,
         log:         Logger,
-        url_fetcher: Box<URLFetcherPassThrough>,
+        url_fetcher: URLFetcherPassThrough,
     }
 
     impl TestBootstrap {
         fn new(data: &[u8]) -> TestBootstrap {
             TestBootstrap {
                 conn:        test_helpers::connection(),
-                feed_url:    url,
+                feed_url:    "https://example.com/feed.xml",
                 log:         test_helpers::log(),
-                url_fetcher: Box::new(URLFetcherPassThrough {
-                    data: data.to_vec(),
-                }),
+                url_fetcher: URLFetcherPassThrough {
+                    data: Arc::new(data.to_vec()),
+                },
             }
         }
 
@@ -1179,7 +1180,7 @@ mod tests {
                     conn:             &*self.conn,
                     disable_shortcut: false,
                     feed_url:         self.feed_url.to_owned(),
-                    url_fetcher:      url_fetcher,
+                    url_fetcher:      &mut self.url_fetcher,
                 },
                 self.log.clone(),
             )

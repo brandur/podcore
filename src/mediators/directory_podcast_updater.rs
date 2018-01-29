@@ -67,13 +67,14 @@ mod tests {
     use mediators::directory_podcast_updater::*;
     use model;
     use model::insertable;
-    use r2d2::PooledConnection;
-    use r2d2_diesel::ConnectionManager;
     use schema::directories_podcasts;
     use test_helpers;
     use url_fetcher::URLFetcherPassThrough;
 
     use diesel;
+    use r2d2::PooledConnection;
+    use r2d2_diesel::ConnectionManager;
+    use std::sync::Arc;
 
     #[test]
     fn test_minimal_feed() {
@@ -134,7 +135,7 @@ mod tests {
                 dir_podcast: dir_podcast,
                 log:         test_helpers::log(),
                 url_fetcher: URLFetcherPassThrough {
-                    data: data.to_vec(),
+                    data: Arc::new(data.to_vec()),
                 },
             }
         }
