@@ -82,11 +82,11 @@ fn add_podcast(matches: ArgMatches) {
     let quiet = matches.is_present("quiet");
     let matches = matches.subcommand_matches("add").unwrap();
 
-    let mut core = Core::new().unwrap();
+    let core = Core::new().unwrap();
     let client = Client::new(&core.handle());
     let mut url_fetcher = URLFetcherLive {
-        client: &client,
-        core:   &mut core,
+        client: client,
+        core:   Arc<Core>,
     };
 
     for url in matches.values_of("URL").unwrap().collect::<Vec<_>>().iter() {

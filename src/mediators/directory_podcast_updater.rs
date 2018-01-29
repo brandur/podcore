@@ -11,7 +11,7 @@ use slog::Logger;
 pub struct DirectoryPodcastUpdater<'a> {
     pub conn:        &'a PgConnection,
     pub dir_podcast: &'a mut model::DirectoryPodcast,
-    pub url_fetcher: &'a mut URLFetcher,
+    pub url_fetcher: Box<URLFetcher>,
 }
 
 impl<'a> DirectoryPodcastUpdater<'a> {
@@ -71,7 +71,7 @@ mod tests {
     use r2d2_diesel::ConnectionManager;
     use schema::directories_podcasts;
     use test_helpers;
-    use url_fetcher::URLFetcherStub;
+    use url_fetcher::URLFetcherPassThrough;
 
     use diesel;
 
@@ -109,17 +109,13 @@ mod tests {
         conn:        PooledConnection<ConnectionManager<PgConnection>>,
         dir_podcast: model::DirectoryPodcast,
         log:         Logger,
-        url_fetcher: URLFetcherStub,
+        url_fetcher: URLFetcherPassThrough,
     }
 
     impl TestBootstrap {
         fn new(data: &[u8]) -> TestBootstrap {
             let conn = test_helpers::connection();
             let url = "https://example.com/feed.xml";
-
-            let url_fetcher = URLFetcherStub {
-                map: map!(url => data.to_vec()),
-            };
 
             let itunes = model::Directory::itunes(&conn).unwrap();
             let dir_podcast_ins = insertable::DirectoryPodcast {
@@ -137,7 +133,9 @@ mod tests {
                 conn:        conn,
                 dir_podcast: dir_podcast,
                 log:         test_helpers::log(),
-                url_fetcher: url_fetcher,
+                url_fetcher: URLFetcherPassThrough {
+                    data: data.to_vec(),
+                },
             }
         }
 

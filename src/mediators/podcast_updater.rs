@@ -28,7 +28,7 @@ pub struct PodcastUpdater<'a> {
     pub disable_shortcut: bool,
 
     pub feed_url:    String,
-    pub url_fetcher: &'a mut URLFetcher,
+    pub url_fetcher: Box<URLFetcher>,
 }
 
 impl<'a> PodcastUpdater<'a> {
@@ -674,7 +674,7 @@ mod tests {
     use r2d2_diesel::ConnectionManager;
     use schema;
     use test_helpers;
-    use url_fetcher::URLFetcherStub;
+    use url_fetcher::URLFetcherPassThrough;
 
     use chrono::prelude::*;
 
@@ -1158,24 +1158,18 @@ mod tests {
         conn:        PooledConnection<ConnectionManager<PgConnection>>,
         feed_url:    &'static str,
         log:         Logger,
-        url_fetcher: URLFetcherStub,
+        url_fetcher: Box<URLFetcherPassThrough>,
     }
 
     impl TestBootstrap {
-        // Initializes the data required to get tests running.
         fn new(data: &[u8]) -> TestBootstrap {
-            let conn = test_helpers::connection();
-            let url = "https://example.com/feed.xml";
-
-            let url_fetcher = URLFetcherStub {
-                map: map!(url => data.to_vec()),
-            };
-
             TestBootstrap {
-                conn:        conn,
+                conn:        test_helpers::connection(),
                 feed_url:    url,
                 log:         test_helpers::log(),
-                url_fetcher: url_fetcher,
+                url_fetcher: Box::new(URLFetcherPassThrough {
+                    data: data.to_vec(),
+                }),
             }
         }
 
@@ -1185,7 +1179,7 @@ mod tests {
                     conn:             &*self.conn,
                     disable_shortcut: false,
                     feed_url:         self.feed_url.to_owned(),
-                    url_fetcher:      &mut self.url_fetcher,
+                    url_fetcher:      url_fetcher,
                 },
                 self.log.clone(),
             )
