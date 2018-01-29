@@ -1,12 +1,11 @@
 use errors::*;
 use mediators::common;
 use mediators::podcast_updater::PodcastUpdater;
-use schema::podcasts;
 use url_fetcher::URLFetcherFactory;
 
 use chan;
 use chan::{Receiver, Sender};
-use chrono::{DateTime, Utc};
+use diesel;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel::types::{BigInt, Text};
@@ -14,7 +13,6 @@ use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use slog::Logger;
 use std::thread;
-use time::Duration;
 
 pub struct PodcastCrawler {
     // Number of workers to use. Should generally be the size of the thread pool minus one for the
@@ -110,13 +108,25 @@ impl PodcastCrawler {
         let res = common::log_timed(
             &log.new(o!("step" => "query_podcasts", "start_id" => start_id)),
             |ref _log| {
-                let horizon: DateTime<Utc> = Utc::now() - Duration::hours(REFRESH_INTERVAL_HOURS);
-                podcasts::table
-                    .filter(podcasts::last_retrieved_at.lt(horizon))
-                    .filter(podcasts::id.gt(start_id))
-                    .order(podcasts::id)
-                    .limit(PAGE_SIZE)
-                    .load::<PodcastTuple>(conn)
+                // See comment on similar function in podcast_reingester -- unfortunately Diesel's
+                // query DSL cannot handle subselects.
+                diesel::sql_query(format!(
+                    "
+                SELECT id,
+                    (
+                       SELECT feed_url
+                       FROM podcast_feed_locations
+                       WHERE podcast_feed_locations.podcast_id = podcasts.id
+                       ORDER BY last_retrieved_at DESC
+                       LIMIT 1
+                    )
+                FROM podcasts
+                WHERE id > {}
+                    AND last_retrieved_at <= NOW() - '{} hours'::interval
+                ORDER BY id
+                LIMIT {}",
+                    start_id, REFRESH_INTERVAL_HOURS, PAGE_SIZE
+                )).load::<PodcastTuple>(conn)
             },
         )?;
 
@@ -146,7 +156,7 @@ struct PodcastTuple {
     id: i64,
 
     #[sql_type = "Text"]
-    feed_url: Option<String>,
+    feed_url: String,
 }
 
 // Private functions
