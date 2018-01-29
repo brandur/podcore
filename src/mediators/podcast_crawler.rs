@@ -212,4 +212,134 @@ fn work(
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    extern crate rand;
+
+    use mediators::podcast_crawler::*;
+    use mediators::podcast_updater::PodcastUpdater;
+    use schema::podcasts;
+    use test_helpers;
+    use url_fetcher::{URLFetcherFactoryPassThrough, URLFetcherPassThrough};
+
+    use chrono::Utc;
+    use rand::Rng;
+    use r2d2::{Pool, PooledConnection};
+    use r2d2_diesel::ConnectionManager;
+    use std::sync::Arc;
+    use time::Duration;
+
+    #[test]
+    #[ignore]
+    fn test_crawler_update() {
+        let mut bootstrap = TestBootstrap::new();
+
+        // Insert lots of data to be crawled
+        let num_podcasts = (test_helpers::NUM_CONNECTIONS as i64) * 10;
+        for _i in 0..num_podcasts {
+            insert_podcast(&bootstrap.log, &*bootstrap.conn);
+        }
+
+        // Mark all podcasts as stale so that the crawler will find them
+        diesel::update(podcasts::table)
+            .set(podcasts::last_retrieved_at.eq(Utc::now() - Duration::hours(24)))
+            .execute(&*bootstrap.conn)
+            .unwrap();
+
+        debug!(&bootstrap.log, "Finished setup (starting the real test)");
+
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
+        assert_eq!(num_podcasts, res.num_podcasts);
+    }
+
+    #[test]
+    #[ignore]
+    fn test_crawler_no_update() {
+        let mut bootstrap = TestBootstrap::new();
+
+        // Just add one podcast given no data will be crawled anyway: any inserted podcasts are
+        // marked as last_retrieved_at too recently, so the crawler will ignore them
+        insert_podcast(&bootstrap.log, &*bootstrap.conn);
+
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
+        assert_eq!(0, res.num_podcasts);
+    }
+
+    // Private types/functions
+    //
+
+    const MINIMAL_FEED: &[u8] = br#"
+<?xml version="1.0" encoding="UTF-8"?>
+<rss>
+  <channel>
+    <title>Title</title>
+    <item>
+      <guid>1</guid>
+      <media:content url="https://example.com/item-1" type="audio/mpeg"/>
+      <pubDate>Sun, 24 Dec 2017 21:37:32 +0000</pubDate>
+      <title>Item 1 Title</title>
+    </item>
+  </channel>
+</rss>"#;
+
+    struct TestBootstrap {
+        conn: PooledConnection<ConnectionManager<PgConnection>>,
+        log:  Logger,
+        pool: Pool<ConnectionManager<PgConnection>>,
+    }
+
+    impl TestBootstrap {
+        fn new() -> TestBootstrap {
+            let pool = test_helpers::pool();
+            let conn = pool.get()
+                .expect("Error acquiring connection from connection pool");
+            TestBootstrap {
+                conn: conn,
+                log:  test_helpers::log_sync(),
+                pool: pool,
+            }
+        }
+
+        fn mediator(&mut self) -> (PodcastCrawler, Logger) {
+            (
+                PodcastCrawler {
+                    // Number of connections minus one for the reingester's control thread and minus
+                    // another one for a connection that a test case might be using for setup.
+                    num_workers:         test_helpers::NUM_CONNECTIONS - 1 - 1,
+                    pool:                self.pool.clone(),
+                    url_fetcher_factory: Box::new(URLFetcherFactoryPassThrough {
+                        data: Arc::new(MINIMAL_FEED.to_vec()),
+                    }),
+                },
+                self.log.clone(),
+            )
+        }
+    }
+
+    impl Drop for TestBootstrap {
+        fn drop(&mut self) {
+            debug!(&self.log, "Cleaning database on bootstrap drop");
+            (*self.conn)
+                .execute("TRUNCATE TABLE podcasts CASCADE")
+                .unwrap();
+        }
+    }
+
+    fn insert_podcast(log: &Logger, conn: &PgConnection) {
+        let mut rng = rand::thread_rng();
+        PodcastUpdater {
+            conn:             conn,
+            disable_shortcut: false,
+
+            // Add a little randomness to feed URLs so that w don't just insert one podcast and
+            // update it over and over.
+            feed_url: format!("https://example.com/feed-{}.xml", rng.gen::<u64>()).to_string(),
+
+            url_fetcher: &mut URLFetcherPassThrough {
+                data: Arc::new(MINIMAL_FEED.to_vec()),
+            },
+        }.run(log)
+            .unwrap();
+    }
+}

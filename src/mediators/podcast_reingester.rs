@@ -235,11 +235,12 @@ mod tests {
 
     use mediators::podcast_reingester::*;
     use mediators::podcast_updater::PodcastUpdater;
+    use test_helpers;
+    use url_fetcher::URLFetcherPassThrough;
+
     use rand::Rng;
     use r2d2::{Pool, PooledConnection};
     use r2d2_diesel::ConnectionManager;
-    use test_helpers;
-    use url_fetcher::URLFetcherPassThrough;
 
     #[test]
     #[ignore]
@@ -252,7 +253,7 @@ mod tests {
             insert_podcast(&bootstrap.log, &*bootstrap.conn);
         }
 
-        info!(&bootstrap.log, "Finished setup (starting the real test)");
+        debug!(&bootstrap.log, "Finished setup (starting the real test)");
 
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
@@ -309,7 +310,7 @@ mod tests {
 
     impl Drop for TestBootstrap {
         fn drop(&mut self) {
-            info!(&self.log, "Cleaning database on bootstrap drop");
+            debug!(&self.log, "Cleaning database on bootstrap drop");
             (*self.conn)
                 .execute("TRUNCATE TABLE podcasts CASCADE")
                 .unwrap();
