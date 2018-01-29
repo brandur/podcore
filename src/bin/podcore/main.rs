@@ -105,6 +105,7 @@ fn crawl_podcasts(matches: ArgMatches) {
     let quiet = matches.is_present("quiet");
     let log = log(quiet);
     let _matches = matches.subcommand_matches("crawl").unwrap();
+    let mut num_loops = 0;
 
     loop {
         let res = PodcastCrawler {
@@ -113,7 +114,9 @@ fn crawl_podcasts(matches: ArgMatches) {
             url_fetcher_factory: Box::new(URLFetcherFactoryLive {}),
         }.run(&log)
             .unwrap();
-        info!(log, "Finished work loop"; "num_podcasts" => res.num_podcasts);
+
+        num_loops += 1;
+        info!(log, "Finished work loop"; "num_loops" => num_loops, "num_podcasts" => res.num_podcasts);
 
         if res.num_podcasts < 1 {
             info!(log, "No podcasts processed -- sleeping"; "seconds" => SLEEP_SECONDS);
