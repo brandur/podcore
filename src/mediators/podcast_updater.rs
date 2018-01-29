@@ -28,7 +28,7 @@ pub struct PodcastUpdater<'a> {
     pub disable_shortcut: bool,
 
     pub feed_url:    String,
-    pub url_fetcher: Box<URLFetcher>,
+    pub url_fetcher: &'a mut URLFetcher,
 }
 
 impl<'a> PodcastUpdater<'a> {

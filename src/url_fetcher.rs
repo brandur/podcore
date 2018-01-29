@@ -6,41 +6,70 @@ use hyper::{Client, Uri};
 #[cfg(test)]
 use std::collections::HashMap;
 use std::str::FromStr;
-use std::sync::Arc;
+//use std::sync::Arc;
 use tokio_core::reactor::Core;
 
-pub trait URLFetcher: Send + URLFetcherClone {
-    fn fetch(&mut self, raw_url: String) -> Result<(Vec<u8>, String)>;
+//
+// URLFetcherFactory
+//
+
+pub trait URLFetcherFactory: Send {
+    // This is here because it's difficult to make a trait cloneable.
+    fn clone_box(&self) -> Box<URLFetcherFactory>;
+
+    fn create(&self) -> Box<URLFetcher>;
 }
 
-// An insanely complicated workaround so as to allow us to produce a trait that can implement
-// Clone:
-//
-//     https://stackoverflow.com/questions/30353462/how-to-clone-a-struct-storing-a-trait-object/30353928#30353928
-//
-pub trait URLFetcherClone {
-    fn clone_box(&self) -> Box<URLFetcher>;
-}
+#[derive(Clone, Debug)]
+pub struct URLFetcherFactoryLive {}
 
-impl<T> URLFetcherClone for T
-where
-    T: 'static + URLFetcher + Clone,
-{
-    fn clone_box(&self) -> Box<URLFetcher> {
-        Box::new(self.clone())
+impl URLFetcherFactory for URLFetcherFactoryLive {
+    fn clone_box(&self) -> Box<URLFetcherFactory> {
+        return Box::new(Self {});
     }
-}
 
-impl Clone for Box<URLFetcher> {
-    fn clone(&self) -> Box<URLFetcher> {
-        self.clone_box()
+    fn create(&self) -> Box<URLFetcher> {
+        let core = Core::new().unwrap();
+        let client = Client::new(&core.handle());
+        Box::new(URLFetcherLive {
+            client: client,
+            core:   core,
+        })
     }
 }
 
 #[derive(Clone, Debug)]
+pub struct URLFetcherFactoryPassThrough {
+    // This could be Arc<_>
+    pub data: Vec<u8>,
+}
+
+impl URLFetcherFactory for URLFetcherFactoryPassThrough {
+    fn clone_box(&self) -> Box<URLFetcherFactory> {
+        return Box::new(Self {
+            data: self.data.clone(),
+        });
+    }
+
+    fn create(&self) -> Box<URLFetcher> {
+        Box::new(URLFetcherPassThrough {
+            data: self.data.clone(),
+        })
+    }
+}
+
+//
+// URLFetcher
+//
+
+pub trait URLFetcher {
+    fn fetch(&mut self, raw_url: String) -> Result<(Vec<u8>, String)>;
+}
+
+#[derive(Debug)]
 pub struct URLFetcherLive {
     pub client: Client<hyper::client::HttpConnector, hyper::Body>,
-    pub core:   Arc<Core>,
+    pub core:   Core,
 }
 
 impl URLFetcher for URLFetcherLive {

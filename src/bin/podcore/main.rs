@@ -18,7 +18,7 @@ use podcore::graphql;
 use podcore::mediators::podcast_crawler::PodcastCrawler;
 use podcore::mediators::podcast_reingester::PodcastReingester;
 use podcore::mediators::podcast_updater::PodcastUpdater;
-use podcore::url_fetcher::URLFetcherLive;
+use podcore::url_fetcher::{URLFetcherFactoryLive, URLFetcherLive};
 
 use clap::{App, ArgMatches, SubCommand};
 use diesel::pg::PgConnection;
@@ -86,7 +86,7 @@ fn add_podcast(matches: ArgMatches) {
     let client = Client::new(&core.handle());
     let mut url_fetcher = URLFetcherLive {
         client: client,
-        core:   Arc<Core>,
+        core:   core,
     };
 
     for url in matches.values_of("URL").unwrap().collect::<Vec<_>>().iter() {
@@ -105,8 +105,9 @@ fn crawl_podcasts(matches: ArgMatches) {
     let _matches = matches.subcommand_matches("crawl").unwrap();
 
     PodcastCrawler {
-        num_workers: NUM_CONNECTIONS - 1,
-        pool:        pool().clone(),
+        num_workers:         NUM_CONNECTIONS - 1,
+        pool:                pool().clone(),
+        url_fetcher_factory: Box::new(URLFetcherFactoryLive {}),
     }.run(&log(quiet))
         .unwrap();
 }

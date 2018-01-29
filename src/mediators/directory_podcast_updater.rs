@@ -11,7 +11,7 @@ use slog::Logger;
 pub struct DirectoryPodcastUpdater<'a> {
     pub conn:        &'a PgConnection,
     pub dir_podcast: &'a mut model::DirectoryPodcast,
-    pub url_fetcher: Box<URLFetcher>,
+    pub url_fetcher: &'a mut URLFetcher,
 }
 
 impl<'a> DirectoryPodcastUpdater<'a> {

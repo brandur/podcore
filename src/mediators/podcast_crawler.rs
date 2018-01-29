@@ -1,7 +1,7 @@
 use errors::*;
 use mediators::common;
 use mediators::podcast_updater::PodcastUpdater;
-use url_fetcher::URLFetcher;
+use url_fetcher::URLFetcherFactory;
 
 use chan;
 use chan::{Receiver, Sender};
@@ -19,8 +19,8 @@ pub struct PodcastCrawler {
     // control process.
     pub num_workers: u32,
 
-    pub pool:        Pool<ConnectionManager<PgConnection>>,
-    pub url_fetcher: Box<URLFetcher + Send>,
+    pub pool:                Pool<ConnectionManager<PgConnection>>,
+    pub url_fetcher_factory: Box<URLFetcherFactory>,
 }
 
 impl PodcastCrawler {
@@ -40,13 +40,13 @@ impl PodcastCrawler {
                 let log =
                     log.new(o!("thread" => thread_name.clone(), "num_threads" => self.num_workers));
                 let pool_clone = self.pool.clone();
-                let url_fetcher_clone = self.url_fetcher.clone_box();
+                let factory_clone = self.url_fetcher_factory.clone_box();
                 let work_recv_clone = work_recv.clone();
 
                 workers.push(thread::Builder::new()
                     .name(thread_name)
                     .spawn(move || {
-                        work(&log, pool_clone, url_fetcher_clone, work_recv_clone);
+                        work(&log, pool_clone, factory_clone, work_recv_clone);
                     })
                     .chain_err(|| "Failed to spawn thread")?);
             }
@@ -155,7 +155,7 @@ struct PodcastTuple {
 fn work(
     log: &Logger,
     pool: Pool<ConnectionManager<PgConnection>>,
-    url_fetcher: Box<URLFetcher>,
+    url_fetcher_factory: Box<URLFetcherFactory>,
     work_recv: Receiver<PodcastTuple>,
 ) {
     let conn = match pool.try_get() {
@@ -169,6 +169,7 @@ fn work(
         }
     };
     info!(log, "Thread acquired a connection");
+    let mut url_fetcher = url_fetcher_factory.create();
 
     loop {
         chan_select! {
@@ -191,7 +192,7 @@ fn work(
                     disable_shortcut: true,
 
                     feed_url:    feed_url,
-                    url_fetcher: url_fetcher,
+                    url_fetcher: &mut *url_fetcher,
                 }.run(&log);
 
                 if let Err(e) = res {

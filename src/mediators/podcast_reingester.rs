@@ -212,7 +212,7 @@ fn work(
                     disable_shortcut: true,
 
                     feed_url:    feed_url,
-                    url_fetcher: Box::new(URLFetcherPassThrough { data: content }),
+                    url_fetcher: &mut URLFetcherPassThrough { data: content },
                 }.run(&log);
 
                 if let Err(e) = res {
