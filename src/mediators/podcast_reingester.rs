@@ -141,8 +141,8 @@ impl PodcastReingester {
                 FROM podcasts
                 WHERE id > {}
                 ORDER BY id
-                LIMIT 100",
-                    start_id
+                LIMIT {}",
+                    start_id, PAGE_SIZE
                 )).load::<PodcastTuple>(conn)
             },
         )?;
@@ -154,6 +154,11 @@ impl PodcastReingester {
 pub struct RunResult {
     pub num_podcasts: i64,
 }
+
+// Private constants
+//
+
+const PAGE_SIZE: i64 = 100;
 
 // Private types
 //

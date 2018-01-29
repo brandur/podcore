@@ -1,11 +1,12 @@
 use errors::*;
 use mediators::common;
 use mediators::podcast_updater::PodcastUpdater;
+use schema::podcasts;
 use url_fetcher::URLFetcherFactory;
 
 use chan;
 use chan::{Receiver, Sender};
-use diesel;
+use chrono::{DateTime, Utc};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel::types::{BigInt, Text};
@@ -13,6 +14,7 @@ use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use slog::Logger;
 use std::thread;
+use time::Duration;
 
 pub struct PodcastCrawler {
     // Number of workers to use. Should generally be the size of the thread pool minus one for the
@@ -108,23 +110,13 @@ impl PodcastCrawler {
         let res = common::log_timed(
             &log.new(o!("step" => "query_podcasts", "start_id" => start_id)),
             |ref _log| {
-                // See comment in the function of the same in podcast_ingester
-                diesel::sql_query(format!(
-                    "
-                SELECT id,
-                    (
-                       SELECT feed_url
-                       FROM podcast_feed_locations
-                       WHERE podcast_feed_locations.podcast_id = podcasts.id
-                       ORDER BY last_retrieved_at DESC
-                       LIMIT 1
-                    )
-                FROM podcasts
-                WHERE id > {}
-                ORDER BY id
-                LIMIT 100",
-                    start_id
-                )).load::<PodcastTuple>(conn)
+                let horizon: DateTime<Utc> = Utc::now() - Duration::hours(REFRESH_INTERVAL_HOURS);
+                podcasts::table
+                    .filter(podcasts::last_retrieved_at.lt(horizon))
+                    .filter(podcasts::id.gt(start_id))
+                    .order(podcasts::id)
+                    .limit(PAGE_SIZE)
+                    .load::<PodcastTuple>(conn)
             },
         )?;
 
@@ -136,17 +128,25 @@ pub struct RunResult {
     pub num_podcasts: i64,
 }
 
+// Private constants
+//
+
+const PAGE_SIZE: i64 = 100;
+
+static REFRESH_INTERVAL_HOURS: i64 = 1;
+
 // Private types
 //
 
 // Exists because `sql_query` doesn't support querying into a tuple, only a struct.
 #[derive(Clone, Debug, QueryableByName)]
+#[table_name = "podcasts"]
 struct PodcastTuple {
     #[sql_type = "BigInt"]
     id: i64,
 
     #[sql_type = "Text"]
-    feed_url: String,
+    feed_url: Option<String>,
 }
 
 // Private functions
