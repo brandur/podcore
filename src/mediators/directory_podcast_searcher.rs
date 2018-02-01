@@ -33,7 +33,8 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         let directory = model::Directory::itunes(&self.conn)?;
         let directory_search = match self.select_directory_search(&log, &directory)? {
             Some(search) => {
-                // The cache is fresh. Retrieve directory podcasts and search results.
+                // The cache is fresh. Retrieve directory podcasts and search results, then return
+                // early.
                 if search.retrieved_at > Utc::now() - Duration::hours(1) {
                     let (directory_podcasts, joins) = self.select_cached_results(&log, &search)?;
                     return Ok(RunResult {
@@ -42,11 +43,11 @@ impl<'a> DirectoryPodcastSearcher<'a> {
                         directory_search:   search,
                         joins:              joins,
                     });
-                } else {
-                    // The cache is stale. We can reuse the search row (after updating its
-                    // retrieval time), but we'll redo all the normal work below.
-                    self.update_directory_search(&log, &search)?
                 }
+
+                // The cache is stale. We can reuse the search row (after updating its retrieval
+                // time), but we'll redo all the normal work below.
+                self.update_directory_search(&log, &search)?
             }
             None => self.insert_directory_search(&log, &directory)?,
         };
