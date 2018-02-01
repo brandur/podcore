@@ -4,10 +4,11 @@ use model;
 use model::insertable;
 use url_fetcher::URLFetcher;
 
+use chrono::Utc;
 use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
-use schema::directories_podcasts;
+use schema::{directories_podcasts, directory_searches};
 use serde_json;
 use slog::Logger;
 use url::form_urlencoded;
@@ -28,13 +29,19 @@ impl<'a> DirectoryPodcastSearcher<'a> {
     }
 
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
-        let itunes = model::Directory::itunes(&self.conn)?;
-        let body = self.fetch_results(log)?;
+        let directory = model::Directory::itunes(&self.conn)?;
+        let directory_search = match self.select_directory_search(&log, &directory)? {
+            // TODO: returned cached results
+            Some(search) => search,
+            None => self.insert_directory_search(&log, &directory)?,
+        };
+        let body = self.fetch_results(&log)?;
         let results = Self::parse_results(&log, body.as_slice())?;
-        let _directory_podcasts = self.upsert_directory_podcasts(&log, &results, &itunes);
+        let _directory_podcasts = self.upsert_directory_podcasts(&log, &results, &directory);
         Ok(RunResult {})
     }
 
+    //
     // Steps
     //
 
@@ -52,12 +59,50 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         Ok(body)
     }
 
+    fn insert_directory_search(
+        &mut self,
+        log: &Logger,
+        directory: &model::Directory,
+    ) -> Result<model::DirectorySearch> {
+        common::log_timed(
+            &log.new(o!("step" => "insert_directory_search")),
+            |ref _log| {
+                diesel::insert_into(directory_searches::table)
+                    .values(&insertable::DirectorySearch {
+                        directory_id: directory.id,
+                        query:        self.query.clone(),
+                        retrieved_at: Utc::now(),
+                    })
+                    .get_result(self.conn)
+                    .chain_err(|| "Error inserting directory podcast")
+            },
+        )
+    }
+
     fn parse_results(log: &Logger, data: &[u8]) -> Result<Vec<SearchResult>> {
         let wrapper: SearchResultWrapper =
             common::log_timed(&log.new(o!("step" => "parse_results")), |ref _log| {
                 serde_json::from_slice(data).chain_err(|| "Error parsing search results JSON")
             })?;
         Ok(wrapper.results)
+    }
+
+    fn select_directory_search(
+        &mut self,
+        log: &Logger,
+        directory: &model::Directory,
+    ) -> Result<Option<model::DirectorySearch>> {
+        common::log_timed(
+            &log.new(o!("step" => "select_directory_search")),
+            |ref _log| {
+                directory_searches::table
+                    .filter(directory_searches::directory_id.eq(directory.id))
+                    .filter(directory_searches::query.eq(self.query.as_str()))
+                    .first(self.conn)
+                    .optional()
+                    .chain_err(|| "Error selecting directory podcast")
+            },
+        )
     }
 
     fn upsert_directory_podcasts(
