@@ -107,6 +107,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
             common::log_timed(&log.new(o!("step" => "parse_results")), |ref _log| {
                 serde_json::from_slice(data).chain_err(|| "Error parsing search results JSON")
             })?;
+        info!(log, "Parsed results"; "count" => wrapper.results.len());
         Ok(wrapper.results)
     }
 
