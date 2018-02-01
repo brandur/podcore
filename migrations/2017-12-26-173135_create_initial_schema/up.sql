@@ -135,7 +135,7 @@ CREATE TABLE directories_podcasts_directory_searches (
 
     directories_podcasts_id BIGINT NOT NULL
         REFERENCES directories_podcasts (id) ON DELETE RESTRICT,
-    directory_searches BIGINT NOT NULL
+    directory_searches_id BIGINT NOT NULL
         REFERENCES directory_searches (id) ON DELETE RESTRICT
 );
 COMMENT ON TABLE directory_searches

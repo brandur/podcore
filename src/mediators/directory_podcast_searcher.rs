@@ -8,7 +8,7 @@ use chrono::Utc;
 use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
-use schema::{directories_podcasts, directory_searches};
+use schema::{directories_podcasts, directories_podcasts_directory_searches, directory_searches};
 use serde_json;
 use slog::Logger;
 use url::form_urlencoded;
@@ -37,13 +37,50 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         };
         let body = self.fetch_results(&log)?;
         let results = Self::parse_results(&log, body.as_slice())?;
-        let _directory_podcasts = self.upsert_directory_podcasts(&log, &results, &directory);
-        Ok(RunResult {})
+        let directory_podcasts = self.upsert_directory_podcasts(&log, &results, &directory)?;
+        let joins = self.refresh_joins(&log, &directory_search, &directory_podcasts)?;
+        Ok(RunResult {
+            directory_podcasts: directory_podcasts,
+            joins:              joins,
+        })
     }
 
     //
     // Steps
     //
+
+    fn refresh_joins(
+        &mut self,
+        log: &Logger,
+        directory_search: &model::DirectorySearch,
+        directory_podcasts: &Vec<model::DirectoryPodcast>,
+    ) -> Result<Vec<model::DirectoryPodcastDirectorySearch>> {
+        common::log_timed(&log.new(o!("step" => "delete_joins")), |ref _log| {
+            diesel::delete(
+                directories_podcasts_directory_searches::table.filter(
+                    directories_podcasts_directory_searches::directory_searches_id
+                        .eq(directory_search.id),
+                ),
+            ).execute(self.conn)
+                .chain_err(|| "Error selecting directory podcast")
+        })?;
+
+        let ins_joins: Vec<insertable::DirectoryPodcastDirectorySearch> = directory_podcasts
+            .iter()
+            .map(|ref p| insertable::DirectoryPodcastDirectorySearch {
+                directories_podcasts_id: p.id,
+                directory_searches_id:   directory_search.id,
+            })
+            .collect();
+
+        common::log_timed(&log.new(o!("step" => "insert_joins")), |ref _log| {
+            diesel::insert_into(directories_podcasts_directory_searches::table)
+                .values(&ins_joins)
+                .get_results(self.conn)
+                .chain_err(|| "Error inserting directory podcast")
+                as Result<Vec<model::DirectoryPodcastDirectorySearch>>
+        })
+    }
 
     fn fetch_results(&mut self, log: &Logger) -> Result<Vec<u8>> {
         let encoded: String = form_urlencoded::Serializer::new(String::new())
@@ -135,7 +172,10 @@ impl<'a> DirectoryPodcastSearcher<'a> {
     }
 }
 
-pub struct RunResult {}
+pub struct RunResult {
+    pub directory_podcasts: Vec<model::DirectoryPodcast>,
+    pub joins:              Vec<model::DirectoryPodcastDirectorySearch>,
+}
 
 //
 // Private types
