@@ -35,25 +35,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
             Some(search) => {
                 // The cache is fresh. Retrieve directory podcasts and search results.
                 if search.retrieved_at > Utc::now() - Duration::hours(1) {
-                    let joins = directories_podcasts_directory_searches::table
-                        .filter(
-                            directories_podcasts_directory_searches::directory_searches_id
-                                .eq(search.id),
-                        )
-                        .order(directories_podcasts_directory_searches::id)
-                        .load::<model::DirectoryPodcastDirectorySearch>(self.conn)
-                        .chain_err(|| "Error loading joins")?;
-                    let directory_podcasts = directories_podcasts::table
-                        .filter(
-                            directories_podcasts::id.eq_any(
-                                joins
-                                    .iter()
-                                    .map(|j| j.directories_podcasts_id)
-                                    .collect::<Vec<i64>>(),
-                            ),
-                        )
-                        .load::<model::DirectoryPodcast>(self.conn)
-                        .chain_err(|| "Error loading directory podcasts")?;
+                    let (directory_podcasts, joins) = self.select_cached_results(&log, &search)?;
                     return Ok(RunResult {
                         cached:             true,
                         directory_podcasts: directory_podcasts,
@@ -63,11 +45,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
                 } else {
                     // The cache is stale. We can reuse the search row (after updating its
                     // retrieval time), but we'll redo all the normal work below.
-                    diesel::update(
-                        directory_searches::table.filter(directory_searches::id.eq(search.id)),
-                    ).set(directory_searches::retrieved_at.eq(Utc::now()))
-                        .get_result(self.conn)
-                        .chain_err(|| "Error updating search retrieval time")?
+                    self.update_directory_search(&log, &search)?
                 }
             }
             None => self.insert_directory_search(&log, &directory)?,
@@ -87,39 +65,6 @@ impl<'a> DirectoryPodcastSearcher<'a> {
     //
     // Steps
     //
-
-    fn refresh_joins(
-        &mut self,
-        log: &Logger,
-        directory_search: &model::DirectorySearch,
-        directory_podcasts: &Vec<model::DirectoryPodcast>,
-    ) -> Result<Vec<model::DirectoryPodcastDirectorySearch>> {
-        common::log_timed(&log.new(o!("step" => "delete_joins")), |ref _log| {
-            diesel::delete(
-                directories_podcasts_directory_searches::table.filter(
-                    directories_podcasts_directory_searches::directory_searches_id
-                        .eq(directory_search.id),
-                ),
-            ).execute(self.conn)
-                .chain_err(|| "Error selecting directory podcast")
-        })?;
-
-        let ins_joins: Vec<insertable::DirectoryPodcastDirectorySearch> = directory_podcasts
-            .iter()
-            .map(|ref p| insertable::DirectoryPodcastDirectorySearch {
-                directories_podcasts_id: p.id,
-                directory_searches_id:   directory_search.id,
-            })
-            .collect();
-
-        common::log_timed(&log.new(o!("step" => "insert_joins")), |ref _log| {
-            diesel::insert_into(directories_podcasts_directory_searches::table)
-                .values(&ins_joins)
-                .get_results(self.conn)
-                .chain_err(|| "Error inserting directory podcast")
-                as Result<Vec<model::DirectoryPodcastDirectorySearch>>
-        })
-    }
 
     fn fetch_results(&mut self, log: &Logger) -> Result<Vec<u8>> {
         let encoded: String = form_urlencoded::Serializer::new(String::new())
@@ -163,6 +108,79 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         Ok(wrapper.results)
     }
 
+    fn refresh_joins(
+        &mut self,
+        log: &Logger,
+        directory_search: &model::DirectorySearch,
+        directory_podcasts: &Vec<model::DirectoryPodcast>,
+    ) -> Result<Vec<model::DirectoryPodcastDirectorySearch>> {
+        common::log_timed(&log.new(o!("step" => "delete_joins")), |ref _log| {
+            diesel::delete(
+                directories_podcasts_directory_searches::table.filter(
+                    directories_podcasts_directory_searches::directory_searches_id
+                        .eq(directory_search.id),
+                ),
+            ).execute(self.conn)
+                .chain_err(|| "Error selecting directory podcast")
+        })?;
+
+        let ins_joins: Vec<insertable::DirectoryPodcastDirectorySearch> = directory_podcasts
+            .iter()
+            .map(|ref p| insertable::DirectoryPodcastDirectorySearch {
+                directories_podcasts_id: p.id,
+                directory_searches_id:   directory_search.id,
+            })
+            .collect();
+
+        common::log_timed(&log.new(o!("step" => "insert_joins")), |ref _log| {
+            diesel::insert_into(directories_podcasts_directory_searches::table)
+                .values(&ins_joins)
+                .get_results(self.conn)
+                .chain_err(|| "Error inserting directory podcast")
+                as Result<Vec<model::DirectoryPodcastDirectorySearch>>
+        })
+    }
+
+    fn select_cached_results(
+        &mut self,
+        log: &Logger,
+        search: &model::DirectorySearch,
+    ) -> Result<
+        (
+            Vec<model::DirectoryPodcast>,
+            Vec<model::DirectoryPodcastDirectorySearch>,
+        ),
+    > {
+        let joins = common::log_timed(&log.new(o!("step" => "select_joins")), |ref _log| {
+            directories_podcasts_directory_searches::table
+                .filter(
+                    directories_podcasts_directory_searches::directory_searches_id.eq(search.id),
+                )
+                .order(directories_podcasts_directory_searches::id)
+                .load::<model::DirectoryPodcastDirectorySearch>(self.conn)
+                .chain_err(|| "Error loading joins")
+        })?;
+
+        let directory_podcasts = common::log_timed(
+            &log.new(o!("step" => "select_directory_podcasts")),
+            |ref _log| {
+                directories_podcasts::table
+                    .filter(
+                        directories_podcasts::id.eq_any(
+                            joins
+                                .iter()
+                                .map(|j| j.directories_podcasts_id)
+                                .collect::<Vec<i64>>(),
+                        ),
+                    )
+                    .load::<model::DirectoryPodcast>(self.conn)
+                    .chain_err(|| "Error loading directory podcasts")
+            },
+        )?;
+
+        Ok((directory_podcasts, joins))
+    }
+
     fn select_directory_search(
         &mut self,
         log: &Logger,
@@ -177,6 +195,23 @@ impl<'a> DirectoryPodcastSearcher<'a> {
                     .first(self.conn)
                     .optional()
                     .chain_err(|| "Error selecting directory podcast")
+            },
+        )
+    }
+
+    fn update_directory_search(
+        &mut self,
+        log: &Logger,
+        search: &model::DirectorySearch,
+    ) -> Result<model::DirectorySearch> {
+        common::log_timed(
+            &log.new(o!("step" => "update_directory_search")),
+            |ref _log| {
+                diesel::update(
+                    directory_searches::table.filter(directory_searches::id.eq(search.id)),
+                ).set(directory_searches::retrieved_at.eq(Utc::now()))
+                    .get_result(self.conn)
+                    .chain_err(|| "Error updating search retrieval time")
             },
         )
     }
