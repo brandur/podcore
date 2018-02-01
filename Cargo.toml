@@ -45,3 +45,4 @@ slog-async = "*"
 slog-term = "*"
 time = { version = "*" }
 tokio-core = "0.1"
+url = "*"

@@ -23,11 +23,15 @@ extern crate r2d2_diesel;
 extern crate rand;
 extern crate regex;
 #[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
+#[macro_use]
 extern crate slog;
 extern crate slog_async;
 extern crate slog_term;
 extern crate time;
 extern crate tokio_core;
+extern crate url;
 
 pub mod api;
 mod errors;

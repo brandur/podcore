@@ -1,5 +1,5 @@
-use mediators::common;
 use errors::*;
+use mediators::common;
 use model;
 use model::insertable;
 use url_fetcher::URLFetcher;
