@@ -91,7 +91,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
 
         let sample = &body[0..100].to_vec();
         info!(log, "Response body (sample)";
-            "body" => format!("{}...", String::from_utf8_lossy(sample)));
+            "body" => format!("{}...", String::from_utf8_lossy(sample).replace("\n", "")));
 
         Ok(body)
     }
