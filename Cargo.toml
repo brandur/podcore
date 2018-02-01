@@ -19,6 +19,7 @@ diesel = { version = "1.0.0-rc1", features = ["chrono", "postgres"] }
 error-chain = { version = "*" }
 futures = "0.1"
 hyper = "0.11"
+hyper-tls = "*"
 
 # This should really be 0.6.0, but unfortunately there appears to be a mismatch
 # in which module the `Request` struct belongs. Hopefully `juniper_iron` will

@@ -3,6 +3,8 @@ use errors::*;
 use futures::Stream;
 use hyper;
 use hyper::{Client, Uri};
+use hyper::client::HttpConnector;
+use hyper_tls::HttpsConnector;
 use std::str::FromStr;
 use std::sync::Arc;
 use tokio_core::reactor::Core;
@@ -28,7 +30,9 @@ impl URLFetcherFactory for URLFetcherFactoryLive {
 
     fn create(&self) -> Box<URLFetcher> {
         let core = Core::new().unwrap();
-        let client = Client::new(&core.handle());
+        let client = Client::configure()
+            .connector(HttpsConnector::new(4, &core.handle()).unwrap())
+            .build(&core.handle());
         Box::new(URLFetcherLive {
             client: client,
             core:   core,
@@ -65,7 +69,7 @@ pub trait URLFetcher {
 
 #[derive(Debug)]
 pub struct URLFetcherLive {
-    pub client: Client<hyper::client::HttpConnector, hyper::Body>,
+    pub client: Client<HttpsConnector<HttpConnector>, hyper::Body>,
     pub core:   Core,
 }
 

@@ -1,6 +1,7 @@
 extern crate clap;
 extern crate diesel;
 extern crate hyper;
+extern crate hyper_tls;
 extern crate iron;
 extern crate juniper_iron;
 extern crate mount;
@@ -24,6 +25,7 @@ use podcore::url_fetcher::{URLFetcherFactoryLive, URLFetcherLive};
 use clap::{App, ArgMatches, SubCommand};
 use diesel::pg::PgConnection;
 use hyper::Client;
+use hyper_tls::HttpsConnector;
 use iron::prelude::*;
 use juniper_iron::{GraphQLHandler, GraphiQLHandler};
 use mount::Mount;
@@ -94,7 +96,9 @@ fn add_podcast(matches: ArgMatches) {
     let matches = matches.subcommand_matches("add").unwrap();
 
     let core = Core::new().unwrap();
-    let client = Client::new(&core.handle());
+    let client = Client::configure()
+        .connector(HttpsConnector::new(4, &core.handle()).unwrap())
+        .build(&core.handle());
     let mut url_fetcher = URLFetcherLive {
         client: client,
         core:   core,
@@ -151,7 +155,9 @@ fn search_podcasts(matches: ArgMatches) {
     let matches = matches.subcommand_matches("search").unwrap();
 
     let core = Core::new().unwrap();
-    let client = Client::new(&core.handle());
+    let client = Client::configure()
+        .connector(HttpsConnector::new(4, &core.handle()).unwrap())
+        .build(&core.handle());
     let mut url_fetcher = URLFetcherLive {
         client: client,
         core:   core,

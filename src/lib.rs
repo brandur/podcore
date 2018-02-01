@@ -10,6 +10,7 @@ extern crate diesel;
 extern crate error_chain;
 extern crate futures;
 extern crate hyper;
+extern crate hyper_tls;
 extern crate iron;
 #[macro_use]
 extern crate juniper;
