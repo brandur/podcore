@@ -72,6 +72,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
             .append_pair("media", "podcast")
             .append_pair("term", self.query.as_str())
             .finish();
+        info!(log, "Encoded query"; "query" => encoded.clone());
 
         let (body, _final_url) =
             common::log_timed(&log.new(o!("step" => "fetch_results")), |ref _log| {
