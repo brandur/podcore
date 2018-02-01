@@ -266,15 +266,34 @@ struct SearchResult {
     artwork_url_100: String,
     collection_id:   u32,
     collection_name: String,
-    feed_url:        String,
+    //#[serde(rename = "feedUrl")]
+    feed_url: String,
 }
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct SearchResultWrapper {
-    results: Vec<SearchResult>,
+    result_count: usize,
+    results:      Vec<SearchResult>,
 }
 
 //
 // Private functions
 //
+
+//
+// Tests
+//
+
+#[cfg(test)]
+mod tests {
+    use mediators::directory_podcast_searcher::*;
+
+    #[test]
+    fn test_results_deserialization() {
+        let encoded = include_bytes!("../test_documents/itunes_search_history.json");
+        let decoded: SearchResultWrapper = serde_json::from_slice(encoded).unwrap();
+        assert_ne!(0, decoded.result_count);
+        assert_eq!(decoded.result_count, decoded.results.len());
+    }
+}
