@@ -11,6 +11,7 @@ use diesel::pg::PgConnection;
 use schema::{directories_podcasts, directories_podcasts_directory_searches, directory_searches};
 use serde_json;
 use slog::Logger;
+use time::Duration;
 use url::form_urlencoded;
 
 pub struct DirectoryPodcastSearcher<'a> {
@@ -31,8 +32,44 @@ impl<'a> DirectoryPodcastSearcher<'a> {
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
         let directory = model::Directory::itunes(&self.conn)?;
         let directory_search = match self.select_directory_search(&log, &directory)? {
-            // TODO: returned cached results
-            Some(search) => search,
+            Some(search) => {
+                // The cache is fresh. Retrieve directory podcasts and search results.
+                if search.retrieved_at > Utc::now() - Duration::hours(1) {
+                    let joins = directories_podcasts_directory_searches::table
+                        .filter(
+                            directories_podcasts_directory_searches::directory_searches_id
+                                .eq(search.id),
+                        )
+                        .order(directories_podcasts_directory_searches::id)
+                        .load::<model::DirectoryPodcastDirectorySearch>(self.conn)
+                        .chain_err(|| "Error loading joins")?;
+                    let directory_podcasts = directories_podcasts::table
+                        .filter(
+                            directories_podcasts::id.eq_any(
+                                joins
+                                    .iter()
+                                    .map(|j| j.directories_podcasts_id)
+                                    .collect::<Vec<i64>>(),
+                            ),
+                        )
+                        .load::<model::DirectoryPodcast>(self.conn)
+                        .chain_err(|| "Error loading directory podcasts")?;
+                    return Ok(RunResult {
+                        cached:             true,
+                        directory_podcasts: directory_podcasts,
+                        directory_search:   search,
+                        joins:              joins,
+                    });
+                } else {
+                    // The cache is stale. We can reuse the search row (after updating its
+                    // retrieval time), but we'll redo all the normal work below.
+                    diesel::update(
+                        directory_searches::table.filter(directory_searches::id.eq(search.id)),
+                    ).set(directory_searches::retrieved_at.eq(Utc::now()))
+                        .get_result(self.conn)
+                        .chain_err(|| "Error updating search retrieval time")?
+                }
+            }
             None => self.insert_directory_search(&log, &directory)?,
         };
         let body = self.fetch_results(&log)?;
@@ -40,7 +77,9 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         let directory_podcasts = self.upsert_directory_podcasts(&log, &results, &directory)?;
         let joins = self.refresh_joins(&log, &directory_search, &directory_podcasts)?;
         Ok(RunResult {
+            cached:             false,
             directory_podcasts: directory_podcasts,
+            directory_search:   directory_search,
             joins:              joins,
         })
     }
@@ -173,7 +212,9 @@ impl<'a> DirectoryPodcastSearcher<'a> {
 }
 
 pub struct RunResult {
+    pub cached:             bool,
     pub directory_podcasts: Vec<model::DirectoryPodcast>,
+    pub directory_search:   model::DirectorySearch,
     pub joins:              Vec<model::DirectoryPodcastDirectorySearch>,
 }
 
