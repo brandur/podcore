@@ -36,6 +36,9 @@ impl<'a> DirectoryPodcastSearcher<'a> {
                 // The cache is fresh. Retrieve directory podcasts and search results, then return
                 // early.
                 if search.retrieved_at > Utc::now() - Duration::hours(1) {
+                    info!(log, "Query cached and fresh";
+                        "retrieved_at" => search.retrieved_at.to_rfc3339());
+
                     let (directory_podcasts, joins) = self.select_cached_results(&log, &search)?;
                     return Ok(RunResult {
                         cached:             true,
@@ -45,11 +48,17 @@ impl<'a> DirectoryPodcastSearcher<'a> {
                     });
                 }
 
+                info!(log, "Query cached, but stale";
+                    "retrieved_at" => search.retrieved_at.to_rfc3339());
+
                 // The cache is stale. We can reuse the search row (after updating its retrieval
                 // time), but we'll redo all the normal work below.
                 self.update_directory_search(&log, &search)?
             }
-            None => self.insert_directory_search(&log, &directory)?,
+            None => {
+                info!(log, "Query not cached");
+                self.insert_directory_search(&log, &directory)?
+            }
         };
         let body = self.fetch_results(&log)?;
         let results = Self::parse_results(&log, body.as_slice())?;
@@ -79,6 +88,11 @@ impl<'a> DirectoryPodcastSearcher<'a> {
                 self.url_fetcher
                     .fetch(format!("https://itunes.apple.com/search?{}", encoded))
             })?;
+
+        let sample = &body[0..100].to_vec();
+        info!(log, "Response body (sample)";
+            "body" => format!("{}...", String::from_utf8_lossy(sample)));
+
         Ok(body)
     }
 
@@ -227,9 +241,10 @@ impl<'a> DirectoryPodcastSearcher<'a> {
     ) -> Result<Vec<model::DirectoryPodcast>> {
         let ins_podcasts: Vec<insertable::DirectoryPodcast> = results
             .iter()
+            .filter(|ref p| p.feed_url.is_some())
             .map(|ref p| insertable::DirectoryPodcast {
                 directory_id: directory.id,
-                feed_url:     Some(p.feed_url.clone()),
+                feed_url:     Some(p.feed_url.clone().unwrap()),
                 podcast_id:   None,
                 vendor_id:    p.collection_id.to_string(),
             })
@@ -266,8 +281,10 @@ struct SearchResult {
     artwork_url_100: String,
     collection_id:   u32,
     collection_name: String,
-    //#[serde(rename = "feedUrl")]
-    feed_url: String,
+
+    // Set as optional because believe it or not, iTunes will occasionally respond with podcasts
+    // that have no feed URL. We'll filter these on our side.
+    feed_url: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
