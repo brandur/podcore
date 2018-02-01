@@ -15,6 +15,7 @@ extern crate tokio_core;
 
 use podcore::api;
 use podcore::graphql;
+use podcore::mediators::directory_podcast_searcher::DirectoryPodcastSearcher;
 use podcore::mediators::podcast_crawler::PodcastCrawler;
 use podcore::mediators::podcast_reingester::PodcastReingester;
 use podcore::mediators::podcast_updater::PodcastUpdater;
@@ -58,6 +59,11 @@ fn main() {
                 .about("Reingests podcasts by reusing their stored raw feeds"),
         )
         .subcommand(
+            SubCommand::with_name("search")
+                .about("Search iTunes directory for podcasts")
+                .arg_from_usage("[QUERY]... 'Search query'"),
+        )
+        .subcommand(
             SubCommand::with_name("serve")
                 .about("Starts the API server")
                 .arg_from_usage("-p, --port [PORT] 'Port to bind server to'"),
@@ -70,6 +76,7 @@ fn main() {
         Some("add") => add_podcast(matches),
         Some("crawl") => crawl_podcasts(matches, options),
         Some("reingest") => reingest_podcasts(matches, options),
+        Some("search") => search_podcasts(matches),
         Some("serve") => serve_http(matches, options),
         None => {
             app.print_help().unwrap();
@@ -135,6 +142,26 @@ fn reingest_podcasts(matches: ArgMatches, options: GlobalOptions) {
     PodcastReingester {
         num_workers: options.num_connections - 1,
         pool:        pool(options.num_connections).clone(),
+    }.run(&log(quiet))
+        .unwrap();
+}
+
+fn search_podcasts(matches: ArgMatches) {
+    let quiet = matches.is_present("quiet");
+    let matches = matches.subcommand_matches("search").unwrap();
+
+    let core = Core::new().unwrap();
+    let client = Client::new(&core.handle());
+    let mut url_fetcher = URLFetcherLive {
+        client: client,
+        core:   core,
+    };
+
+    let query = matches.value_of("QUERY").unwrap();
+    DirectoryPodcastSearcher {
+        conn:        &*connection(),
+        query:       query.to_owned(),
+        url_fetcher: &mut url_fetcher,
     }.run(&log(quiet))
         .unwrap();
 }
