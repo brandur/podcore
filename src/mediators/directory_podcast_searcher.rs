@@ -252,18 +252,22 @@ impl<'a> DirectoryPodcastSearcher<'a> {
             })
             .collect();
 
-        common::log_timed(&log.new(o!("step" => "upsert_episodes")), |ref _log| {
-            Ok(diesel::insert_into(directories_podcasts::table)
-                .values(&ins_podcasts)
-                .on_conflict((
-                    directories_podcasts::directory_id,
-                    directories_podcasts::vendor_id,
-                ))
-                .do_update()
-                .set((directories_podcasts::feed_url.eq(excluded(directories_podcasts::feed_url)),))
-                .get_results(self.conn)
-                .chain_err(|| "Error upserting directory podcasts")?)
-        })
+        common::log_timed(
+            &log.new(o!("step" => "upsert_directory_podcasts")),
+            |ref _log| {
+                Ok(diesel::insert_into(directories_podcasts::table)
+                    .values(&ins_podcasts)
+                    .on_conflict((
+                        directories_podcasts::directory_id,
+                        directories_podcasts::vendor_id,
+                    ))
+                    .do_update()
+                    .set((directories_podcasts::feed_url
+                        .eq(excluded(directories_podcasts::feed_url)),))
+                    .get_results(self.conn)
+                    .chain_err(|| "Error upserting directory podcasts")?)
+            },
+        )
     }
 }
 
