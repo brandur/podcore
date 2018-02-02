@@ -8,6 +8,7 @@ use chrono::Utc;
 use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
+use diesel::pg::upsert::excluded;
 use schema::{directories_podcasts, directories_podcasts_directory_searches, directory_searches};
 use serde_json;
 use slog::Logger;
@@ -89,9 +90,10 @@ impl<'a> DirectoryPodcastSearcher<'a> {
                     .fetch(format!("https://itunes.apple.com/search?{}", encoded))
             })?;
 
-        let sample = &body[0..100].to_vec();
+        // TODO: Extract into function
+        let sample = body.iter().take(100).cloned().collect::<Vec<u8>>();
         info!(log, "Response body (sample)";
-            "body" => format!("{}...", String::from_utf8_lossy(sample).replace("\n", "")));
+            "body" => format!("{}...", String::from_utf8_lossy(sample.as_slice()).replace("\n", "")));
 
         Ok(body)
     }
@@ -257,7 +259,8 @@ impl<'a> DirectoryPodcastSearcher<'a> {
                     directories_podcasts::directory_id,
                     directories_podcasts::vendor_id,
                 ))
-                .do_nothing()
+                .do_update()
+                .set((directories_podcasts::feed_url.eq(excluded(directories_podcasts::feed_url)),))
                 .get_results(self.conn)
                 .chain_err(|| "Error upserting directory podcasts")?)
         })
