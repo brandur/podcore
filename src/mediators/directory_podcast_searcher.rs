@@ -254,16 +254,14 @@ impl<'a> DirectoryPodcastSearcher<'a> {
             })
             .collect();
 
-        let feed_urls: Vec<String> = ins_podcasts
-            .iter()
-            .map(|ref p| p.feed_url.clone())
-            .collect();
-
         // Retrieve any IDs for podcasts that are already in database and have a previous location
         // that matches one returned by our directory.
         let podcast_id_tuples: Vec<(String, i64)> = podcasts::table
             .inner_join(podcast_feed_locations::table)
-            .filter(podcast_feed_locations::feed_url.eq_any(feed_urls))
+            .filter(
+                podcast_feed_locations::feed_url
+                    .eq_any(ins_podcasts.iter().map(|ref p| p.feed_url.clone())),
+            )
             .select((podcast_feed_locations::feed_url, podcasts::id))
             .load(self.conn)?;
 
