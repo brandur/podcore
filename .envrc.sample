@@ -1,2 +1,3 @@
 export DATABASE_URL=postgres://localhost/podcore
+export SENTRY_URL=
 export TEST_DATABASE_URL=postgres://localhost/podcore-test
