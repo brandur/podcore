@@ -61,6 +61,10 @@ fn main() {
                 .about("Crawls the web to retrieve podcasts that need to be updated"),
         )
         .subcommand(
+            SubCommand::with_name("error")
+                .about("Triggers an error (for testing error output and Sentry)"),
+        )
+        .subcommand(
             SubCommand::with_name("reingest")
                 .about("Reingests podcasts by reusing their stored raw feeds"),
         )
@@ -81,6 +85,7 @@ fn main() {
     let res = match matches.subcommand_name() {
         Some("add") => add_podcast(matches),
         Some("crawl") => crawl_podcasts(matches, options),
+        Some("error") => trigger_error(matches),
         Some("reingest") => reingest_podcasts(matches, options),
         Some("search") => search_podcasts(matches),
         Some("serve") => serve_http(matches, options),
@@ -211,6 +216,17 @@ fn serve_http(matches: ArgMatches, options: GlobalOptions) -> Result<()> {
     Ok(())
 }
 
+fn trigger_error(matches: ArgMatches) -> Result<()> {
+    let _quiet = matches.is_present("quiet");
+    let _matches = matches.subcommand_matches("error").unwrap();
+
+    // We chain some extra context on to add a little flavor and to help show what output would
+    // look like
+    Err(Error::from("Error triggered by user request")
+        .chain_err(|| "Chained context 1")
+        .chain_err(|| "Chained context 2"))
+}
+
 //
 // Private types/functions
 //
@@ -237,19 +253,21 @@ fn handle_error(e: &Error) {
     use std::io::Write;
     let stderr = &mut ::std::io::stderr();
 
-    writeln!(stderr, "error: {}", e).unwrap();
+    writeln!(stderr, "outermost error: {}", e).unwrap();
 
     for e in e.iter().skip(1) {
-        writeln!(stderr, "caused by: {}", e).unwrap();
+        writeln!(stderr, "chained error: {}", e).unwrap();
     }
 
     // The backtrace is not always generated. Programs must be run with `RUST_BACKTRACE=1`.
     if let Some(backtrace) = e.backtrace() {
-        writeln!(stderr, "backtrace: {:?}", backtrace).unwrap();
+        writeln!(stderr, "{:?}", backtrace).unwrap();
     }
 
     match env::var("SENTRY_URL") {
         Ok(url) => {
+            writeln!(stderr, "sending event to Sentry").unwrap();
+
             let core = Core::new().unwrap();
             let creds = url.parse::<SentryCredential>().unwrap();
             let client = Sentry::from_settings(core.handle(), Default::default(), creds);
@@ -259,7 +277,7 @@ fn handle_error(e: &Error) {
                 e.to_string().as_str(),
                 &Device::default(), // device
                 None,               // culprit
-                None,               // fingerprint
+                None,               // fingerprint (helps group errors)
                 None,               // server name
                 None,               // TODO: stacktrace
                 None,               // TODO: Git SHA or tag or whatever
