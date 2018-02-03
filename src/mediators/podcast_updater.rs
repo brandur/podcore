@@ -43,6 +43,7 @@ impl<'a> PodcastUpdater<'a> {
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
         // the "final URL" is one that might include a permanent redirect
         let (body, final_url) = self.fetch_feed(log)?;
+        common::log_body_sample(log, &body);
 
         let sha256_hash = content_hash(&body);
 

@@ -91,11 +91,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
                 self.url_fetcher
                     .fetch(format!("https://itunes.apple.com/search?{}", encoded))
             })?;
-
-        // TODO: Extract into function
-        let sample = body.iter().take(100).cloned().collect::<Vec<u8>>();
-        info!(log, "Response body (sample)";
-            "body" => format!("{}...", String::from_utf8_lossy(sample.as_slice()).replace("\n", "")));
+        common::log_body_sample(log, &body);
 
         Ok(body)
     }
