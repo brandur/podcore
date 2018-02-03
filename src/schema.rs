@@ -9,7 +9,7 @@ table! {
     directories_podcasts (id) {
         id -> Int8,
         directory_id -> Int8,
-        feed_url -> Nullable<Text>,
+        feed_url -> Text,
         podcast_id -> Nullable<Int8>,
         vendor_id -> Text,
     }

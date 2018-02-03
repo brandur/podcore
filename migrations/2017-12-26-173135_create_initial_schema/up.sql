@@ -107,7 +107,7 @@ CREATE TABLE directories_podcasts (
 
     directory_id BIGINT NOT NULL
         REFERENCES directories (id) ON DELETE RESTRICT,
-    feed_url TEXT
+    feed_url TEXT NOT NULL
         CHECK (char_length(feed_url) <= 500),
     podcast_id BIGINT
         REFERENCES podcasts (id) ON DELETE RESTRICT,
@@ -117,7 +117,7 @@ CREATE TABLE directories_podcasts (
 COMMENT ON TABLE directories_podcasts
     IS 'Podcast series. e.g. Roderick on the Line.';
 COMMENT ON COLUMN directories_podcasts.feed_url
-    IS 'Podcast''s feed URL. Useful when retrieving a podcast''s feed for the first time and unset after.';
+    IS 'Podcast''s feed URL. Useful when retrieving a podcast''s feed for the first time.';
 COMMENT ON COLUMN directories_podcasts.podcast_id
     IS 'Internal podcast ID. Only assigned after the podcast''s feed is retrieved for the first time.';
 COMMENT ON COLUMN directories_podcasts.vendor_id

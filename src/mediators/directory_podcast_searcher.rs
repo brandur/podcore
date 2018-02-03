@@ -9,9 +9,11 @@ use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use diesel::pg::upsert::excluded;
-use schema::{directories_podcasts, directories_podcasts_directory_searches, directory_searches};
+use schema::{directories_podcasts, directories_podcasts_directory_searches, directory_searches,
+             podcast_feed_locations, podcasts};
 use serde_json;
 use slog::Logger;
+use std::collections::HashMap;
 use time::Duration;
 use url::form_urlencoded;
 
@@ -241,16 +243,36 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         results: &Vec<SearchResult>,
         directory: &model::Directory,
     ) -> Result<Vec<model::DirectoryPodcast>> {
-        let ins_podcasts: Vec<insertable::DirectoryPodcast> = results
+        let mut ins_podcasts: Vec<insertable::DirectoryPodcast> = results
             .iter()
             .filter(|ref p| p.feed_url.is_some())
             .map(|ref p| insertable::DirectoryPodcast {
                 directory_id: directory.id,
-                feed_url:     Some(p.feed_url.clone().unwrap()),
+                feed_url:     p.feed_url.clone().unwrap(),
                 podcast_id:   None,
                 vendor_id:    p.collection_id.to_string(),
             })
             .collect();
+
+        let feed_urls: Vec<String> = ins_podcasts
+            .iter()
+            .map(|ref p| p.feed_url.clone())
+            .collect();
+
+        // Retrieve any IDs for podcasts that are already in database and have a previous location
+        // that matches one returned by our directory.
+        let podcast_id_tuples: Vec<(String, i64)> = podcasts::table
+            .inner_join(podcast_feed_locations::table)
+            .filter(podcast_feed_locations::feed_url.eq_any(feed_urls))
+            .select((podcast_feed_locations::feed_url, podcasts::id))
+            .load(self.conn)?;
+
+        // Maps feed URLs to podcast IDs.
+        let podcast_id_map: HashMap<_, _> = podcast_id_tuples.into_iter().collect();
+
+        for mut ins_podcast in &mut ins_podcasts {
+            ins_podcast.podcast_id = podcast_id_map.get(&ins_podcast.feed_url).cloned();
+        }
 
         common::log_timed(
             &log.new(o!("step" => "upsert_directory_podcasts")),

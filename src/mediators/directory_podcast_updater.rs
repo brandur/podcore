@@ -24,34 +24,16 @@ impl<'a> DirectoryPodcastUpdater<'a> {
     }
 
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
-        let feed_url = self.dir_podcast.feed_url.clone().unwrap();
-
         PodcastUpdater {
             conn:             self.conn,
             disable_shortcut: false,
-            feed_url:         feed_url,
+            feed_url:         self.dir_podcast.feed_url.clone(),
             url_fetcher:      self.url_fetcher,
         }.run(&log)?;
-
-        self.save_dir_podcast(&log)?;
 
         Ok(RunResult {
             dir_podcast: self.dir_podcast,
         })
-    }
-
-    // Steps
-    //
-
-    fn save_dir_podcast(&mut self, log: &Logger) -> Result<()> {
-        common::log_timed(&log.new(o!("step" => "save_dir_podcast")), |ref _log| {
-            self.dir_podcast.feed_url = None;
-            self.dir_podcast
-                .save_changes::<model::DirectoryPodcast>(&self.conn)
-                .chain_err(|| "Error saving changes to directory podcast")
-        })?;
-
-        Ok(())
     }
 }
 
@@ -80,11 +62,7 @@ mod tests {
     fn test_minimal_feed() {
         let mut bootstrap = TestBootstrap::new(MINIMAL_FEED);
         let (mut mediator, log) = bootstrap.mediator();
-        let res = mediator.run(&log).unwrap();
-
-        // the mediator empties feed URL after the directory podcast has been handled and its moved
-        // to a more accurate property
-        assert_eq!(None, res.dir_podcast.feed_url);
+        let _res = mediator.run(&log).unwrap();
     }
 
     // Private types/functions

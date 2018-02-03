@@ -42,7 +42,7 @@ impl Directory {
 pub struct DirectoryPodcast {
     pub id:           i64,
     pub directory_id: i64,
-    pub feed_url:     Option<String>,
+    pub feed_url:     String,
     pub podcast_id:   Option<i64>,
     pub vendor_id:    String,
 }
@@ -118,7 +118,7 @@ pub mod insertable {
     #[table_name = "directories_podcasts"]
     pub struct DirectoryPodcast {
         pub directory_id: i64,
-        pub feed_url:     Option<String>,
+        pub feed_url:     String,
         pub podcast_id:   Option<i64>,
         pub vendor_id:    String,
     }
