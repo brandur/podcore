@@ -348,7 +348,7 @@ mod tests {
 
     #[test]
     fn test_results_deserialization() {
-        let encoded = include_bytes!("../test_documents/itunes_search_history.json");
+        let encoded = include_bytes!("../test_documents/itunes_search.json");
         let decoded: SearchResultWrapper = serde_json::from_slice(encoded).unwrap();
         assert_ne!(0, decoded.result_count);
         assert_eq!(decoded.result_count, decoded.results.len());
