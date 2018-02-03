@@ -44,6 +44,7 @@ pub struct DirectoryPodcast {
     pub directory_id: i64,
     pub feed_url:     String,
     pub podcast_id:   Option<i64>,
+    pub title:        String,
     pub vendor_id:    String,
 }
 
@@ -120,6 +121,7 @@ pub mod insertable {
         pub directory_id: i64,
         pub feed_url:     String,
         pub podcast_id:   Option<i64>,
+        pub title:        String,
         pub vendor_id:    String,
     }
 

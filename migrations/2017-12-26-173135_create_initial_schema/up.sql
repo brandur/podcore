@@ -111,6 +111,8 @@ CREATE TABLE directories_podcasts (
         CHECK (char_length(feed_url) <= 500),
     podcast_id BIGINT
         REFERENCES podcasts (id) ON DELETE RESTRICT,
+    title TEXT NOT NULL
+        CHECK (char_length(title) <= 500),
     vendor_id TEXT NOT NULL
         CHECK (char_length(vendor_id) <= 200)
 );
@@ -120,6 +122,8 @@ COMMENT ON COLUMN directories_podcasts.feed_url
     IS 'Podcast''s feed URL. Useful when retrieving a podcast''s feed for the first time.';
 COMMENT ON COLUMN directories_podcasts.podcast_id
     IS 'Internal podcast ID. Only assigned after the podcast''s feed is retrieved for the first time.';
+COMMENT ON COLUMN directories_podcasts.title
+    IS 'Podcast''s title.';
 COMMENT ON COLUMN directories_podcasts.vendor_id
     IS 'A unique ID for the podcast which is assigned by the directory''s vendor.';
 

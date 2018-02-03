@@ -250,6 +250,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
                 directory_id: directory.id,
                 feed_url:     p.feed_url.clone().unwrap(),
                 podcast_id:   None,
+                title:        p.collection_name.clone(),
                 vendor_id:    p.collection_id.to_string(),
             })
             .collect();
@@ -282,8 +283,10 @@ impl<'a> DirectoryPodcastSearcher<'a> {
                         directories_podcasts::vendor_id,
                     ))
                     .do_update()
-                    .set((directories_podcasts::feed_url
-                        .eq(excluded(directories_podcasts::feed_url)),))
+                    .set((
+                        directories_podcasts::feed_url.eq(excluded(directories_podcasts::feed_url)),
+                        directories_podcasts::title.eq(excluded(directories_podcasts::title)),
+                    ))
                     .get_results(self.conn)
                     .chain_err(|| "Error upserting directory podcasts")?)
             },
@@ -343,7 +346,42 @@ mod tests {
     fn test_new_search() {
         let mut bootstrap = TestBootstrap::new();
         let (mut mediator, log) = bootstrap.mediator();
-        let _res = mediator.run(&log).unwrap();
+        let res = mediator.run(&log).unwrap();
+
+        assert_eq!(false, res.cached);
+
+        // Directory podcast
+        assert_eq!(1, res.directory_podcasts.len());
+        let directory_podcast = &res.directory_podcasts[0];
+        assert_eq!("https://example.com/feed.xml", directory_podcast.feed_url);
+        assert_eq!("Example Podcast", directory_podcast.title);
+        assert_eq!("123", directory_podcast.vendor_id);
+
+        // Directory search
+        assert_eq!(DIRECTORY_SEARCH_QUERY, res.directory_search.query);
+
+        // Join row
+        assert_eq!(1, res.joins.len());
+        let join = &res.joins[0];
+        assert_eq!(directory_podcast.id, join.directories_podcasts_id);
+        assert_eq!(res.directory_search.id, join.directory_searches_id);
+    }
+
+    #[test]
+    fn test_cached_search_fresh() {
+        let mut bootstrap = TestBootstrap::new();
+
+        // First run (inserts original results)
+        {
+            let (mut mediator, log) = bootstrap.mediator();
+            let _res = mediator.run(&log).unwrap();
+        }
+
+        // Second run (hits cached results)
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
+
+        assert_eq!(true, res.cached);
     }
 
     #[test]
@@ -357,13 +395,14 @@ mod tests {
     //
     // Private types/functions
     //
+    const DIRECTORY_SEARCH_QUERY: &str = "History";
 
-    const DIRECTORY_SEARCH: &[u8] = br#"{
+    const DIRECTORY_SEARCH_RESULTS: &[u8] = br#"{
   "resultCount": 1,
   "results": [
     {
       "artworkUrl100": "https://example.com/artwork_100x100.jpg",
-      "collectionId": 471418144,
+      "collectionId": 123,
       "collectionName": "Example Podcast",
       "kind": "podcast",
       "feedUrl": "https://example.com/feed.xml"
@@ -387,7 +426,7 @@ mod tests {
                 conn:        conn,
                 log:         test_helpers::log(),
                 url_fetcher: URLFetcherPassThrough {
-                    data: Arc::new(DIRECTORY_SEARCH.to_vec()),
+                    data: Arc::new(DIRECTORY_SEARCH_RESULTS.to_vec()),
                 },
             }
         }
@@ -396,7 +435,7 @@ mod tests {
             (
                 DirectoryPodcastSearcher {
                     conn:        &*self.conn,
-                    query:       "History".to_owned(),
+                    query:       DIRECTORY_SEARCH_QUERY.to_owned(),
                     url_fetcher: &mut self.url_fetcher,
                 },
                 self.log.clone(),

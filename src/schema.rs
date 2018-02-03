@@ -11,6 +11,7 @@ table! {
         directory_id -> Int8,
         feed_url -> Text,
         podcast_id -> Nullable<Int8>,
+        title -> Text,
         vendor_id -> Text,
     }
 }

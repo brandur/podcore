@@ -102,6 +102,7 @@ mod tests {
                 directory_id: itunes.id,
                 feed_url:     url.to_owned(),
                 podcast_id:   None,
+                title:        "Example Podcast".to_owned(),
                 vendor_id:    "471418144".to_owned(),
             };
             let dir_podcast = diesel::insert_into(directories_podcasts::table)
