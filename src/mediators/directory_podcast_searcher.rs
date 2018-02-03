@@ -344,7 +344,7 @@ mod tests {
 
     #[test]
     fn test_new_search() {
-        let mut bootstrap = TestBootstrap::new();
+        let mut bootstrap = TestBootstrap::new(DIRECTORY_SEARCH_RESULTS);
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
 
@@ -369,19 +369,66 @@ mod tests {
 
     #[test]
     fn test_cached_search_fresh() {
-        let mut bootstrap = TestBootstrap::new();
+        let mut bootstrap = TestBootstrap::new(DIRECTORY_SEARCH_RESULTS);
 
         // First run (inserts original results)
-        {
+        let _res = {
             let (mut mediator, log) = bootstrap.mediator();
-            let _res = mediator.run(&log).unwrap();
-        }
+            mediator.run(&log).unwrap()
+        };
 
         // Second run (hits cached results)
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
 
         assert_eq!(true, res.cached);
+    }
+
+    #[test]
+    fn test_cached_search_stale() {
+        // First run (inserts original results)
+        {
+            let mut bootstrap = TestBootstrap::new(DIRECTORY_SEARCH_RESULTS);
+
+            let res = {
+                let (mut mediator, log) = bootstrap.mediator();
+                mediator.run(&log).unwrap()
+            };
+
+            // Update the search's timestamp, thereby invalidating the cache.
+            diesel::update(
+                directory_searches::table
+                    .filter(directory_searches::id.eq(res.directory_search.id)),
+            ).set(directory_searches::retrieved_at.eq(Utc::now() - Duration::days(1)))
+                .execute(&*bootstrap.conn)
+                .unwrap();
+        }
+
+        // Second run. Notice that we're using the alternate set of results.
+        let mut bootstrap = TestBootstrap::new(DIRECTORY_SEARCH_RESULTS_ALT);
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
+
+        assert_eq!(false, res.cached);
+
+        // Directory podcast
+        assert_eq!(1, res.directory_podcasts.len());
+        let directory_podcast = &res.directory_podcasts[0];
+        assert_eq!(
+            "https://example.com/alternate.xml",
+            directory_podcast.feed_url
+        );
+        assert_eq!("Alternate Podcast", directory_podcast.title);
+        assert_eq!("124", directory_podcast.vendor_id);
+
+        // Directory search
+        assert_eq!(DIRECTORY_SEARCH_QUERY, res.directory_search.query);
+
+        // Join row
+        assert_eq!(1, res.joins.len());
+        let join = &res.joins[0];
+        assert_eq!(directory_podcast.id, join.directories_podcasts_id);
+        assert_eq!(res.directory_search.id, join.directory_searches_id);
     }
 
     #[test]
@@ -410,6 +457,19 @@ mod tests {
   ]
 }"#;
 
+    const DIRECTORY_SEARCH_RESULTS_ALT: &[u8] = br#"{
+  "resultCount": 1,
+  "results": [
+    {
+      "artworkUrl100": "https://example.com/artwork_100x100.jpg",
+      "collectionId": 124,
+      "collectionName": "Alternate Podcast",
+      "kind": "podcast",
+      "feedUrl": "https://example.com/alternate.xml"
+    }
+  ]
+}"#;
+
     // Encapsulates the structures that are needed for tests to run. One should only be obtained by
     // invoking bootstrap().
     struct TestBootstrap {
@@ -419,14 +479,14 @@ mod tests {
     }
 
     impl TestBootstrap {
-        fn new() -> TestBootstrap {
+        fn new(data: &[u8]) -> TestBootstrap {
             let conn = test_helpers::connection();
 
             TestBootstrap {
                 conn:        conn,
                 log:         test_helpers::log(),
                 url_fetcher: URLFetcherPassThrough {
-                    data: Arc::new(DIRECTORY_SEARCH_RESULTS.to_vec()),
+                    data: Arc::new(data.to_vec()),
                 },
             }
         }
