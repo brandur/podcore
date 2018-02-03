@@ -6,6 +6,7 @@ cargo install diesel_cli --no-default-features --features postgres
 ```
 
 ```
+cp .envrc.sample .envrc
 direnv allow
 
 # $DATABASE_URL
