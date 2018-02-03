@@ -8,6 +8,7 @@ extern crate mount;
 extern crate podcore;
 extern crate r2d2;
 extern crate r2d2_diesel;
+extern crate sentry;
 #[macro_use]
 extern crate slog;
 extern crate slog_async;
@@ -15,6 +16,7 @@ extern crate slog_term;
 extern crate tokio_core;
 
 use podcore::api;
+use podcore::errors::*;
 use podcore::graphql;
 use podcore::mediators::directory_podcast_searcher::DirectoryPodcastSearcher;
 use podcore::mediators::podcast_crawler::PodcastCrawler;
@@ -31,7 +33,9 @@ use juniper_iron::{GraphQLHandler, GraphiQLHandler};
 use mount::Mount;
 use r2d2::{Pool, PooledConnection};
 use r2d2_diesel::ConnectionManager;
+use sentry::{Device, Sentry, SentryCredential};
 use slog::{Drain, Logger};
+use std::default::Default;
 use std::env;
 use std::thread;
 use std::time::Duration;
@@ -74,7 +78,7 @@ fn main() {
     let matches = app.clone().get_matches();
     let options = parse_global_options(&matches);
 
-    match matches.subcommand_name() {
+    let res = match matches.subcommand_name() {
         Some("add") => add_podcast(matches),
         Some("crawl") => crawl_podcasts(matches, options),
         Some("reingest") => reingest_podcasts(matches, options),
@@ -82,22 +86,27 @@ fn main() {
         Some("serve") => serve_http(matches, options),
         None => {
             app.print_help().unwrap();
-            return;
+            Ok(())
         }
         _ => unreachable!(),
-    }
+    };
+    if let Err(ref e) = res {
+        handle_error(&e);
+    };
 }
 
+//
 // Subcommands
 //
 
-fn add_podcast(matches: ArgMatches) {
+fn add_podcast(matches: ArgMatches) -> Result<()> {
     let quiet = matches.is_present("quiet");
     let matches = matches.subcommand_matches("add").unwrap();
 
     let core = Core::new().unwrap();
     let client = Client::configure()
-        .connector(HttpsConnector::new(4, &core.handle()).unwrap())
+        .connector(HttpsConnector::new(4, &core.handle())
+            .chain_err(|| "Error initializing HTTPS connector")?)
         .build(&core.handle());
     let mut url_fetcher = URLFetcherLive {
         client: client,
@@ -110,12 +119,12 @@ fn add_podcast(matches: ArgMatches) {
             disable_shortcut: false,
             feed_url:         url.to_owned().to_owned(),
             url_fetcher:      &mut url_fetcher,
-        }.run(&log(quiet))
-            .unwrap();
+        }.run(&log(quiet))?;
     }
+    Ok(())
 }
 
-fn crawl_podcasts(matches: ArgMatches, options: GlobalOptions) {
+fn crawl_podcasts(matches: ArgMatches, options: GlobalOptions) -> Result<()> {
     let quiet = matches.is_present("quiet");
     let log = log(quiet);
     let _matches = matches.subcommand_matches("crawl").unwrap();
@@ -126,8 +135,7 @@ fn crawl_podcasts(matches: ArgMatches, options: GlobalOptions) {
             num_workers:         options.num_connections - 1,
             pool:                pool(options.num_connections).clone(),
             url_fetcher_factory: Box::new(URLFetcherFactoryLive {}),
-        }.run(&log)
-            .unwrap();
+        }.run(&log)?;
 
         num_loops += 1;
         info!(log, "Finished work loop"; "num_loops" => num_loops, "num_podcasts" => res.num_podcasts);
@@ -139,24 +147,25 @@ fn crawl_podcasts(matches: ArgMatches, options: GlobalOptions) {
     }
 }
 
-fn reingest_podcasts(matches: ArgMatches, options: GlobalOptions) {
+fn reingest_podcasts(matches: ArgMatches, options: GlobalOptions) -> Result<()> {
     let quiet = matches.is_present("quiet");
     let _matches = matches.subcommand_matches("reingest").unwrap();
 
     PodcastReingester {
         num_workers: options.num_connections - 1,
         pool:        pool(options.num_connections).clone(),
-    }.run(&log(quiet))
-        .unwrap();
+    }.run(&log(quiet))?;
+    Ok(())
 }
 
-fn search_podcasts(matches: ArgMatches) {
+fn search_podcasts(matches: ArgMatches) -> Result<()> {
     let quiet = matches.is_present("quiet");
     let matches = matches.subcommand_matches("search").unwrap();
 
     let core = Core::new().unwrap();
     let client = Client::configure()
-        .connector(HttpsConnector::new(4, &core.handle()).unwrap())
+        .connector(HttpsConnector::new(4, &core.handle())
+            .chain_err(|| "Error initializing HTTPS connector")?)
         .build(&core.handle());
     let mut url_fetcher = URLFetcherLive {
         client: client,
@@ -168,11 +177,11 @@ fn search_podcasts(matches: ArgMatches) {
         conn:        &*connection(),
         query:       query.to_owned(),
         url_fetcher: &mut url_fetcher,
-    }.run(&log(quiet))
-        .unwrap();
+    }.run(&log(quiet))?;
+    Ok(())
 }
 
-fn serve_http(matches: ArgMatches, options: GlobalOptions) {
+fn serve_http(matches: ArgMatches, options: GlobalOptions) -> Result<()> {
     let quiet = matches.is_present("quiet");
     let matches = matches.subcommand_matches("serve").unwrap();
 
@@ -198,9 +207,11 @@ fn serve_http(matches: ArgMatches, options: GlobalOptions) {
     info!(log, "API starting on: {}", host);
     Iron::new(api::chain(&log, mount))
         .http(host.as_str())
-        .unwrap();
+        .chain_err(|| "Error binding API")?;
+    Ok(())
 }
 
+//
 // Private types/functions
 //
 
@@ -220,6 +231,47 @@ fn connection() -> PooledConnection<ConnectionManager<PgConnection>> {
     pool(1)
         .get()
         .expect("Error acquiring connection from connection pool")
+}
+
+fn handle_error(e: &Error) {
+    use std::io::Write;
+    let stderr = &mut ::std::io::stderr();
+
+    writeln!(stderr, "error: {}", e).unwrap();
+
+    for e in e.iter().skip(1) {
+        writeln!(stderr, "caused by: {}", e).unwrap();
+    }
+
+    // The backtrace is not always generated. Programs must be run with `RUST_BACKTRACE=1`.
+    if let Some(backtrace) = e.backtrace() {
+        writeln!(stderr, "backtrace: {:?}", backtrace).unwrap();
+    }
+
+    match env::var("SENTRY_URL") {
+        Ok(url) => {
+            let core = Core::new().unwrap();
+            let creds = url.parse::<SentryCredential>().unwrap();
+            let client = Sentry::from_settings(core.handle(), Default::default(), creds);
+            client.log_event(sentry::Event::new(
+                "panic",
+                "fatal",
+                e.to_string().as_str(),
+                &Device::default(), // device
+                None,               // culprit
+                None,               // fingerprint
+                None,               // server name
+                None,               // TODO: stacktrace
+                None,               // TODO: Git SHA or tag or whatever
+                None,               // e.g. "production"
+                None,               // tags
+                None,               // extra
+            ));
+        }
+        Err(_) => (),
+    };
+
+    ::std::process::exit(1);
 }
 
 fn log(quiet: bool) -> Logger {

@@ -35,7 +35,7 @@ extern crate tokio_core;
 extern crate url;
 
 pub mod api;
-mod errors;
+pub mod errors;
 pub mod graphql;
 #[cfg(test)]
 #[macro_use]
