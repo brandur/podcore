@@ -65,6 +65,7 @@ mod tests {
         let _res = mediator.run(&log).unwrap();
     }
 
+    //
     // Private types/functions
     //
 
@@ -83,7 +84,7 @@ mod tests {
 </rss>"#;
 
     // Encapsulates the structures that are needed for tests to run. One should only be obtained by
-    // invoking bootstrap().
+    // invoking TestBootstrap::new().
     struct TestBootstrap {
         conn:        PooledConnection<ConnectionManager<PgConnection>>,
         dir_podcast: model::DirectoryPodcast,
@@ -99,7 +100,7 @@ mod tests {
             let itunes = model::Directory::itunes(&conn).unwrap();
             let dir_podcast_ins = insertable::DirectoryPodcast {
                 directory_id: itunes.id,
-                feed_url:     Some(url.to_owned()),
+                feed_url:     url.to_owned(),
                 podcast_id:   None,
                 vendor_id:    "471418144".to_owned(),
             };

@@ -332,6 +332,19 @@ struct SearchResultWrapper {
 #[cfg(test)]
 mod tests {
     use mediators::directory_podcast_searcher::*;
+    use test_helpers;
+    use url_fetcher::URLFetcherPassThrough;
+
+    use r2d2::PooledConnection;
+    use r2d2_diesel::ConnectionManager;
+    use std::sync::Arc;
+
+    #[test]
+    fn test_new_search() {
+        let mut bootstrap = TestBootstrap::new();
+        let (mut mediator, log) = bootstrap.mediator();
+        let _res = mediator.run(&log).unwrap();
+    }
 
     #[test]
     fn test_results_deserialization() {
@@ -339,5 +352,55 @@ mod tests {
         let decoded: SearchResultWrapper = serde_json::from_slice(encoded).unwrap();
         assert_ne!(0, decoded.result_count);
         assert_eq!(decoded.result_count, decoded.results.len());
+    }
+
+    //
+    // Private types/functions
+    //
+
+    const DIRECTORY_SEARCH: &[u8] = br#"{
+  "resultCount": 1,
+  "results": [
+    {
+      "artworkUrl100": "https://example.com/artwork_100x100.jpg",
+      "collectionId": 471418144,
+      "collectionName": "Example Podcast",
+      "kind": "podcast",
+      "feedUrl": "https://example.com/feed.xml"
+    }
+  ]
+}"#;
+
+    // Encapsulates the structures that are needed for tests to run. One should only be obtained by
+    // invoking bootstrap().
+    struct TestBootstrap {
+        conn:        PooledConnection<ConnectionManager<PgConnection>>,
+        log:         Logger,
+        url_fetcher: URLFetcherPassThrough,
+    }
+
+    impl TestBootstrap {
+        fn new() -> TestBootstrap {
+            let conn = test_helpers::connection();
+
+            TestBootstrap {
+                conn:        conn,
+                log:         test_helpers::log(),
+                url_fetcher: URLFetcherPassThrough {
+                    data: Arc::new(DIRECTORY_SEARCH.to_vec()),
+                },
+            }
+        }
+
+        fn mediator(&mut self) -> (DirectoryPodcastSearcher, Logger) {
+            (
+                DirectoryPodcastSearcher {
+                    conn:        &*self.conn,
+                    query:       "History".to_owned(),
+                    url_fetcher: &mut self.url_fetcher,
+                },
+                self.log.clone(),
+            )
+        }
     }
 }
