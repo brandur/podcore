@@ -34,6 +34,7 @@ extern crate slog_term;
 extern crate time;
 extern crate tokio_core;
 extern crate url;
+extern crate uuid;
 
 pub mod api;
 pub mod errors;

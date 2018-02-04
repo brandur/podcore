@@ -12,6 +12,7 @@ use std;
 use std::collections::HashMap;
 use std::default::Default;
 use url;
+use uuid::Uuid;
 
 pub struct ErrorReporter<'a> {
     pub creds:       &'a SentryCredentials,
@@ -29,22 +30,15 @@ impl<'a> ErrorReporter<'a> {
     fn run_inner(&mut self, log: &Logger) -> Result<()> {
         let event = Event {
             // required
-            event_id:  "".to_owned(),
+            event_id:  Uuid::new_v4().simple().to_string(), // `simple` gets an unhyphenated UUID
             message:   self.error.to_string(),
             timestamp: Utc::now().to_rfc3339(),
             level:     "fatal".to_owned(),
-            logger:    "panic".to_owned(), // TODO: What should my logger be?
+            logger:    "panic".to_owned(),
             platform:  "other".to_owned(),
             sdk:       SDK {
-                name:    "rust-sentry".to_owned(),
+                name:    env!("CARGO_PKG_NAME").to_owned(),
                 version: env!("CARGO_PKG_VERSION").to_owned(),
-            },
-            device:    Device {
-                name:    std::env::var_os("OSTYPE")
-                    .and_then(|cs| cs.into_string().ok())
-                    .unwrap_or("".to_owned()),
-                version: "".to_owned(),
-                build:   "".to_owned(),
             },
 
             // optional
@@ -56,8 +50,9 @@ impl<'a> ErrorReporter<'a> {
             environment: None, // TODO: Want environment,
             modules:     Default::default(),
             extra:       Default::default(),
-            fingerprint: vec![], // TODO: Probably want fingerprint
+            fingerprint: vec!["{{ default }}".to_owned()], // Maybe further customize the fingerprint
         };
+        info!(log, "Generated event"; "event_id" => event.event_id.as_str());
 
         let mut req = Request::new(Method::Post, self.creds.uri().clone());
         let body = serde_json::to_string(&event).map_err(Error::from)?;
@@ -168,13 +163,6 @@ impl std::str::FromStr for SentryCredentials {
 
 header! { (XSentryAuth, "X-Sentry-Auth") => [String] }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
-pub struct Device {
-    name:    String,
-    version: String,
-    build:   String,
-}
-
 // see https://docs.getsentry.com/hosted/clientdev/attributes/
 #[derive(Debug, Clone, Serialize)]
 struct Event {
@@ -186,7 +174,6 @@ struct Event {
     logger:    String, // ex "my.logger.name"
     platform:  String, // Acceptable values ..., other
     sdk:       SDK,
-    device:    Device,
 
     // optional
     culprit:     Option<String>, // the primary perpetrator of this event ex: "my.module.function_name"
