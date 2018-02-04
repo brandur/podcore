@@ -3,6 +3,7 @@ use mediators::common;
 use url_fetcher::URLFetcher;
 
 use chrono::Utc;
+use error_chain::ChainedError; // contains `display_chain`
 use hyper;
 use hyper::{Body, Method, Request, StatusCode, Uri};
 use hyper::header::{ContentLength, ContentType};
@@ -28,10 +29,35 @@ impl<'a> ErrorReporter<'a> {
     }
 
     fn run_inner(&mut self, log: &Logger) -> Result<()> {
+        let stack_trace = if let Some(backtrace) = self.error.backtrace() {
+            let mut frames = vec![];
+            for ref frame in backtrace.frames() {
+                // TODO: Is this right? Some frames can have no symbols. Try to check backtrace
+                // implementation.
+                for ref symbol in frame.symbols() {
+                    let name = symbol
+                        .name()
+                        .map_or("unresolved symbol".to_owned(), |name| name.to_string());
+                    let filename = symbol
+                        .filename()
+                        .map_or("".to_owned(), |sym| sym.to_string_lossy().into_owned());
+                    let lineno = symbol.lineno().unwrap_or(0);
+                    frames.push(StackFrame {
+                        filename: filename,
+                        function: name,
+                        lineno:   lineno,
+                    });
+                }
+            }
+            Some(StackTrace { frames: frames })
+        } else {
+            None
+        };
+
         let event = Event {
             // required
             event_id:  Uuid::new_v4().simple().to_string(), // `simple` gets an unhyphenated UUID
-            message:   self.error.to_string(),
+            message:   format!("{}", self.error.display_chain()),
             timestamp: Utc::now().to_rfc3339(),
             level:     "fatal".to_owned(),
             logger:    "panic".to_owned(),
@@ -44,7 +70,7 @@ impl<'a> ErrorReporter<'a> {
             // optional
             culprit:     None,
             server_name: None, // TODO: Want server name
-            stack_trace: None, // TODO: Want stack trace
+            stack_trace: stack_trace,
             release:     None, // TODO: Want release,
             tags:        Default::default(),
             environment: None, // TODO: Want environment,
@@ -178,7 +204,10 @@ struct Event {
     // optional
     culprit:     Option<String>, // the primary perpetrator of this event ex: "my.module.function_name"
     server_name: Option<String>, // host client from which the event was recorded
-    stack_trace: Option<Vec<StackFrame>>, // stack trace
+
+    #[serde(rename = "stacktrace")]
+    stack_trace: Option<StackTrace>, // stack trace
+
     release:     Option<String>, // generally be something along the lines of the git SHA for the given project
     tags:        HashMap<String, String>, // WARNING! should be serialized as json object k->v
     environment: Option<String>, // ex: "production"
@@ -198,4 +227,9 @@ struct StackFrame {
     filename: String,
     function: String,
     lineno:   u32,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct StackTrace {
+    frames: Vec<StackFrame>,
 }
