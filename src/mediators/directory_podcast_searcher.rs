@@ -9,7 +9,7 @@ use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use diesel::pg::upsert::excluded;
-use hyper;
+use hyper::{Method, StatusCode};
 use schema::{directories_podcasts, directories_podcasts_directory_searches, directory_searches,
              podcast_feed_locations, podcasts};
 use serde_json;
@@ -87,14 +87,21 @@ impl<'a> DirectoryPodcastSearcher<'a> {
             .finish();
         info!(log, "Encoded query"; "query" => encoded.clone());
 
-        let (body, _final_url) =
+        let (status, body, _final_url) =
             common::log_timed(&log.new(o!("step" => "fetch_results")), |ref _log| {
                 self.url_fetcher.fetch(
-                    hyper::Method::Get,
+                    Method::Get,
                     format!("https://itunes.apple.com/search?{}", encoded),
                 )
             })?;
-        common::log_body_sample(log, &body);
+        common::log_body_sample(log, status, &body);
+
+        if status != StatusCode::Ok {
+            bail!(
+                "Unexpected status while fetching search results: {}",
+                status
+            )
+        }
 
         Ok(body)
     }

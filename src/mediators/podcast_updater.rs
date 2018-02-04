@@ -11,7 +11,7 @@ use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use diesel::pg::upsert::excluded;
-use hyper;
+use hyper::{Method, StatusCode};
 use quick_xml::events::{BytesText, Event};
 use quick_xml::reader::Reader;
 use regex::Regex;
@@ -44,7 +44,6 @@ impl<'a> PodcastUpdater<'a> {
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
         // the "final URL" is one that might include a permanent redirect
         let (body, final_url) = self.fetch_feed(log)?;
-        common::log_body_sample(log, &body);
 
         let sha256_hash = content_hash(&body);
 
@@ -162,10 +161,17 @@ impl<'a> PodcastUpdater<'a> {
     }
 
     fn fetch_feed(&mut self, log: &Logger) -> Result<(Vec<u8>, String)> {
-        common::log_timed(&log.new(o!("step" => "fetch_feed")), |ref _log| {
-            self.url_fetcher
-                .fetch(hyper::Method::Get, self.feed_url.clone())
-        })
+        let (status, body, final_url) = common::log_timed(
+            &log.new(o!("step" => "fetch_feed")),
+            |ref _log| self.url_fetcher.fetch(Method::Get, self.feed_url.clone()),
+        )?;
+        common::log_body_sample(log, status, &body);
+
+        if status != StatusCode::Ok {
+            bail!("Unexpected status while fetching feed: {}", status)
+        }
+
+        Ok((body, final_url))
     }
 
     fn parse_feed(log: &Logger, data: &str) -> Result<(raw::Podcast, Vec<raw::Episode>)> {

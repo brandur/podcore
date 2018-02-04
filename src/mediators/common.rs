@@ -1,3 +1,4 @@
+use hyper::StatusCode;
 use slog::Logger;
 use std::str;
 use time::precise_time_ns;
@@ -16,10 +17,10 @@ where
     res
 }
 
-pub fn log_body_sample(log: &Logger, body: &Vec<u8>) {
+pub fn log_body_sample(log: &Logger, status: StatusCode, body: &Vec<u8>) {
     let sample = body.iter().take(100).cloned().collect::<Vec<u8>>();
     let string = String::from_utf8_lossy(sample.as_slice()).replace("\n", "");
-    info!(log, "Response body (sample)"; "body" => format!("{}...", string));
+    info!(log, "Response (sample)"; "status" => status.to_string(), "body" => format!("{}...", string));
 }
 
 pub fn thread_name(n: u32) -> String {
@@ -53,9 +54,14 @@ mod tests {
     #[test]
     fn test_log_body_sample() {
         // Not much of a test, but we're just making sure that no errors are thrown
-        log_body_sample(&test_helpers::log(), &b"Short string".to_vec());
         log_body_sample(
             &test_helpers::log(),
+            StatusCode::Ok,
+            &b"Short string".to_vec(),
+        );
+        log_body_sample(
+            &test_helpers::log(),
+            StatusCode::Ok,
             &br#"
             Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
             incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud

@@ -1,7 +1,7 @@
 use errors::*;
 
 use futures::Stream;
-use hyper::{Body, Client, Method, Request, Uri};
+use hyper::{Body, Client, Method, Request, StatusCode, Uri};
 use hyper::client::HttpConnector;
 use hyper_tls::HttpsConnector;
 use std::str::FromStr;
@@ -71,7 +71,7 @@ impl URLFetcherFactory for URLFetcherFactoryPassThrough {
 //
 
 pub trait URLFetcher {
-    fn fetch(&mut self, method: Method, raw_url: String) -> Result<(Vec<u8>, String)>;
+    fn fetch(&mut self, method: Method, raw_url: String) -> Result<(StatusCode, Vec<u8>, String)>;
 }
 
 #[derive(Debug)]
@@ -81,7 +81,7 @@ pub struct URLFetcherLive {
 }
 
 impl URLFetcher for URLFetcherLive {
-    fn fetch(&mut self, method: Method, raw_url: String) -> Result<(Vec<u8>, String)> {
+    fn fetch(&mut self, method: Method, raw_url: String) -> Result<(StatusCode, Vec<u8>, String)> {
         let uri = Uri::from_str(raw_url.as_str())
             .chain_err(|| format!("Error parsing feed URL: {}", raw_url))?;
 
@@ -90,13 +90,14 @@ impl URLFetcher for URLFetcherLive {
         let res = self.core
             .run(self.client.request(req))
             .chain_err(|| format!("Error fetching feed URL: {}", raw_url))?;
+        let status = res.status();
 
         // TODO: Follow redirects
 
         let body = self.core
             .run(res.body().concat2())
             .chain_err(|| format!("Error reading body from URL: {}", raw_url))?;
-        Ok(((*body).to_vec(), raw_url))
+        Ok((status, (*body).to_vec(), raw_url))
     }
 }
 
@@ -106,7 +107,7 @@ pub struct URLFetcherPassThrough {
 }
 
 impl URLFetcher for URLFetcherPassThrough {
-    fn fetch(&mut self, _method: Method, raw_url: String) -> Result<(Vec<u8>, String)> {
-        return Ok(((*self.data).clone(), raw_url));
+    fn fetch(&mut self, _method: Method, raw_url: String) -> Result<(StatusCode, Vec<u8>, String)> {
+        return Ok((StatusCode::Ok, (*self.data).clone(), raw_url));
     }
 }
