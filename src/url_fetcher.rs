@@ -1,13 +1,20 @@
 use errors::*;
 
 use futures::Stream;
-use hyper;
-use hyper::{Client, Uri};
+use hyper::{Body, Client, Method, Request, Uri};
 use hyper::client::HttpConnector;
 use hyper_tls::HttpsConnector;
 use std::str::FromStr;
 use std::sync::Arc;
 use tokio_core::reactor::Core;
+
+pub enum Verb {
+    DELETE,
+    GET,
+    PATCH,
+    POST,
+    PUT,
+}
 
 //
 // URLFetcherFactory trait + implementations
@@ -64,21 +71,24 @@ impl URLFetcherFactory for URLFetcherFactoryPassThrough {
 //
 
 pub trait URLFetcher {
-    fn fetch(&mut self, raw_url: String) -> Result<(Vec<u8>, String)>;
+    fn fetch(&mut self, method: Method, raw_url: String) -> Result<(Vec<u8>, String)>;
 }
 
 #[derive(Debug)]
 pub struct URLFetcherLive {
-    pub client: Client<HttpsConnector<HttpConnector>, hyper::Body>,
+    pub client: Client<HttpsConnector<HttpConnector>, Body>,
     pub core:   Core,
 }
 
 impl URLFetcher for URLFetcherLive {
-    fn fetch(&mut self, raw_url: String) -> Result<(Vec<u8>, String)> {
-        let feed_url = Uri::from_str(raw_url.as_str())
+    fn fetch(&mut self, method: Method, raw_url: String) -> Result<(Vec<u8>, String)> {
+        let uri = Uri::from_str(raw_url.as_str())
             .chain_err(|| format!("Error parsing feed URL: {}", raw_url))?;
+
+        let req = Request::new(method, uri);
+
         let res = self.core
-            .run(self.client.get(feed_url))
+            .run(self.client.request(req))
             .chain_err(|| format!("Error fetching feed URL: {}", raw_url))?;
 
         // TODO: Follow redirects
@@ -96,7 +106,7 @@ pub struct URLFetcherPassThrough {
 }
 
 impl URLFetcher for URLFetcherPassThrough {
-    fn fetch(&mut self, raw_url: String) -> Result<(Vec<u8>, String)> {
+    fn fetch(&mut self, _method: Method, raw_url: String) -> Result<(Vec<u8>, String)> {
         return Ok(((*self.data).clone(), raw_url));
     }
 }

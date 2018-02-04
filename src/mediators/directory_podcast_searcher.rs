@@ -9,6 +9,7 @@ use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use diesel::pg::upsert::excluded;
+use hyper;
 use schema::{directories_podcasts, directories_podcasts_directory_searches, directory_searches,
              podcast_feed_locations, podcasts};
 use serde_json;
@@ -88,8 +89,10 @@ impl<'a> DirectoryPodcastSearcher<'a> {
 
         let (body, _final_url) =
             common::log_timed(&log.new(o!("step" => "fetch_results")), |ref _log| {
-                self.url_fetcher
-                    .fetch(format!("https://itunes.apple.com/search?{}", encoded))
+                self.url_fetcher.fetch(
+                    hyper::Method::Get,
+                    format!("https://itunes.apple.com/search?{}", encoded),
+                )
             })?;
         common::log_body_sample(log, &body);
 

@@ -11,6 +11,7 @@ use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use diesel::pg::upsert::excluded;
+use hyper;
 use quick_xml::events::{BytesText, Event};
 use quick_xml::reader::Reader;
 use regex::Regex;
@@ -162,7 +163,8 @@ impl<'a> PodcastUpdater<'a> {
 
     fn fetch_feed(&mut self, log: &Logger) -> Result<(Vec<u8>, String)> {
         common::log_timed(&log.new(o!("step" => "fetch_feed")), |ref _log| {
-            self.url_fetcher.fetch(self.feed_url.clone())
+            self.url_fetcher
+                .fetch(hyper::Method::Get, self.feed_url.clone())
         })
     }
 
