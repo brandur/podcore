@@ -38,14 +38,6 @@ r2d2-diesel = { version = "1.0.0-rc1" }
 rand = "0.4"
 regex = "0.2"
 rust-crypto = "^0.2"
-
-# This is a fork of the official Sentry library which unfortunately seems to be
-# non-functional:
-#
-#     https://github.com/getsentry/sentry-rust/issues/25
-#
-sentry-rs = "*"
-
 serde = { version = "1.0.24" }
 serde_derive = "*"
 serde_json = { version = "1.0.8" }

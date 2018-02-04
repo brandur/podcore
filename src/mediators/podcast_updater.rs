@@ -11,11 +11,12 @@ use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use diesel::pg::upsert::excluded;
-use hyper::{Method, StatusCode};
+use hyper::{Method, Request, StatusCode, Uri};
 use quick_xml::events::{BytesText, Event};
 use quick_xml::reader::Reader;
 use regex::Regex;
 use schema::{episodes, podcast_feed_contents, podcast_feed_locations, podcasts};
+use std::str::FromStr;
 use slog::Logger;
 use std::io::BufRead;
 use std::str;
@@ -161,16 +162,19 @@ impl<'a> PodcastUpdater<'a> {
     }
 
     fn fetch_feed(&mut self, log: &Logger) -> Result<(Vec<u8>, String)> {
-        let (status, body, final_url) = common::log_timed(
-            &log.new(o!("step" => "fetch_feed")),
-            |ref _log| self.url_fetcher.fetch(Method::Get, self.feed_url.clone()),
-        )?;
+        let (status, body, final_url) =
+            common::log_timed(&log.new(o!("step" => "fetch_feed")), |ref _log| {
+                self.url_fetcher.fetch(Request::new(
+                    Method::Get,
+                    Uri::from_str(self.feed_url.as_str()).map_err(Error::from)?,
+                ))
+            })?;
         common::log_body_sample(log, status, &body);
-
-        if status != StatusCode::Ok {
-            bail!("Unexpected status while fetching feed: {}", status)
-        }
-
+        ensure!(
+            status == StatusCode::Ok,
+            "Unexpected status while fetching feed: {}",
+            status
+        );
         Ok((body, final_url))
     }
 
@@ -340,6 +344,7 @@ pub struct RunResult {
     pub podcast:  model::Podcast,
 }
 
+//
 // Private macros
 //
 
@@ -380,6 +385,7 @@ macro_rules! require_podcast_field {
     );
 }
 
+//
 // Private types
 //
 

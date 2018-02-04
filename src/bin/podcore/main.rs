@@ -8,7 +8,6 @@ extern crate mount;
 extern crate podcore;
 extern crate r2d2;
 extern crate r2d2_diesel;
-extern crate sentry_rs;
 #[macro_use]
 extern crate slog;
 extern crate slog_async;
@@ -19,6 +18,7 @@ use podcore::api;
 use podcore::errors::*;
 use podcore::graphql;
 use podcore::mediators::directory_podcast_searcher::DirectoryPodcastSearcher;
+use podcore::mediators::error_reporter::{ErrorReporter, SentryCredentials};
 use podcore::mediators::podcast_crawler::PodcastCrawler;
 use podcore::mediators::podcast_reingester::PodcastReingester;
 use podcore::mediators::podcast_updater::PodcastUpdater;
@@ -33,8 +33,6 @@ use juniper_iron::{GraphQLHandler, GraphiQLHandler};
 use mount::Mount;
 use r2d2::{Pool, PooledConnection};
 use r2d2_diesel::ConnectionManager;
-use sentry_rs::Sentry;
-use sentry_rs::models::{Event, SentryCredentials};
 use slog::{Drain, Logger};
 use std::env;
 use std::thread;
@@ -250,46 +248,11 @@ fn connection() -> PooledConnection<ConnectionManager<PgConnection>> {
 }
 
 fn handle_error(e: &Error) {
-    use std::io::Write;
-    let stderr = &mut ::std::io::stderr();
+    print_error(e);
 
-    writeln!(stderr, "outermost error: {}", e).unwrap();
-
-    for e in e.iter().skip(1) {
-        writeln!(stderr, "chained error: {}", e).unwrap();
+    if let Err(inner_e) = report_error(e) {
+        print_error(&inner_e);
     }
-
-    // The backtrace is not always generated. Programs must be run with `RUST_BACKTRACE=1`.
-    if let Some(backtrace) = e.backtrace() {
-        writeln!(stderr, "{:?}", backtrace).unwrap();
-    }
-
-    match env::var("SENTRY_URL") {
-        Ok(url) => {
-            writeln!(stderr, "sending event to Sentry").unwrap();
-
-            let creds = url.parse::<SentryCredentials>().unwrap();
-            let client = Sentry::new(
-                "server_name".to_owned(),
-                "release".to_owned(),
-                "environment".to_owned(),
-                creds,
-            );
-            client.log_event(Event::new(
-                "panic",
-                "fatal",
-                e.to_string().as_str(),
-                None, // culprit
-                None, // fingerprint (helps group errors)
-                None, // server name
-                None, // TODO: stacktrace
-                None, // TODO: Git SHA or tag or whatever
-                None, // e.g. "production"
-                None, // device
-            ));
-        }
-        Err(_) => (),
-    };
 
     ::std::process::exit(1);
 }
@@ -327,4 +290,51 @@ fn pool(num_connections: u32) -> Pool<ConnectionManager<PgConnection>> {
         .max_size(num_connections)
         .build(manager)
         .expect("Failed to create pool.")
+}
+
+// Prints an error to stderr.
+fn print_error(e: &Error) {
+    use std::io::Write;
+    let stderr = &mut ::std::io::stderr();
+
+    writeln!(stderr, "outermost error: {}", e).unwrap();
+
+    for e in e.iter().skip(1) {
+        writeln!(stderr, "chained error: {}", e).unwrap();
+    }
+
+    // The backtrace is not always generated. Programs must be run with `RUST_BACKTRACE=1`.
+    if let Some(backtrace) = e.backtrace() {
+        writeln!(stderr, "{:?}", backtrace).unwrap();
+    }
+}
+
+// Reports an error to Sentry.
+fn report_error(e: &Error) -> Result<()> {
+    match env::var("SENTRY_URL") {
+        Ok(url) => {
+            use std::io::Write;
+            let stderr = &mut ::std::io::stderr();
+
+            writeln!(stderr, "sending event to Sentry").unwrap();
+
+            let core = Core::new().unwrap();
+            let client = Client::configure()
+                .connector(HttpsConnector::new(4, &core.handle())
+                    .chain_err(|| "Error initializing HTTPS connector")?)
+                .build(&core.handle());
+            let creds = url.parse::<SentryCredentials>().unwrap();
+            let mut url_fetcher = URLFetcherLive {
+                client: client,
+                core:   core,
+            };
+
+            ErrorReporter {
+                creds:       &creds,
+                error:       &e,
+                url_fetcher: &mut url_fetcher,
+            }.run(&log(false))
+        }
+        Err(_) => Ok(()),
+    }
 }

@@ -9,6 +9,7 @@ extern crate diesel;
 #[macro_use]
 extern crate error_chain;
 extern crate futures;
+#[macro_use]
 extern crate hyper;
 extern crate hyper_tls;
 extern crate iron;

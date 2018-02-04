@@ -9,12 +9,13 @@ use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use diesel::pg::upsert::excluded;
-use hyper::{Method, StatusCode};
+use hyper::{Method, Request, StatusCode, Uri};
 use schema::{directories_podcasts, directories_podcasts_directory_searches, directory_searches,
              podcast_feed_locations, podcasts};
 use serde_json;
 use slog::Logger;
 use std::collections::HashMap;
+use std::str::FromStr;
 use time::Duration;
 use url::form_urlencoded;
 
@@ -89,10 +90,11 @@ impl<'a> DirectoryPodcastSearcher<'a> {
 
         let (status, body, _final_url) =
             common::log_timed(&log.new(o!("step" => "fetch_results")), |ref _log| {
-                self.url_fetcher.fetch(
+                self.url_fetcher.fetch(Request::new(
                     Method::Get,
-                    format!("https://itunes.apple.com/search?{}", encoded),
-                )
+                    Uri::from_str(format!("https://itunes.apple.com/search?{}", encoded).as_str())
+                        .map_err(Error::from)?,
+                ))
             })?;
         common::log_body_sample(log, status, &body);
 

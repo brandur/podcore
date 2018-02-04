@@ -1,10 +1,9 @@
 use errors::*;
 
 use futures::Stream;
-use hyper::{Body, Client, Method, Request, StatusCode, Uri};
+use hyper::{Body, Client, Request, StatusCode};
 use hyper::client::HttpConnector;
 use hyper_tls::HttpsConnector;
-use std::str::FromStr;
 use std::sync::Arc;
 use tokio_core::reactor::Core;
 
@@ -71,7 +70,8 @@ impl URLFetcherFactory for URLFetcherFactoryPassThrough {
 //
 
 pub trait URLFetcher {
-    fn fetch(&mut self, method: Method, raw_url: String) -> Result<(StatusCode, Vec<u8>, String)>;
+    // TODO: StatusCode should just be entire Response struct
+    fn fetch(&mut self, req: Request) -> Result<(StatusCode, Vec<u8>, String)>;
 }
 
 #[derive(Debug)]
@@ -81,23 +81,19 @@ pub struct URLFetcherLive {
 }
 
 impl URLFetcher for URLFetcherLive {
-    fn fetch(&mut self, method: Method, raw_url: String) -> Result<(StatusCode, Vec<u8>, String)> {
-        let uri = Uri::from_str(raw_url.as_str())
-            .chain_err(|| format!("Error parsing feed URL: {}", raw_url))?;
-
-        let req = Request::new(method, uri);
-
+    fn fetch(&mut self, req: Request) -> Result<(StatusCode, Vec<u8>, String)> {
+        let uri = req.uri().to_string();
         let res = self.core
             .run(self.client.request(req))
-            .chain_err(|| format!("Error fetching feed URL: {}", raw_url))?;
+            .chain_err(|| format!("Error fetching feed URL: {}", uri))?;
         let status = res.status();
 
         // TODO: Follow redirects
 
         let body = self.core
             .run(res.body().concat2())
-            .chain_err(|| format!("Error reading body from URL: {}", raw_url))?;
-        Ok((status, (*body).to_vec(), raw_url))
+            .chain_err(|| format!("Error reading body from URL: {}", uri))?;
+        Ok((status, (*body).to_vec(), uri))
     }
 }
 
@@ -107,7 +103,8 @@ pub struct URLFetcherPassThrough {
 }
 
 impl URLFetcher for URLFetcherPassThrough {
-    fn fetch(&mut self, _method: Method, raw_url: String) -> Result<(StatusCode, Vec<u8>, String)> {
-        return Ok((StatusCode::Ok, (*self.data).clone(), raw_url));
+    fn fetch(&mut self, req: Request) -> Result<(StatusCode, Vec<u8>, String)> {
+        let uri = req.uri().to_string();
+        return Ok((StatusCode::Ok, (*self.data).clone(), uri));
     }
 }
