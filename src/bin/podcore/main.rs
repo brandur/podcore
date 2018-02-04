@@ -8,7 +8,7 @@ extern crate mount;
 extern crate podcore;
 extern crate r2d2;
 extern crate r2d2_diesel;
-extern crate sentry;
+extern crate sentry_rs;
 #[macro_use]
 extern crate slog;
 extern crate slog_async;
@@ -33,9 +33,9 @@ use juniper_iron::{GraphQLHandler, GraphiQLHandler};
 use mount::Mount;
 use r2d2::{Pool, PooledConnection};
 use r2d2_diesel::ConnectionManager;
-use sentry::{Device, Sentry, SentryCredential};
+use sentry_rs::Sentry;
+use sentry_rs::models::{Event, SentryCredentials};
 use slog::{Drain, Logger};
-use std::default::Default;
 use std::env;
 use std::thread;
 use std::time::Duration;
@@ -268,22 +268,24 @@ fn handle_error(e: &Error) {
         Ok(url) => {
             writeln!(stderr, "sending event to Sentry").unwrap();
 
-            let core = Core::new().unwrap();
-            let creds = url.parse::<SentryCredential>().unwrap();
-            let client = Sentry::from_settings(core.handle(), Default::default(), creds);
-            client.log_event(sentry::Event::new(
+            let creds = url.parse::<SentryCredentials>().unwrap();
+            let client = Sentry::new(
+                "server_name".to_owned(),
+                "release".to_owned(),
+                "environment".to_owned(),
+                creds,
+            );
+            client.log_event(Event::new(
                 "panic",
                 "fatal",
                 e.to_string().as_str(),
-                &Device::default(), // device
-                None,               // culprit
-                None,               // fingerprint (helps group errors)
-                None,               // server name
-                None,               // TODO: stacktrace
-                None,               // TODO: Git SHA or tag or whatever
-                None,               // e.g. "production"
-                None,               // tags
-                None,               // extra
+                None, // culprit
+                None, // fingerprint (helps group errors)
+                None, // server name
+                None, // TODO: stacktrace
+                None, // TODO: Git SHA or tag or whatever
+                None, // e.g. "production"
+                None, // device
             ));
         }
         Err(_) => (),
