@@ -1,3 +1,4 @@
+use errors;
 use errors::*;
 use mediators::common;
 use url_fetcher::URLFetcher;
@@ -29,7 +30,7 @@ impl<'a> ErrorReporter<'a> {
     }
 
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
-        let error_strings = build_error_strings(&self.error);
+        let error_strings = errors::error_strings(&self.error);
         let stack_trace = build_stack_trace(&self.error);
         let event = build_event(error_strings, stack_trace);
         info!(log, "Generated event"; "event_id" => event.event_id.as_str());
@@ -190,23 +191,6 @@ struct StackTrace {
 //
 // Private functions
 //
-
-// Collect error strings together so that we can build a good error message to
-// send up. It's worth nothing that the original error is actually at the end of
-// the iterator, but since it's the most relevant, we reverse the list.
-//
-// The chain isn't a double-ended iterator (meaning we can't use `rev`), so we
-// have to collect it to a Vec first before reversing it.
-fn build_error_strings(error: &Error) -> Vec<String> {
-    error
-        .iter()
-        .map(|ref e| e.to_string())
-        .collect::<Vec<_>>()
-        .iter()
-        .cloned()
-        .rev()
-        .collect()
-}
 
 fn build_event(error_strings: Vec<String>, stack_trace: Option<StackTrace>) -> Event {
     Event {

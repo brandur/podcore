@@ -22,3 +22,38 @@ error_chain!{
         }
     }
 }
+
+// Collect error strings together so that we can build a good error message to
+// send up. It's worth nothing that the original error is actually at the end of
+// the iterator, but since it's the most relevant, we reverse the list.
+//
+// The chain isn't a double-ended iterator (meaning we can't use `rev`), so we
+// have to collect it to a Vec first before reversing it.
+pub fn error_strings(error: &Error) -> Vec<String> {
+    error
+        .iter()
+        .map(|ref e| e.to_string())
+        .collect::<Vec<_>>()
+        .iter()
+        .cloned()
+        .rev()
+        .collect()
+}
+
+// Prints an error to stderr.
+pub fn print_error(error: &Error) {
+    use std::io::Write;
+    let stderr = &mut ::std::io::stderr();
+
+    let error_strings = error_strings(error);
+    writeln!(stderr, "Error: {}", error_strings[0]).unwrap();
+    for s in error_strings.iter().skip(1) {
+        writeln!(stderr, "Chained error: {}", s).unwrap();
+    }
+
+    // The backtrace is not always generated. Programs must be run with
+    // `RUST_BACKTRACE=1`.
+    if let Some(backtrace) = error.backtrace() {
+        writeln!(stderr, "{:?}", backtrace).unwrap();
+    }
+}

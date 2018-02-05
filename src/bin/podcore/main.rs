@@ -15,6 +15,7 @@ extern crate slog_term;
 extern crate tokio_core;
 
 use podcore::api;
+use podcore::errors;
 use podcore::errors::*;
 use podcore::graphql;
 use podcore::mediators::directory_podcast_searcher::DirectoryPodcastSearcher;
@@ -243,10 +244,10 @@ fn connection() -> PooledConnection<ConnectionManager<PgConnection>> {
 }
 
 fn handle_error(e: &Error, quiet: bool) {
-    print_error(e);
+    errors::print_error(e);
 
     if let Err(inner_e) = report_error(e, quiet) {
-        print_error(&inner_e);
+        errors::print_error(&inner_e);
     }
 
     ::std::process::exit(1);
@@ -286,41 +287,6 @@ fn pool(num_connections: u32) -> Pool<ConnectionManager<PgConnection>> {
         .max_size(num_connections)
         .build(manager)
         .expect("Failed to create pool.")
-}
-
-// Prints an error to stderr.
-fn print_error(error: &Error) {
-    use std::io::Write;
-    let stderr = &mut ::std::io::stderr();
-
-    let error_strings = build_error_strings(error);
-    writeln!(stderr, "Error: {}", error_strings[0]).unwrap();
-    for s in error_strings.iter().skip(1) {
-        writeln!(stderr, "Chained error: {}", s).unwrap();
-    }
-
-    // The backtrace is not always generated. Programs must be run with
-    // `RUST_BACKTRACE=1`.
-    if let Some(backtrace) = error.backtrace() {
-        writeln!(stderr, "{:?}", backtrace).unwrap();
-    }
-}
-
-// Collect error strings together so that we can build a good error message to
-// send up. It's worth nothing that the original error is actually at the end of
-// the iterator, but since it's the most relevant, we reverse the list.
-//
-// The chain isn't a double-ended iterator (meaning we can't use `rev`), so we
-// have to collect it to a Vec first before reversing it.
-fn build_error_strings(error: &Error) -> Vec<String> {
-    error
-        .iter()
-        .map(|ref e| e.to_string())
-        .collect::<Vec<_>>()
-        .iter()
-        .cloned()
-        .rev()
-        .collect()
 }
 
 // Reports an error to Sentry.
