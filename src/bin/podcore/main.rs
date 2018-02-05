@@ -329,11 +329,12 @@ fn report_error(e: &Error) -> Result<()> {
                 core:   core,
             };
 
-            ErrorReporter {
+            let _res = ErrorReporter {
                 creds:       &creds,
                 error:       &e,
                 url_fetcher: &mut url_fetcher,
-            }.run(&log(false))
+            }.run(&log(false))?;
+            Ok(())
         }
         Err(_) => Ok(()),
     }

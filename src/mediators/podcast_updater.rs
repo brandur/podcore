@@ -471,6 +471,7 @@ mod raw {
     }
 }
 
+//
 // Private functions
 //
 

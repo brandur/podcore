@@ -22,22 +22,26 @@ pub struct ErrorReporter<'a> {
 }
 
 impl<'a> ErrorReporter<'a> {
-    pub fn run(&mut self, log: &Logger) -> Result<()> {
+    pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
         common::log_timed(&log.new(o!("step" => file!())), |ref log| {
             self.run_inner(&log)
         })
     }
 
-    fn run_inner(&mut self, log: &Logger) -> Result<()> {
+    fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
         let error_strings = build_error_strings(&self.error);
         let stack_trace = build_stack_trace(&self.error);
         let event = build_event(error_strings, stack_trace);
         info!(log, "Generated event"; "event_id" => event.event_id.as_str());
 
         let req = build_request(&self.creds, event)?;
-        post_error(log, self.url_fetcher, req)
+        post_error(log, self.url_fetcher, req)?;
+
+        Ok(RunResult {})
     }
 }
+
+pub struct RunResult {}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SentryCredentials {
