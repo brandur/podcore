@@ -1,3 +1,4 @@
+use error_helpers;
 use errors::*;
 use mediators::common;
 use mediators::podcast_updater::PodcastUpdater;
@@ -205,7 +206,11 @@ fn work(
                 }.run(&log);
 
                 if let Err(e) = res {
-                    error!(log, "Error processing podcast: {}", e);
+                    error_helpers::print_error(&log, &e);
+
+                    if let Err(inner_e) = error_helpers::report_error(&log, &e) {
+                        error_helpers::print_error(&log, &inner_e);
+                    }
                 }
             },
         }
