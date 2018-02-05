@@ -247,7 +247,7 @@ fn handle_error(e: &Error, quiet: bool) {
     let log = log(quiet);
     errors::print_error(&log, e);
 
-    if let Err(inner_e) = report_error(e, quiet) {
+    if let Err(inner_e) = report_error(&log, e) {
         errors::print_error(&log, &inner_e);
     }
 
@@ -298,13 +298,10 @@ fn pool(num_connections: u32) -> Pool<ConnectionManager<PgConnection>> {
 // blocks until the error is reported. If at some point that errors need to be
 // going up to Sentry constantly, this could be optimized without too much
 // trouble.
-fn report_error(error: &Error, quiet: bool) -> Result<()> {
+fn report_error(log: &Logger, error: &Error) -> Result<()> {
     match env::var("SENTRY_URL") {
         Ok(url) => {
-            use std::io::Write;
-            let stderr = &mut ::std::io::stderr();
-
-            writeln!(stderr, "Sending event to Sentry").unwrap();
+            info!(log, "Sending event to Sentry");
 
             let core = Core::new().unwrap();
             let client = Client::configure()
@@ -321,7 +318,7 @@ fn report_error(error: &Error, quiet: bool) -> Result<()> {
                 creds:       &creds,
                 error:       &error,
                 url_fetcher: &mut url_fetcher,
-            }.run(&log(quiet))?;
+            }.run(log)?;
             Ok(())
         }
         Err(_) => Ok(()),
