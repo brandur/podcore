@@ -223,9 +223,9 @@ mod tests {
     use url_fetcher::{URLFetcherFactoryPassThrough, URLFetcherPassThrough};
 
     use chrono::Utc;
-    use rand::Rng;
     use r2d2::{Pool, PooledConnection};
     use r2d2_diesel::ConnectionManager;
+    use rand::Rng;
     use std::sync::Arc;
     use time::Duration;
 

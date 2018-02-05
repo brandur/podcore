@@ -3,8 +3,8 @@ use model;
 use schema::{episodes, podcasts};
 
 use chrono::{DateTime, Utc};
-use diesel::prelude::*;
 use diesel::pg::PgConnection;
+use diesel::prelude::*;
 use juniper;
 use juniper::FieldResult;
 use r2d2::{Pool, PooledConnection};

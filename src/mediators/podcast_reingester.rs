@@ -242,9 +242,9 @@ mod tests {
     use test_helpers;
     use url_fetcher::URLFetcherPassThrough;
 
-    use rand::Rng;
     use r2d2::{Pool, PooledConnection};
     use r2d2_diesel::ConnectionManager;
+    use rand::Rng;
 
     #[test]
     #[ignore]

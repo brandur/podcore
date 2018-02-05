@@ -6,9 +6,9 @@ use url_fetcher::URLFetcher;
 
 use chrono::Utc;
 use diesel;
-use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use diesel::pg::upsert::excluded;
+use diesel::prelude::*;
 use hyper::{Method, Request, StatusCode, Uri};
 use schema::{directories_podcasts, directories_podcasts_directory_searches, directory_searches,
              podcast_feed_locations, podcasts};

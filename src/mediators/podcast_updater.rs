@@ -8,18 +8,18 @@ use chrono::{DateTime, Utc};
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 use diesel;
-use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use diesel::pg::upsert::excluded;
+use diesel::prelude::*;
 use hyper::{Method, Request, StatusCode, Uri};
 use quick_xml::events::{BytesText, Event};
 use quick_xml::reader::Reader;
 use regex::Regex;
 use schema::{episodes, podcast_feed_contents, podcast_feed_locations, podcasts};
-use std::str::FromStr;
 use slog::Logger;
 use std::io::BufRead;
 use std::str;
+use std::str::FromStr;
 
 pub struct PodcastUpdater<'a> {
     pub conn: &'a PgConnection,

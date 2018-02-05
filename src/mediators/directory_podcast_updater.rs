@@ -1,6 +1,6 @@
+use errors::*;
 use mediators::common;
 use mediators::podcast_updater::PodcastUpdater;
-use errors::*;
 use model;
 use url_fetcher::URLFetcher;
 
