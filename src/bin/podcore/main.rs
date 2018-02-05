@@ -244,10 +244,11 @@ fn connection() -> PooledConnection<ConnectionManager<PgConnection>> {
 }
 
 fn handle_error(e: &Error, quiet: bool) {
-    errors::print_error(e);
+    let log = log(quiet);
+    errors::print_error(&log, e);
 
     if let Err(inner_e) = report_error(e, quiet) {
-        errors::print_error(&inner_e);
+        errors::print_error(&log, &inner_e);
     }
 
     ::std::process::exit(1);
@@ -290,6 +291,13 @@ fn pool(num_connections: u32) -> Pool<ConnectionManager<PgConnection>> {
 }
 
 // Reports an error to Sentry.
+//
+// This method is really slow because it assumes that reporting errors isn't
+// going to need to be a hyper optimized operation (which is hopefully the
+// case). It instantiates its own Tokio Core and a brand new client and then
+// blocks until the error is reported. If at some point that errors need to be
+// going up to Sentry constantly, this could be optimized without too much
+// trouble.
 fn report_error(error: &Error, quiet: bool) -> Result<()> {
     match env::var("SENTRY_URL") {
         Ok(url) => {

@@ -3,6 +3,8 @@
 //     http://brson.github.io/2016/11/30/starting-with-error-chain
 //
 
+use slog::Logger;
+
 // Create the Error, ErrorKind, ResultExt, and Result types
 error_chain!{
     // Automatic conversions between this error chain and other error types not defined by the
@@ -41,19 +43,16 @@ pub fn error_strings(error: &Error) -> Vec<String> {
 }
 
 // Prints an error to stderr.
-pub fn print_error(error: &Error) {
-    use std::io::Write;
-    let stderr = &mut ::std::io::stderr();
-
+pub fn print_error(log: &Logger, error: &Error) {
     let error_strings = error_strings(error);
-    writeln!(stderr, "Error: {}", error_strings[0]).unwrap();
+    error!(log, "Error: {}", error_strings[0]);
     for s in error_strings.iter().skip(1) {
-        writeln!(stderr, "Chained error: {}", s).unwrap();
+        error!(log, "Chained error: {}", s);
     }
 
     // The backtrace is not always generated. Programs must be run with
     // `RUST_BACKTRACE=1`.
     if let Some(backtrace) = error.backtrace() {
-        writeln!(stderr, "{:?}", backtrace).unwrap();
+        error!(log, "{:?}", backtrace);
     }
 }
