@@ -289,31 +289,48 @@ fn pool(num_connections: u32) -> Pool<ConnectionManager<PgConnection>> {
 }
 
 // Prints an error to stderr.
-fn print_error(e: &Error) {
+fn print_error(error: &Error) {
     use std::io::Write;
     let stderr = &mut ::std::io::stderr();
 
-    writeln!(stderr, "outermost error: {}", e).unwrap();
-
-    for e in e.iter().skip(1) {
-        writeln!(stderr, "chained error: {}", e).unwrap();
+    let error_strings = build_error_strings(error);
+    writeln!(stderr, "Error: {}", error_strings[0]).unwrap();
+    for s in error_strings.iter().skip(1) {
+        writeln!(stderr, "Chained error: {}", s).unwrap();
     }
 
     // The backtrace is not always generated. Programs must be run with
     // `RUST_BACKTRACE=1`.
-    if let Some(backtrace) = e.backtrace() {
+    if let Some(backtrace) = error.backtrace() {
         writeln!(stderr, "{:?}", backtrace).unwrap();
     }
 }
 
+// Collect error strings together so that we can build a good error message to
+// send up. It's worth nothing that the original error is actually at the end of
+// the iterator, but since it's the most relevant, we reverse the list.
+//
+// The chain isn't a double-ended iterator (meaning we can't use `rev`), so we
+// have to collect it to a Vec first before reversing it.
+fn build_error_strings(error: &Error) -> Vec<String> {
+    error
+        .iter()
+        .map(|ref e| e.to_string())
+        .collect::<Vec<_>>()
+        .iter()
+        .cloned()
+        .rev()
+        .collect()
+}
+
 // Reports an error to Sentry.
-fn report_error(e: &Error, quiet: bool) -> Result<()> {
+fn report_error(error: &Error, quiet: bool) -> Result<()> {
     match env::var("SENTRY_URL") {
         Ok(url) => {
             use std::io::Write;
             let stderr = &mut ::std::io::stderr();
 
-            writeln!(stderr, "sending event to Sentry").unwrap();
+            writeln!(stderr, "Sending event to Sentry").unwrap();
 
             let core = Core::new().unwrap();
             let client = Client::configure()
@@ -328,7 +345,7 @@ fn report_error(e: &Error, quiet: bool) -> Result<()> {
 
             let _res = ErrorReporter {
                 creds:       &creds,
-                error:       &e,
+                error:       &error,
                 url_fetcher: &mut url_fetcher,
             }.run(&log(quiet))?;
             Ok(())
