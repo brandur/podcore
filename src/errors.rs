@@ -3,8 +3,6 @@
 //     http://brson.github.io/2016/11/30/starting-with-error-chain
 //
 
-use slog::Logger;
-
 // Create the Error, ErrorKind, ResultExt, and Result types
 error_chain!{
     // Automatic conversions between this error chain and other error types not defined by the
@@ -31,6 +29,10 @@ error_chain!{
 //
 // The chain isn't a double-ended iterator (meaning we can't use `rev`), so we
 // have to collect it to a Vec first before reversing it.
+//
+// I've located this function here instead of error_helpers because it's needed
+// by ErrorReporter. It's a bit of a breakage in modularity though, so it might
+// be better just to duplicate the function in two places instead.
 pub fn error_strings(error: &Error) -> Vec<String> {
     error
         .iter()
@@ -40,19 +42,4 @@ pub fn error_strings(error: &Error) -> Vec<String> {
         .cloned()
         .rev()
         .collect()
-}
-
-// Prints an error to stderr.
-pub fn print_error(log: &Logger, error: &Error) {
-    let error_strings = error_strings(error);
-    error!(log, "Error: {}", error_strings[0]);
-    for s in error_strings.iter().skip(1) {
-        error!(log, "Chained error: {}", s);
-    }
-
-    // The backtrace is not always generated. Programs must be run with
-    // `RUST_BACKTRACE=1`.
-    if let Some(backtrace) = error.backtrace() {
-        error!(log, "{:?}", backtrace);
-    }
 }
