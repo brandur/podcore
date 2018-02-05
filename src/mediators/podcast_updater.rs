@@ -1134,6 +1134,7 @@ mod tests {
         }
     }
 
+    //
     // Private types/functions
     //
 
@@ -1171,7 +1172,7 @@ mod tests {
 </rss>"#;
 
     // Encapsulates the structures that are needed for tests to run. One should only be obtained by
-    // invoking bootstrap().
+    // invoking TestBootstrap::new().
     struct TestBootstrap {
         conn:        PooledConnection<ConnectionManager<PgConnection>>,
         feed_url:    &'static str,

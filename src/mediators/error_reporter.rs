@@ -116,28 +116,57 @@ header! { (XSentryAuth, "X-Sentry-Auth") => [String] }
 // see https://docs.getsentry.com/hosted/clientdev/attributes/
 #[derive(Debug, Clone, Serialize)]
 struct Event {
+    //
     // required
-    event_id:  String, // uuid4 exactly 32 characters (no dashes!)
-    message:   String, // Maximum length is 1000 characters.
-    timestamp: String, // ISO 8601 format, without a timezone ex: "2011-05-02T17:41:36"
-    level:     String, // fatal, error, warning, info, debug
-    logger:    String, // ex "my.logger.name"
-    platform:  String, // Acceptable values ..., other
-    sdk:       SDK,
+    //
 
+    // uuid4 exactly 32 characters (no dashes)
+    event_id: String,
+
+    // Maximum length is 1000 characters.
+    message: String,
+
+    // ISO 8601 format, without a timezone ex: "2011-05-02T17:41:36"
+    timestamp: String,
+
+    // fatal, error, warning, info, debug
+    level: String,
+
+    // ex "my.logger.name"
+    logger: String,
+
+    // Acceptable values ..., other
+    platform: String,
+
+    sdk: SDK,
+
+    //
     // optional
-    culprit:     Option<String>, // the primary perpetrator of this event ex: "my.module.function_name"
-    server_name: Option<String>, // host client from which the event was recorded
+    //
+
+    // the primary perpetrator of this event ex: "my.module.function_name"
+    culprit: Option<String>,
+
+    // host client from which the event was recorded
+    server_name: Option<String>,
 
     #[serde(rename = "stacktrace")]
-    stack_trace: Option<StackTrace>, // stack trace
+    stack_trace: Option<StackTrace>,
 
-    release:     Option<String>, // generally be something along the lines of the git SHA for the given project
-    tags:        HashMap<String, String>, // WARNING! should be serialized as json object k->v
-    environment: Option<String>, // ex: "production"
-    modules:     HashMap<String, String>, // WARNING! should be serialized as json object k->v
-    extra:       HashMap<String, String>, // WARNING! should be serialized as json object k->v
-    fingerprint: Vec<String>, // An array of strings used to dictate the deduplicating for this event.
+    // generally be something along the lines of the git SHA for the given project
+    release: Option<String>,
+
+    tags: HashMap<String, String>,
+
+    // e.g., "production"
+    environment: Option<String>,
+
+    modules: HashMap<String, String>,
+
+    extra: HashMap<String, String>,
+
+    // an array of strings used to dictate the deduplicating for this event.
+    fingerprint: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -278,4 +307,67 @@ fn post_error(log: &Logger, url_fetcher: &mut URLFetcher, req: Request) -> Resul
         status
     );
     Ok(())
+}
+
+//
+// Tests
+//
+
+#[cfg(test)]
+mod tests {
+    use mediators::error_reporter::*;
+    use test_helpers;
+    use url_fetcher::URLFetcherPassThrough;
+
+    use std::sync::Arc;
+
+    #[test]
+    fn test_error_reporting() {
+        let error = Error::from("Error triggered by user request")
+            .chain_err(|| "Chained context 1")
+            .chain_err(|| "Chained context 2");
+
+        let mut bootstrap = TestBootstrap::new(error);
+        let (mut mediator, log) = bootstrap.mediator();
+        let _res = mediator.run(&log).unwrap();
+    }
+
+    //
+    // Private types/functions
+    //
+
+    // Encapsulates the structures that are needed for tests to run. One should only be obtained by
+    // invoking TestBootstrap::new().
+    struct TestBootstrap {
+        creds:       SentryCredentials,
+        error:       Error,
+        log:         Logger,
+        url_fetcher: URLFetcherPassThrough,
+    }
+
+    impl TestBootstrap {
+        fn new(error: Error) -> TestBootstrap {
+            TestBootstrap {
+                creds:       "https://user:pass@sentry.io/1"
+                    .parse::<SentryCredentials>()
+                    .unwrap(),
+                error:       error,
+                log:         test_helpers::log(),
+                url_fetcher: URLFetcherPassThrough {
+                    data: Arc::new("{}".as_bytes().to_vec()),
+                },
+            }
+        }
+
+        fn mediator(&mut self) -> (ErrorReporter, Logger) {
+            (
+                ErrorReporter {
+                    creds:       &self.creds,
+                    error:       &self.error,
+                    url_fetcher: &mut self.url_fetcher,
+                },
+                self.log.clone(),
+            )
+        }
+    }
 }
