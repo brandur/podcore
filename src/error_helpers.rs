@@ -38,8 +38,7 @@ pub fn report_error(log: &Logger, error: &Error) -> Result<()> {
 
             let core = Core::new().unwrap();
             let client = Client::configure()
-                .connector(HttpsConnector::new(4, &core.handle())
-                    .chain_err(|| "Error initializing HTTPS connector")?)
+                .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
                 .build(&core.handle());
             let creds = url.parse::<SentryCredentials>().unwrap();
             let mut url_fetcher = URLFetcherLive {

@@ -19,6 +19,7 @@ extern crate juniper_iron;
 #[macro_use]
 extern crate lazy_static;
 extern crate mount;
+extern crate native_tls;
 extern crate quick_xml;
 extern crate r2d2;
 extern crate r2d2_diesel;

@@ -11,6 +11,7 @@ error_chain!{
     foreign_links {
         Database(::diesel::result::Error);
         HyperError(::hyper::Error);
+        NativeTls(::native_tls::Error);
         HyperUri(::hyper::error::UriError);
         Json(::serde_json::Error);
         UrlParse(::url::ParseError);

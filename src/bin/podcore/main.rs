@@ -108,8 +108,7 @@ fn add_podcast(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
 
     let core = Core::new().unwrap();
     let client = Client::configure()
-        .connector(HttpsConnector::new(4, &core.handle())
-            .chain_err(|| "Error initializing HTTPS connector")?)
+        .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
         .build(&core.handle());
     let mut url_fetcher = URLFetcherLive {
         client: client,
@@ -164,8 +163,7 @@ fn search_podcasts(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
 
     let core = Core::new().unwrap();
     let client = Client::configure()
-        .connector(HttpsConnector::new(4, &core.handle())
-            .chain_err(|| "Error initializing HTTPS connector")?)
+        .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
         .build(&core.handle());
     let mut url_fetcher = URLFetcherLive {
         client: client,

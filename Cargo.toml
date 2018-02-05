@@ -32,6 +32,7 @@ mount = "^0.3.0"
 juniper = { version = "0.9.1" }
 juniper_iron = { version = "0.1.1" }
 lazy_static = "1.0"
+native-tls = "*"
 quick-xml = "0.10.1"
 r2d2 = { version = "*" }
 r2d2-diesel = { version = "1.0.0-rc1" }
