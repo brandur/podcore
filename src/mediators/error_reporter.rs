@@ -12,6 +12,7 @@ use slog::Logger;
 use std;
 use std::collections::HashMap;
 use std::default::Default;
+use std::env;
 use url;
 use uuid::Uuid;
 
@@ -29,6 +30,21 @@ impl<'a> ErrorReporter<'a> {
     }
 
     fn run_inner(&mut self, log: &Logger) -> Result<()> {
+        // Collect error strings together so that we can build a good error message to send up.
+        // It's worth nothing that the original error is actually at the end of the iterator, but
+        // since it's the most relevant, we reverse the list.
+        //
+        // The chain isn't a double-ended iterator (meaning we can't use `rev`), so we have to
+        // collect it to a Vec first before reversing it.
+        let error_strings: Vec<String> = self.error
+            .iter()
+            .map(|ref e| e.to_string())
+            .collect::<Vec<_>>()
+            .iter()
+            .cloned()
+            .rev()
+            .collect();
+
         let stack_trace = if let Some(backtrace) = self.error.backtrace() {
             let mut frames = vec![];
             for ref frame in backtrace.frames() {
@@ -57,7 +73,7 @@ impl<'a> ErrorReporter<'a> {
         let event = Event {
             // required
             event_id:  Uuid::new_v4().simple().to_string(), // `simple` gets an unhyphenated UUID
-            message:   format!("{}", self.error.display_chain()),
+            message:   error_strings.join("\n"),
             timestamp: Utc::now().to_rfc3339(),
             level:     "fatal".to_owned(),
             logger:    "panic".to_owned(),
@@ -73,7 +89,7 @@ impl<'a> ErrorReporter<'a> {
             stack_trace: stack_trace,
             release:     None, // TODO: Want release,
             tags:        Default::default(),
-            environment: None, // TODO: Want environment,
+            environment: Some(env::var("PODCORE_ENV").unwrap_or("development".to_owned())),
             modules:     Default::default(),
             extra:       Default::default(),
             fingerprint: vec!["{{ default }}".to_owned()], // Maybe further customize the fingerprint
