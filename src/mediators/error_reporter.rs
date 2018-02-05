@@ -3,7 +3,6 @@ use mediators::common;
 use url_fetcher::URLFetcher;
 
 use chrono::Utc;
-use error_chain::ChainedError; // contains `display_chain`
 use hyper;
 use hyper::{Body, Method, Request, StatusCode, Uri};
 use hyper::header::{ContentLength, ContentType};
@@ -30,108 +29,13 @@ impl<'a> ErrorReporter<'a> {
     }
 
     fn run_inner(&mut self, log: &Logger) -> Result<()> {
-        // Collect error strings together so that we can build a good error message to send up.
-        // It's worth nothing that the original error is actually at the end of the iterator, but
-        // since it's the most relevant, we reverse the list.
-        //
-        // The chain isn't a double-ended iterator (meaning we can't use `rev`), so we have to
-        // collect it to a Vec first before reversing it.
-        let error_strings: Vec<String> = self.error
-            .iter()
-            .map(|ref e| e.to_string())
-            .collect::<Vec<_>>()
-            .iter()
-            .cloned()
-            .rev()
-            .collect();
-
-        let stack_trace = if let Some(backtrace) = self.error.backtrace() {
-            let mut frames = vec![];
-            for ref frame in backtrace.frames() {
-                // TODO: Is this right? Some frames can have no symbols. Try to check backtrace
-                // implementation.
-                for ref symbol in frame.symbols() {
-                    let name = symbol
-                        .name()
-                        .map_or("unresolved symbol".to_owned(), |name| name.to_string());
-                    let filename = symbol
-                        .filename()
-                        .map_or("".to_owned(), |sym| sym.to_string_lossy().into_owned());
-                    let lineno = symbol.lineno().unwrap_or(0);
-                    frames.push(StackFrame {
-                        filename: filename,
-                        function: name,
-                        lineno:   lineno,
-                    });
-                }
-            }
-            Some(StackTrace { frames: frames })
-        } else {
-            None
-        };
-
-        let event = Event {
-            // required
-            event_id:  Uuid::new_v4().simple().to_string(), // `simple` gets an unhyphenated UUID
-            message:   error_strings.join("\n"),
-            timestamp: Utc::now().to_rfc3339(),
-            level:     "fatal".to_owned(),
-            logger:    "panic".to_owned(),
-            platform:  "other".to_owned(),
-            sdk:       SDK {
-                name:    env!("CARGO_PKG_NAME").to_owned(),
-                version: env!("CARGO_PKG_VERSION").to_owned(),
-            },
-
-            // optional
-            culprit:     None,
-            server_name: None, // TODO: Want server name
-            stack_trace: stack_trace,
-            release:     None, // TODO: Want release,
-            tags:        Default::default(),
-            environment: Some(env::var("PODCORE_ENV").unwrap_or("development".to_owned())),
-            modules:     Default::default(),
-            extra:       Default::default(),
-            fingerprint: vec!["{{ default }}".to_owned()], // Maybe further customize the fingerprint
-        };
+        let error_strings = build_error_strings(&self.error);
+        let stack_trace = build_stack_trace(&self.error);
+        let event = build_event(error_strings, stack_trace);
         info!(log, "Generated event"; "event_id" => event.event_id.as_str());
 
-        let mut req = Request::new(Method::Post, self.creds.uri().clone());
-        let body = serde_json::to_string(&event).map_err(Error::from)?;
-        {
-            let headers = req.headers_mut();
-
-            // X-Sentry-Auth: Sentry sentry_version=7,
-            // sentry_client=<client version, arbitrary>,
-            // sentry_timestamp=<current timestamp>,
-            // sentry_key=<public api key>,
-            // sentry_secret=<secret api key>
-            //
-            let timestamp = Utc::now().timestamp();
-            let sentry_auth = format!(
-            "Sentry sentry_version=7,sentry_client=rust-sentry/{},sentry_timestamp={},sentry_key={},sentry_secret={}",
-            env!("CARGO_PKG_VERSION"),
-            timestamp,
-            self.creds.key,
-            self.creds.secret
-        );
-            headers.set(XSentryAuth(sentry_auth));
-            headers.set(ContentType::json());
-            headers.set(ContentLength(body.len() as u64));
-        }
-        req.set_body(Body::from(body));
-
-        let (status, body, _final_url) = common::log_timed(
-            &log.new(o!("step" => "post_error")),
-            |ref _log| self.url_fetcher.fetch(req),
-        )?;
-        common::log_body_sample(log, status, &body);
-        ensure!(
-            status == StatusCode::Ok,
-            "Unexpected status while reporting error: {}",
-            status
-        );
-        Ok(())
+        let req = build_request(&self.creds, event)?;
+        post_error(log, self.url_fetcher, req)
     }
 }
 
@@ -248,4 +152,126 @@ struct StackFrame {
 #[derive(Debug, Clone, Serialize)]
 struct StackTrace {
     frames: Vec<StackFrame>,
+}
+
+//
+// Private functions
+//
+
+// Collect error strings together so that we can build a good error message to send up. It's worth
+// nothing that the original error is actually at the end of the iterator, but since it's the most
+// relevant, we reverse the list.
+//
+// The chain isn't a double-ended iterator (meaning we can't use `rev`), so we have to collect it
+// to a Vec first before reversing it.
+fn build_error_strings(error: &Error) -> Vec<String> {
+    error
+        .iter()
+        .map(|ref e| e.to_string())
+        .collect::<Vec<_>>()
+        .iter()
+        .cloned()
+        .rev()
+        .collect()
+}
+
+fn build_event(error_strings: Vec<String>, stack_trace: Option<StackTrace>) -> Event {
+    Event {
+        // required
+        event_id:  Uuid::new_v4().simple().to_string(), // `simple` gets an unhyphenated UUID
+        message:   error_strings.join("\n"),
+        timestamp: Utc::now().to_rfc3339(),
+        level:     "fatal".to_owned(),
+        logger:    "panic".to_owned(),
+        platform:  "other".to_owned(),
+        sdk:       SDK {
+            name:    env!("CARGO_PKG_NAME").to_owned(),
+            version: env!("CARGO_PKG_VERSION").to_owned(),
+        },
+
+        // optional
+        culprit:     None,
+        server_name: None, // TODO: Want server name
+        stack_trace: stack_trace,
+        release:     None, // TODO: Want release,
+        tags:        Default::default(),
+        environment: Some(env::var("PODCORE_ENV").unwrap_or("development".to_owned())),
+        modules:     Default::default(),
+        extra:       Default::default(),
+        fingerprint: vec!["{{ default }}".to_owned()], // Maybe further customize the fingerprint
+    }
+}
+
+fn build_request(creds: &SentryCredentials, event: Event) -> Result<Request> {
+    let mut req = Request::new(Method::Post, creds.uri().clone());
+    let body = serde_json::to_string(&event).map_err(Error::from)?;
+    {
+        let headers = req.headers_mut();
+
+        // X-Sentry-Auth: Sentry sentry_version=7,
+        // sentry_client=<client version, arbitrary>,
+        // sentry_timestamp=<current timestamp>,
+        // sentry_key=<public api key>,
+        // sentry_secret=<secret api key>
+        //
+        let timestamp = Utc::now().timestamp();
+        let sentry_auth = format!(
+            concat!(
+                "Sentry sentry_version=7,sentry_client=rust-sentry/{},",
+                "sentry_timestamp={},sentry_key={},sentry_secret={}"
+            ),
+            env!("CARGO_PKG_VERSION"),
+            timestamp,
+            creds.key,
+            creds.secret
+        );
+        headers.set(XSentryAuth(sentry_auth));
+        headers.set(ContentType::json());
+        headers.set(ContentLength(body.len() as u64));
+    }
+    req.set_body(Body::from(body));
+    Ok(req)
+}
+
+fn build_stack_trace(error: &Error) -> Option<StackTrace> {
+    if error.backtrace().is_none() {
+        return None;
+    }
+
+    let backtrace = error.backtrace().unwrap();
+    let mut frames = vec![];
+
+    for ref frame in backtrace.frames() {
+        // TODO: Is this right? Some frames can have no symbols. Try to check backtrace
+        // implementation.
+        for ref symbol in frame.symbols() {
+            let name = symbol
+                .name()
+                .map_or("unresolved symbol".to_owned(), |name| name.to_string());
+            let filename = symbol
+                .filename()
+                .map_or("".to_owned(), |sym| sym.to_string_lossy().into_owned());
+            let lineno = symbol.lineno().unwrap_or(0);
+            frames.push(StackFrame {
+                filename: filename,
+                function: name,
+                lineno:   lineno,
+            });
+        }
+    }
+    Some(StackTrace { frames: frames })
+}
+
+fn post_error(log: &Logger, url_fetcher: &mut URLFetcher, req: Request) -> Result<()> {
+    let (status, body, _final_url) = common::log_timed(
+        &log.new(o!("step" => "post_error")),
+        |ref _log| url_fetcher.fetch(req),
+    )?;
+    common::log_body_sample(log, status, &body);
+    ensure!(
+        status == StatusCode::Ok,
+        "Unexpected status while reporting error: {}",
+        status
+    );
+    Ok(())
 }
