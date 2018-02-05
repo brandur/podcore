@@ -82,12 +82,12 @@ fn main() {
     let options = parse_global_options(&matches);
 
     let res = match matches.subcommand_name() {
-        Some("add") => add_podcast(matches),
-        Some("crawl") => crawl_podcasts(matches, options),
-        Some("error") => trigger_error(matches),
-        Some("reingest") => reingest_podcasts(matches, options),
-        Some("search") => search_podcasts(matches),
-        Some("serve") => serve_http(matches, options),
+        Some("add") => add_podcast(matches, &options),
+        Some("crawl") => crawl_podcasts(matches, &options),
+        Some("error") => trigger_error(matches, &options),
+        Some("reingest") => reingest_podcasts(matches, &options),
+        Some("search") => search_podcasts(matches, &options),
+        Some("serve") => serve_http(matches, &options),
         None => {
             app.print_help().unwrap();
             Ok(())
@@ -95,7 +95,7 @@ fn main() {
         _ => unreachable!(),
     };
     if let Err(ref e) = res {
-        handle_error(&e);
+        handle_error(&e, options.quiet);
     };
 }
 
@@ -103,8 +103,7 @@ fn main() {
 // Subcommands
 //
 
-fn add_podcast(matches: ArgMatches) -> Result<()> {
-    let quiet = matches.is_present("quiet");
+fn add_podcast(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("add").unwrap();
 
     let core = Core::new().unwrap();
@@ -123,14 +122,13 @@ fn add_podcast(matches: ArgMatches) -> Result<()> {
             disable_shortcut: false,
             feed_url:         url.to_owned().to_owned(),
             url_fetcher:      &mut url_fetcher,
-        }.run(&log(quiet))?;
+        }.run(&log(options.quiet))?;
     }
     Ok(())
 }
 
-fn crawl_podcasts(matches: ArgMatches, options: GlobalOptions) -> Result<()> {
-    let quiet = matches.is_present("quiet");
-    let log = log(quiet);
+fn crawl_podcasts(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
+    let log = log(options.quiet);
     let _matches = matches.subcommand_matches("crawl").unwrap();
     let mut num_loops = 0;
 
@@ -151,19 +149,17 @@ fn crawl_podcasts(matches: ArgMatches, options: GlobalOptions) -> Result<()> {
     }
 }
 
-fn reingest_podcasts(matches: ArgMatches, options: GlobalOptions) -> Result<()> {
-    let quiet = matches.is_present("quiet");
+fn reingest_podcasts(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
     let _matches = matches.subcommand_matches("reingest").unwrap();
 
     PodcastReingester {
         num_workers: options.num_connections - 1,
         pool:        pool(options.num_connections).clone(),
-    }.run(&log(quiet))?;
+    }.run(&log(options.quiet))?;
     Ok(())
 }
 
-fn search_podcasts(matches: ArgMatches) -> Result<()> {
-    let quiet = matches.is_present("quiet");
+fn search_podcasts(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("search").unwrap();
 
     let core = Core::new().unwrap();
@@ -181,18 +177,18 @@ fn search_podcasts(matches: ArgMatches) -> Result<()> {
         conn:        &*connection(),
         query:       query.to_owned(),
         url_fetcher: &mut url_fetcher,
-    }.run(&log(quiet))?;
+    }.run(&log(options.quiet))?;
     Ok(())
 }
 
-fn serve_http(matches: ArgMatches, options: GlobalOptions) -> Result<()> {
-    let quiet = matches.is_present("quiet");
+fn serve_http(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("serve").unwrap();
 
     let port = env::var("PORT").unwrap_or("8080".to_owned());
     let port = matches.value_of("PORT").unwrap_or_else(|| port.as_str());
     let host = format!("0.0.0.0:{}", port);
-    let log = log(quiet);
+    let log = log(options.quiet);
+    let num_connections = options.num_connections;
 
     let mut mount = Mount::new();
 
@@ -200,9 +196,7 @@ fn serve_http(matches: ArgMatches, options: GlobalOptions) -> Result<()> {
     mount.mount("/", graphiql_endpoint);
 
     let graphql_endpoint = GraphQLHandler::new(
-        move |_: &mut Request| -> graphql::Context {
-            graphql::Context::new(pool(options.num_connections))
-        },
+        move |_: &mut Request| -> graphql::Context { graphql::Context::new(pool(num_connections)) },
         graphql::Query::new(),
         graphql::Mutation::new(),
     );
@@ -215,8 +209,7 @@ fn serve_http(matches: ArgMatches, options: GlobalOptions) -> Result<()> {
     Ok(())
 }
 
-fn trigger_error(matches: ArgMatches) -> Result<()> {
-    let _quiet = matches.is_present("quiet");
+fn trigger_error(matches: ArgMatches, _options: &GlobalOptions) -> Result<()> {
     let _matches = matches.subcommand_matches("error").unwrap();
 
     // We chain some extra context on to add a little flavor and to help show what
@@ -238,6 +231,7 @@ const SLEEP_SECONDS: u64 = 60;
 
 struct GlobalOptions {
     num_connections: u32,
+    quiet:           bool,
 }
 
 /// Acquires a single connection from a connection pool. This is suitable for use a shortcut by
@@ -248,10 +242,10 @@ fn connection() -> PooledConnection<ConnectionManager<PgConnection>> {
         .expect("Error acquiring connection from connection pool")
 }
 
-fn handle_error(e: &Error) {
+fn handle_error(e: &Error, quiet: bool) {
     print_error(e);
 
-    if let Err(inner_e) = report_error(e) {
+    if let Err(inner_e) = report_error(e, quiet) {
         print_error(&inner_e);
     }
 
@@ -279,6 +273,7 @@ fn parse_global_options(matches: &ArgMatches) -> GlobalOptions {
                     .map(|s| s.parse::<u32>().unwrap())
                     .unwrap_or(NUM_CONNECTIONS),
             ),
+        quiet:           matches.is_present("quiet"),
     }
 }
 
@@ -312,7 +307,7 @@ fn print_error(e: &Error) {
 }
 
 // Reports an error to Sentry.
-fn report_error(e: &Error) -> Result<()> {
+fn report_error(e: &Error, quiet: bool) -> Result<()> {
     match env::var("SENTRY_URL") {
         Ok(url) => {
             use std::io::Write;
@@ -335,7 +330,7 @@ fn report_error(e: &Error) -> Result<()> {
                 creds:       &creds,
                 error:       &e,
                 url_fetcher: &mut url_fetcher,
-            }.run(&log(false))?;
+            }.run(&log(quiet))?;
             Ok(())
         }
         Err(_) => Ok(()),
