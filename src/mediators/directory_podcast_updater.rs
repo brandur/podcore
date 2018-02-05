@@ -83,8 +83,8 @@ mod tests {
   </channel>
 </rss>"#;
 
-    // Encapsulates the structures that are needed for tests to run. One should only be obtained by
-    // invoking TestBootstrap::new().
+    // Encapsulates the structures that are needed for tests to run. One should
+    // only be obtained by invoking TestBootstrap::new().
     struct TestBootstrap {
         conn:        PooledConnection<ConnectionManager<PgConnection>>,
         dir_podcast: model::DirectoryPodcast,

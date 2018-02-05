@@ -54,21 +54,24 @@ impl<'a> PodcastUpdater<'a> {
         // Convert raw podcast data into something that's database compatible.
         let ins_podcast = Self::convert_podcast(&log, &raw_podcast)?;
 
-        // To make runs of this mediator idempotent we first check whether there's an existing
-        // podcast record that has a URL that matches the one we're processing.
+        // To make runs of this mediator idempotent we first check whether there's an
+        // existing podcast record that has a URL that matches the one we're
+        // processing.
         //
         // Note that we keep a record of all a podcast's historical URLs, so even if two
-        // directories have two entries for the same podcast with different URLs (say one is the
-        // newer version that old one 301s to), this should still work.
+        // directories have two entries for the same podcast with different URLs (say
+        // one is the newer version that old one 301s to), this should still
+        // work.
         let podcast = self.upsert_podcast(&log, &ins_podcast, final_url.as_str())?;
 
-        // The final URL of the feed may be different than what a directory gave us. Whatever it
-        // is, make sure that it's associated with the podcast.
+        // The final URL of the feed may be different than what a directory gave us.
+        // Whatever it is, make sure that it's associated with the podcast.
         let location = self.upsert_podcast_feed_location(&log, &podcast, final_url)?;
 
-        // Check to see if we already have a content record that matches our calculated hash. If
-        // so, that means that we've already successfully processed this podcast in the past and
-        // can save ourselves some work by skipping it.
+        // Check to see if we already have a content record that matches our calculated
+        // hash. If so, that means that we've already successfully processed
+        // this podcast in the past and can save ourselves some work by
+        // skipping it.
         if !self.disable_shortcut && self.already_processed(log, &podcast, sha256_hash.as_str())? {
             return Ok(RunResult {
                 episodes: None,
@@ -77,8 +80,8 @@ impl<'a> PodcastUpdater<'a> {
             });
         }
 
-        // Store the podcast's raw content. Note that this is a relatively expensive operation
-        // because a feed's body can be quite large.
+        // Store the podcast's raw content. Note that this is a relatively expensive
+        // operation because a feed's body can be quite large.
         self.upsert_podcast_feed_content(log, &podcast, body, sha256_hash)?;
 
         let ins_episodes = Self::convert_episodes(&log, raw_episodes, &podcast)?;
@@ -348,10 +351,10 @@ pub struct RunResult {
 // Private macros
 //
 
-// A macro that shortens the number of lines of code required to validate that a field is present
-// in a raw episode and t return an "invalid" enum record if it isn't. It's probably not a good
-// idea to use macros for a fairly trivial operation like this, but I'll unwind them if this gets
-// any more complicated.
+// A macro that shortens the number of lines of code required to validate that
+// a field is present in a raw episode and t return an "invalid" enum record if
+// it isn't. It's probably not a good idea to use macros for a fairly trivial
+// operation like this, but I'll unwind them if this gets any more complicated.
 macro_rules! require_episode_field {
     // Variation for a check without including an episode GUID.
     ($raw_field:expr, $message:expr) => (
@@ -545,8 +548,8 @@ fn parse_date_time(s: &str) -> Result<DateTime<Utc>> {
         );
     }
 
-    // Try to parse a valid datetime first, then fall back and start moving into various known
-    // problem cases.
+    // Try to parse a valid datetime first, then fall back and start moving into
+    // various known problem cases.
     match DateTime::parse_from_rfc2822(s) {
         Ok(d) => Ok(d.with_timezone(&Utc)),
         _ => {
@@ -621,24 +624,27 @@ fn parse_item<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<raw::E
     Ok(episode)
 }
 
-// The idea here is to produce a tolerant form of quick-xml's function that is tolerant to as wide
-// of a variety of possibly misencoded podcast feeds as possible.
+// The idea here is to produce a tolerant form of quick-xml's function that is
+// tolerant to as wide of a variety of possibly misencoded podcast feeds as
+// possible.
 pub fn safe_unescape_and_decode<'b, B: BufRead>(
     log: &Logger,
     bytes: &BytesText<'b>,
     reader: &Reader<B>,
 ) -> String {
-    // quick-xml's unescape might fail if it runs into an improperly encoded '&' with something
-    // like this:
+    // quick-xml's unescape might fail if it runs into an improperly encoded '&'
+    // with something like this:
     //
     //     Some(Error(Escape("Cannot find \';\' after \'&\'", 486..1124) ...
     //
-    // The idea here is that we try to unescape: If we can, great, continue to decode. If we can't,
-    // then we just ignore the error (it goes to logs, but nothing else) and continue to decode.
+    // The idea here is that we try to unescape: If we can, great, continue to
+    // decode. If we can't, then we just ignore the error (it goes to logs, but
+    // nothing else) and continue to decode.
     //
-    // Eventually this would probably be better served by completely reimplementing quick-xml's
-    // unescaped so that we just don't balk when we see certain things that we know to be problems.
-    // Just do as good of a job as possible in the same style as a web browser with HTML.
+    // Eventually this would probably be better served by completely reimplementing
+    // quick-xml's unescaped so that we just don't balk when we see certain
+    // things that we know to be problems. Just do as good of a job as possible
+    // in the same style as a web browser with HTML.
     match bytes.unescaped() {
         Ok(bytes) => reader.decode(&*bytes).into_owned(),
         Err(e) => {
@@ -803,9 +809,9 @@ mod tests {
         {
             let (mut mediator, log) = bootstrap.mediator();
 
-            // Disable the shortcut that checks to see if content has already been processed so
-            // that we can verify idempotency even if the mediator is doing a complete end-to-end
-            // run.
+            // Disable the shortcut that checks to see if content has already been
+            // processed so that we can verify idempotency even if the mediator
+            // is doing a complete end-to-end run.
             mediator.disable_shortcut = true;
 
             let _res = mediator.run(&log).unwrap();
@@ -852,9 +858,10 @@ mod tests {
             parse_date_time("Sun, 24 Dec 2017 21:37:32 EST").unwrap()
         );
 
-        // Never forget how uselessly pedantic Rust programmers are. A "-0000" is technically
-        // considered missing even though it's obvious to anyone on Earth what should be done with
-        // it. Our special implementation handles it, so test this case specifically.
+        // Never forget how uselessly pedantic Rust programmers are. A "-0000" is
+        // technically considered missing even though it's obvious to anyone on
+        // Earth what should be done with it. Our special implementation
+        // handles it, so test this case specifically.
         assert_eq!(
             Utc.ymd(2017, 12, 24).and_hms(21, 37, 32),
             parse_date_time("Sun, 24 Dec 2017 21:37:32 -0000").unwrap()
@@ -1171,8 +1178,8 @@ mod tests {
   </channel>
 </rss>"#;
 
-    // Encapsulates the structures that are needed for tests to run. One should only be obtained by
-    // invoking TestBootstrap::new().
+    // Encapsulates the structures that are needed for tests to run. One should
+    // only be obtained by invoking TestBootstrap::new().
     struct TestBootstrap {
         conn:        PooledConnection<ConnectionManager<PgConnection>>,
         feed_url:    &'static str,

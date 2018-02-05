@@ -92,8 +92,9 @@ where
 pub static NUM_CONNECTIONS: u32 = 10;
 
 fn check_database(conn: &PgConnection) {
-    // Note that we only check one table's count as a proxy for the state of the entire database.
-    // This isn't bullet proof, but will hopefully be enough to avoid most stupid problems.
+    // Note that we only check one table's count as a proxy for the state of the
+    // entire database. This isn't bullet proof, but will hopefully be enough
+    // to avoid most stupid problems.
     match schema::podcasts::table.count().first(conn) {
         Ok(0) => (),
         Ok(n) => panic!(

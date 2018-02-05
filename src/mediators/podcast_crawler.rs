@@ -53,8 +53,8 @@ impl PodcastCrawler {
 
             self.page_podcasts(log, work_send)?
 
-            // `work_send` is dropped, which unblocks our threads' select, passes them a `None`
-            // result, and lets them to drop back to main
+            // `work_send` is dropped, which unblocks our threads' select, passes them a
+            // `None` result, and lets them to drop back to main
         };
 
         // Wait for threads to rejoin
@@ -108,8 +108,8 @@ impl PodcastCrawler {
         let res = common::log_timed(
             &log.new(o!("step" => "query_podcasts", "start_id" => start_id)),
             |ref _log| {
-                // See comment on similar function in podcast_reingester -- unfortunately Diesel's
-                // query DSL cannot handle subselects.
+                // See comment on similar function in podcast_reingester -- unfortunately
+                // Diesel's query DSL cannot handle subselects.
                 diesel::sql_query(format!(
                     "
                 SELECT id,
@@ -148,7 +148,8 @@ static REFRESH_INTERVAL_HOURS: i64 = 1;
 // Private types
 //
 
-// Exists because `sql_query` doesn't support querying into a tuple, only a struct.
+// Exists because `sql_query` doesn't support querying into a tuple, only a
+// struct.
 #[derive(Clone, Debug, QueryableByName)]
 #[table_name = "podcasts"]
 struct PodcastTuple {
@@ -257,8 +258,9 @@ mod tests {
     fn test_crawler_no_update() {
         let mut bootstrap = TestBootstrap::new();
 
-        // Just add one podcast given no data will be crawled anyway: any inserted podcasts are
-        // marked as last_retrieved_at too recently, so the crawler will ignore them
+        // Just add one podcast given no data will be crawled anyway: any inserted
+        // podcasts are marked as last_retrieved_at too recently, so the
+        // crawler will ignore them
         insert_podcast(&bootstrap.log, &*bootstrap.conn);
 
         let (mut mediator, log) = bootstrap.mediator();
@@ -304,8 +306,9 @@ mod tests {
         fn mediator(&mut self) -> (PodcastCrawler, Logger) {
             (
                 PodcastCrawler {
-                    // Number of connections minus one for the reingester's control thread and minus
-                    // another one for a connection that a test case might be using for setup.
+                    // Number of connections minus one for the reingester's control thread and
+                    // minus another one for a connection that a test case
+                    // might be using for setup.
                     num_workers:         test_helpers::NUM_CONNECTIONS - 1 - 1,
                     pool:                self.pool.clone(),
                     url_fetcher_factory: Box::new(URLFetcherFactoryPassThrough {

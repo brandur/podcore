@@ -43,7 +43,8 @@ use tokio_core::reactor::Core;
 //
 
 fn main() {
-    // Note that when using `arg_from_usage`, `<arg>` is required and `[arg]` is optional.
+    // Note that when using `arg_from_usage`, `<arg>` is required and `[arg]` is
+    // optional.
     let mut app = App::new("podcore")
         .version("0.1")
         .about("A general utility command for the podcore project")
@@ -218,8 +219,8 @@ fn trigger_error(matches: ArgMatches) -> Result<()> {
     let _quiet = matches.is_present("quiet");
     let _matches = matches.subcommand_matches("error").unwrap();
 
-    // We chain some extra context on to add a little flavor and to help show what output would
-    // look like
+    // We chain some extra context on to add a little flavor and to help show what
+    // output would look like
     Err(Error::from("Error triggered by user request")
         .chain_err(|| "Chained context 1")
         .chain_err(|| "Chained context 2"))
@@ -231,8 +232,8 @@ fn trigger_error(matches: ArgMatches) -> Result<()> {
 
 const NUM_CONNECTIONS: u32 = 50;
 
-// For commands that loop, the number of seconds to sleep between iterations where no records were
-// processed.
+// For commands that loop, the number of seconds to sleep between iterations
+// where no records were processed.
 const SLEEP_SECONDS: u64 = 60;
 
 struct GlobalOptions {
@@ -303,7 +304,8 @@ fn print_error(e: &Error) {
         writeln!(stderr, "chained error: {}", e).unwrap();
     }
 
-    // The backtrace is not always generated. Programs must be run with `RUST_BACKTRACE=1`.
+    // The backtrace is not always generated. Programs must be run with
+    // `RUST_BACKTRACE=1`.
     if let Some(backtrace) = e.backtrace() {
         writeln!(stderr, "{:?}", backtrace).unwrap();
     }

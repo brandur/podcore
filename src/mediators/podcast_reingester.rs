@@ -52,8 +52,8 @@ impl PodcastReingester {
 
             self.page_podcasts(log, work_send)?
 
-            // `work_send` is dropped, which unblocks our threads' select, passes them a `None`
-            // result, and lets them to drop back to main
+            // `work_send` is dropped, which unblocks our threads' select, passes them a
+            // `None` result, and lets them to drop back to main
         };
 
         // Wait for threads to rejoin
@@ -111,16 +111,19 @@ impl PodcastReingester {
                 // has proven to be somewhere between frustrating difficult to impossible.
                 //
                 // First of all, Diesel cannot properly implement taking a single result from a
-                // subselect -- it can only take results as `Vec<_>`. I asked in the Gitter channel
-                // and the response confirmed the problem, but only relunctantly so, and I wouldn't
-                // expect this to get fixed anytime soon.
+                // subselect -- it can only take results as `Vec<_>`. I asked in the Gitter
+                // channel and the response confirmed the problem, but only
+                // relunctantly so, and I wouldn't expect this to get fixed
+                // anytime soon.
                 //
-                // Secondly, even using the `Vec<_>` workaround, I was able to get the subselects
-                // to a state where they'd successfully compile, but produce an invalid query at
-                // runtime. On debug it turned out that the query was invalid because neither
-                // subselect was being wrapped in parentheses (`SELECT ...` instead of `(SELECT
-                // ...)`). This might be solvable somehow, but examples in tests and documentation
-                // are quite poor, so I gave up and fell back to this.
+                // Secondly, even using the `Vec<_>` workaround, I was able to get the
+                // subselects to a state where they'd successfully compile, but
+                // produce an invalid query at runtime. On debug it turned out
+                // that the query was invalid because neither subselect was
+                // being wrapped in parentheses (`SELECT ...` instead of `(SELECT
+                // ...)`). This might be solvable somehow, but examples in tests and
+                // documentation are quite poor, so I gave up and fell back to
+                // this.
                 diesel::sql_query(format!(
                     "
                 SELECT id,
@@ -163,7 +166,8 @@ const PAGE_SIZE: i64 = 100;
 // Private types
 //
 
-// Exists because `sql_query` doesn't support querying into a tuple, only a struct.
+// Exists because `sql_query` doesn't support querying into a tuple, only a
+// struct.
 #[derive(Clone, Debug, QueryableByName)]
 struct PodcastTuple {
     #[sql_type = "BigInt"]
@@ -298,8 +302,9 @@ mod tests {
         fn mediator(&mut self) -> (PodcastReingester, Logger) {
             (
                 PodcastReingester {
-                    // Number of connections minus one for the reingester's control thread and minus
-                    // another one for a connection that a test case might be using for setup.
+                    // Number of connections minus one for the reingester's control thread and
+                    // minus another one for a connection that a test case
+                    // might be using for setup.
                     num_workers: test_helpers::NUM_CONNECTIONS - 1 - 1,
                     pool:        self.pool.clone(),
                 },

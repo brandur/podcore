@@ -7,9 +7,9 @@ use time::precise_time_ns;
 pub fn chain(log: &Logger, mount: Mount) -> Chain {
     let mut chain = Chain::new(mount);
 
-    // Tried to pass in `log` as a reference here, but ran into serious trouble giving a middleware
-    // a lifetime like 'a because all the Iron traits require a static lifetime. I don't really
-    // understand why.
+    // Tried to pass in `log` as a reference here, but ran into serious trouble
+    // giving a middleware a lifetime like 'a because all the Iron traits
+    // require a static lifetime. I don't really understand why.
     chain.link_before(ResponseTime { log: log.clone() });
     chain.link_after(ResponseTime { log: log.clone() });
 

@@ -191,12 +191,12 @@ struct StackTrace {
 // Private functions
 //
 
-// Collect error strings together so that we can build a good error message to send up. It's worth
-// nothing that the original error is actually at the end of the iterator, but since it's the most
-// relevant, we reverse the list.
+// Collect error strings together so that we can build a good error message to
+// send up. It's worth nothing that the original error is actually at the end of
+// the iterator, but since it's the most relevant, we reverse the list.
 //
-// The chain isn't a double-ended iterator (meaning we can't use `rev`), so we have to collect it
-// to a Vec first before reversing it.
+// The chain isn't a double-ended iterator (meaning we can't use `rev`), so we
+// have to collect it to a Vec first before reversing it.
 fn build_error_strings(error: &Error) -> Vec<String> {
     error
         .iter()
@@ -336,8 +336,8 @@ mod tests {
     // Private types/functions
     //
 
-    // Encapsulates the structures that are needed for tests to run. One should only be obtained by
-    // invoking TestBootstrap::new().
+    // Encapsulates the structures that are needed for tests to run. One should
+    // only be obtained by invoking TestBootstrap::new().
     struct TestBootstrap {
         creds:       SentryCredentials,
         error:       Error,

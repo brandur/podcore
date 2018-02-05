@@ -1,1 +1,2 @@
 struct_field_align_threshold = 20
+wrap_comments = true

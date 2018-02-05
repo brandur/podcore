@@ -38,8 +38,8 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         let directory = model::Directory::itunes(&self.conn)?;
         let directory_search = match self.select_directory_search(&log, &directory)? {
             Some(search) => {
-                // The cache is fresh. Retrieve directory podcasts and search results, then return
-                // early.
+                // The cache is fresh. Retrieve directory podcasts and search results, then
+                // return early.
                 if search.retrieved_at > Utc::now() - Duration::hours(1) {
                     info!(log, "Query cached and fresh";
                         "retrieved_at" => search.retrieved_at.to_rfc3339());
@@ -263,8 +263,8 @@ impl<'a> DirectoryPodcastSearcher<'a> {
             })
             .collect();
 
-        // Retrieve any IDs for podcasts that are already in database and have a previous location
-        // that matches one returned by our directory.
+        // Retrieve any IDs for podcasts that are already in database and have a
+        // previous location that matches one returned by our directory.
         let podcast_id_tuples: Vec<(String, i64)> = podcasts::table
             .inner_join(podcast_feed_locations::table)
             .filter(
@@ -478,8 +478,8 @@ mod tests {
   ]
 }"#;
 
-    // Encapsulates the structures that are needed for tests to run. One should only be obtained by
-    // invoking bootstrap().
+    // Encapsulates the structures that are needed for tests to run. One should
+    // only be obtained by invoking bootstrap().
     struct TestBootstrap {
         conn:        PooledConnection<ConnectionManager<PgConnection>>,
         log:         Logger,

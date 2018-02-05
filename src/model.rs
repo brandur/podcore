@@ -7,9 +7,10 @@ use diesel::pg::PgConnection;
 
 // Database models for the application.
 //
-// Note that models are separately into `Queryable` and `Insertable` versions (with the latter
-// located in the `insertable` module) so that we can insert rows with default values like we'd
-// want to for an autoincrementing primary key. See here for details:
+// Note that models are separately into `Queryable` and `Insertable` versions
+// (with the latter located in the `insertable` module) so that we can insert
+// rows with default values like we'd want to for an autoincrementing primary
+// key. See here for details:
 //
 // https://github.com/diesel-rs/diesel/issues/1440
 //
