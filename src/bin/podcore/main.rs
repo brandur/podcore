@@ -117,7 +117,7 @@ fn add_podcast(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
 
     for url in matches.values_of("URL").unwrap().collect::<Vec<_>>().iter() {
         PodcastUpdater {
-            conn:             &*connection(),
+            conn:             &*connection()?,
             disable_shortcut: false,
             feed_url:         url.to_owned().to_owned(),
             url_fetcher:      &mut url_fetcher,
@@ -172,7 +172,7 @@ fn search_podcasts(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
 
     let query = matches.value_of("QUERY").unwrap();
     DirectoryPodcastSearcher {
-        conn:        &*connection(),
+        conn:        &*connection()?,
         query:       query.to_owned(),
         url_fetcher: &mut url_fetcher,
     }.run(&log(options.quiet))?;
@@ -234,10 +234,8 @@ struct GlobalOptions {
 
 /// Acquires a single connection from a connection pool. This is suitable for use a shortcut by
 /// subcommands that only need to run one single-threaded task.
-fn connection() -> PooledConnection<ConnectionManager<PgConnection>> {
-    pool(1)
-        .get()
-        .expect("Error acquiring connection from connection pool")
+fn connection() -> Result<PooledConnection<ConnectionManager<PgConnection>>> {
+    pool(1).get().map_err(Error::from)
 }
 
 fn handle_error(e: &Error, quiet: bool) {

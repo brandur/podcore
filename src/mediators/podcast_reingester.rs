@@ -73,9 +73,7 @@ impl PodcastReingester {
     fn page_podcasts(&mut self, log: &Logger, work_send: Sender<PodcastTuple>) -> Result<i64> {
         let log = log.new(o!("thread" => "control"));
         common::log_timed(&log.new(o!("step" => "page_podcasts")), |ref log| {
-            let conn = &*(self.pool
-                .get()
-                .chain_err(|| "Error acquiring connection from connection pool"))?;
+            let conn = &*(self.pool.get().map_err(Error::from))?;
 
             let mut last_id = 0i64;
             let mut num_podcasts = 0i64;
@@ -295,8 +293,7 @@ mod tests {
     impl TestBootstrap {
         fn new() -> TestBootstrap {
             let pool = test_helpers::pool();
-            let conn = pool.get()
-                .expect("Error acquiring connection from connection pool");
+            let conn = pool.get().map_err(Error::from).unwrap();
             TestBootstrap {
                 conn: conn,
                 log:  test_helpers::log_sync(),

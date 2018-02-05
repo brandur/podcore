@@ -1,3 +1,4 @@
+use errors::*;
 use schema;
 
 use diesel::pg::PgConnection;
@@ -16,9 +17,7 @@ use std::time::Duration;
 /// Acquires a single connection from a connection pool and starts a test transaction on it. This
 /// is suitable for use a shortcut by subcommands that only need to run one single-threaded task.
 pub fn connection() -> PooledConnection<ConnectionManager<PgConnection>> {
-    let conn = pool()
-        .get()
-        .expect("Error acquiring connection from connection pool");
+    let conn = pool().get().map_err(Error::from).unwrap();
     conn.begin_test_transaction().unwrap();
     conn
 }
@@ -60,8 +59,7 @@ pub fn pool() -> Pool<ConnectionManager<PgConnection>> {
         .build(manager)
         .expect("Failed to create pool.");
 
-    let conn = pool.get()
-        .expect("Error acquiring connection from connection pool");
+    let conn = pool.get().map_err(Error::from).unwrap();
     check_database(&*conn);
 
     pool

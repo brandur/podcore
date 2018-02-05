@@ -10,6 +10,7 @@ error_chain!{
     // original error.
     foreign_links {
         Database(::diesel::result::Error);
+        DatabaseConnectionPool(::r2d2::Error);
         HyperError(::hyper::Error);
         NativeTls(::native_tls::Error);
         HyperUri(::hyper::error::UriError);
