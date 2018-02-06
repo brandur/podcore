@@ -271,10 +271,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
                 schema::podcast_feed_location::feed_url
                     .eq_any(ins_podcasts.iter().map(|ref p| p.feed_url.clone())),
             )
-            .select((
-                schema::podcast_feed_location::feed_url,
-                schema::podcast::id,
-            ))
+            .select((schema::podcast_feed_location::feed_url, schema::podcast::id))
             .load(self.conn)?;
 
         // Maps feed URLs to podcast IDs.
