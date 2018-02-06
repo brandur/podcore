@@ -1,3 +1,4 @@
+use error_helpers;
 use errors::*;
 use mediators::common;
 
@@ -60,7 +61,7 @@ pub struct RunResult {}
 const DELETE_LIMIT: i64 = 1000;
 
 // The maximum number of content rows to keep around for any given podcast.
-const DIRECTORY_PODCAST_CONTENT_LIMIT: i64 = 10;
+pub const DIRECTORY_PODCAST_CONTENT_LIMIT: i64 = 10;
 
 //
 // Private types
@@ -92,19 +93,99 @@ fn clean_directory_podcast_content(log: &Logger, pool: Pool<ConnectionManager<Pg
     };
     debug!(log, "Thread acquired a connection");
 
+    let mut num_cleaned = 0;
     loop {
-        diesel::sql_query(format!(
-            "
-                DELETE FROM directory_podcast_content
-                WHERE id IN (
-                    SELECT id,
-                        row_number() OVER (ORDER BY retrieved_at DESC)
-                    FROM directory_podcast_content
-                    WHERE row_number > {}
-                    LIMIT {}
-                )
-                RETURNING id",
-            DIRECTORY_PODCAST_CONTENT_LIMIT, DELETE_LIMIT
-        )).load::<DirectoryPodcastContentTuple>(&*conn)?;
+        let res = select_directory_podcast_content_batch(log, &*conn);
+
+        if let Err(e) = res {
+            error_helpers::print_error(&log, &e);
+
+            if let Err(inner_e) = error_helpers::report_error(&log, &e) {
+                error_helpers::print_error(&log, &inner_e);
+            }
+            break;
+        }
+
+        let batch = res.unwrap();
+        if batch.len() < 1 {
+            info!(log, "Cleaned all directory podcast contents"; "num_cleaned" => num_cleaned);
+            break;
+        }
+        num_cleaned += batch.len();
+    }
+}
+
+fn select_directory_podcast_content_batch(
+    log: &Logger,
+    conn: &PgConnection,
+) -> Result<Vec<DirectoryPodcastContentTuple>> {
+    common::log_timed(
+        &log.new(o!("step" => "select_directory_podcast_content_batch", "limit" => DELETE_LIMIT)),
+        |ref _log| {
+            diesel::sql_query(format!(
+                "
+                    WITH batch AS (
+                        SELECT id,
+                            row_number() OVER (ORDER BY retrieved_at DESC)
+                        FROM directory_podcast_content
+                        WHERE row_number > {}
+                        LIMIT {}
+                    )
+                    DELETE FROM directory_podcast_content
+                    WHERE id IN (
+                        SELECT id
+                        FROM batch
+                    )
+                    RETURNING id",
+                DIRECTORY_PODCAST_CONTENT_LIMIT, DELETE_LIMIT
+            )).load::<DirectoryPodcastContentTuple>(conn)
+                .chain_err(|| "Error selecting directory podcast content batch")
+        },
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use mediators::cleaner::*;
+    use test_helpers;
+
+    use r2d2::PooledConnection;
+
+    #[test]
+    fn test_clean_directory_podcast_content() {
+        let mut bootstrap = TestBootstrap::new();
+        let (mut mediator, log) = bootstrap.mediator();
+        let _res = mediator.run(&log).unwrap();
+    }
+
+    //
+    // Private types/functions
+    //
+
+    struct TestBootstrap {
+        conn: PooledConnection<ConnectionManager<PgConnection>>,
+        log:  Logger,
+        pool: Pool<ConnectionManager<PgConnection>>,
+    }
+
+    impl TestBootstrap {
+        fn new() -> TestBootstrap {
+            let pool = test_helpers::pool();
+            let conn = pool.get().map_err(Error::from).unwrap();
+            TestBootstrap {
+                conn: conn,
+                log:  test_helpers::log_sync(),
+                pool: pool,
+            }
+        }
+
+        fn mediator(&mut self) -> (Cleaner, Logger) {
+            (
+                Cleaner {
+                    pool: self.pool.clone(),
+                },
+                self.log.clone(),
+            )
+        }
     }
 }
