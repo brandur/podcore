@@ -15,7 +15,7 @@ use hyper::{Method, Request, StatusCode, Uri};
 use quick_xml::events::{BytesText, Event};
 use quick_xml::reader::Reader;
 use regex::Regex;
-use schema::{episodes, podcast_feed_contents, podcast_feed_locations, podcasts};
+use schema;
 use slog::Logger;
 use std::io::BufRead;
 use std::str;
@@ -107,11 +107,11 @@ impl<'a> PodcastUpdater<'a> {
         let matching_content_count: i64 = common::log_timed(
             &log.new(o!("step" => "query_podcast_feed_content")),
             |ref _log| {
-                podcast_feed_contents::table
+                schema::podcast_feed_contents::table
                     .filter(
-                        podcast_feed_contents::podcast_id
+                        schema::podcast_feed_contents::podcast_id
                             .eq(podcast.id)
-                            .and(podcast_feed_contents::sha256_hash.eq(sha256_hash)),
+                            .and(schema::podcast_feed_contents::sha256_hash.eq(sha256_hash)),
                     )
                     .count()
                     .first(self.conn)
@@ -211,19 +211,19 @@ impl<'a> PodcastUpdater<'a> {
         ins_episodes: Vec<insertable::Episode>,
     ) -> Result<Vec<model::Episode>> {
         common::log_timed(&log.new(o!("step" => "upsert_episodes")), |ref _log| {
-            Ok(diesel::insert_into(episodes::table)
+            Ok(diesel::insert_into(schema::episodes::table)
                 .values(&ins_episodes)
-                .on_conflict((episodes::podcast_id, episodes::guid))
+                .on_conflict((schema::episodes::podcast_id, schema::episodes::guid))
                 .do_update()
                 .set((
-                    episodes::description.eq(excluded(episodes::description)),
-                    episodes::explicit.eq(excluded(episodes::explicit)),
-                    episodes::link_url.eq(excluded(episodes::link_url)),
-                    episodes::media_type.eq(excluded(episodes::media_type)),
-                    episodes::media_url.eq(excluded(episodes::media_url)),
-                    episodes::podcast_id.eq(excluded(episodes::podcast_id)),
-                    episodes::published_at.eq(excluded(episodes::published_at)),
-                    episodes::title.eq(excluded(episodes::title)),
+                    schema::episodes::description.eq(excluded(schema::episodes::description)),
+                    schema::episodes::explicit.eq(excluded(schema::episodes::explicit)),
+                    schema::episodes::link_url.eq(excluded(schema::episodes::link_url)),
+                    schema::episodes::media_type.eq(excluded(schema::episodes::media_type)),
+                    schema::episodes::media_url.eq(excluded(schema::episodes::media_url)),
+                    schema::episodes::podcast_id.eq(excluded(schema::episodes::podcast_id)),
+                    schema::episodes::published_at.eq(excluded(schema::episodes::published_at)),
+                    schema::episodes::title.eq(excluded(schema::episodes::title)),
                 ))
                 .get_results(self.conn)
                 .chain_err(|| "Error upserting podcast episodes")?)
@@ -236,23 +236,25 @@ impl<'a> PodcastUpdater<'a> {
         ins_podcast: &insertable::Podcast,
         final_url: &str,
     ) -> Result<model::Podcast> {
-        let podcast_id: Option<i64> =
-            common::log_timed(&log.new(o!("step" => "query_podcast")), |ref _log| {
-                podcasts::table
+        let podcast_id: Option<i64> = common::log_timed(
+            &log.new(o!("step" => "query_podcast")),
+            |ref _log| {
+                schema::podcasts::table
                     .left_join(
-                        podcast_feed_locations::table
-                            .on(podcasts::id.eq(podcast_feed_locations::podcast_id)),
+                        schema::podcast_feed_locations::table
+                            .on(schema::podcasts::id.eq(schema::podcast_feed_locations::podcast_id)),
                     )
-                    .filter(podcast_feed_locations::feed_url.eq(final_url))
-                    .select((podcasts::id))
+                    .filter(schema::podcast_feed_locations::feed_url.eq(final_url))
+                    .select((schema::podcasts::id))
                     .first(self.conn)
                     .optional()
-            })?;
+            },
+        )?;
 
         if let Some(podcast_id) = podcast_id {
             info!(log, "Found existing podcast ID {}", podcast_id);
             common::log_timed(&log.new(o!("step" => "update_podcast")), |ref _log| {
-                diesel::update(podcasts::table.filter(podcasts::id.eq(podcast_id)))
+                diesel::update(schema::podcasts::table.filter(schema::podcasts::id.eq(podcast_id)))
                     .set(ins_podcast)
                     .get_result(self.conn)
                     .chain_err(|| "Error updating podcast")
@@ -260,7 +262,7 @@ impl<'a> PodcastUpdater<'a> {
         } else {
             info!(log, "No existing podcast found; inserting new");
             common::log_timed(&log.new(o!("step" => "insert_podcast")), |ref _log| {
-                diesel::insert_into(podcasts::table)
+                diesel::insert_into(schema::podcasts::table)
                     .values(ins_podcast)
                     .get_result(self.conn)
                     .chain_err(|| "Error inserting podcast")
@@ -284,16 +286,16 @@ impl<'a> PodcastUpdater<'a> {
         common::log_timed(
             &log.new(o!("step" => "upsert_podcast_feed_content")),
             |ref _log| {
-                diesel::insert_into(podcast_feed_contents::table)
+                diesel::insert_into(schema::podcast_feed_contents::table)
                     .values(&content_ins)
                     .on_conflict((
-                        podcast_feed_contents::podcast_id,
-                        podcast_feed_contents::sha256_hash,
+                        schema::podcast_feed_contents::podcast_id,
+                        schema::podcast_feed_contents::sha256_hash,
                     ))
                     .do_update()
                     .set(
-                        podcast_feed_contents::retrieved_at
-                            .eq(excluded(podcast_feed_contents::retrieved_at)),
+                        schema::podcast_feed_contents::retrieved_at
+                            .eq(excluded(schema::podcast_feed_contents::retrieved_at)),
                     )
                     .execute(self.conn)
                     .chain_err(|| "Error upserting podcast feed content")
@@ -318,16 +320,16 @@ impl<'a> PodcastUpdater<'a> {
         common::log_timed(
             &log.new(o!("step" => "upsert_podcast_feed_location")),
             |ref _log| {
-                diesel::insert_into(podcast_feed_locations::table)
+                diesel::insert_into(schema::podcast_feed_locations::table)
                     .values(&location_ins)
                     .on_conflict((
-                        podcast_feed_locations::podcast_id,
-                        podcast_feed_locations::feed_url,
+                        schema::podcast_feed_locations::podcast_id,
+                        schema::podcast_feed_locations::feed_url,
                     ))
                     .do_update()
                     .set(
-                        podcast_feed_locations::last_retrieved_at
-                            .eq(excluded(podcast_feed_locations::last_retrieved_at)),
+                        schema::podcast_feed_locations::last_retrieved_at
+                            .eq(excluded(schema::podcast_feed_locations::last_retrieved_at)),
                     )
                     .get_result(self.conn)
                     .chain_err(|| "Error upserting podcast feed location")

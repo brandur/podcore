@@ -1,5 +1,6 @@
 use errors::*;
-use schema::{directories, directory_podcast};
+use schema;
+use schema::directory_podcast;
 
 use chrono::{DateTime, Utc};
 use diesel::pg::PgConnection;
@@ -30,8 +31,8 @@ impl Directory {
 
     #[allow(dead_code)]
     fn load_dir(conn: &PgConnection, name: &str) -> Result<Self> {
-        directories::table
-            .filter(directories::name.eq(name))
+        schema::directories::table
+            .filter(schema::directories::name.eq(name))
             .first::<Directory>(conn)
             .chain_err(|| format!("Error loading {} directory record", name))
     }
@@ -51,9 +52,9 @@ pub struct DirectoryPodcast {
 
 #[derive(Queryable)]
 pub struct DirectoryPodcastDirectorySearch {
-    pub id: i64,
+    pub id:                   i64,
     pub directory_podcast_id: i64,
-    pub directory_search_id: i64,
+    pub directory_search_id:  i64,
 }
 
 #[allow(dead_code)]
@@ -110,9 +111,8 @@ pub struct PodcastFeedLocation {
 }
 
 pub mod insertable {
-    use schema::{directory_podcast, directory_podcast_directory_search,
-                 directory_search, episodes, podcast_feed_contents, podcast_feed_locations,
-                 podcasts};
+    use schema::{directory_podcast, directory_podcast_directory_search, directory_search,
+                 episodes, podcast_feed_contents, podcast_feed_locations, podcasts};
 
     use chrono::{DateTime, Utc};
 
@@ -130,7 +130,7 @@ pub mod insertable {
     #[table_name = "directory_podcast_directory_search"]
     pub struct DirectoryPodcastDirectorySearch {
         pub directory_podcast_id: i64,
-        pub directory_search_id:   i64,
+        pub directory_search_id:  i64,
     }
 
     #[allow(dead_code)]

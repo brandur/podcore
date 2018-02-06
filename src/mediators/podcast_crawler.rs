@@ -221,7 +221,7 @@ mod tests {
 
     use mediators::podcast_crawler::*;
     use mediators::podcast_updater::PodcastUpdater;
-    use schema::podcasts;
+    use schema;
     use test_helpers;
     use url_fetcher::{URLFetcherFactoryPassThrough, URLFetcherPassThrough};
 
@@ -244,8 +244,8 @@ mod tests {
         }
 
         // Mark all podcasts as stale so that the crawler will find them
-        diesel::update(podcasts::table)
-            .set(podcasts::last_retrieved_at.eq(Utc::now() - Duration::hours(24)))
+        diesel::update(schema::podcasts::table)
+            .set(schema::podcasts::last_retrieved_at.eq(Utc::now() - Duration::hours(24)))
             .execute(&*bootstrap.conn)
             .unwrap();
 

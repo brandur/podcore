@@ -10,8 +10,7 @@ use diesel::pg::PgConnection;
 use diesel::pg::upsert::excluded;
 use diesel::prelude::*;
 use hyper::{Method, Request, StatusCode, Uri};
-use schema::{directory_podcast, directory_podcast_directory_search, directory_search,
-             podcast_feed_locations, podcasts};
+use schema;
 use serde_json;
 use slog::Logger;
 use std::collections::HashMap;
@@ -116,7 +115,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         common::log_timed(
             &log.new(o!("step" => "insert_directory_search")),
             |ref _log| {
-                diesel::insert_into(directory_search::table)
+                diesel::insert_into(schema::directory_search::table)
                     .values(&insertable::DirectorySearch {
                         directory_id: directory.id,
                         query:        self.query.clone(),
@@ -145,8 +144,8 @@ impl<'a> DirectoryPodcastSearcher<'a> {
     ) -> Result<Vec<model::DirectoryPodcastDirectorySearch>> {
         common::log_timed(&log.new(o!("step" => "delete_joins")), |ref _log| {
             diesel::delete(
-                directory_podcast_directory_search::table.filter(
-                    directory_podcast_directory_search::directory_search_id
+                schema::directory_podcast_directory_search::table.filter(
+                    schema::directory_podcast_directory_search::directory_search_id
                         .eq(directory_search.id),
                 ),
             ).execute(self.conn)
@@ -157,12 +156,12 @@ impl<'a> DirectoryPodcastSearcher<'a> {
             .iter()
             .map(|ref p| insertable::DirectoryPodcastDirectorySearch {
                 directory_podcast_id: p.id,
-                directory_search_id:   directory_search.id,
+                directory_search_id:  directory_search.id,
             })
             .collect();
 
         common::log_timed(&log.new(o!("step" => "insert_joins")), |ref _log| {
-            diesel::insert_into(directory_podcast_directory_search::table)
+            diesel::insert_into(schema::directory_podcast_directory_search::table)
                 .values(&ins_joins)
                 .get_results(self.conn)
                 .chain_err(|| "Error inserting directory podcast")
@@ -181,11 +180,11 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         ),
     > {
         let joins = common::log_timed(&log.new(o!("step" => "select_joins")), |ref _log| {
-            directory_podcast_directory_search::table
+            schema::directory_podcast_directory_search::table
                 .filter(
-                    directory_podcast_directory_search::directory_search_id.eq(search.id),
+                    schema::directory_podcast_directory_search::directory_search_id.eq(search.id),
                 )
-                .order(directory_podcast_directory_search::id)
+                .order(schema::directory_podcast_directory_search::id)
                 .load::<model::DirectoryPodcastDirectorySearch>(self.conn)
                 .chain_err(|| "Error loading joins")
         })?;
@@ -193,9 +192,9 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         let directory_podcasts = common::log_timed(
             &log.new(o!("step" => "select_directory_podcasts")),
             |ref _log| {
-                directory_podcast::table
+                schema::directory_podcast::table
                     .filter(
-                        directory_podcast::id.eq_any(
+                        schema::directory_podcast::id.eq_any(
                             joins
                                 .iter()
                                 .map(|j| j.directory_podcast_id)
@@ -218,9 +217,9 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         common::log_timed(
             &log.new(o!("step" => "select_directory_search")),
             |ref _log| {
-                directory_search::table
-                    .filter(directory_search::directory_id.eq(directory.id))
-                    .filter(directory_search::query.eq(self.query.as_str()))
+                schema::directory_search::table
+                    .filter(schema::directory_search::directory_id.eq(directory.id))
+                    .filter(schema::directory_search::query.eq(self.query.as_str()))
                     .first(self.conn)
                     .optional()
                     .chain_err(|| "Error selecting directory podcast")
@@ -237,8 +236,9 @@ impl<'a> DirectoryPodcastSearcher<'a> {
             &log.new(o!("step" => "update_directory_search")),
             |ref _log| {
                 diesel::update(
-                    directory_search::table.filter(directory_search::id.eq(search.id)),
-                ).set(directory_search::retrieved_at.eq(Utc::now()))
+                    schema::directory_search::table
+                        .filter(schema::directory_search::id.eq(search.id)),
+                ).set(schema::directory_search::retrieved_at.eq(Utc::now()))
                     .get_result(self.conn)
                     .chain_err(|| "Error updating search retrieval time")
             },
@@ -265,13 +265,16 @@ impl<'a> DirectoryPodcastSearcher<'a> {
 
         // Retrieve any IDs for podcasts that are already in database and have a
         // previous location that matches one returned by our directory.
-        let podcast_id_tuples: Vec<(String, i64)> = podcasts::table
-            .inner_join(podcast_feed_locations::table)
+        let podcast_id_tuples: Vec<(String, i64)> = schema::podcasts::table
+            .inner_join(schema::podcast_feed_locations::table)
             .filter(
-                podcast_feed_locations::feed_url
+                schema::podcast_feed_locations::feed_url
                     .eq_any(ins_podcasts.iter().map(|ref p| p.feed_url.clone())),
             )
-            .select((podcast_feed_locations::feed_url, podcasts::id))
+            .select((
+                schema::podcast_feed_locations::feed_url,
+                schema::podcasts::id,
+            ))
             .load(self.conn)?;
 
         // Maps feed URLs to podcast IDs.
@@ -284,16 +287,18 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         common::log_timed(
             &log.new(o!("step" => "upsert_directory_podcasts")),
             |ref _log| {
-                Ok(diesel::insert_into(directory_podcast::table)
+                Ok(diesel::insert_into(schema::directory_podcast::table)
                     .values(&ins_podcasts)
                     .on_conflict((
-                        directory_podcast::directory_id,
-                        directory_podcast::vendor_id,
+                        schema::directory_podcast::directory_id,
+                        schema::directory_podcast::vendor_id,
                     ))
                     .do_update()
                     .set((
-                        directory_podcast::feed_url.eq(excluded(directory_podcast::feed_url)),
-                        directory_podcast::title.eq(excluded(directory_podcast::title)),
+                        schema::directory_podcast::feed_url
+                            .eq(excluded(schema::directory_podcast::feed_url)),
+                        schema::directory_podcast::title
+                            .eq(excluded(schema::directory_podcast::title)),
                     ))
                     .get_results(self.conn)
                     .chain_err(|| "Error upserting directory podcasts")?)
@@ -405,9 +410,9 @@ mod tests {
 
             // Update the search's timestamp, thereby invalidating the cache.
             diesel::update(
-                directory_search::table
-                    .filter(directory_search::id.eq(res.directory_search.id)),
-            ).set(directory_search::retrieved_at.eq(Utc::now() - Duration::days(1)))
+                schema::directory_search::table
+                    .filter(schema::directory_search::id.eq(res.directory_search.id)),
+            ).set(schema::directory_search::retrieved_at.eq(Utc::now() - Duration::days(1)))
                 .execute(&*bootstrap.conn)
                 .unwrap();
         }
