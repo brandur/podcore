@@ -65,7 +65,8 @@ fn main() {
         )
         .subcommand(
             SubCommand::with_name("crawl")
-                .about("Crawls the web to retrieve podcasts that need to be updated"),
+                .about("Crawls the web to retrieve podcasts that need to be updated")
+                .arg_from_usage("--run-once 'Run only one time instead of looping'"),
         )
         .subcommand(
             SubCommand::with_name("error")
@@ -131,8 +132,9 @@ fn add_podcast(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
 
 fn crawl_podcasts(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
     let log = log(options);
-    let _matches = matches.subcommand_matches("crawl").unwrap();
+    let matches = matches.subcommand_matches("crawl").unwrap();
     let mut num_loops = 0;
+    let run_once = matches.is_present("run-once");
 
     loop {
         let res = PodcastCrawler {
@@ -143,6 +145,10 @@ fn crawl_podcasts(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
 
         num_loops += 1;
         info!(log, "Finished work loop"; "num_loops" => num_loops, "num_podcasts" => res.num_podcasts);
+
+        if run_once {
+            break (Ok(()));
+        }
 
         if res.num_podcasts < 1 {
             info!(log, "No podcasts processed -- sleeping"; "seconds" => SLEEP_SECONDS);
