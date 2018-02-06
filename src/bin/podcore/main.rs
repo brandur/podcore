@@ -3,6 +3,7 @@ extern crate diesel;
 extern crate hyper;
 extern crate hyper_tls;
 extern crate iron;
+extern crate isatty;
 extern crate juniper_iron;
 extern crate mount;
 extern crate podcore;
@@ -29,6 +30,7 @@ use diesel::pg::PgConnection;
 use hyper::Client;
 use hyper_tls::HttpsConnector;
 use iron::prelude::*;
+use isatty::stdout_isatty;
 use juniper_iron::{GraphQLHandler, GraphiQLHandler};
 use mount::Mount;
 use r2d2::{Pool, PooledConnection};
@@ -48,7 +50,8 @@ fn main() {
     let mut app = App::new("podcore")
         .version("0.1")
         .about("A general utility command for the podcore project")
-        .arg_from_usage("-c, --num-connections [NUM_CONNECTIONS] 'Number of Postgres connections'")
+        .arg_from_usage("   --log-async 'Log asynchronously (good for logging on servers)'")
+        .arg_from_usage("-c --num-connections [NUM_CONNECTIONS] 'Number of Postgres connections'")
         .arg_from_usage("-q --quiet 'Quiets all output'")
         .subcommand(
             SubCommand::with_name("add")
@@ -95,7 +98,7 @@ fn main() {
         _ => unreachable!(),
     };
     if let Err(ref e) = res {
-        handle_error(&e, options.quiet);
+        handle_error(&e, &options);
     };
 }
 
@@ -121,13 +124,13 @@ fn add_podcast(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
             disable_shortcut: false,
             feed_url:         url.to_owned().to_owned(),
             url_fetcher:      &mut url_fetcher,
-        }.run(&log(options.quiet))?;
+        }.run(&log(options))?;
     }
     Ok(())
 }
 
 fn crawl_podcasts(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
-    let log = log(options.quiet);
+    let log = log(options);
     let _matches = matches.subcommand_matches("crawl").unwrap();
     let mut num_loops = 0;
 
@@ -154,7 +157,7 @@ fn reingest_podcasts(matches: ArgMatches, options: &GlobalOptions) -> Result<()>
     PodcastReingester {
         num_workers: options.num_connections - 1,
         pool:        pool(options.num_connections)?.clone(),
-    }.run(&log(options.quiet))?;
+    }.run(&log(options))?;
     Ok(())
 }
 
@@ -175,7 +178,7 @@ fn search_podcasts(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
         conn:        &*connection()?,
         query:       query.to_owned(),
         url_fetcher: &mut url_fetcher,
-    }.run(&log(options.quiet))?;
+    }.run(&log(options))?;
     Ok(())
 }
 
@@ -185,7 +188,7 @@ fn serve_http(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
     let port = env::var("PORT").unwrap_or("8080".to_owned());
     let port = matches.value_of("PORT").unwrap_or_else(|| port.as_str());
     let host = format!("0.0.0.0:{}", port);
-    let log = log(options.quiet);
+    let log = log(options);
     let num_connections = options.num_connections;
     let pool = pool(num_connections)?;
 
@@ -229,6 +232,7 @@ const NUM_CONNECTIONS: u32 = 50;
 const SLEEP_SECONDS: u64 = 60;
 
 struct GlobalOptions {
+    log_async:       bool,
     num_connections: u32,
     quiet:           bool,
 }
@@ -239,8 +243,8 @@ fn connection() -> Result<PooledConnection<ConnectionManager<PgConnection>>> {
     pool(1)?.get().map_err(Error::from)
 }
 
-fn handle_error(e: &Error, quiet: bool) {
-    let log = log(quiet);
+fn handle_error(e: &Error, options: &GlobalOptions) {
+    let log = log(options);
     error_helpers::print_error(&log, e);
 
     if let Err(inner_e) = error_helpers::report_error(&log, e) {
@@ -250,19 +254,32 @@ fn handle_error(e: &Error, quiet: bool) {
     ::std::process::exit(1);
 }
 
-fn log(quiet: bool) -> Logger {
-    if !quiet {
+fn log(options: &GlobalOptions) -> Logger {
+    if options.quiet {
+        slog::Logger::root(slog::Discard, o!())
+    } else if options.log_async {
+        let decorator = slog_term::PlainSyncDecorator::new(std::io::stdout());
+        let drain = slog_term::FullFormat::new(decorator).build().fuse();
+        slog::Logger::root(drain, o!())
+    } else {
         let decorator = slog_term::PlainSyncDecorator::new(std::io::stdout());
         let drain = slog_term::CompactFormat::new(decorator).build().fuse();
         let async_drain = slog_async::Async::new(drain).build().fuse();
         slog::Logger::root(async_drain, o!())
-    } else {
-        slog::Logger::root(slog::Discard, o!())
     }
 }
 
 fn parse_global_options(matches: &ArgMatches) -> GlobalOptions {
     GlobalOptions {
+        // Go async if we've been explicitly told to do so. Otherwise, detect whether we should go
+        // async based on whether stdout is a terminal. Sync is okay for terminals, but quite bad
+        // for server logs.
+        log_async: if matches.is_present("log-async") {
+            true
+        } else {
+            !stdout_isatty()
+        },
+
         num_connections: env::var("NUM_CONNECTIONS")
             .map(|s| s.parse::<u32>().unwrap())
             .unwrap_or(
@@ -271,7 +288,8 @@ fn parse_global_options(matches: &ArgMatches) -> GlobalOptions {
                     .map(|s| s.parse::<u32>().unwrap())
                     .unwrap_or(NUM_CONNECTIONS),
             ),
-        quiet:           matches.is_present("quiet"),
+
+        quiet: matches.is_present("quiet"),
     }
 }
 

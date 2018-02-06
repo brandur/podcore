@@ -12,6 +12,7 @@ name = "podcore"
 path = "src/bin/podcore/main.rs"
 
 [dependencies]
+isatty = "*"
 chan = "*"
 chrono = "0.4"
 clap = "*"
