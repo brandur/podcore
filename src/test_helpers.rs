@@ -63,6 +63,16 @@ pub fn connection() -> PooledConnection<ConnectionManager<PgConnection>> {
     conn
 }
 
+// Resets database state.
+//
+// Note that this is currently a really janky way of doing this. Please
+// continue to add whatever statements here that are necessary to get things
+// back to zero.
+pub fn clean_database(log: &Logger, conn: &PgConnection) {
+    debug!(log, "Cleaning database on bootstrap drop");
+    conn.execute("TRUNCATE TABLE podcast CASCADE").unwrap();
+}
+
 pub fn log() -> Logger {
     if nocapture() {
         let decorator = slog_term::PlainSyncDecorator::new(std::io::stdout());

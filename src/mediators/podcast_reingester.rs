@@ -128,19 +128,19 @@ impl PodcastReingester {
                 SELECT id,
                     (
                        SELECT content
-                       FROM podcast_feed_contents
-                       WHERE podcast_feed_contents.podcast_id = podcasts.id
+                       FROM podcast_feed_content
+                       WHERE podcast_feed_content.podcast_id = podcast.id
                        ORDER BY retrieved_at DESC
                        LIMIT 1
                     ),
                     (
                        SELECT feed_url
-                       FROM podcast_feed_locations
-                       WHERE podcast_feed_locations.podcast_id = podcasts.id
+                       FROM podcast_feed_location
+                       WHERE podcast_feed_location.podcast_id = podcast.id
                        ORDER BY last_retrieved_at DESC
                        LIMIT 1
                     )
-                FROM podcasts
+                FROM podcast
                 WHERE id > {}
                 ORDER BY id
                 LIMIT {}",
@@ -304,10 +304,7 @@ mod tests {
 
     impl Drop for TestBootstrap {
         fn drop(&mut self) {
-            debug!(&self.log, "Cleaning database on bootstrap drop");
-            (*self.conn)
-                .execute("TRUNCATE TABLE podcasts CASCADE")
-                .unwrap();
+            test_helpers::clean_database(&self.log, &*self.conn);
         }
     }
 

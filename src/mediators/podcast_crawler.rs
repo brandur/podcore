@@ -114,12 +114,12 @@ impl PodcastCrawler {
                 SELECT id,
                     (
                        SELECT feed_url
-                       FROM podcast_feed_locations
-                       WHERE podcast_feed_locations.podcast_id = podcasts.id
+                       FROM podcast_feed_location
+                       WHERE podcast_feed_location.podcast_id = podcast.id
                        ORDER BY last_retrieved_at DESC
                        LIMIT 1
                     )
-                FROM podcasts
+                FROM podcast
                 WHERE id > {}
                     AND last_retrieved_at <= NOW() - '{} hours'::interval
                 ORDER BY id
@@ -311,10 +311,7 @@ mod tests {
 
     impl Drop for TestBootstrap {
         fn drop(&mut self) {
-            debug!(&self.log, "Cleaning database on bootstrap drop");
-            (*self.conn)
-                .execute("TRUNCATE TABLE podcasts CASCADE")
-                .unwrap();
+            test_helpers::clean_database(&self.log, &*self.conn);
         }
     }
 
