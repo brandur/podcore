@@ -842,6 +842,24 @@ mod tests {
     }
 
     #[test]
+    fn test_garbage() {
+        let mut bootstrap = TestBootstrap::new(b"not a feed");
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log);
+
+        assert_eq!(true, res.is_err());
+        let err = res.err().unwrap();
+        let mut err_iter = err.iter();
+
+        assert_eq!(
+            "Error in database transaction",
+            err_iter.next().unwrap().to_string()
+        );
+        assert_eq!("No rss tag found", err_iter.next().unwrap().to_string());
+        assert_eq!(true, err_iter.next().is_none());
+    }
+
+    #[test]
     fn test_parse_date_time() {
         // Valid RFC 2822
         assert_eq!(
