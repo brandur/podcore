@@ -59,6 +59,11 @@ fn main() {
                 .arg_from_usage("<URL>... 'URL(s) to fetch'"),
         )
         .subcommand(
+            SubCommand::with_name("api")
+                .about("Starts the API server")
+                .arg_from_usage("-p, --port [PORT] 'Port to bind server to'"),
+        )
+        .subcommand(
             SubCommand::with_name("crawl")
                 .about("Crawls the web to retrieve podcasts that need to be updated"),
         )
@@ -74,11 +79,6 @@ fn main() {
             SubCommand::with_name("search")
                 .about("Search iTunes directory for podcasts")
                 .arg_from_usage("[QUERY]... 'Search query'"),
-        )
-        .subcommand(
-            SubCommand::with_name("serve")
-                .about("Starts the API server")
-                .arg_from_usage("-p, --port [PORT] 'Port to bind server to'"),
         );
 
     let matches = app.clone().get_matches();
@@ -86,11 +86,11 @@ fn main() {
 
     let res = match matches.subcommand_name() {
         Some("add") => add_podcast(matches, &options),
+        Some("api") => serve_api(matches, &options),
         Some("crawl") => crawl_podcasts(matches, &options),
         Some("error") => trigger_error(matches, &options),
         Some("reingest") => reingest_podcasts(matches, &options),
         Some("search") => search_podcasts(matches, &options),
-        Some("serve") => serve_http(matches, &options),
         None => {
             app.print_help().unwrap();
             Ok(())
@@ -182,8 +182,8 @@ fn search_podcasts(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
     Ok(())
 }
 
-fn serve_http(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
-    let matches = matches.subcommand_matches("serve").unwrap();
+fn serve_api(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
+    let matches = matches.subcommand_matches("api").unwrap();
 
     let port = env::var("PORT").unwrap_or("8080".to_owned());
     let port = matches.value_of("PORT").unwrap_or_else(|| port.as_str());
