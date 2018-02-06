@@ -3,7 +3,6 @@ use schema;
 
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
-use diesel::types::Text;
 use r2d2::{HandleError, Pool, PooledConnection};
 use r2d2_diesel::ConnectionManager;
 use slog;
