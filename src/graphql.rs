@@ -1,6 +1,6 @@
 use errors::*;
 use model;
-use schema::{episodes, podcasts};
+use schema;
 
 use chrono::{DateTime, Utc};
 use diesel::pg::PgConnection;
@@ -146,9 +146,9 @@ graphql_object!(Query: Context |&self| {
             chain_err(|| "Error parsing podcast ID")?;
 
         let context = executor.context();
-        let results = episodes::table
-            .filter(episodes::podcast_id.eq(id))
-            .order(episodes::published_at.desc())
+        let results = schema::episodes::table
+            .filter(schema::episodes::podcast_id.eq(id))
+            .order(schema::episodes::published_at.desc())
             .limit(20)
             .load::<model::Episode>(&*context.get_conn()?)
             .chain_err(|| "Error loading episodes from the database")?
@@ -160,8 +160,8 @@ graphql_object!(Query: Context |&self| {
 
     field podcasts(&executor) -> FieldResult<Vec<PodcastObject>> as "A collection of podcasts." {
         let context = executor.context();
-        let results = podcasts::table
-            .order(podcasts::title.asc())
+        let results = schema::podcasts::table
+            .order(schema::podcasts::title.asc())
             .limit(5)
             .load::<model::Podcast>(&*context.get_conn()?)
             .chain_err(|| "Error loading podcasts from the database")?

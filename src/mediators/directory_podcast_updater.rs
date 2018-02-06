@@ -49,7 +49,7 @@ mod tests {
     use mediators::directory_podcast_updater::*;
     use model;
     use model::insertable;
-    use schema::directory_podcast;
+    use schema;
     use test_helpers;
     use url_fetcher::URLFetcherPassThrough;
 
@@ -91,7 +91,7 @@ mod tests {
                 title:        "Example Podcast".to_owned(),
                 vendor_id:    "471418144".to_owned(),
             };
-            let dir_podcast = diesel::insert_into(directory_podcast::table)
+            let dir_podcast = diesel::insert_into(schema::directory_podcast::table)
                 .values(&dir_podcast_ins)
                 .get_result(&*conn)
                 .unwrap();
