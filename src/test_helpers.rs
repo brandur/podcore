@@ -14,6 +14,47 @@ use std;
 use std::env;
 use std::time::Duration;
 
+//
+// Public constants
+//
+
+pub const IDEAL_FEED: &[u8] = br#"
+<?xml version="1.0" encoding="UTF-8"?>
+<rss>
+  <channel>
+    <language>en-US</language>
+    <link>https://example.com/podcast</link>
+    <media:thumbnail url="https://example.com/podcast-image-url.jpg"/>
+    <title>Title</title>
+    <item>
+      <description><![CDATA[Item 1 description]]></description>
+      <guid>1</guid>
+      <itunes:explicit>yes</itunes:explicit>
+      <media:content url="https://example.com/item-1" type="audio/mpeg"/>
+      <pubDate>Sun, 24 Dec 2017 21:37:32 +0000</pubDate>
+      <title>Item 1 Title</title>
+    </item>
+  </channel>
+</rss>"#;
+
+pub const MINIMAL_FEED: &[u8] = br#"
+<?xml version="1.0" encoding="UTF-8"?>
+<rss>
+  <channel>
+    <title>Title</title>
+    <item>
+      <guid>1</guid>
+      <media:content url="https://example.com/item-1" type="audio/mpeg"/>
+      <pubDate>Sun, 24 Dec 2017 21:37:32 +0000</pubDate>
+      <title>Item 1 Title</title>
+    </item>
+  </channel>
+</rss>"#;
+
+//
+// Public functions
+//
+
 /// Acquires a single connection from a connection pool and starts a test transaction on it. This
 /// is suitable for use a shortcut by subcommands that only need to run one single-threaded task.
 pub fn connection() -> PooledConnection<ConnectionManager<PgConnection>> {
@@ -65,6 +106,7 @@ pub fn pool() -> Pool<ConnectionManager<PgConnection>> {
     pool
 }
 
+//
 // Private types/functions
 //
 

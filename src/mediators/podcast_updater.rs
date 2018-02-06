@@ -704,7 +704,7 @@ mod tests {
 
     #[test]
     fn test_ideal_feed() {
-        let mut bootstrap = TestBootstrap::new(IDEAL_FEED);
+        let mut bootstrap = TestBootstrap::new(test_helpers::IDEAL_FEED);
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
 
@@ -751,7 +751,7 @@ mod tests {
 
     #[test]
     fn test_minimal_feed() {
-        let mut bootstrap = TestBootstrap::new(MINIMAL_FEED);
+        let mut bootstrap = TestBootstrap::new(test_helpers::MINIMAL_FEED);
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
 
@@ -771,7 +771,7 @@ mod tests {
 
     #[test]
     fn test_idempotency_with_shortcut() {
-        let mut bootstrap = TestBootstrap::new(MINIMAL_FEED);
+        let mut bootstrap = TestBootstrap::new(test_helpers::MINIMAL_FEED);
 
         {
             let (mut mediator, log) = bootstrap.mediator();
@@ -804,7 +804,7 @@ mod tests {
 
     #[test]
     fn test_idempotency_without_shortcut() {
-        let mut bootstrap = TestBootstrap::new(MINIMAL_FEED);
+        let mut bootstrap = TestBootstrap::new(test_helpers::MINIMAL_FEED);
 
         {
             let (mut mediator, log) = bootstrap.mediator();
@@ -1144,39 +1144,6 @@ mod tests {
     //
     // Private types/functions
     //
-
-    const IDEAL_FEED: &[u8] = br#"
-<?xml version="1.0" encoding="UTF-8"?>
-<rss>
-  <channel>
-    <language>en-US</language>
-    <link>https://example.com/podcast</link>
-    <media:thumbnail url="https://example.com/podcast-image-url.jpg"/>
-    <title>Title</title>
-    <item>
-      <description><![CDATA[Item 1 description]]></description>
-      <guid>1</guid>
-      <itunes:explicit>yes</itunes:explicit>
-      <media:content url="https://example.com/item-1" type="audio/mpeg"/>
-      <pubDate>Sun, 24 Dec 2017 21:37:32 +0000</pubDate>
-      <title>Item 1 Title</title>
-    </item>
-  </channel>
-</rss>"#;
-
-    const MINIMAL_FEED: &[u8] = br#"
-<?xml version="1.0" encoding="UTF-8"?>
-<rss>
-  <channel>
-    <title>Title</title>
-    <item>
-      <guid>1</guid>
-      <media:content url="https://example.com/item-1" type="audio/mpeg"/>
-      <pubDate>Sun, 24 Dec 2017 21:37:32 +0000</pubDate>
-      <title>Item 1 Title</title>
-    </item>
-  </channel>
-</rss>"#;
 
     // Encapsulates the structures that are needed for tests to run. One should
     // only be obtained by invoking TestBootstrap::new().

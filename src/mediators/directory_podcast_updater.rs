@@ -60,7 +60,7 @@ mod tests {
 
     #[test]
     fn test_minimal_feed() {
-        let mut bootstrap = TestBootstrap::new(MINIMAL_FEED);
+        let mut bootstrap = TestBootstrap::new(test_helpers::MINIMAL_FEED);
         let (mut mediator, log) = bootstrap.mediator();
         let _res = mediator.run(&log).unwrap();
     }
@@ -68,20 +68,6 @@ mod tests {
     //
     // Private types/functions
     //
-
-    const MINIMAL_FEED: &[u8] = br#"
-<?xml version="1.0" encoding="UTF-8"?>
-<rss>
-  <channel>
-    <title>Title</title>
-    <item>
-      <guid>1</guid>
-      <media:content url="https://example.com/item-1" type="audio/mpeg"/>
-      <pubDate>Sun, 24 Dec 2017 21:37:32 +0000</pubDate>
-      <title>Item 1 Title</title>
-    </item>
-  </channel>
-</rss>"#;
 
     // Encapsulates the structures that are needed for tests to run. One should
     // only be obtained by invoking TestBootstrap::new().

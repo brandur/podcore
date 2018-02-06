@@ -271,22 +271,9 @@ mod tests {
         assert_eq!(0, res.num_podcasts);
     }
 
+    //
     // Private types/functions
     //
-
-    const MINIMAL_FEED: &[u8] = br#"
-<?xml version="1.0" encoding="UTF-8"?>
-<rss>
-  <channel>
-    <title>Title</title>
-    <item>
-      <guid>1</guid>
-      <media:content url="https://example.com/item-1" type="audio/mpeg"/>
-      <pubDate>Sun, 24 Dec 2017 21:37:32 +0000</pubDate>
-      <title>Item 1 Title</title>
-    </item>
-  </channel>
-</rss>"#;
 
     struct TestBootstrap {
         conn: PooledConnection<ConnectionManager<PgConnection>>,
@@ -314,7 +301,7 @@ mod tests {
                     num_workers:         test_helpers::NUM_CONNECTIONS - 1 - 1,
                     pool:                self.pool.clone(),
                     url_fetcher_factory: Box::new(URLFetcherFactoryPassThrough {
-                        data: Arc::new(MINIMAL_FEED.to_vec()),
+                        data: Arc::new(test_helpers::MINIMAL_FEED.to_vec()),
                     }),
                 },
                 self.log.clone(),
@@ -342,7 +329,7 @@ mod tests {
             feed_url: format!("https://example.com/feed-{}.xml", rng.gen::<u64>()).to_string(),
 
             url_fetcher: &mut URLFetcherPassThrough {
-                data: Arc::new(MINIMAL_FEED.to_vec()),
+                data: Arc::new(test_helpers::MINIMAL_FEED.to_vec()),
             },
         }.run(log)
             .unwrap();
