@@ -19,7 +19,7 @@ DATABASE_URL=$TEST_DATABASE_URL diesel migration run
 ```
 
 ```
-$ cargo build && target/debug/podcore-serve
+$ cargo build && target/debug/podcore api
 GraphQL server started on 0.0.0.0:8080
 ```
 
