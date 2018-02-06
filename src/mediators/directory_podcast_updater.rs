@@ -1,3 +1,4 @@
+use error_helpers;
 use errors::*;
 use mediators::common;
 use mediators::podcast_updater::PodcastUpdater;
@@ -47,8 +48,11 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                     podcast:        Some(res.podcast),
                 })
             }
-            Err(err) => {
-                let ex = self.upsert_exception(&log, &err)?;
+            Err(e) => {
+                let ex = self.upsert_exception(&log, &e)?;
+                if let Err(inner_e) = error_helpers::report_error(&log, &e) {
+                    error_helpers::print_error(&log, &inner_e);
+                }
 
                 Ok(RunResult {
                     dir_podcast:    self.dir_podcast,
