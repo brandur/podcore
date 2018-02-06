@@ -1,5 +1,5 @@
 table! {
-    directories (id) {
+    directory (id) {
         id -> Int8,
         name -> Text,
     }
@@ -79,17 +79,17 @@ table! {
     }
 }
 
-joinable!(directory_podcast -> directories (directory_id));
+joinable!(directory_podcast -> directory (directory_id));
 joinable!(directory_podcast -> podcasts (podcast_id));
 joinable!(directory_podcast_directory_search -> directory_podcast (directory_podcast_id));
 joinable!(directory_podcast_directory_search -> directory_search (directory_search_id));
-joinable!(directory_search -> directories (directory_id));
+joinable!(directory_search -> directory (directory_id));
 joinable!(episodes -> podcasts (podcast_id));
 joinable!(podcast_feed_content -> podcasts (podcast_id));
 joinable!(podcast_feed_location -> podcasts (podcast_id));
 
 allow_tables_to_appear_in_same_query!(
-    directories,
+    directory,
     directory_podcast,
     directory_podcast_directory_search,
     directory_search,

@@ -1,19 +1,19 @@
 --
--- directories
+-- directory
 --
 
-CREATE TABLE directories (
+CREATE TABLE directory (
     id BIGSERIAL PRIMARY KEY,
     name TEXT NOT NULL UNIQUE
         CHECK (char_length(name) <= 100)
 );
-COMMENT ON TABLE directories
-    IS 'Podcast directories. e.g. Apple iTunes.';
+COMMENT ON TABLE directory
+    IS 'Podcast directory. e.g. Apple iTunes.';
 
-CREATE INDEX directories_name
-    ON directories (name);
+CREATE INDEX directory_name
+    ON directory (name);
 
-INSERT INTO directories (name)
+INSERT INTO directory (name)
     VALUES ('Apple iTunes')
     ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name;
 
@@ -24,13 +24,13 @@ INSERT INTO directories (name)
 CREATE TABLE directory_search (
     id BIGSERIAL PRIMARY KEY,
     directory_id BIGINT NOT NULL
-        REFERENCES directories (id) ON DELETE RESTRICT,
+        REFERENCES directory (id) ON DELETE RESTRICT,
     query TEXT NOT NULL
         CHECK (char_length(query) <= 100),
     retrieved_at TIMESTAMPTZ NOT NULL
 );
 COMMENT ON TABLE directory_search
-    IS 'Cached searches for podcasts on directories.';
+    IS 'Cached searches for podcasts on directory.';
 
 --
 -- podcasts
@@ -106,7 +106,7 @@ CREATE TABLE directory_podcast (
     id BIGSERIAL PRIMARY KEY,
 
     directory_id BIGINT NOT NULL
-        REFERENCES directories (id) ON DELETE RESTRICT,
+        REFERENCES directory (id) ON DELETE RESTRICT,
     feed_url TEXT NOT NULL
         CHECK (char_length(feed_url) <= 500),
     podcast_id BIGINT
@@ -143,7 +143,7 @@ CREATE TABLE directory_podcast_directory_search (
         REFERENCES directory_search (id) ON DELETE RESTRICT
 );
 COMMENT ON TABLE directory_search
-    IS 'Join table between searches on directories and directory podcasts.';
+    IS 'Join table between searches on directory and directory podcasts.';
 
 --
 -- episodes

@@ -31,8 +31,8 @@ impl Directory {
 
     #[allow(dead_code)]
     fn load_dir(conn: &PgConnection, name: &str) -> Result<Self> {
-        schema::directories::table
-            .filter(schema::directories::name.eq(name))
+        schema::directory::table
+            .filter(schema::directory::name.eq(name))
             .first::<Directory>(conn)
             .chain_err(|| format!("Error loading {} directory record", name))
     }
