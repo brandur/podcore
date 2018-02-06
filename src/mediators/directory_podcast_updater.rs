@@ -141,10 +141,63 @@ mod tests {
     use std::sync::Arc;
 
     #[test]
-    fn test_minimal_feed() {
+    fn test_directory_podcast_hydration_success() {
         let mut bootstrap = TestBootstrap::new(test_helpers::MINIMAL_FEED);
         let (mut mediator, log) = bootstrap.mediator();
-        let _res = mediator.run(&log).unwrap();
+        let res = mediator.run(&log).unwrap();
+
+        // We should have a podcast and no exception
+        assert_eq!(true, res.dir_podcast_ex.is_none());
+        assert_eq!(true, res.podcast.is_some());
+
+        // Check that the directory podcast has been updated
+        let podcast = res.podcast.unwrap();
+        assert_eq!(Some(podcast.id), res.dir_podcast.podcast_id);
+    }
+
+    #[test]
+    fn test_directory_podcast_hydration_failure() {
+        let mut bootstrap = TestBootstrap::new(b"not a feed");
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
+
+        // We should have an exception and no podcast
+        assert_eq!(true, res.dir_podcast_ex.is_some());
+        assert_eq!(true, res.podcast.is_none());
+
+        let ex = res.dir_podcast_ex.unwrap();
+        assert_eq!(res.dir_podcast.id, ex.directory_podcast_id);
+        assert_ne!(0, ex.errors.len());
+    }
+
+    // An old exception should be removed on a new success
+    #[test]
+    fn test_directory_podcast_exception_removal() {
+        let mut bootstrap = TestBootstrap::new(test_helpers::MINIMAL_FEED);
+
+        let dir_podcast_ex_ins = insertable::DirectoryPodcastException {
+            directory_podcast_id: bootstrap.dir_podcast.id,
+            errors:               vec!["a".to_owned(), "b".to_owned()],
+            occurred_at:          Utc::now(),
+        };
+        diesel::insert_into(schema::directory_podcast_exception::table)
+            .values(&dir_podcast_ex_ins)
+            .execute(&*bootstrap.conn)
+            .unwrap();
+
+        {
+            let (mut mediator, log) = bootstrap.mediator();
+            let res = mediator.run(&log).unwrap();
+            assert_eq!(true, res.dir_podcast_ex.is_none());
+        }
+
+        // Exception count should now be back down to zero
+        assert_eq!(
+            Ok(0),
+            schema::directory_podcast_exception::table
+                .count()
+                .first(&*bootstrap.conn)
+        );
     }
 
     //
