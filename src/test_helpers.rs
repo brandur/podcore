@@ -63,7 +63,9 @@ pub fn connection() -> PooledConnection<ConnectionManager<PgConnection>> {
     conn
 }
 
-// Resets database state.
+// Resets database state. This is useful for tests that can't use a test
+// transaction like the ones that require multiple connections across multiple
+// threads.
 //
 // Note that this is currently a really janky way of doing this. Please
 // continue to add whatever statements here that are necessary to get things
