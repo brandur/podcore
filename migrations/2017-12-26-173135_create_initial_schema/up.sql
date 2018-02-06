@@ -75,10 +75,10 @@ CREATE UNIQUE INDEX podcast_feed_locations_podcast_id_feed_url
     ON podcast_feed_locations (podcast_id, feed_url);
 
 --
--- podcast_feed_contents
+-- podcast_feed_content
 --
 
-CREATE TABLE podcast_feed_contents (
+CREATE TABLE podcast_feed_content (
     id BIGSERIAL PRIMARY KEY,
     content TEXT NOT NULL
         CHECK (char_length(content) <= 1000000),
@@ -88,15 +88,15 @@ CREATE TABLE podcast_feed_contents (
     sha256_hash TEXT NOT NULL
         CHECK (char_length(sha256_hash) = 64)
 );
-COMMENT ON TABLE podcast_feed_contents
+COMMENT ON TABLE podcast_feed_content
     IS 'Historical records of raw content retrieved from podcast feeds.';
-COMMENT ON COLUMN podcast_feed_contents.content
+COMMENT ON COLUMN podcast_feed_content.content
     IS 'Raw XML content.';
 
-CREATE INDEX podcast_feed_contents_podcast_id_retrieved_at
-    ON podcast_feed_contents (podcast_id, retrieved_at);
-CREATE UNIQUE INDEX podcast_feed_contents_podcast_id_sha256_hash
-    ON podcast_feed_contents (podcast_id, sha256_hash);
+CREATE INDEX podcast_feed_content_podcast_id_retrieved_at
+    ON podcast_feed_content (podcast_id, retrieved_at);
+CREATE UNIQUE INDEX podcast_feed_content_podcast_id_sha256_hash
+    ON podcast_feed_content (podcast_id, sha256_hash);
 
 --
 -- directory_podcast

@@ -107,11 +107,11 @@ impl<'a> PodcastUpdater<'a> {
         let matching_content_count: i64 = common::log_timed(
             &log.new(o!("step" => "query_podcast_feed_content")),
             |ref _log| {
-                schema::podcast_feed_contents::table
+                schema::podcast_feed_content::table
                     .filter(
-                        schema::podcast_feed_contents::podcast_id
+                        schema::podcast_feed_content::podcast_id
                             .eq(podcast.id)
-                            .and(schema::podcast_feed_contents::sha256_hash.eq(sha256_hash)),
+                            .and(schema::podcast_feed_content::sha256_hash.eq(sha256_hash)),
                     )
                     .count()
                     .first(self.conn)
@@ -286,16 +286,16 @@ impl<'a> PodcastUpdater<'a> {
         common::log_timed(
             &log.new(o!("step" => "upsert_podcast_feed_content")),
             |ref _log| {
-                diesel::insert_into(schema::podcast_feed_contents::table)
+                diesel::insert_into(schema::podcast_feed_content::table)
                     .values(&content_ins)
                     .on_conflict((
-                        schema::podcast_feed_contents::podcast_id,
-                        schema::podcast_feed_contents::sha256_hash,
+                        schema::podcast_feed_content::podcast_id,
+                        schema::podcast_feed_content::sha256_hash,
                     ))
                     .do_update()
                     .set(
-                        schema::podcast_feed_contents::retrieved_at
-                            .eq(excluded(schema::podcast_feed_contents::retrieved_at)),
+                        schema::podcast_feed_content::retrieved_at
+                            .eq(excluded(schema::podcast_feed_content::retrieved_at)),
                     )
                     .execute(self.conn)
                     .chain_err(|| "Error upserting podcast feed content")
@@ -792,7 +792,7 @@ mod tests {
         );
         assert_eq!(
             Ok(1),
-            schema::podcast_feed_contents::table
+            schema::podcast_feed_content::table
                 .count()
                 .first(&*bootstrap.conn)
         );
@@ -831,7 +831,7 @@ mod tests {
         );
         assert_eq!(
             Ok(1),
-            schema::podcast_feed_contents::table
+            schema::podcast_feed_content::table
                 .count()
                 .first(&*bootstrap.conn)
         );
