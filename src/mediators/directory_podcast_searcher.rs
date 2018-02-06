@@ -266,13 +266,13 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         // Retrieve any IDs for podcasts that are already in database and have a
         // previous location that matches one returned by our directory.
         let podcast_id_tuples: Vec<(String, i64)> = schema::podcasts::table
-            .inner_join(schema::podcast_feed_locations::table)
+            .inner_join(schema::podcast_feed_location::table)
             .filter(
-                schema::podcast_feed_locations::feed_url
+                schema::podcast_feed_location::feed_url
                     .eq_any(ins_podcasts.iter().map(|ref p| p.feed_url.clone())),
             )
             .select((
-                schema::podcast_feed_locations::feed_url,
+                schema::podcast_feed_location::feed_url,
                 schema::podcasts::id,
             ))
             .load(self.conn)?;

@@ -59,7 +59,7 @@ table! {
 }
 
 table! {
-    podcast_feed_locations (id) {
+    podcast_feed_location (id) {
         id -> Int8,
         first_retrieved_at -> Timestamptz,
         feed_url -> Text,
@@ -86,7 +86,7 @@ joinable!(directory_podcast_directory_search -> directory_search (directory_sear
 joinable!(directory_search -> directories (directory_id));
 joinable!(episodes -> podcasts (podcast_id));
 joinable!(podcast_feed_content -> podcasts (podcast_id));
-joinable!(podcast_feed_locations -> podcasts (podcast_id));
+joinable!(podcast_feed_location -> podcasts (podcast_id));
 
 allow_tables_to_appear_in_same_query!(
     directories,
@@ -95,6 +95,6 @@ allow_tables_to_appear_in_same_query!(
     directory_search,
     episodes,
     podcast_feed_content,
-    podcast_feed_locations,
+    podcast_feed_location,
     podcasts,
 );

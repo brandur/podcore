@@ -53,10 +53,10 @@ COMMENT ON TABLE podcasts
     IS 'Podcast series. e.g. Roderick on the Line.';
 
 --
--- podcast_feed_locations
+-- podcast_feed_location
 --
 
-CREATE TABLE podcast_feed_locations (
+CREATE TABLE podcast_feed_location (
     id BIGSERIAL PRIMARY KEY,
 
     first_retrieved_at TIMESTAMPTZ NOT NULL,
@@ -66,13 +66,13 @@ CREATE TABLE podcast_feed_locations (
     podcast_id BIGINT NOT NULL
         REFERENCES podcasts (id) ON DELETE RESTRICT
 );
-COMMENT ON TABLE podcast_feed_locations
+COMMENT ON TABLE podcast_feed_location
     IS 'Historical records of podcast feed URLs.';
 
-CREATE INDEX podcast_feed_locations_podcast_id_first_retrieved_at
-    ON podcast_feed_locations (podcast_id, first_retrieved_at);
-CREATE UNIQUE INDEX podcast_feed_locations_podcast_id_feed_url
-    ON podcast_feed_locations (podcast_id, feed_url);
+CREATE INDEX podcast_feed_location_podcast_id_first_retrieved_at
+    ON podcast_feed_location (podcast_id, first_retrieved_at);
+CREATE UNIQUE INDEX podcast_feed_location_podcast_id_feed_url
+    ON podcast_feed_location (podcast_id, feed_url);
 
 --
 -- podcast_feed_content

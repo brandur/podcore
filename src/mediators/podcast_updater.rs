@@ -241,10 +241,10 @@ impl<'a> PodcastUpdater<'a> {
             |ref _log| {
                 schema::podcasts::table
                     .left_join(
-                        schema::podcast_feed_locations::table
-                            .on(schema::podcasts::id.eq(schema::podcast_feed_locations::podcast_id)),
+                        schema::podcast_feed_location::table
+                            .on(schema::podcasts::id.eq(schema::podcast_feed_location::podcast_id)),
                     )
-                    .filter(schema::podcast_feed_locations::feed_url.eq(final_url))
+                    .filter(schema::podcast_feed_location::feed_url.eq(final_url))
                     .select((schema::podcasts::id))
                     .first(self.conn)
                     .optional()
@@ -320,16 +320,16 @@ impl<'a> PodcastUpdater<'a> {
         common::log_timed(
             &log.new(o!("step" => "upsert_podcast_feed_location")),
             |ref _log| {
-                diesel::insert_into(schema::podcast_feed_locations::table)
+                diesel::insert_into(schema::podcast_feed_location::table)
                     .values(&location_ins)
                     .on_conflict((
-                        schema::podcast_feed_locations::podcast_id,
-                        schema::podcast_feed_locations::feed_url,
+                        schema::podcast_feed_location::podcast_id,
+                        schema::podcast_feed_location::feed_url,
                     ))
                     .do_update()
                     .set(
-                        schema::podcast_feed_locations::last_retrieved_at
-                            .eq(excluded(schema::podcast_feed_locations::last_retrieved_at)),
+                        schema::podcast_feed_location::last_retrieved_at
+                            .eq(excluded(schema::podcast_feed_location::last_retrieved_at)),
                     )
                     .get_result(self.conn)
                     .chain_err(|| "Error upserting podcast feed location")
@@ -798,7 +798,7 @@ mod tests {
         );
         assert_eq!(
             Ok(1),
-            schema::podcast_feed_locations::table
+            schema::podcast_feed_location::table
                 .count()
                 .first(&*bootstrap.conn)
         );
@@ -837,7 +837,7 @@ mod tests {
         );
         assert_eq!(
             Ok(1),
-            schema::podcast_feed_locations::table
+            schema::podcast_feed_location::table
                 .count()
                 .first(&*bootstrap.conn)
         );
