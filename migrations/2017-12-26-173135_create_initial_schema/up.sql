@@ -18,10 +18,10 @@ INSERT INTO directories (name)
     ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name;
 
 --
--- directory_searches
+-- directory_search
 --
 
-CREATE TABLE directory_searches (
+CREATE TABLE directory_search (
     id BIGSERIAL PRIMARY KEY,
     directory_id BIGINT NOT NULL
         REFERENCES directories (id) ON DELETE RESTRICT,
@@ -29,7 +29,7 @@ CREATE TABLE directory_searches (
         CHECK (char_length(query) <= 100),
     retrieved_at TIMESTAMPTZ NOT NULL
 );
-COMMENT ON TABLE directory_searches
+COMMENT ON TABLE directory_search
     IS 'Cached searches for podcasts on directories.';
 
 --
@@ -131,18 +131,18 @@ CREATE UNIQUE INDEX directory_podcast_directory_id_vendor_id
     ON directory_podcast (directory_id, vendor_id);
 
 --
--- directory_podcast_directory_searches
+-- directory_podcast_directory_search
 --
 
-CREATE TABLE directory_podcast_directory_searches (
+CREATE TABLE directory_podcast_directory_search (
     id BIGSERIAL PRIMARY KEY,
 
     directory_podcast_id BIGINT NOT NULL
         REFERENCES directory_podcast (id) ON DELETE RESTRICT,
-    directory_searches_id BIGINT NOT NULL
-        REFERENCES directory_searches (id) ON DELETE RESTRICT
+    directory_search_id BIGINT NOT NULL
+        REFERENCES directory_search (id) ON DELETE RESTRICT
 );
-COMMENT ON TABLE directory_searches
+COMMENT ON TABLE directory_search
     IS 'Join table between searches on directories and directory podcasts.';
 
 --

@@ -17,15 +17,15 @@ table! {
 }
 
 table! {
-    directory_podcast_directory_searches (id) {
+    directory_podcast_directory_search (id) {
         id -> Int8,
         directory_podcast_id -> Int8,
-        directory_searches_id -> Int8,
+        directory_search_id -> Int8,
     }
 }
 
 table! {
-    directory_searches (id) {
+    directory_search (id) {
         id -> Int8,
         directory_id -> Int8,
         query -> Text,
@@ -81,9 +81,9 @@ table! {
 
 joinable!(directory_podcast -> directories (directory_id));
 joinable!(directory_podcast -> podcasts (podcast_id));
-joinable!(directory_podcast_directory_searches -> directory_podcast (directory_podcast_id));
-joinable!(directory_podcast_directory_searches -> directory_searches (directory_searches_id));
-joinable!(directory_searches -> directories (directory_id));
+joinable!(directory_podcast_directory_search -> directory_podcast (directory_podcast_id));
+joinable!(directory_podcast_directory_search -> directory_search (directory_search_id));
+joinable!(directory_search -> directories (directory_id));
 joinable!(episodes -> podcasts (podcast_id));
 joinable!(podcast_feed_contents -> podcasts (podcast_id));
 joinable!(podcast_feed_locations -> podcasts (podcast_id));
@@ -91,8 +91,8 @@ joinable!(podcast_feed_locations -> podcasts (podcast_id));
 allow_tables_to_appear_in_same_query!(
     directories,
     directory_podcast,
-    directory_podcast_directory_searches,
-    directory_searches,
+    directory_podcast_directory_search,
+    directory_search,
     episodes,
     podcast_feed_contents,
     podcast_feed_locations,

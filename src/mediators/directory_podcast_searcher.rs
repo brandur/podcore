@@ -10,7 +10,7 @@ use diesel::pg::PgConnection;
 use diesel::pg::upsert::excluded;
 use diesel::prelude::*;
 use hyper::{Method, Request, StatusCode, Uri};
-use schema::{directory_podcast, directory_podcast_directory_searches, directory_searches,
+use schema::{directory_podcast, directory_podcast_directory_search, directory_search,
              podcast_feed_locations, podcasts};
 use serde_json;
 use slog::Logger;
@@ -116,7 +116,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         common::log_timed(
             &log.new(o!("step" => "insert_directory_search")),
             |ref _log| {
-                diesel::insert_into(directory_searches::table)
+                diesel::insert_into(directory_search::table)
                     .values(&insertable::DirectorySearch {
                         directory_id: directory.id,
                         query:        self.query.clone(),
@@ -145,8 +145,8 @@ impl<'a> DirectoryPodcastSearcher<'a> {
     ) -> Result<Vec<model::DirectoryPodcastDirectorySearch>> {
         common::log_timed(&log.new(o!("step" => "delete_joins")), |ref _log| {
             diesel::delete(
-                directory_podcast_directory_searches::table.filter(
-                    directory_podcast_directory_searches::directory_searches_id
+                directory_podcast_directory_search::table.filter(
+                    directory_podcast_directory_search::directory_search_id
                         .eq(directory_search.id),
                 ),
             ).execute(self.conn)
@@ -157,12 +157,12 @@ impl<'a> DirectoryPodcastSearcher<'a> {
             .iter()
             .map(|ref p| insertable::DirectoryPodcastDirectorySearch {
                 directory_podcast_id: p.id,
-                directory_searches_id:   directory_search.id,
+                directory_search_id:   directory_search.id,
             })
             .collect();
 
         common::log_timed(&log.new(o!("step" => "insert_joins")), |ref _log| {
-            diesel::insert_into(directory_podcast_directory_searches::table)
+            diesel::insert_into(directory_podcast_directory_search::table)
                 .values(&ins_joins)
                 .get_results(self.conn)
                 .chain_err(|| "Error inserting directory podcast")
@@ -181,11 +181,11 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         ),
     > {
         let joins = common::log_timed(&log.new(o!("step" => "select_joins")), |ref _log| {
-            directory_podcast_directory_searches::table
+            directory_podcast_directory_search::table
                 .filter(
-                    directory_podcast_directory_searches::directory_searches_id.eq(search.id),
+                    directory_podcast_directory_search::directory_search_id.eq(search.id),
                 )
-                .order(directory_podcast_directory_searches::id)
+                .order(directory_podcast_directory_search::id)
                 .load::<model::DirectoryPodcastDirectorySearch>(self.conn)
                 .chain_err(|| "Error loading joins")
         })?;
@@ -218,9 +218,9 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         common::log_timed(
             &log.new(o!("step" => "select_directory_search")),
             |ref _log| {
-                directory_searches::table
-                    .filter(directory_searches::directory_id.eq(directory.id))
-                    .filter(directory_searches::query.eq(self.query.as_str()))
+                directory_search::table
+                    .filter(directory_search::directory_id.eq(directory.id))
+                    .filter(directory_search::query.eq(self.query.as_str()))
                     .first(self.conn)
                     .optional()
                     .chain_err(|| "Error selecting directory podcast")
@@ -237,8 +237,8 @@ impl<'a> DirectoryPodcastSearcher<'a> {
             &log.new(o!("step" => "update_directory_search")),
             |ref _log| {
                 diesel::update(
-                    directory_searches::table.filter(directory_searches::id.eq(search.id)),
-                ).set(directory_searches::retrieved_at.eq(Utc::now()))
+                    directory_search::table.filter(directory_search::id.eq(search.id)),
+                ).set(directory_search::retrieved_at.eq(Utc::now()))
                     .get_result(self.conn)
                     .chain_err(|| "Error updating search retrieval time")
             },
@@ -372,7 +372,7 @@ mod tests {
         assert_eq!(1, res.joins.len());
         let join = &res.joins[0];
         assert_eq!(directory_podcast.id, join.directory_podcast_id);
-        assert_eq!(res.directory_search.id, join.directory_searches_id);
+        assert_eq!(res.directory_search.id, join.directory_search_id);
     }
 
     #[test]
@@ -405,9 +405,9 @@ mod tests {
 
             // Update the search's timestamp, thereby invalidating the cache.
             diesel::update(
-                directory_searches::table
-                    .filter(directory_searches::id.eq(res.directory_search.id)),
-            ).set(directory_searches::retrieved_at.eq(Utc::now() - Duration::days(1)))
+                directory_search::table
+                    .filter(directory_search::id.eq(res.directory_search.id)),
+            ).set(directory_search::retrieved_at.eq(Utc::now() - Duration::days(1)))
                 .execute(&*bootstrap.conn)
                 .unwrap();
         }
@@ -436,7 +436,7 @@ mod tests {
         assert_eq!(1, res.joins.len());
         let join = &res.joins[0];
         assert_eq!(directory_podcast.id, join.directory_podcast_id);
-        assert_eq!(res.directory_search.id, join.directory_searches_id);
+        assert_eq!(res.directory_search.id, join.directory_search_id);
     }
 
     #[test]

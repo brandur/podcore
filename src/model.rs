@@ -53,7 +53,7 @@ pub struct DirectoryPodcast {
 pub struct DirectoryPodcastDirectorySearch {
     pub id: i64,
     pub directory_podcast_id: i64,
-    pub directory_searches_id: i64,
+    pub directory_search_id: i64,
 }
 
 #[allow(dead_code)]
@@ -110,8 +110,8 @@ pub struct PodcastFeedLocation {
 }
 
 pub mod insertable {
-    use schema::{directory_podcast, directory_podcast_directory_searches,
-                 directory_searches, episodes, podcast_feed_contents, podcast_feed_locations,
+    use schema::{directory_podcast, directory_podcast_directory_search,
+                 directory_search, episodes, podcast_feed_contents, podcast_feed_locations,
                  podcasts};
 
     use chrono::{DateTime, Utc};
@@ -127,15 +127,15 @@ pub mod insertable {
     }
 
     #[derive(Insertable)]
-    #[table_name = "directory_podcast_directory_searches"]
+    #[table_name = "directory_podcast_directory_search"]
     pub struct DirectoryPodcastDirectorySearch {
         pub directory_podcast_id: i64,
-        pub directory_searches_id:   i64,
+        pub directory_search_id:   i64,
     }
 
     #[allow(dead_code)]
     #[derive(Insertable)]
-    #[table_name = "directory_searches"]
+    #[table_name = "directory_search"]
     pub struct DirectorySearch {
         pub directory_id: i64,
         pub query:        String,
