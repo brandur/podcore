@@ -99,10 +99,10 @@ CREATE UNIQUE INDEX podcast_feed_contents_podcast_id_sha256_hash
     ON podcast_feed_contents (podcast_id, sha256_hash);
 
 --
--- directories_podcasts
+-- directory_podcast
 --
 
-CREATE TABLE directories_podcasts (
+CREATE TABLE directory_podcast (
     id BIGSERIAL PRIMARY KEY,
 
     directory_id BIGINT NOT NULL
@@ -116,29 +116,29 @@ CREATE TABLE directories_podcasts (
     vendor_id TEXT NOT NULL
         CHECK (char_length(vendor_id) <= 200)
 );
-COMMENT ON TABLE directories_podcasts
+COMMENT ON TABLE directory_podcast
     IS 'Podcast series. e.g. Roderick on the Line.';
-COMMENT ON COLUMN directories_podcasts.feed_url
+COMMENT ON COLUMN directory_podcast.feed_url
     IS 'Podcast''s feed URL. Useful when retrieving a podcast''s feed for the first time.';
-COMMENT ON COLUMN directories_podcasts.podcast_id
+COMMENT ON COLUMN directory_podcast.podcast_id
     IS 'Internal podcast ID. Only assigned after the podcast''s feed is retrieved for the first time.';
-COMMENT ON COLUMN directories_podcasts.title
+COMMENT ON COLUMN directory_podcast.title
     IS 'Podcast''s title.';
-COMMENT ON COLUMN directories_podcasts.vendor_id
+COMMENT ON COLUMN directory_podcast.vendor_id
     IS 'A unique ID for the podcast which is assigned by the directory''s vendor.';
 
-CREATE UNIQUE INDEX directories_podcasts_directory_id_vendor_id
-    ON directories_podcasts (directory_id, vendor_id);
+CREATE UNIQUE INDEX directory_podcast_directory_id_vendor_id
+    ON directory_podcast (directory_id, vendor_id);
 
 --
--- directories_podcasts_directory_searches
+-- directory_podcast_directory_searches
 --
 
-CREATE TABLE directories_podcasts_directory_searches (
+CREATE TABLE directory_podcast_directory_searches (
     id BIGSERIAL PRIMARY KEY,
 
-    directories_podcasts_id BIGINT NOT NULL
-        REFERENCES directories_podcasts (id) ON DELETE RESTRICT,
+    directory_podcast_id BIGINT NOT NULL
+        REFERENCES directory_podcast (id) ON DELETE RESTRICT,
     directory_searches_id BIGINT NOT NULL
         REFERENCES directory_searches (id) ON DELETE RESTRICT
 );

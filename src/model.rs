@@ -1,5 +1,5 @@
 use errors::*;
-use schema::{directories, directories_podcasts};
+use schema::{directories, directory_podcast};
 
 use chrono::{DateTime, Utc};
 use diesel::pg::PgConnection;
@@ -39,7 +39,7 @@ impl Directory {
 
 #[changeset_options(treat_none_as_null = "true")]
 #[derive(AsChangeset, Identifiable, Queryable)]
-#[table_name = "directories_podcasts"]
+#[table_name = "directory_podcast"]
 pub struct DirectoryPodcast {
     pub id:           i64,
     pub directory_id: i64,
@@ -52,7 +52,7 @@ pub struct DirectoryPodcast {
 #[derive(Queryable)]
 pub struct DirectoryPodcastDirectorySearch {
     pub id: i64,
-    pub directories_podcasts_id: i64,
+    pub directory_podcast_id: i64,
     pub directory_searches_id: i64,
 }
 
@@ -110,14 +110,14 @@ pub struct PodcastFeedLocation {
 }
 
 pub mod insertable {
-    use schema::{directories_podcasts, directories_podcasts_directory_searches,
+    use schema::{directory_podcast, directory_podcast_directory_searches,
                  directory_searches, episodes, podcast_feed_contents, podcast_feed_locations,
                  podcasts};
 
     use chrono::{DateTime, Utc};
 
     #[derive(Insertable)]
-    #[table_name = "directories_podcasts"]
+    #[table_name = "directory_podcast"]
     pub struct DirectoryPodcast {
         pub directory_id: i64,
         pub feed_url:     String,
@@ -127,9 +127,9 @@ pub mod insertable {
     }
 
     #[derive(Insertable)]
-    #[table_name = "directories_podcasts_directory_searches"]
+    #[table_name = "directory_podcast_directory_searches"]
     pub struct DirectoryPodcastDirectorySearch {
-        pub directories_podcasts_id: i64,
+        pub directory_podcast_id: i64,
         pub directory_searches_id:   i64,
     }
 

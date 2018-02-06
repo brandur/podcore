@@ -10,7 +10,7 @@ use diesel::pg::PgConnection;
 use diesel::pg::upsert::excluded;
 use diesel::prelude::*;
 use hyper::{Method, Request, StatusCode, Uri};
-use schema::{directories_podcasts, directories_podcasts_directory_searches, directory_searches,
+use schema::{directory_podcast, directory_podcast_directory_searches, directory_searches,
              podcast_feed_locations, podcasts};
 use serde_json;
 use slog::Logger;
@@ -145,8 +145,8 @@ impl<'a> DirectoryPodcastSearcher<'a> {
     ) -> Result<Vec<model::DirectoryPodcastDirectorySearch>> {
         common::log_timed(&log.new(o!("step" => "delete_joins")), |ref _log| {
             diesel::delete(
-                directories_podcasts_directory_searches::table.filter(
-                    directories_podcasts_directory_searches::directory_searches_id
+                directory_podcast_directory_searches::table.filter(
+                    directory_podcast_directory_searches::directory_searches_id
                         .eq(directory_search.id),
                 ),
             ).execute(self.conn)
@@ -156,13 +156,13 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         let ins_joins: Vec<insertable::DirectoryPodcastDirectorySearch> = directory_podcasts
             .iter()
             .map(|ref p| insertable::DirectoryPodcastDirectorySearch {
-                directories_podcasts_id: p.id,
+                directory_podcast_id: p.id,
                 directory_searches_id:   directory_search.id,
             })
             .collect();
 
         common::log_timed(&log.new(o!("step" => "insert_joins")), |ref _log| {
-            diesel::insert_into(directories_podcasts_directory_searches::table)
+            diesel::insert_into(directory_podcast_directory_searches::table)
                 .values(&ins_joins)
                 .get_results(self.conn)
                 .chain_err(|| "Error inserting directory podcast")
@@ -181,11 +181,11 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         ),
     > {
         let joins = common::log_timed(&log.new(o!("step" => "select_joins")), |ref _log| {
-            directories_podcasts_directory_searches::table
+            directory_podcast_directory_searches::table
                 .filter(
-                    directories_podcasts_directory_searches::directory_searches_id.eq(search.id),
+                    directory_podcast_directory_searches::directory_searches_id.eq(search.id),
                 )
-                .order(directories_podcasts_directory_searches::id)
+                .order(directory_podcast_directory_searches::id)
                 .load::<model::DirectoryPodcastDirectorySearch>(self.conn)
                 .chain_err(|| "Error loading joins")
         })?;
@@ -193,12 +193,12 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         let directory_podcasts = common::log_timed(
             &log.new(o!("step" => "select_directory_podcasts")),
             |ref _log| {
-                directories_podcasts::table
+                directory_podcast::table
                     .filter(
-                        directories_podcasts::id.eq_any(
+                        directory_podcast::id.eq_any(
                             joins
                                 .iter()
-                                .map(|j| j.directories_podcasts_id)
+                                .map(|j| j.directory_podcast_id)
                                 .collect::<Vec<i64>>(),
                         ),
                     )
@@ -284,16 +284,16 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         common::log_timed(
             &log.new(o!("step" => "upsert_directory_podcasts")),
             |ref _log| {
-                Ok(diesel::insert_into(directories_podcasts::table)
+                Ok(diesel::insert_into(directory_podcast::table)
                     .values(&ins_podcasts)
                     .on_conflict((
-                        directories_podcasts::directory_id,
-                        directories_podcasts::vendor_id,
+                        directory_podcast::directory_id,
+                        directory_podcast::vendor_id,
                     ))
                     .do_update()
                     .set((
-                        directories_podcasts::feed_url.eq(excluded(directories_podcasts::feed_url)),
-                        directories_podcasts::title.eq(excluded(directories_podcasts::title)),
+                        directory_podcast::feed_url.eq(excluded(directory_podcast::feed_url)),
+                        directory_podcast::title.eq(excluded(directory_podcast::title)),
                     ))
                     .get_results(self.conn)
                     .chain_err(|| "Error upserting directory podcasts")?)
@@ -371,7 +371,7 @@ mod tests {
         // Join row
         assert_eq!(1, res.joins.len());
         let join = &res.joins[0];
-        assert_eq!(directory_podcast.id, join.directories_podcasts_id);
+        assert_eq!(directory_podcast.id, join.directory_podcast_id);
         assert_eq!(res.directory_search.id, join.directory_searches_id);
     }
 
@@ -435,7 +435,7 @@ mod tests {
         // Join row
         assert_eq!(1, res.joins.len());
         let join = &res.joins[0];
-        assert_eq!(directory_podcast.id, join.directories_podcasts_id);
+        assert_eq!(directory_podcast.id, join.directory_podcast_id);
         assert_eq!(res.directory_search.id, join.directory_searches_id);
     }
 
