@@ -1,4 +1,5 @@
 /.envrc
 /target/
 **/*.rs.bk
+*.pem
 *.rustfmt
