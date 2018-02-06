@@ -1,4 +1,5 @@
 mod common;
+pub mod cleaner;
 pub mod directory_podcast_searcher;
 pub mod directory_podcast_updater;
 pub mod error_reporter;
