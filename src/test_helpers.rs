@@ -126,12 +126,6 @@ pub fn pool() -> Pool<ConnectionManager<PgConnection>> {
 #[derive(Copy, Clone, Debug)]
 pub struct LoggingErrorHandler;
 
-#[derive(Clone, Debug, QueryableByName)]
-struct Snapshot {
-    #[sql_type = "Text"]
-    id: String,
-}
-
 impl<E> HandleError<E> for LoggingErrorHandler
 where
     E: std::error::Error,

@@ -137,6 +137,7 @@ pub struct RunResult {
     pub num_podcasts: i64,
 }
 
+//
 // Private constants
 //
 
@@ -144,13 +145,14 @@ const PAGE_SIZE: i64 = 100;
 
 static REFRESH_INTERVAL_HOURS: i64 = 1;
 
+//
 // Private types
 //
 
 // Exists because `sql_query` doesn't support querying into a tuple, only a
 // struct.
 #[derive(Clone, Debug, QueryableByName)]
-#[table_name = "podcasts"]
+#[table_name = "podcast"]
 struct PodcastTuple {
     #[sql_type = "BigInt"]
     id: i64,
@@ -159,6 +161,7 @@ struct PodcastTuple {
     feed_url: String,
 }
 
+//
 // Private functions
 //
 

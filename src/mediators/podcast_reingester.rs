@@ -168,6 +168,7 @@ const PAGE_SIZE: i64 = 100;
 // Exists because `sql_query` doesn't support querying into a tuple, only a
 // struct.
 #[derive(Clone, Debug, QueryableByName)]
+#[table_name = "podcast"]
 struct PodcastTuple {
     #[sql_type = "BigInt"]
     id: i64,
