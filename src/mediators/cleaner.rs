@@ -27,14 +27,14 @@ impl Cleaner {
 
         // This is the only cleaner for now, but there will be more!
         {
-            let thread_name = "directory_podcast_content_cleaner".to_owned();
+            let thread_name = "podcast_feed_content_cleaner".to_owned();
             let log = log.new(o!("thread" => thread_name.clone()));
             let pool_clone = self.pool.clone();
 
             workers.push(thread::Builder::new()
                 .name(thread_name)
                 .spawn(move || {
-                    clean_directory_podcast_content(&log, pool_clone);
+                    clean_podcast_feed_content(&log, pool_clone);
                 })
                 .chain_err(|| "Failed to spawn thread")?);
         }
@@ -61,7 +61,7 @@ pub struct RunResult {}
 const DELETE_LIMIT: i64 = 1000;
 
 // The maximum number of content rows to keep around for any given podcast.
-pub const DIRECTORY_PODCAST_CONTENT_LIMIT: i64 = 10;
+pub const PODCAST_FEED_CONTENT_LIMIT: i64 = 10;
 
 //
 // Private types
@@ -70,7 +70,7 @@ pub const DIRECTORY_PODCAST_CONTENT_LIMIT: i64 = 10;
 // Exists because `sql_query` doesn't support querying into a tuple, only a
 // struct.
 #[derive(Clone, Debug, QueryableByName)]
-//#[table_name = "directory_podcast_content"]
+//#[table_name = "podcast_feed_content"]
 struct DirectoryPodcastContentTuple {
     #[sql_type = "BigInt"]
     id: i64,
@@ -80,7 +80,7 @@ struct DirectoryPodcastContentTuple {
 // Private functions
 //
 
-fn clean_directory_podcast_content(log: &Logger, pool: Pool<ConnectionManager<PgConnection>>) {
+fn clean_podcast_feed_content(log: &Logger, pool: Pool<ConnectionManager<PgConnection>>) {
     let conn = match pool.try_get() {
         Some(conn) => conn,
         None => {
@@ -95,7 +95,7 @@ fn clean_directory_podcast_content(log: &Logger, pool: Pool<ConnectionManager<Pg
 
     let mut num_cleaned = 0;
     loop {
-        let res = select_directory_podcast_content_batch(log, &*conn);
+        let res = select_podcast_feed_content_batch(log, &*conn);
 
         if let Err(e) = res {
             error_helpers::print_error(&log, &e);
@@ -115,29 +115,29 @@ fn clean_directory_podcast_content(log: &Logger, pool: Pool<ConnectionManager<Pg
     }
 }
 
-fn select_directory_podcast_content_batch(
+fn select_podcast_feed_content_batch(
     log: &Logger,
     conn: &PgConnection,
 ) -> Result<Vec<DirectoryPodcastContentTuple>> {
     common::log_timed(
-        &log.new(o!("step" => "select_directory_podcast_content_batch", "limit" => DELETE_LIMIT)),
+        &log.new(o!("step" => "select_podcast_feed_content_batch", "limit" => DELETE_LIMIT)),
         |ref _log| {
             diesel::sql_query(format!(
                 "
                     WITH batch AS (
                         SELECT id,
                             row_number() OVER (ORDER BY retrieved_at DESC)
-                        FROM directory_podcast_content
+                        FROM podcast_feed_content
                         WHERE row_number > {}
                         LIMIT {}
                     )
-                    DELETE FROM directory_podcast_content
+                    DELETE FROM podcast_feed_content
                     WHERE id IN (
                         SELECT id
                         FROM batch
                     )
                     RETURNING id",
-                DIRECTORY_PODCAST_CONTENT_LIMIT, DELETE_LIMIT
+                PODCAST_FEED_CONTENT_LIMIT, DELETE_LIMIT
             )).load::<DirectoryPodcastContentTuple>(conn)
                 .chain_err(|| "Error selecting directory podcast content batch")
         },
@@ -146,16 +146,46 @@ fn select_directory_podcast_content_batch(
 
 #[cfg(test)]
 mod tests {
-    use mediators::cleaner::*;
-    use test_helpers;
+    extern crate rand;
 
+    use mediators::cleaner::*;
+    use mediators::podcast_updater::PodcastUpdater;
+    use model;
+    use model::insertable;
+    use schema;
+    use test_helpers;
+    use url_fetcher::URLFetcherPassThrough;
+
+    use chrono::Utc;
     use r2d2::PooledConnection;
+    use rand::Rng;
+    use std::sync::Arc;
 
     #[test]
-    fn test_clean_directory_podcast_content() {
+    #[ignore]
+    fn test_clean_podcast_feed_content() {
         let mut bootstrap = TestBootstrap::new();
+
+        let podcast = insert_podcast(&bootstrap.log, &*bootstrap.conn);
+        for _i in 0..25 {
+            insert_podcast_feed_content(&bootstrap.log, &*bootstrap.conn, &podcast);
+        }
+        assert_eq!(
+            Ok(25 + 1),
+            schema::podcast_feed_content::table
+                .count()
+                .first(&*bootstrap.conn)
+        );
+
         let (mut mediator, log) = bootstrap.mediator();
         let _res = mediator.run(&log).unwrap();
+
+        assert_eq!(
+            Ok(PODCAST_FEED_CONTENT_LIMIT + 1),
+            schema::podcast_feed_content::table
+                .count()
+                .first(&*bootstrap.conn)
+        );
     }
 
     //
@@ -187,5 +217,48 @@ mod tests {
                 self.log.clone(),
             )
         }
+    }
+
+    impl Drop for TestBootstrap {
+        fn drop(&mut self) {
+            test_helpers::clean_database(&self.log, &*self.conn);
+        }
+    }
+
+    fn insert_podcast(log: &Logger, conn: &PgConnection) -> model::Podcast {
+        let mut rng = rand::thread_rng();
+        PodcastUpdater {
+            conn:             conn,
+            disable_shortcut: false,
+
+            // Add a little randomness to feed URLs so that w don't just insert one podcast and
+            // update it over and over.
+            feed_url: format!("https://example.com/feed-{}.xml", rng.gen::<u64>()).to_string(),
+
+            url_fetcher: &mut URLFetcherPassThrough {
+                data: Arc::new(test_helpers::MINIMAL_FEED.to_vec()),
+            },
+        }.run(log)
+            .unwrap()
+            .podcast
+    }
+
+    fn insert_podcast_feed_content(_log: &Logger, conn: &PgConnection, podcast: &model::Podcast) {
+        let mut rng = rand::thread_rng();
+
+        let content_ins = insertable::PodcastFeedContent {
+            content:      "feed body".to_owned(),
+            podcast_id:   podcast.id,
+            retrieved_at: Utc::now(),
+
+            // There's a length check on this field in Postgres, so generate a string that's
+            // exactly 64 characters long.
+            sha256_hash: rng.gen_ascii_chars().take(64).collect(),
+        };
+
+        diesel::insert_into(schema::podcast_feed_content::table)
+            .values(&content_ins)
+            .execute(conn)
+            .unwrap();
     }
 }
