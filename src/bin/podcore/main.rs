@@ -134,7 +134,7 @@ fn crawl_podcasts(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
     loop {
         let res = PodcastCrawler {
             num_workers:         options.num_connections - 1,
-            pool:                pool(options.num_connections).clone(),
+            pool:                pool(options.num_connections)?.clone(),
             url_fetcher_factory: Box::new(URLFetcherFactoryLive {}),
         }.run(&log)?;
 
@@ -153,7 +153,7 @@ fn reingest_podcasts(matches: ArgMatches, options: &GlobalOptions) -> Result<()>
 
     PodcastReingester {
         num_workers: options.num_connections - 1,
-        pool:        pool(options.num_connections).clone(),
+        pool:        pool(options.num_connections)?.clone(),
     }.run(&log(options.quiet))?;
     Ok(())
 }
@@ -187,6 +187,7 @@ fn serve_http(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
     let host = format!("0.0.0.0:{}", port);
     let log = log(options.quiet);
     let num_connections = options.num_connections;
+    let pool = pool(num_connections)?;
 
     let mut mount = Mount::new();
 
@@ -194,7 +195,7 @@ fn serve_http(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
     mount.mount("/", graphiql_endpoint);
 
     let graphql_endpoint = GraphQLHandler::new(
-        move |_: &mut Request| -> graphql::Context { graphql::Context::new(pool(num_connections)) },
+        move |_: &mut Request| -> graphql::Context { graphql::Context::new(pool.clone()) },
         graphql::Query::new(),
         graphql::Mutation::new(),
     );
@@ -235,7 +236,7 @@ struct GlobalOptions {
 /// Acquires a single connection from a connection pool. This is suitable for use a shortcut by
 /// subcommands that only need to run one single-threaded task.
 fn connection() -> Result<PooledConnection<ConnectionManager<PgConnection>>> {
-    pool(1).get().map_err(Error::from)
+    pool(1)?.get().map_err(Error::from)
 }
 
 fn handle_error(e: &Error, quiet: bool) {
@@ -275,12 +276,12 @@ fn parse_global_options(matches: &ArgMatches) -> GlobalOptions {
 }
 
 /// Initializes and returns a connection pool suitable for use across threads.
-fn pool(num_connections: u32) -> Pool<ConnectionManager<PgConnection>> {
+fn pool(num_connections: u32) -> Result<Pool<ConnectionManager<PgConnection>>> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let manager = ConnectionManager::<PgConnection>::new(database_url);
     Pool::builder()
         .idle_timeout(Some(Duration::from_secs(5)))
         .max_size(num_connections)
         .build(manager)
-        .expect("Failed to create pool.")
+        .map_err(Error::from)
 }
