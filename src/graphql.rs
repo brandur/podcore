@@ -160,8 +160,8 @@ graphql_object!(Query: Context |&self| {
 
     field podcasts(&executor) -> FieldResult<Vec<PodcastObject>> as "A collection of podcasts." {
         let context = executor.context();
-        let results = schema::podcasts::table
-            .order(schema::podcasts::title.asc())
+        let results = schema::podcast::table
+            .order(schema::podcast::title.asc())
             .limit(5)
             .load::<model::Podcast>(&*context.get_conn()?)
             .chain_err(|| "Error loading podcasts from the database")?

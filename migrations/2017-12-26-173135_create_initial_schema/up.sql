@@ -30,13 +30,13 @@ CREATE TABLE directory_search (
     retrieved_at TIMESTAMPTZ NOT NULL
 );
 COMMENT ON TABLE directory_search
-    IS 'Cached searches for podcasts on directory.';
+    IS 'Cached searches for podcast on directory.';
 
 --
--- podcasts
+-- podcast
 --
 
-CREATE TABLE podcasts (
+CREATE TABLE podcast (
     id BIGSERIAL PRIMARY KEY,
 
     image_url TEXT
@@ -49,7 +49,7 @@ CREATE TABLE podcasts (
     title TEXT NOT NULL
         CHECK (char_length(title) <= 200)
 );
-COMMENT ON TABLE podcasts
+COMMENT ON TABLE podcast
     IS 'Podcast series. e.g. Roderick on the Line.';
 
 --
@@ -64,7 +64,7 @@ CREATE TABLE podcast_feed_location (
         CHECK (char_length(feed_url) <= 500),
     last_retrieved_at TIMESTAMPTZ NOT NULL,
     podcast_id BIGINT NOT NULL
-        REFERENCES podcasts (id) ON DELETE RESTRICT
+        REFERENCES podcast (id) ON DELETE RESTRICT
 );
 COMMENT ON TABLE podcast_feed_location
     IS 'Historical records of podcast feed URLs.';
@@ -83,7 +83,7 @@ CREATE TABLE podcast_feed_content (
     content TEXT NOT NULL
         CHECK (char_length(content) <= 1000000),
     podcast_id BIGINT NOT NULL
-        REFERENCES podcasts (id) ON DELETE RESTRICT,
+        REFERENCES podcast (id) ON DELETE RESTRICT,
     retrieved_at TIMESTAMPTZ NOT NULL,
     sha256_hash TEXT NOT NULL
         CHECK (char_length(sha256_hash) = 64)
@@ -110,7 +110,7 @@ CREATE TABLE directory_podcast (
     feed_url TEXT NOT NULL
         CHECK (char_length(feed_url) <= 500),
     podcast_id BIGINT
-        REFERENCES podcasts (id) ON DELETE RESTRICT,
+        REFERENCES podcast (id) ON DELETE RESTRICT,
     title TEXT NOT NULL
         CHECK (char_length(title) <= 500),
     vendor_id TEXT NOT NULL
@@ -143,7 +143,7 @@ CREATE TABLE directory_podcast_directory_search (
         REFERENCES directory_search (id) ON DELETE RESTRICT
 );
 COMMENT ON TABLE directory_search
-    IS 'Join table between searches on directory and directory podcasts.';
+    IS 'Join table between searches on directory and directory podcast.';
 
 --
 -- episode
@@ -164,7 +164,7 @@ CREATE TABLE episode (
     media_url TEXT NOT NULL
         CHECK (char_length(title) <= 500),
     podcast_id BIGINT NOT NULL
-        REFERENCES podcasts (id) ON DELETE RESTRICT,
+        REFERENCES podcast (id) ON DELETE RESTRICT,
     published_at TIMESTAMPTZ NOT NULL,
     title TEXT NOT NULL
         CHECK (char_length(title) <= 200)

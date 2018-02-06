@@ -239,13 +239,13 @@ impl<'a> PodcastUpdater<'a> {
         let podcast_id: Option<i64> = common::log_timed(
             &log.new(o!("step" => "query_podcast")),
             |ref _log| {
-                schema::podcasts::table
+                schema::podcast::table
                     .left_join(
                         schema::podcast_feed_location::table
-                            .on(schema::podcasts::id.eq(schema::podcast_feed_location::podcast_id)),
+                            .on(schema::podcast::id.eq(schema::podcast_feed_location::podcast_id)),
                     )
                     .filter(schema::podcast_feed_location::feed_url.eq(final_url))
-                    .select((schema::podcasts::id))
+                    .select((schema::podcast::id))
                     .first(self.conn)
                     .optional()
             },
@@ -254,7 +254,7 @@ impl<'a> PodcastUpdater<'a> {
         if let Some(podcast_id) = podcast_id {
             info!(log, "Found existing podcast ID {}", podcast_id);
             common::log_timed(&log.new(o!("step" => "update_podcast")), |ref _log| {
-                diesel::update(schema::podcasts::table.filter(schema::podcasts::id.eq(podcast_id)))
+                diesel::update(schema::podcast::table.filter(schema::podcast::id.eq(podcast_id)))
                     .set(ins_podcast)
                     .get_result(self.conn)
                     .chain_err(|| "Error updating podcast")
@@ -262,7 +262,7 @@ impl<'a> PodcastUpdater<'a> {
         } else {
             info!(log, "No existing podcast found; inserting new");
             common::log_timed(&log.new(o!("step" => "insert_podcast")), |ref _log| {
-                diesel::insert_into(schema::podcasts::table)
+                diesel::insert_into(schema::podcast::table)
                     .values(ins_podcast)
                     .get_result(self.conn)
                     .chain_err(|| "Error inserting podcast")
@@ -788,7 +788,7 @@ mod tests {
         );
         assert_eq!(
             Ok(1),
-            schema::podcasts::table.count().first(&*bootstrap.conn)
+            schema::podcast::table.count().first(&*bootstrap.conn)
         );
         assert_eq!(
             Ok(1),
@@ -827,7 +827,7 @@ mod tests {
         );
         assert_eq!(
             Ok(1),
-            schema::podcasts::table.count().first(&*bootstrap.conn)
+            schema::podcast::table.count().first(&*bootstrap.conn)
         );
         assert_eq!(
             Ok(1),

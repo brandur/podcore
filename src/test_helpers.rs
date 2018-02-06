@@ -135,7 +135,7 @@ fn check_database(conn: &PgConnection) {
     // Note that we only check one table's count as a proxy for the state of the
     // entire database. This isn't bullet proof, but will hopefully be enough
     // to avoid most stupid problems.
-    match schema::podcasts::table.count().first(conn) {
+    match schema::podcast::table.count().first(conn) {
         Ok(0) => (),
         Ok(n) => panic!(
             "Expected test database to be empty, but found {} podcast(s). Please reset it.",

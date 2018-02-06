@@ -112,7 +112,7 @@ pub struct PodcastFeedLocation {
 
 pub mod insertable {
     use schema::{directory_podcast, directory_podcast_directory_search, directory_search, episode,
-                 podcast_feed_content, podcast_feed_location, podcasts};
+                 podcast, podcast_feed_content, podcast_feed_location};
 
     use chrono::{DateTime, Utc};
 
@@ -158,7 +158,7 @@ pub mod insertable {
 
     #[changeset_options(treat_none_as_null = "true")]
     #[derive(AsChangeset, Insertable)]
-    #[table_name = "podcasts"]
+    #[table_name = "podcast"]
     pub struct Podcast {
         pub image_url:         Option<String>,
         pub language:          Option<String>,

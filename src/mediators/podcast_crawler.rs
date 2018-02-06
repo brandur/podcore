@@ -244,8 +244,8 @@ mod tests {
         }
 
         // Mark all podcasts as stale so that the crawler will find them
-        diesel::update(schema::podcasts::table)
-            .set(schema::podcasts::last_retrieved_at.eq(Utc::now() - Duration::hours(24)))
+        diesel::update(schema::podcast::table)
+            .set(schema::podcast::last_retrieved_at.eq(Utc::now() - Duration::hours(24)))
             .execute(&*bootstrap.conn)
             .unwrap();
 
