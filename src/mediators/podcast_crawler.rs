@@ -111,19 +111,19 @@ impl PodcastCrawler {
                 // Diesel's query DSL cannot handle subselects.
                 diesel::sql_query(format!(
                     "
-                SELECT id,
-                    (
-                       SELECT feed_url
-                       FROM podcast_feed_location
-                       WHERE podcast_feed_location.podcast_id = podcast.id
-                       ORDER BY last_retrieved_at DESC
-                       LIMIT 1
-                    )
-                FROM podcast
-                WHERE id > {}
-                    AND last_retrieved_at <= NOW() - '{} hours'::interval
-                ORDER BY id
-                LIMIT {}",
+                        SELECT id,
+                            (
+                               SELECT feed_url
+                               FROM podcast_feed_location
+                               WHERE podcast_feed_location.podcast_id = podcast.id
+                               ORDER BY last_retrieved_at DESC
+                               LIMIT 1
+                            )
+                        FROM podcast
+                        WHERE id > {}
+                            AND last_retrieved_at <= NOW() - '{} hours'::interval
+                        ORDER BY id
+                        LIMIT {}",
                     start_id, REFRESH_INTERVAL_HOURS, PAGE_SIZE
                 )).load::<PodcastTuple>(conn)
             },
