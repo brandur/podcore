@@ -51,13 +51,20 @@ pub struct DirectoryPodcast {
 }
 
 #[derive(Queryable)]
+pub struct DirectoryPodcastException {
+    pub id:                   i64,
+    pub directory_podcast_id: i64,
+    pub errors:               Vec<String>,
+    pub occurred_at:          DateTime<Utc>,
+}
+
+#[derive(Queryable)]
 pub struct DirectoryPodcastDirectorySearch {
     pub id:                   i64,
     pub directory_podcast_id: i64,
     pub directory_search_id:  i64,
 }
 
-#[allow(dead_code)]
 #[derive(Queryable)]
 pub struct DirectorySearch {
     pub id:           i64,
@@ -111,8 +118,9 @@ pub struct PodcastFeedLocation {
 }
 
 pub mod insertable {
-    use schema::{directory_podcast, directory_podcast_directory_search, directory_search, episode,
-                 podcast, podcast_feed_content, podcast_feed_location};
+    use schema::{directory_podcast, directory_podcast_directory_search,
+                 directory_podcast_exception, directory_search, episode, podcast,
+                 podcast_feed_content, podcast_feed_location};
 
     use chrono::{DateTime, Utc};
 
@@ -127,13 +135,20 @@ pub mod insertable {
     }
 
     #[derive(Insertable)]
+    #[table_name = "directory_podcast_exception"]
+    pub struct DirectoryPodcastException {
+        pub directory_podcast_id: i64,
+        pub errors:               Vec<String>,
+        pub occurred_at:          DateTime<Utc>,
+    }
+
+    #[derive(Insertable)]
     #[table_name = "directory_podcast_directory_search"]
     pub struct DirectoryPodcastDirectorySearch {
         pub directory_podcast_id: i64,
         pub directory_search_id:  i64,
     }
 
-    #[allow(dead_code)]
     #[derive(Insertable)]
     #[table_name = "directory_search"]
     pub struct DirectorySearch {
@@ -167,7 +182,6 @@ pub mod insertable {
         pub title:             String,
     }
 
-    #[allow(dead_code)]
     #[derive(Insertable)]
     #[table_name = "podcast_feed_content"]
     pub struct PodcastFeedContent {

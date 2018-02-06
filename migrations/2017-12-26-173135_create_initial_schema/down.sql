@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS directory_podcast_directory_search;
+DROP TABLE IF EXISTS directory_podcast_exception;
 DROP TABLE IF EXISTS directory_search;
 DROP TABLE IF EXISTS directory_podcast;
 DROP TABLE IF EXISTS directory;

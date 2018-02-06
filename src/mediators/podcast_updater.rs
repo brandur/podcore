@@ -2,6 +2,7 @@ use errors::*;
 use mediators::common;
 use model;
 use model::insertable;
+use schema;
 use url_fetcher::URLFetcher;
 
 use chrono::{DateTime, Utc};
@@ -15,7 +16,6 @@ use hyper::{Method, Request, StatusCode, Uri};
 use quick_xml::events::{BytesText, Event};
 use quick_xml::reader::Reader;
 use regex::Regex;
-use schema;
 use slog::Logger;
 use std::io::BufRead;
 use std::str;
@@ -236,9 +236,8 @@ impl<'a> PodcastUpdater<'a> {
         ins_podcast: &insertable::Podcast,
         final_url: &str,
     ) -> Result<model::Podcast> {
-        let podcast_id: Option<i64> = common::log_timed(
-            &log.new(o!("step" => "query_podcast")),
-            |ref _log| {
+        let podcast_id: Option<i64> =
+            common::log_timed(&log.new(o!("step" => "query_podcast")), |ref _log| {
                 schema::podcast::table
                     .left_join(
                         schema::podcast_feed_location::table
@@ -248,8 +247,7 @@ impl<'a> PodcastUpdater<'a> {
                     .select((schema::podcast::id))
                     .first(self.conn)
                     .optional()
-            },
-        )?;
+            })?;
 
         if let Some(podcast_id) = podcast_id {
             info!(log, "Found existing podcast ID {}", podcast_id);

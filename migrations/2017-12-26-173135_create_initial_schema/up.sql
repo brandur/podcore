@@ -146,6 +146,23 @@ COMMENT ON TABLE directory_search
     IS 'Join table between searches on directory and directory podcast.';
 
 --
+-- directory_podcast_exception
+--
+
+CREATE TABLE directory_podcast_exception (
+    id BIGSERIAL PRIMARY KEY,
+
+    -- unique because we only save the last error that occurred
+    directory_podcast_id BIGINT NOT NULL UNIQUE
+        REFERENCES directory_podcast (id) ON DELETE RESTRICT,
+
+    errors TEXT[] NOT NULL,
+    occurred_at TIMESTAMPTZ NOT NULL
+);
+COMMENT ON TABLE directory_podcast_exception
+    IS 'Stores exceptions that occurred when ingesting a podcast.';
+
+--
 -- episode
 --
 
