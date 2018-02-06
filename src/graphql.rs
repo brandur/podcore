@@ -146,9 +146,9 @@ graphql_object!(Query: Context |&self| {
             chain_err(|| "Error parsing podcast ID")?;
 
         let context = executor.context();
-        let results = schema::episodes::table
-            .filter(schema::episodes::podcast_id.eq(id))
-            .order(schema::episodes::published_at.desc())
+        let results = schema::episode::table
+            .filter(schema::episode::podcast_id.eq(id))
+            .order(schema::episode::published_at.desc())
             .limit(20)
             .load::<model::Episode>(&*context.get_conn()?)
             .chain_err(|| "Error loading episodes from the database")?

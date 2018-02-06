@@ -146,10 +146,10 @@ COMMENT ON TABLE directory_search
     IS 'Join table between searches on directory and directory podcasts.';
 
 --
--- episodes
+-- episode
 --
 
-CREATE TABLE episodes (
+CREATE TABLE episode (
     id BIGSERIAL PRIMARY KEY,
 
     description TEXT
@@ -169,8 +169,8 @@ CREATE TABLE episodes (
     title TEXT NOT NULL
         CHECK (char_length(title) <= 200)
 );
-COMMENT ON TABLE episodes
-    IS 'Podcast episodes, like a single item in a podcast''s RSS feed.';
+COMMENT ON TABLE episode
+    IS 'Podcast episode, like a single item in a podcast''s RSS feed.';
 
-CREATE UNIQUE INDEX episodes_podcast_id_guid
-    ON episodes (podcast_id, guid);
+CREATE UNIQUE INDEX episode_podcast_id_guid
+    ON episode (podcast_id, guid);

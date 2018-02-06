@@ -211,19 +211,19 @@ impl<'a> PodcastUpdater<'a> {
         ins_episodes: Vec<insertable::Episode>,
     ) -> Result<Vec<model::Episode>> {
         common::log_timed(&log.new(o!("step" => "upsert_episodes")), |ref _log| {
-            Ok(diesel::insert_into(schema::episodes::table)
+            Ok(diesel::insert_into(schema::episode::table)
                 .values(&ins_episodes)
-                .on_conflict((schema::episodes::podcast_id, schema::episodes::guid))
+                .on_conflict((schema::episode::podcast_id, schema::episode::guid))
                 .do_update()
                 .set((
-                    schema::episodes::description.eq(excluded(schema::episodes::description)),
-                    schema::episodes::explicit.eq(excluded(schema::episodes::explicit)),
-                    schema::episodes::link_url.eq(excluded(schema::episodes::link_url)),
-                    schema::episodes::media_type.eq(excluded(schema::episodes::media_type)),
-                    schema::episodes::media_url.eq(excluded(schema::episodes::media_url)),
-                    schema::episodes::podcast_id.eq(excluded(schema::episodes::podcast_id)),
-                    schema::episodes::published_at.eq(excluded(schema::episodes::published_at)),
-                    schema::episodes::title.eq(excluded(schema::episodes::title)),
+                    schema::episode::description.eq(excluded(schema::episode::description)),
+                    schema::episode::explicit.eq(excluded(schema::episode::explicit)),
+                    schema::episode::link_url.eq(excluded(schema::episode::link_url)),
+                    schema::episode::media_type.eq(excluded(schema::episode::media_type)),
+                    schema::episode::media_url.eq(excluded(schema::episode::media_url)),
+                    schema::episode::podcast_id.eq(excluded(schema::episode::podcast_id)),
+                    schema::episode::published_at.eq(excluded(schema::episode::published_at)),
+                    schema::episode::title.eq(excluded(schema::episode::title)),
                 ))
                 .get_results(self.conn)
                 .chain_err(|| "Error upserting podcast episodes")?)
@@ -784,7 +784,7 @@ mod tests {
         // Make sure that we ended up with one of everything
         assert_eq!(
             Ok(1),
-            schema::episodes::table.count().first(&*bootstrap.conn)
+            schema::episode::table.count().first(&*bootstrap.conn)
         );
         assert_eq!(
             Ok(1),
@@ -823,7 +823,7 @@ mod tests {
         // Make sure that we ended up with one of everything
         assert_eq!(
             Ok(1),
-            schema::episodes::table.count().first(&*bootstrap.conn)
+            schema::episode::table.count().first(&*bootstrap.conn)
         );
         assert_eq!(
             Ok(1),

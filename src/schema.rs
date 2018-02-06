@@ -34,7 +34,7 @@ table! {
 }
 
 table! {
-    episodes (id) {
+    episode (id) {
         id -> Int8,
         description -> Nullable<Text>,
         explicit -> Nullable<Bool>,
@@ -84,7 +84,7 @@ joinable!(directory_podcast -> podcasts (podcast_id));
 joinable!(directory_podcast_directory_search -> directory_podcast (directory_podcast_id));
 joinable!(directory_podcast_directory_search -> directory_search (directory_search_id));
 joinable!(directory_search -> directory (directory_id));
-joinable!(episodes -> podcasts (podcast_id));
+joinable!(episode -> podcasts (podcast_id));
 joinable!(podcast_feed_content -> podcasts (podcast_id));
 joinable!(podcast_feed_location -> podcasts (podcast_id));
 
@@ -93,7 +93,7 @@ allow_tables_to_appear_in_same_query!(
     directory_podcast,
     directory_podcast_directory_search,
     directory_search,
-    episodes,
+    episode,
     podcast_feed_content,
     podcast_feed_location,
     podcasts,
