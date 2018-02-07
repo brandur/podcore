@@ -123,7 +123,7 @@ impl PodcastReingester {
                 // ...)`). This might be solvable somehow, but examples in tests and
                 // documentation are quite poor, so I gave up and fell back to
                 // this.
-                diesel::sql_query(format!(
+                diesel::sql_query(
                     "
                 SELECT id,
                     (
@@ -141,11 +141,12 @@ impl PodcastReingester {
                        LIMIT 1
                     )
                 FROM podcast
-                WHERE id > {}
+                WHERE id > $1
                 ORDER BY id
-                LIMIT {}",
-                    start_id, PAGE_SIZE
-                )).load::<PodcastTuple>(conn)
+                LIMIT $2",
+                ).bind::<BigInt, _>(start_id)
+                    .bind::<BigInt, _>(PAGE_SIZE)
+                    .load::<PodcastTuple>(conn)
             },
         )?;
 

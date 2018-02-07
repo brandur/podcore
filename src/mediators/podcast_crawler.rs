@@ -109,7 +109,7 @@ impl PodcastCrawler {
             |ref _log| {
                 // See comment on similar function in podcast_reingester -- unfortunately
                 // Diesel's query DSL cannot handle subselects.
-                diesel::sql_query(format!(
+                diesel::sql_query(
                     "
                         SELECT id,
                             (
@@ -120,12 +120,14 @@ impl PodcastCrawler {
                                LIMIT 1
                             )
                         FROM podcast
-                        WHERE id > {}
-                            AND last_retrieved_at <= NOW() - '{} hours'::interval
+                        WHERE id > $1
+                            AND last_retrieved_at <= NOW() - $2::interval
                         ORDER BY id
-                        LIMIT {}",
-                    start_id, REFRESH_INTERVAL_HOURS, PAGE_SIZE
-                )).load::<PodcastTuple>(conn)
+                        LIMIT $3",
+                ).bind::<BigInt, _>(start_id)
+                    .bind::<Text, _>(format!("{} hours", REFRESH_INTERVAL_HOURS))
+                    .bind::<BigInt, _>(PAGE_SIZE)
+                    .load::<PodcastTuple>(conn)
             },
         )?;
 

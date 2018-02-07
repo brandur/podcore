@@ -119,7 +119,7 @@ fn delete_podcast_feed_content_batch(
     common::log_timed(
         &log.new(o!("step" => "delete_podcast_feed_content_batch", "limit" => DELETE_LIMIT)),
         |ref _log| {
-            diesel::sql_query(format!(
+            diesel::sql_query(
                 "
                     WITH numbered AS (
                         SELECT id,
@@ -131,16 +131,17 @@ fn delete_podcast_feed_content_batch(
                         WHERE id IN (
                             SELECT id
                             FROM numbered
-                            WHERE row_number > {}
-                            LIMIT {}
+                            WHERE row_number > $1
+                            LIMIT $2
                         )
                         RETURNING id
                     )
                     SELECT COUNT(*)
                     FROM batch
-                    ",
-                PODCAST_FEED_CONTENT_LIMIT, DELETE_LIMIT
-            )).get_result::<DeletePodcastFeedContentBatchResults>(conn)
+                ",
+            ).bind::<BigInt, _>(PODCAST_FEED_CONTENT_LIMIT)
+                .bind::<BigInt, _>(DELETE_LIMIT)
+                .get_result::<DeletePodcastFeedContentBatchResults>(conn)
                 .chain_err(|| "Error deleting directory podcast content batch")
         },
     )
