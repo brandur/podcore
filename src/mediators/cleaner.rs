@@ -22,6 +22,17 @@ impl Cleaner {
     }
 
     pub fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
+        let directory_podcast_thread = {
+            let thread_name = "directory_podcast_cleaner".to_owned();
+            let log = log.new(o!("thread" => thread_name.clone()));
+            let pool_clone = self.pool.clone();
+
+            thread::Builder::new()
+                .name(thread_name)
+                .spawn(move || work(&log, pool_clone, &delete_directory_podcast_batch))
+                .map_err(Error::from)?
+        };
+
         let directory_search_thread = {
             let thread_name = "directory_search_cleaner".to_owned();
             let log = log.new(o!("thread" => thread_name.clone()));
@@ -49,13 +60,16 @@ impl Cleaner {
         // doesn't happen here and never expect to). Our work functions also
         // return a `Result<_>` which may contain an error that we've set which
         // is what the `?` is checking for.
+        let num_directory_podcast_cleaned = directory_podcast_thread.join().unwrap()?;
         let num_directory_search_cleaned = directory_search_thread.join().unwrap()?;
         let num_podcast_feed_content_cleaned = podcast_feed_content_thread.join().unwrap()?;
 
         Ok(RunResult {
             // total number of cleaned resources
-            num_cleaned: num_directory_search_cleaned + num_podcast_feed_content_cleaned,
+            num_cleaned: num_directory_podcast_cleaned + num_directory_search_cleaned
+                + num_podcast_feed_content_cleaned,
 
+            num_directory_podcast_cleaned:    num_directory_podcast_cleaned,
             num_directory_search_cleaned:     num_directory_search_cleaned,
             num_podcast_feed_content_cleaned: num_podcast_feed_content_cleaned,
         })
@@ -66,6 +80,7 @@ pub struct RunResult {
     // total number of cleaned resources
     pub num_cleaned: i64,
 
+    pub num_directory_podcast_cleaned:    i64,
     pub num_directory_search_cleaned:     i64,
     pub num_podcast_feed_content_cleaned: i64,
 }
@@ -108,6 +123,43 @@ struct DeleteResults {
 //
 // Private functions
 //
+
+fn delete_directory_podcast_batch(log: &Logger, conn: &PgConnection) -> Result<DeleteResults> {
+    common::log_timed(
+        &log.new(o!("step" => "delete_directory_podcast_batch", "limit" => DELETE_LIMIT)),
+        |ref _log| {
+            // The idea here is to find "dangling" directory podcasts. Those are directory
+            // podcasts that were never reified into a full podcast record (no
+            // one ever clicked through to them) and for which there are
+            // directory searches still pointing to (directory searches will
+            // themselves be removed after a certain time period of disuse by another
+            // cleaner below, but they won't remove any directory podcast records).
+            diesel::sql_query(
+                "
+                    WITH batch AS (
+                        DELETE FROM directory_podcast
+                        WHERE id IN (
+                            SELECT id
+                            FROM directory_podcast
+                            WHERE podcast_id IS NULL
+                                AND NOT EXISTS (
+                                    SELECT 1
+                                    FROM directory_podcast_directory_search
+                                    WHERE directory_podcast_id = directory_podcast.id
+                                )
+                            LIMIT $1
+                        )
+                        RETURNING id
+                    )
+                    SELECT COUNT(*)
+                    FROM batch
+                ",
+            ).bind::<BigInt, _>(DELETE_LIMIT)
+                .get_result::<DeleteResults>(conn)
+                .chain_err(|| "Error deleting directory podcast content batch")
+        },
+    )
+}
 
 fn delete_directory_search_batch(log: &Logger, conn: &PgConnection) -> Result<DeleteResults> {
     common::log_timed(

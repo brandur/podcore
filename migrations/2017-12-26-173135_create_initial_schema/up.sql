@@ -149,6 +149,12 @@ CREATE TABLE directory_podcast_directory_search (
 COMMENT ON TABLE directory_podcast_directory_search
     IS 'Join table between searches on directory and directory podcast.';
 
+CREATE INDEX directory_podcast_directory_search_directory_podcast_id
+    ON directory_podcast_directory_search (directory_podcast_id);
+
+CREATE INDEX directory_podcast_directory_search_directory_search_id
+    ON directory_podcast_directory_search (directory_search_id);
+
 --
 -- directory_podcast_exception
 --
