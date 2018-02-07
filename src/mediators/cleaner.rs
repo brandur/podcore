@@ -4,7 +4,7 @@ use mediators::common;
 use diesel;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
-use diesel::types::BigInt;
+use diesel::types::{BigInt, Text};
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use slog::Logger;
@@ -22,8 +22,18 @@ impl Cleaner {
     }
 
     pub fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
-        // This is the only cleaner for now, but there will be more!
-        let podcast_feed_content_cleaner_thread = {
+        let directory_search_thread = {
+            let thread_name = "directory_search_cleaner".to_owned();
+            let log = log.new(o!("thread" => thread_name.clone()));
+            let pool_clone = self.pool.clone();
+
+            thread::Builder::new()
+                .name(thread_name)
+                .spawn(move || clean_directory_search(&log, pool_clone))
+                .map_err(Error::from)?
+        };
+
+        let podcast_feed_content_thread = {
             let thread_name = "podcast_feed_content_cleaner".to_owned();
             let log = log.new(o!("thread" => thread_name.clone()));
             let pool_clone = self.pool.clone();
@@ -39,12 +49,14 @@ impl Cleaner {
         // doesn't happen here and never expect to). Our work functions also
         // return a `Result<_>` which may contain an error that we've set which
         // is what the `?` is checking for.
-        let num_podcast_feed_content_cleaned = podcast_feed_content_cleaner_thread.join().unwrap()?;
+        let num_directory_search_cleaned = directory_search_thread.join().unwrap()?;
+        let num_podcast_feed_content_cleaned = podcast_feed_content_thread.join().unwrap()?;
 
         Ok(RunResult {
             // total number of cleaned resources
-            num_cleaned: num_podcast_feed_content_cleaned,
+            num_cleaned: num_directory_search_cleaned + num_podcast_feed_content_cleaned,
 
+            num_directory_search_cleaned:     num_directory_search_cleaned,
             num_podcast_feed_content_cleaned: num_podcast_feed_content_cleaned,
         })
     }
@@ -54,6 +66,7 @@ pub struct RunResult {
     // total number of cleaned resources
     pub num_cleaned: i64,
 
+    pub num_directory_search_cleaned:     i64,
     pub num_podcast_feed_content_cleaned: i64,
 }
 
@@ -67,12 +80,30 @@ pub struct RunResult {
 // facilities.
 const DELETE_LIMIT: i64 = 1000;
 
+// Target horizon beyond which we want to start removing old directory searches
+// (they're cached for much less time than this, but we keep the records around
+// for a while anyway, even if they're not used). Frequent searches that are
+// still in used get upserted so that their timestamp is refreshed and they're
+// never removed.
+//
+// Should be formatted as a string that's coercable to the Postgres interval
+// type.
+static DIRECTORY_SEARCH_DELETE_HORIZON: &'static str = "1 week";
+
 // The maximum number of content rows to keep around for any given podcast.
 pub const PODCAST_FEED_CONTENT_LIMIT: i64 = 10;
 
 //
 // Private types
 //
+
+// Exists because `sql_query` doesn't support querying into a tuple, only a
+// struct.
+#[derive(Clone, Debug, QueryableByName)]
+struct DeleteDirectorySearchResults {
+    #[sql_type = "BigInt"]
+    count: i64,
+}
 
 // Exists because `sql_query` doesn't support querying into a tuple, only a
 // struct.
@@ -85,6 +116,32 @@ struct DeletePodcastFeedContentBatchResults {
 //
 // Private functions
 //
+
+fn clean_directory_search(
+    log: &Logger,
+    pool: Pool<ConnectionManager<PgConnection>>,
+) -> Result<i64> {
+    let conn = match pool.try_get() {
+        Some(conn) => conn,
+        None => {
+            bail!("Error acquiring connection from connection pool (too few max connections?)");
+        }
+    };
+    debug!(log, "Thread acquired a connection");
+
+    let mut num_cleaned = 0;
+    loop {
+        let res = delete_directory_search_batch(log, &*conn)?;
+        num_cleaned += res.count;
+        info!(log, "Cleaned batch of directory podcast contents"; "num_cleaned" => num_cleaned);
+
+        if res.count < 1 {
+            break;
+        }
+    }
+
+    Ok(num_cleaned)
+}
 
 fn clean_podcast_feed_content(
     log: &Logger,
@@ -110,6 +167,37 @@ fn clean_podcast_feed_content(
     }
 
     Ok(num_cleaned)
+}
+
+fn delete_directory_search_batch(
+    log: &Logger,
+    conn: &PgConnection,
+) -> Result<DeleteDirectorySearchResults> {
+    common::log_timed(
+        &log.new(o!("step" => "delete_directory_search_batch", "limit" => DELETE_LIMIT)),
+        |ref _log| {
+            // This works because directory_podcast_directory_search is ON DELETE CASCADE
+            diesel::sql_query(
+                "
+                    WITH batch AS (
+                        DELETE FROM directory_search
+                        WHERE id IN (
+                            SELECT id
+                            FROM directory_search
+                            WHERE retrieved_at > NOW() - $1::interval
+                            LIMIT $2
+                        )
+                        RETURNING id
+                    )
+                    SELECT COUNT(*)
+                    FROM batch
+                ",
+            ).bind::<Text, _>(DIRECTORY_SEARCH_DELETE_HORIZON)
+                .bind::<BigInt, _>(DELETE_LIMIT)
+                .get_result::<DeleteDirectorySearchResults>(conn)
+                .chain_err(|| "Error deleting directory search content batch")
+        },
+    )
 }
 
 fn delete_podcast_feed_content_batch(

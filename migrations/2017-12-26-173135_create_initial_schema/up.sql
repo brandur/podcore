@@ -139,10 +139,14 @@ CREATE TABLE directory_podcast_directory_search (
 
     directory_podcast_id BIGINT NOT NULL
         REFERENCES directory_podcast (id) ON DELETE RESTRICT,
+
+    -- ON DELETE CASCADE because I'm too lazy to issue multiple operations when
+    -- I'm cleaning these up and because this all recoverable ephemeral data
+    -- anyway
     directory_search_id BIGINT NOT NULL
-        REFERENCES directory_search (id) ON DELETE RESTRICT
+        REFERENCES directory_search (id) ON DELETE CASCADE
 );
-COMMENT ON TABLE directory_search
+COMMENT ON TABLE directory_podcast_directory_search
     IS 'Join table between searches on directory and directory podcast.';
 
 --

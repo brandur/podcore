@@ -151,6 +151,7 @@ fn clean(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
         num_loops += 1;
         info!(log, "Finished work loop";
             "num_loops" => num_loops,
+            "num_directory_search_cleaned" => res.num_directory_search_cleaned,
             "num_podcast_feed_content_cleaned" => res.num_podcast_feed_content_cleaned);
 
         if run_once {
