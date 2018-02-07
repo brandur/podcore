@@ -86,7 +86,7 @@ fn clean_podcast_feed_content(log: &Logger, pool: Pool<ConnectionManager<PgConne
         None => {
             error!(
                 log,
-                "Error acquiring connection from connection pool (is num_workers misconfigured?)"
+                "Error acquiring connection from connection pool (too few max connections?)"
             );
             return;
         }
@@ -95,7 +95,7 @@ fn clean_podcast_feed_content(log: &Logger, pool: Pool<ConnectionManager<PgConne
 
     let mut num_cleaned = 0;
     loop {
-        let res = select_podcast_feed_content_batch(log, &*conn);
+        let res = delete_podcast_feed_content_batch(log, &*conn);
 
         if let Err(e) = res {
             error_helpers::print_error(&log, &e);
@@ -111,26 +111,32 @@ fn clean_podcast_feed_content(log: &Logger, pool: Pool<ConnectionManager<PgConne
             info!(log, "Cleaned all directory podcast contents"; "num_cleaned" => num_cleaned);
             break;
         }
+        info!(log, "Cleaned batch of directory podcast contents"; "num_cleaned" => batch.len());
         num_cleaned += batch.len();
     }
 }
 
-fn select_podcast_feed_content_batch(
+fn delete_podcast_feed_content_batch(
     log: &Logger,
     conn: &PgConnection,
 ) -> Result<Vec<DirectoryPodcastContentTuple>> {
     common::log_timed(
-        &log.new(o!("step" => "select_podcast_feed_content_batch", "limit" => DELETE_LIMIT)),
+        &log.new(o!("step" => "delete_podcast_feed_content_batch", "limit" => DELETE_LIMIT)),
         |ref _log| {
             diesel::sql_query(format!(
                 "
-                    WITH batch AS (
+                    WITH numbered AS (
                         SELECT id,
-                            row_number() OVER (ORDER BY retrieved_at DESC)
+                            row_number() OVER (ORDER BY podcast_id, retrieved_at DESC)
                         FROM podcast_feed_content
+                    ),
+                    batch AS (
+                        SELECT id
+                        FROM numbered
                         WHERE row_number > {}
                         LIMIT {}
                     )
+
                     DELETE FROM podcast_feed_content
                     WHERE id IN (
                         SELECT id
@@ -139,7 +145,7 @@ fn select_podcast_feed_content_batch(
                     RETURNING id",
                 PODCAST_FEED_CONTENT_LIMIT, DELETE_LIMIT
             )).load::<DirectoryPodcastContentTuple>(conn)
-                .chain_err(|| "Error selecting directory podcast content batch")
+                .chain_err(|| "Error deleting directory podcast content batch")
         },
     )
 }
@@ -181,7 +187,7 @@ mod tests {
         let _res = mediator.run(&log).unwrap();
 
         assert_eq!(
-            Ok(PODCAST_FEED_CONTENT_LIMIT + 1),
+            Ok(PODCAST_FEED_CONTENT_LIMIT),
             schema::podcast_feed_content::table
                 .count()
                 .first(&*bootstrap.conn)
