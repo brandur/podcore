@@ -31,7 +31,7 @@ impl Cleaner {
             thread::Builder::new()
                 .name(thread_name)
                 .spawn(move || clean_podcast_feed_content(&log, pool_clone))
-                .chain_err(|| "Error spawning thread")?
+                .map_err(Error::from)?
         };
 
         // `unwrap` followed by `?` might seem a little unusual. The `unwrap` is there

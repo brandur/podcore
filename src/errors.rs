@@ -12,6 +12,7 @@ error_chain!{
         Database(::diesel::result::Error);
         DatabaseConnectionPool(::r2d2::Error);
         HyperError(::hyper::Error);
+        Io(::std::io::Error);
         NativeTls(::native_tls::Error);
         HyperUri(::hyper::error::UriError);
         Json(::serde_json::Error);

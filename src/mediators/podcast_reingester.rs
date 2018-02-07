@@ -48,7 +48,7 @@ impl PodcastReingester {
                     .spawn(move || {
                         work(&log, pool_clone, work_recv_clone);
                     })
-                    .chain_err(|| "Failed to spawn thread")?);
+                    .map_err(Error::from)?);
             }
 
             self.page_podcasts(log, work_send)?
