@@ -100,15 +100,7 @@ pub const PODCAST_FEED_CONTENT_LIMIT: i64 = 10;
 // Exists because `sql_query` doesn't support querying into a tuple, only a
 // struct.
 #[derive(Clone, Debug, QueryableByName)]
-struct DeleteDirectorySearchResults {
-    #[sql_type = "BigInt"]
-    count: i64,
-}
-
-// Exists because `sql_query` doesn't support querying into a tuple, only a
-// struct.
-#[derive(Clone, Debug, QueryableByName)]
-struct DeletePodcastFeedContentBatchResults {
+struct DeleteResults {
     #[sql_type = "BigInt"]
     count: i64,
 }
@@ -133,7 +125,7 @@ fn clean_directory_search(
     loop {
         let res = delete_directory_search_batch(log, &*conn)?;
         num_cleaned += res.count;
-        info!(log, "Cleaned batch of directory podcast contents"; "num_cleaned" => num_cleaned);
+        info!(log, "Cleaned batch"; "num_cleaned" => num_cleaned);
 
         if res.count < 1 {
             break;
@@ -159,7 +151,7 @@ fn clean_podcast_feed_content(
     loop {
         let res = delete_podcast_feed_content_batch(log, &*conn)?;
         num_cleaned += res.count;
-        info!(log, "Cleaned batch of directory podcast contents"; "num_cleaned" => num_cleaned);
+        info!(log, "Cleaned batch"; "num_cleaned" => num_cleaned);
 
         if res.count < 1 {
             break;
@@ -169,10 +161,7 @@ fn clean_podcast_feed_content(
     Ok(num_cleaned)
 }
 
-fn delete_directory_search_batch(
-    log: &Logger,
-    conn: &PgConnection,
-) -> Result<DeleteDirectorySearchResults> {
+fn delete_directory_search_batch(log: &Logger, conn: &PgConnection) -> Result<DeleteResults> {
     common::log_timed(
         &log.new(o!("step" => "delete_directory_search_batch", "limit" => DELETE_LIMIT)),
         |ref _log| {
@@ -194,16 +183,13 @@ fn delete_directory_search_batch(
                 ",
             ).bind::<Text, _>(DIRECTORY_SEARCH_DELETE_HORIZON)
                 .bind::<BigInt, _>(DELETE_LIMIT)
-                .get_result::<DeleteDirectorySearchResults>(conn)
+                .get_result::<DeleteResults>(conn)
                 .chain_err(|| "Error deleting directory search content batch")
         },
     )
 }
 
-fn delete_podcast_feed_content_batch(
-    log: &Logger,
-    conn: &PgConnection,
-) -> Result<DeletePodcastFeedContentBatchResults> {
+fn delete_podcast_feed_content_batch(log: &Logger, conn: &PgConnection) -> Result<DeleteResults> {
     common::log_timed(
         &log.new(o!("step" => "delete_podcast_feed_content_batch", "limit" => DELETE_LIMIT)),
         |ref _log| {
@@ -229,7 +215,7 @@ fn delete_podcast_feed_content_batch(
                 ",
             ).bind::<BigInt, _>(PODCAST_FEED_CONTENT_LIMIT)
                 .bind::<BigInt, _>(DELETE_LIMIT)
-                .get_result::<DeletePodcastFeedContentBatchResults>(conn)
+                .get_result::<DeleteResults>(conn)
                 .chain_err(|| "Error deleting directory podcast content batch")
         },
     )
