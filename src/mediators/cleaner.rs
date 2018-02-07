@@ -1,4 +1,3 @@
-use error_helpers;
 use errors::*;
 use mediators::common;
 
@@ -23,34 +22,39 @@ impl Cleaner {
     }
 
     pub fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
-        let mut workers = vec![];
-
         // This is the only cleaner for now, but there will be more!
-        {
+        let podcast_feed_content_cleaner_thread = {
             let thread_name = "podcast_feed_content_cleaner".to_owned();
             let log = log.new(o!("thread" => thread_name.clone()));
             let pool_clone = self.pool.clone();
 
-            workers.push(thread::Builder::new()
+            thread::Builder::new()
                 .name(thread_name)
-                .spawn(move || {
-                    clean_podcast_feed_content(&log, pool_clone);
-                })
-                .chain_err(|| "Failed to spawn thread")?);
-        }
+                .spawn(move || clean_podcast_feed_content(&log, pool_clone))
+                .chain_err(|| "Error spawning thread")?
+        };
 
-        // Wait for threads to rejoin
-        for worker in workers {
-            let _ = worker.join();
-        }
+        // `unwrap` followed by `?` might seem a little unusual. The `unwrap` is there
+        // to unpack a thread that might have panicked (something that we hope
+        // doesn't happen here and never expect to). Our work functions also
+        // return a `Result<_>` which may contain an error that we've set which
+        // is what the `?` is checking for.
+        let num_podcast_feed_content_cleaned = podcast_feed_content_cleaner_thread.join().unwrap()?;
 
-        // TODO: This should be a real number
-        Ok(RunResult { num_cleaned: 0 })
+        Ok(RunResult {
+            // total number of cleaned resources
+            num_cleaned: num_podcast_feed_content_cleaned,
+
+            num_podcast_feed_content_cleaned: num_podcast_feed_content_cleaned,
+        })
     }
 }
 
 pub struct RunResult {
+    // total number of cleaned resources
     pub num_cleaned: i64,
+
+    pub num_podcast_feed_content_cleaned: i64,
 }
 
 //
@@ -82,40 +86,30 @@ struct DeletePodcastFeedContentBatchResults {
 // Private functions
 //
 
-fn clean_podcast_feed_content(log: &Logger, pool: Pool<ConnectionManager<PgConnection>>) {
+fn clean_podcast_feed_content(
+    log: &Logger,
+    pool: Pool<ConnectionManager<PgConnection>>,
+) -> Result<i64> {
     let conn = match pool.try_get() {
         Some(conn) => conn,
         None => {
-            error!(
-                log,
-                "Error acquiring connection from connection pool (too few max connections?)"
-            );
-            return;
+            bail!("Error acquiring connection from connection pool (too few max connections?)");
         }
     };
     debug!(log, "Thread acquired a connection");
 
     let mut num_cleaned = 0;
     loop {
-        let res = delete_podcast_feed_content_batch(log, &*conn);
+        let res = delete_podcast_feed_content_batch(log, &*conn)?;
+        num_cleaned += res.count;
+        info!(log, "Cleaned batch of directory podcast contents"; "num_cleaned" => num_cleaned);
 
-        if let Err(e) = res {
-            error_helpers::print_error(&log, &e);
-
-            if let Err(inner_e) = error_helpers::report_error(&log, &e) {
-                error_helpers::print_error(&log, &inner_e);
-            }
+        if res.count < 1 {
             break;
         }
-
-        let batch = res.unwrap();
-        if batch.count < 1 {
-            info!(log, "Cleaned all directory podcast contents"; "num_cleaned" => num_cleaned);
-            break;
-        }
-        info!(log, "Cleaned batch of directory podcast contents"; "num_cleaned" => batch.count);
-        num_cleaned += batch.count;
     }
+
+    Ok(num_cleaned)
 }
 
 fn delete_podcast_feed_content_batch(
@@ -174,20 +168,27 @@ mod tests {
     fn test_clean_podcast_feed_content() {
         let mut bootstrap = TestBootstrap::new();
 
+        let num_contents = 25;
         let podcast = insert_podcast(&bootstrap.log, &*bootstrap.conn);
-        for _i in 0..25 {
+        for _i in 0..num_contents {
             insert_podcast_feed_content(&bootstrap.log, &*bootstrap.conn, &podcast);
         }
         assert_eq!(
-            Ok(25 + 1),
+            Ok(num_contents + 1), // + 1 for the one inserted with the original podcast
             schema::podcast_feed_content::table
                 .count()
                 .first(&*bootstrap.conn)
         );
 
         let (mut mediator, log) = bootstrap.mediator();
-        let _res = mediator.run(&log).unwrap();
+        let res = mediator.run(&log).unwrap();
 
+        // Expect to have cleaned all except the limit number of rows
+        let expected_num_cleaned = num_contents + 1 - PODCAST_FEED_CONTENT_LIMIT;
+        assert_eq!(expected_num_cleaned, res.num_cleaned);
+        assert_eq!(expected_num_cleaned, res.num_podcast_feed_content_cleaned);
+
+        // Expect to have exactly the limit left in the database
         assert_eq!(
             Ok(PODCAST_FEED_CONTENT_LIMIT),
             schema::podcast_feed_content::table

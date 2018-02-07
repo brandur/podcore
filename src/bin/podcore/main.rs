@@ -149,7 +149,9 @@ fn clean(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
         }.run(&log)?;
 
         num_loops += 1;
-        info!(log, "Finished work loop"; "num_loops" => num_loops, "num_cleaned" => res.num_cleaned);
+        info!(log, "Finished work loop";
+            "num_loops" => num_loops,
+            "num_podcast_feed_content_cleaned" => res.num_podcast_feed_content_cleaned);
 
         if run_once {
             break (Ok(()));
