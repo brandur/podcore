@@ -29,7 +29,7 @@ impl Cleaner {
 
             thread::Builder::new()
                 .name(thread_name)
-                .spawn(move || clean_directory_search(&log, pool_clone))
+                .spawn(move || work(&log, pool_clone, &delete_directory_search_batch))
                 .map_err(Error::from)?
         };
 
@@ -40,7 +40,7 @@ impl Cleaner {
 
             thread::Builder::new()
                 .name(thread_name)
-                .spawn(move || clean_podcast_feed_content(&log, pool_clone))
+                .spawn(move || work(&log, pool_clone, &delete_podcast_feed_content_batch))
                 .map_err(Error::from)?
         };
 
@@ -109,58 +109,6 @@ struct DeleteResults {
 // Private functions
 //
 
-fn clean_directory_search(
-    log: &Logger,
-    pool: Pool<ConnectionManager<PgConnection>>,
-) -> Result<i64> {
-    let conn = match pool.try_get() {
-        Some(conn) => conn,
-        None => {
-            bail!("Error acquiring connection from connection pool (too few max connections?)");
-        }
-    };
-    debug!(log, "Thread acquired a connection");
-
-    let mut num_cleaned = 0;
-    loop {
-        let res = delete_directory_search_batch(log, &*conn)?;
-        num_cleaned += res.count;
-        info!(log, "Cleaned batch"; "num_cleaned" => num_cleaned);
-
-        if res.count < 1 {
-            break;
-        }
-    }
-
-    Ok(num_cleaned)
-}
-
-fn clean_podcast_feed_content(
-    log: &Logger,
-    pool: Pool<ConnectionManager<PgConnection>>,
-) -> Result<i64> {
-    let conn = match pool.try_get() {
-        Some(conn) => conn,
-        None => {
-            bail!("Error acquiring connection from connection pool (too few max connections?)");
-        }
-    };
-    debug!(log, "Thread acquired a connection");
-
-    let mut num_cleaned = 0;
-    loop {
-        let res = delete_podcast_feed_content_batch(log, &*conn)?;
-        num_cleaned += res.count;
-        info!(log, "Cleaned batch"; "num_cleaned" => num_cleaned);
-
-        if res.count < 1 {
-            break;
-        }
-    }
-
-    Ok(num_cleaned)
-}
-
 fn delete_directory_search_batch(log: &Logger, conn: &PgConnection) -> Result<DeleteResults> {
     common::log_timed(
         &log.new(o!("step" => "delete_directory_search_batch", "limit" => DELETE_LIMIT)),
@@ -219,6 +167,33 @@ fn delete_podcast_feed_content_batch(log: &Logger, conn: &PgConnection) -> Resul
                 .chain_err(|| "Error deleting directory podcast content batch")
         },
     )
+}
+
+fn work(
+    log: &Logger,
+    pool: Pool<ConnectionManager<PgConnection>>,
+    batch_delete_func: &Fn(&Logger, &PgConnection) -> Result<DeleteResults>,
+) -> Result<i64> {
+    let conn = match pool.try_get() {
+        Some(conn) => conn,
+        None => {
+            bail!("Error acquiring connection from connection pool (too few max connections?)");
+        }
+    };
+    debug!(log, "Thread acquired a connection");
+
+    let mut num_cleaned = 0;
+    loop {
+        let res = batch_delete_func(log, &*conn)?;
+        num_cleaned += res.count;
+        info!(log, "Cleaned batch"; "num_cleaned" => num_cleaned);
+
+        if res.count < 1 {
+            break;
+        }
+    }
+
+    Ok(num_cleaned)
 }
 
 #[cfg(test)]
