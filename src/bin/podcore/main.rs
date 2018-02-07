@@ -19,6 +19,7 @@ use podcore::api;
 use podcore::error_helpers;
 use podcore::errors::*;
 use podcore::graphql;
+use podcore::mediators::cleaner::Cleaner;
 use podcore::mediators::directory_podcast_searcher::DirectoryPodcastSearcher;
 use podcore::mediators::podcast_crawler::PodcastCrawler;
 use podcore::mediators::podcast_reingester::PodcastReingester;
@@ -64,6 +65,11 @@ fn main() {
                 .arg_from_usage("-p, --port [PORT] 'Port to bind server to'"),
         )
         .subcommand(
+            SubCommand::with_name("clean")
+                .about("Cleans the database (should be run periodically)")
+                .arg_from_usage("--run-once 'Run only one time instead of looping'"),
+        )
+        .subcommand(
             SubCommand::with_name("crawl")
                 .about("Crawls the web to retrieve podcasts that need to be updated")
                 .arg_from_usage("--run-once 'Run only one time instead of looping'"),
@@ -88,6 +94,7 @@ fn main() {
     let res = match matches.subcommand_name() {
         Some("add") => add_podcast(matches, &options),
         Some("api") => serve_api(matches, &options),
+        Some("clean") => clean(matches, &options),
         Some("crawl") => crawl_podcasts(matches, &options),
         Some("error") => trigger_error(matches, &options),
         Some("reingest") => reingest_podcasts(matches, &options),
@@ -128,6 +135,31 @@ fn add_podcast(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
         }.run(&log(options))?;
     }
     Ok(())
+}
+
+fn clean(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
+    let log = log(options);
+    let matches = matches.subcommand_matches("clean").unwrap();
+    let mut num_loops = 0;
+    let run_once = matches.is_present("run-once");
+
+    loop {
+        let res = Cleaner {
+            pool: pool(options.num_connections)?.clone(),
+        }.run(&log)?;
+
+        num_loops += 1;
+        info!(log, "Finished work loop"; "num_loops" => num_loops, "num_cleaned" => res.num_cleaned);
+
+        if run_once {
+            break (Ok(()));
+        }
+
+        if res.num_cleaned < 1 {
+            info!(log, "No rows cleaned -- sleeping"; "seconds" => SLEEP_SECONDS);
+            thread::sleep(Duration::from_secs(SLEEP_SECONDS));
+        }
+    }
 }
 
 fn crawl_podcasts(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {

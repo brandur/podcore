@@ -44,11 +44,14 @@ impl Cleaner {
             let _ = worker.join();
         }
 
-        Ok(RunResult {})
+        // TODO: This should be a real number
+        Ok(RunResult { num_cleaned: 0 })
     }
 }
 
-pub struct RunResult {}
+pub struct RunResult {
+    pub num_cleaned: i64,
+}
 
 //
 // Private constants
