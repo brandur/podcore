@@ -73,10 +73,9 @@ pub const PODCAST_FEED_CONTENT_LIMIT: i64 = 10;
 // Exists because `sql_query` doesn't support querying into a tuple, only a
 // struct.
 #[derive(Clone, Debug, QueryableByName)]
-//#[table_name = "podcast_feed_content"]
-struct DirectoryPodcastContentTuple {
+struct DeletePodcastFeedContentBatchResults {
     #[sql_type = "BigInt"]
-    id: i64,
+    count: i64,
 }
 
 //
@@ -110,19 +109,19 @@ fn clean_podcast_feed_content(log: &Logger, pool: Pool<ConnectionManager<PgConne
         }
 
         let batch = res.unwrap();
-        if batch.len() < 1 {
+        if batch.count < 1 {
             info!(log, "Cleaned all directory podcast contents"; "num_cleaned" => num_cleaned);
             break;
         }
-        info!(log, "Cleaned batch of directory podcast contents"; "num_cleaned" => batch.len());
-        num_cleaned += batch.len();
+        info!(log, "Cleaned batch of directory podcast contents"; "num_cleaned" => batch.count);
+        num_cleaned += batch.count;
     }
 }
 
 fn delete_podcast_feed_content_batch(
     log: &Logger,
     conn: &PgConnection,
-) -> Result<Vec<DirectoryPodcastContentTuple>> {
+) -> Result<DeletePodcastFeedContentBatchResults> {
     common::log_timed(
         &log.new(o!("step" => "delete_podcast_feed_content_batch", "limit" => DELETE_LIMIT)),
         |ref _log| {
@@ -130,24 +129,24 @@ fn delete_podcast_feed_content_batch(
                 "
                     WITH numbered AS (
                         SELECT id,
-                            row_number() OVER (ORDER BY podcast_id, retrieved_at DESC)
+                            ROW_NUMBER() OVER (ORDER BY podcast_id, retrieved_at DESC)
                         FROM podcast_feed_content
                     ),
                     batch AS (
-                        SELECT id
-                        FROM numbered
-                        WHERE row_number > {}
-                        LIMIT {}
+                        DELETE FROM podcast_feed_content
+                        WHERE id IN (
+                            SELECT id
+                            FROM numbered
+                            WHERE row_number > {}
+                            LIMIT {}
+                        )
+                        RETURNING id
                     )
-
-                    DELETE FROM podcast_feed_content
-                    WHERE id IN (
-                        SELECT id
-                        FROM batch
-                    )
-                    RETURNING id",
+                    SELECT COUNT(*)
+                    FROM batch
+                    ",
                 PODCAST_FEED_CONTENT_LIMIT, DELETE_LIMIT
-            )).load::<DirectoryPodcastContentTuple>(conn)
+            )).get_result::<DeletePodcastFeedContentBatchResults>(conn)
                 .chain_err(|| "Error deleting directory podcast content batch")
         },
     )
