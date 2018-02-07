@@ -125,7 +125,7 @@ impl PodcastCrawler {
                         ORDER BY id
                         LIMIT $3",
                 ).bind::<BigInt, _>(start_id)
-                    .bind::<Text, _>(format!("{} hours", REFRESH_INTERVAL_HOURS))
+                    .bind::<Text, _>(REFRESH_INTERVAL)
                     .bind::<BigInt, _>(PAGE_SIZE)
                     .load::<PodcastTuple>(conn)
             },
@@ -145,7 +145,11 @@ pub struct RunResult {
 
 const PAGE_SIZE: i64 = 100;
 
-static REFRESH_INTERVAL_HOURS: i64 = 1;
+// Target interval at which we want to refresh every podcast feed.
+//
+// Should be formatted as a string that's coercable to the Postgres interval
+// type.
+static REFRESH_INTERVAL: &'static str = "1 hours";
 
 //
 // Private types
