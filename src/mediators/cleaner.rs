@@ -348,6 +348,59 @@ mod tests {
         }
     }
 
+    fn insert_directory_podcast(_log: &Logger, conn: &PgConnection) -> model::DirectoryPodcast {
+        let mut rng = rand::thread_rng();
+
+        let directory = model::Directory::itunes(&conn).unwrap();
+
+        let dir_podcast_ins = insertable::DirectoryPodcast {
+            directory_id: directory.id,
+            feed_url:     "https://example.com/feed.xml".to_owned(),
+            podcast_id:   None,
+            title:        "Example Podcast".to_owned(),
+            vendor_id:    rng.gen_ascii_chars().take(50).collect(),
+        };
+
+        diesel::insert_into(schema::directory_podcast::table)
+            .values(&dir_podcast_ins)
+            .get_result(conn)
+            .unwrap()
+    }
+
+    fn insert_directory_podcast_directory_search(
+        _log: &Logger,
+        conn: &PgConnection,
+        dir_podcast: &model::DirectoryPodcast,
+        search: &model::DirectorySearch,
+    ) {
+        let join_ins = insertable::DirectoryPodcastDirectorySearch {
+            directory_podcast_id: dir_podcast.id,
+            directory_search_id:  search.id,
+        };
+
+        diesel::insert_into(schema::directory_podcast_directory_search::table)
+            .values(&join_ins)
+            .execute(conn)
+            .unwrap();
+    }
+
+    fn insert_directory_search(_log: &Logger, conn: &PgConnection) -> model::DirectorySearch {
+        let mut rng = rand::thread_rng();
+
+        let directory = model::Directory::itunes(&conn).unwrap();
+
+        let search_ins = insertable::DirectorySearch {
+            directory_id: directory.id,
+            query:        rng.gen_ascii_chars().take(50).collect(),
+            retrieved_at: Utc::now(),
+        };
+
+        diesel::insert_into(schema::directory_search::table)
+            .values(&search_ins)
+            .get_result(conn)
+            .unwrap()
+    }
+
     fn insert_podcast(log: &Logger, conn: &PgConnection) -> model::Podcast {
         let mut rng = rand::thread_rng();
         PodcastUpdater {
