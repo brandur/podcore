@@ -318,6 +318,20 @@ mod tests {
 
     #[test]
     #[ignore]
+    fn test_clean_directory_podcast() {
+        let mut bootstrap = TestBootstrap::new();
+
+        let _dir_podcast = insert_directory_podcast(&bootstrap.log, &*bootstrap.conn);
+
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
+
+        assert_eq!(1, res.num_directory_podcast_cleaned);
+        assert_eq!(1, res.num_cleaned);
+    }
+
+    #[test]
+    #[ignore]
     fn test_clean_directory_search() {
         let mut bootstrap = TestBootstrap::new();
 
