@@ -168,13 +168,17 @@ fn delete_directory_search_batch(log: &Logger, conn: &PgConnection) -> Result<De
             // This works because directory_podcast_directory_search is ON DELETE CASCADE
             diesel::sql_query(
                 "
-                    WITH batch AS (
+                    WITH expired AS (
+                        SELECT id
+                        FROM directory_search
+                        WHERE retrieved_at < NOW() - $1::interval
+                        LIMIT $2
+                    ),
+                    batch AS (
                         DELETE FROM directory_search
                         WHERE id IN (
                             SELECT id
-                            FROM directory_search
-                            WHERE retrieved_at > NOW() - $1::interval
-                            LIMIT $2
+                            FROM expired
                         )
                         RETURNING id
                     )
@@ -298,8 +302,8 @@ mod tests {
 
         // Expect to have cleaned all except the limit number of rows
         let expected_num_cleaned = num_contents + 1 - PODCAST_FEED_CONTENT_LIMIT;
-        assert_eq!(expected_num_cleaned, res.num_cleaned);
         assert_eq!(expected_num_cleaned, res.num_podcast_feed_content_cleaned);
+        assert_eq!(expected_num_cleaned, res.num_cleaned);
 
         // Expect to have exactly the limit left in the database plus one more for the
         // other podcast
@@ -309,6 +313,29 @@ mod tests {
                 .count()
                 .first(&*bootstrap.conn)
         );
+    }
+
+    #[test]
+    #[ignore]
+    fn test_clean_directory_search() {
+        let mut bootstrap = TestBootstrap::new();
+
+        let dir_podcast = insert_directory_podcast(&bootstrap.log, &*bootstrap.conn);
+        let search = insert_directory_search(&bootstrap.log, &*bootstrap.conn);
+        insert_directory_podcast_directory_search(
+            &bootstrap.log,
+            &*bootstrap.conn,
+            &dir_podcast,
+            &search,
+        );
+
+        {
+            let (mut mediator, log) = bootstrap.mediator();
+            let res = mediator.run(&log).unwrap();
+
+            assert_eq!(0, res.num_directory_search_cleaned);
+            assert_eq!(0, res.num_cleaned);
+        }
     }
 
     //
