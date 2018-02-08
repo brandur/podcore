@@ -26,9 +26,7 @@ pub struct PodcastReingester {
 
 impl PodcastReingester {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
-        common::log_timed(&log.new(o!("step" => file!())), |ref log| {
-            self.run_inner(&log)
-        })
+        common::log_timed(&log.new(o!("step" => file!())), |log| self.run_inner(log))
     }
 
     pub fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
@@ -46,12 +44,12 @@ impl PodcastReingester {
                 workers.push(thread::Builder::new()
                     .name(thread_name)
                     .spawn(move || {
-                        work(&log, pool_clone, work_recv_clone);
+                        work(&log, &pool_clone, &work_recv_clone);
                     })
                     .map_err(Error::from)?);
             }
 
-            self.page_podcasts(log, work_send)?
+            self.page_podcasts(log, &work_send)?
 
             // `work_send` is dropped, which unblocks our threads' select, passes them a
             // `None` result, and lets them to drop back to main
@@ -70,18 +68,18 @@ impl PodcastReingester {
     // Steps
     //
 
-    fn page_podcasts(&mut self, log: &Logger, work_send: Sender<PodcastTuple>) -> Result<i64> {
+    fn page_podcasts(&mut self, log: &Logger, work_send: &Sender<PodcastTuple>) -> Result<i64> {
         let log = log.new(o!("thread" => "control"));
-        common::log_timed(&log.new(o!("step" => "page_podcasts")), |ref log| {
+        common::log_timed(&log.new(o!("step" => "page_podcasts")), |log| {
             let conn = &*(self.pool.get().map_err(Error::from))?;
 
             let mut last_id = 0i64;
             let mut num_podcasts = 0i64;
             loop {
-                let podcast_tuples = Self::select_podcasts(&log, &*conn, last_id)?;
+                let podcast_tuples = Self::select_podcasts(log, &*conn, last_id)?;
 
                 // If no results came back, we're done
-                if podcast_tuples.len() == 0 {
+                if podcast_tuples.is_empty() {
                     info!(log, "All podcasts consumed -- finishing");
                     break;
                 }
@@ -105,7 +103,7 @@ impl PodcastReingester {
     ) -> Result<Vec<PodcastTuple>> {
         let res = common::log_timed(
             &log.new(o!("step" => "query_podcasts", "start_id" => start_id)),
-            |ref _log| {
+            |_log| {
                 // Fell back to `sql_query` because implementing this in Diesel's query language
                 // has proven to be somewhere between frustrating difficult to impossible.
                 //
@@ -186,8 +184,8 @@ struct PodcastTuple {
 
 fn work(
     log: &Logger,
-    pool: Pool<ConnectionManager<PgConnection>>,
-    work_recv: Receiver<PodcastTuple>,
+    pool: &Pool<ConnectionManager<PgConnection>>,
+    work_recv: &Receiver<PodcastTuple>,
 ) {
     let conn = match pool.try_get() {
         Some(conn) => conn,
@@ -224,13 +222,13 @@ fn work(
 
                     feed_url:    feed_url,
                     url_fetcher: &mut URLFetcherPassThrough { data: Arc::new(content) },
-                }.run(&log);
+                }.run(log);
 
                 if let Err(e) = res {
-                    error_helpers::print_error(&log, &e);
+                    error_helpers::print_error(log, &e);
 
-                    if let Err(inner_e) = error_helpers::report_error(&log, &e) {
-                        error_helpers::print_error(&log, &inner_e);
+                    if let Err(inner_e) = error_helpers::report_error(log, &e) {
+                        error_helpers::print_error(log, &inner_e);
                     }
                 }
             },

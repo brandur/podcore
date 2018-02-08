@@ -10,14 +10,14 @@ where
 {
     let start = precise_time_ns();
     info!(log, "Start");
-    let res = f(&log);
+    let res = f(log);
     let elapsed = precise_time_ns() - start;
     let (div, unit) = unit(elapsed);
     info!(log, "Finish"; "elapsed" => format!("{:.*}{}", 3, ((elapsed as f64) / div), unit));
     res
 }
 
-pub fn log_body_sample(log: &Logger, status: StatusCode, body: &Vec<u8>) {
+pub fn log_body_sample(log: &Logger, status: StatusCode, body: &[u8]) {
     let sample = body.iter().take(100).cloned().collect::<Vec<u8>>();
     let string = String::from_utf8_lossy(sample.as_slice()).replace("\n", "");
     info!(log, "Response (sample)"; "status" => status.to_string(), "body" => format!("{}...", string));

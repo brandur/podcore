@@ -35,9 +35,9 @@ pub struct PodcastUpdater<'a> {
 
 impl<'a> PodcastUpdater<'a> {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
-        common::log_timed(&log.new(o!("step" => file!())), |ref log| {
+        common::log_timed(&log.new(o!("step" => file!())), |log| {
             self.conn
-                .transaction::<_, Error, _>(|| self.run_inner(&log))
+                .transaction::<_, Error, _>(|| self.run_inner(log))
                 .chain_err(|| "Error in database transaction")
         })
     }
@@ -49,10 +49,10 @@ impl<'a> PodcastUpdater<'a> {
         let sha256_hash = content_hash(&body);
 
         let body = String::from_utf8(body).chain_err(|| "Error decoding to UTF-8")?;
-        let (raw_podcast, raw_episodes) = Self::parse_feed(&log, body.as_str())?;
+        let (raw_podcast, raw_episodes) = Self::parse_feed(log, body.as_str())?;
 
         // Convert raw podcast data into something that's database compatible.
-        let ins_podcast = Self::convert_podcast(&log, &raw_podcast)?;
+        let ins_podcast = Self::convert_podcast(log, &raw_podcast)?;
 
         // To make runs of this mediator idempotent we first check whether there's an
         // existing podcast record that has a URL that matches the one we're
@@ -62,11 +62,11 @@ impl<'a> PodcastUpdater<'a> {
         // directories have two entries for the same podcast with different URLs (say
         // one is the newer version that old one 301s to), this should still
         // work.
-        let podcast = self.upsert_podcast(&log, &ins_podcast, final_url.as_str())?;
+        let podcast = self.upsert_podcast(log, &ins_podcast, final_url.as_str())?;
 
         // The final URL of the feed may be different than what a directory gave us.
         // Whatever it is, make sure that it's associated with the podcast.
-        let location = self.upsert_podcast_feed_location(&log, &podcast, final_url)?;
+        let location = self.upsert_podcast_feed_location(log, &podcast, final_url)?;
 
         // Check to see if we already have a content record that matches our calculated
         // hash. If so, that means that we've already successfully processed
@@ -84,9 +84,9 @@ impl<'a> PodcastUpdater<'a> {
         // operation because a feed's body can be quite large.
         self.upsert_podcast_feed_content(log, &podcast, body, sha256_hash)?;
 
-        let ins_episodes = Self::convert_episodes(&log, raw_episodes, &podcast)?;
+        let ins_episodes = Self::convert_episodes(log, raw_episodes, &podcast)?;
 
-        let episodes = self.upsert_episodes(&log, ins_episodes)?;
+        let episodes = self.upsert_episodes(log, &ins_episodes)?;
 
         Ok(RunResult {
             episodes: Some(episodes),
@@ -106,7 +106,7 @@ impl<'a> PodcastUpdater<'a> {
     ) -> Result<bool> {
         let matching_content_count: i64 = common::log_timed(
             &log.new(o!("step" => "query_podcast_feed_content")),
-            |ref _log| {
+            |_log| {
                 schema::podcast_feed_content::table
                     .filter(
                         schema::podcast_feed_content::podcast_id
@@ -126,12 +126,12 @@ impl<'a> PodcastUpdater<'a> {
         raws: Vec<raw::Episode>,
         podcast: &model::Podcast,
     ) -> Result<Vec<insertable::Episode>> {
-        common::log_timed(&log.new(o!("step" => "convert_episodes")), |ref log| {
+        common::log_timed(&log.new(o!("step" => "convert_episodes")), |log| {
             let num_candidates = raws.len();
             let mut episodes = Vec::with_capacity(num_candidates);
 
             for raw in raws {
-                match validate_episode(&raw, &podcast)
+                match validate_episode(&raw, podcast)
                     .chain_err(|| format!("Failed to convert: {:?}", raw))?
                 {
                     EpisodeOrInvalid::Valid(e) => episodes.push(e),
@@ -139,7 +139,7 @@ impl<'a> PodcastUpdater<'a> {
                         message: m,
                         guid: g,
                     } => error!(log, "Invalid episode in feed: {}", m;
-                            "episode-guid" => g, "podcast" => podcast.id.clone(),
+                            "episode-guid" => g, "podcast" => podcast.id,
                             "podcast_title" => podcast.title.clone()),
                 }
             }
@@ -153,8 +153,8 @@ impl<'a> PodcastUpdater<'a> {
     fn convert_podcast(log: &Logger, raw_podcast: &raw::Podcast) -> Result<insertable::Podcast> {
         common::log_timed(
             &log.new(o!("step" => "convert_podcast")),
-            |ref _log| -> Result<insertable::Podcast> {
-                match validate_podcast(&raw_podcast)
+            |_log| -> Result<insertable::Podcast> {
+                match validate_podcast(raw_podcast)
                     .chain_err(|| format!("Failed to convert: {:?}", raw_podcast))?
                 {
                     PodcastOrInvalid::Valid(p) => Ok(p),
@@ -166,7 +166,7 @@ impl<'a> PodcastUpdater<'a> {
 
     fn fetch_feed(&mut self, log: &Logger) -> Result<(Vec<u8>, String)> {
         let (status, body, final_url) =
-            common::log_timed(&log.new(o!("step" => "fetch_feed")), |ref _log| {
+            common::log_timed(&log.new(o!("step" => "fetch_feed")), |_log| {
                 self.url_fetcher.fetch(Request::new(
                     Method::Get,
                     Uri::from_str(self.feed_url.as_str()).map_err(Error::from)?,
@@ -182,7 +182,7 @@ impl<'a> PodcastUpdater<'a> {
     }
 
     fn parse_feed(log: &Logger, data: &str) -> Result<(raw::Podcast, Vec<raw::Episode>)> {
-        common::log_timed(&log.new(o!("step" => "parse_feed")), |ref log| {
+        common::log_timed(&log.new(o!("step" => "parse_feed")), |log| {
             let mut buf = Vec::new();
 
             let mut reader = Reader::from_str(data);
@@ -190,12 +190,11 @@ impl<'a> PodcastUpdater<'a> {
 
             loop {
                 match reader.read_event(&mut buf) {
-                    Ok(Event::Start(ref e)) => match e.name() {
-                        b"rss" => {
-                            return parse_rss(&log, &mut reader);
+                    Ok(Event::Start(ref e)) => {
+                        if e.name() == b"rss" {
+                            return parse_rss(log, &mut reader);
                         }
-                        _ => (),
-                    },
+                    }
                     Ok(Event::Eof) => break,
                     _ => {}
                 }
@@ -208,11 +207,11 @@ impl<'a> PodcastUpdater<'a> {
     fn upsert_episodes(
         &mut self,
         log: &Logger,
-        ins_episodes: Vec<insertable::Episode>,
+        ins_episodes: &[insertable::Episode],
     ) -> Result<Vec<model::Episode>> {
-        common::log_timed(&log.new(o!("step" => "upsert_episodes")), |ref _log| {
+        common::log_timed(&log.new(o!("step" => "upsert_episodes")), |_log| {
             Ok(diesel::insert_into(schema::episode::table)
-                .values(&ins_episodes)
+                .values(ins_episodes)
                 .on_conflict((schema::episode::podcast_id, schema::episode::guid))
                 .do_update()
                 .set((
@@ -237,21 +236,21 @@ impl<'a> PodcastUpdater<'a> {
         final_url: &str,
     ) -> Result<model::Podcast> {
         let podcast_id: Option<i64> =
-            common::log_timed(&log.new(o!("step" => "query_podcast")), |ref _log| {
+            common::log_timed(&log.new(o!("step" => "query_podcast")), |_log| {
                 schema::podcast::table
                     .left_join(
                         schema::podcast_feed_location::table
                             .on(schema::podcast::id.eq(schema::podcast_feed_location::podcast_id)),
                     )
                     .filter(schema::podcast_feed_location::feed_url.eq(final_url))
-                    .select((schema::podcast::id))
+                    .select(schema::podcast::id)
                     .first(self.conn)
                     .optional()
             })?;
 
         if let Some(podcast_id) = podcast_id {
             info!(log, "Found existing podcast ID {}", podcast_id);
-            common::log_timed(&log.new(o!("step" => "update_podcast")), |ref _log| {
+            common::log_timed(&log.new(o!("step" => "update_podcast")), |_log| {
                 diesel::update(schema::podcast::table.filter(schema::podcast::id.eq(podcast_id)))
                     .set(ins_podcast)
                     .get_result(self.conn)
@@ -259,7 +258,7 @@ impl<'a> PodcastUpdater<'a> {
             })
         } else {
             info!(log, "No existing podcast found; inserting new");
-            common::log_timed(&log.new(o!("step" => "insert_podcast")), |ref _log| {
+            common::log_timed(&log.new(o!("step" => "insert_podcast")), |_log| {
                 diesel::insert_into(schema::podcast::table)
                     .values(ins_podcast)
                     .get_result(self.conn)
@@ -283,7 +282,7 @@ impl<'a> PodcastUpdater<'a> {
         };
         common::log_timed(
             &log.new(o!("step" => "upsert_podcast_feed_content")),
-            |ref _log| {
+            |_log| {
                 diesel::insert_into(schema::podcast_feed_content::table)
                     .values(&content_ins)
                     .on_conflict((
@@ -317,7 +316,7 @@ impl<'a> PodcastUpdater<'a> {
         };
         common::log_timed(
             &log.new(o!("step" => "upsert_podcast_feed_location")),
-            |ref _log| {
+            |_log| {
                 diesel::insert_into(schema::podcast_feed_location::table)
                     .values(&location_ins)
                     .on_conflict((
@@ -416,7 +415,7 @@ enum EpisodeOrInvalid {
     },
 }
 
-/// See comment on EpisodeOrInvalid.
+/// See comment on `EpisodeOrInvalid`.
 enum PodcastOrInvalid {
     Valid(insertable::Podcast),
     Invalid { message: &'static str },
@@ -478,9 +477,9 @@ mod raw {
 // Private functions
 //
 
-fn content_hash(content: &Vec<u8>) -> String {
+fn content_hash(content: &[u8]) -> String {
     let mut sha = Sha256::new();
-    sha.input(content.clone().as_slice());
+    sha.input(content);
     sha.result_str()
 }
 
@@ -488,7 +487,7 @@ fn element_text<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<Stri
     let mut buf = Vec::new();
     match reader.read_event(&mut buf) {
         Ok(Event::CData(ref e)) | Ok(Event::Text(ref e)) => {
-            let val = safe_unescape_and_decode(log, e, &reader);
+            let val = safe_unescape_and_decode(log, e, reader);
             return Ok(val.clone());
         }
         _ => {}
@@ -508,17 +507,14 @@ fn parse_channel<R: BufRead>(
     loop {
         match reader.read_event(&mut buf) {
             Ok(Event::Start(ref e)) => match e.name() {
-                b"item" => episodes.push(parse_item(&log, reader)?),
+                b"item" => episodes.push(parse_item(log, reader)?),
                 b"language" => podcast.language = Some(element_text(log, reader)?),
                 b"link" => podcast.link_url = Some(element_text(log, reader)?),
                 b"media:thumbnail" => for attr in e.attributes().with_checks(false) {
                     if let Ok(attr) = attr {
-                        match attr.key {
-                            b"url" => {
-                                podcast.image_url = Some(attr.unescape_and_decode_value(&reader)
-                                    .chain_err(|| "Error unescaping and decoding attribute")?);
-                            }
-                            _ => (),
+                        if attr.key == b"url" {
+                            podcast.image_url = Some(attr.unescape_and_decode_value(reader)
+                                .chain_err(|| "Error unescaping and decoding attribute")?);
                         }
                     }
                 },
@@ -572,12 +568,11 @@ fn parse_rss<R: BufRead>(
 
     loop {
         match reader.read_event(&mut buf) {
-            Ok(Event::Start(ref e)) => match e.name() {
-                b"channel" => {
-                    return parse_channel(&log, reader);
+            Ok(Event::Start(ref e)) => {
+                if e.name() == b"channel" {
+                    return parse_channel(log, reader);
                 }
-                _ => (),
-            },
+            }
             Ok(Event::Eof) => break,
             _ => {}
         }
@@ -598,11 +593,11 @@ fn parse_item<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<raw::E
                     if let Ok(attr) = attr {
                         match attr.key {
                             b"type" => {
-                                episode.media_type = Some(attr.unescape_and_decode_value(&reader)
+                                episode.media_type = Some(attr.unescape_and_decode_value(reader)
                                     .chain_err(|| "Error unescaping and decoding attribute")?);
                             }
                             b"url" => {
-                                episode.media_url = Some(attr.unescape_and_decode_value(&reader)
+                                episode.media_url = Some(attr.unescape_and_decode_value(reader)
                                     .chain_err(|| "Error unescaping and decoding attribute")?);
                             }
                             _ => (),
@@ -662,7 +657,7 @@ fn validate_episode(raw: &raw::Episode, podcast: &model::Podcast) -> Result<Epis
 
     Ok(EpisodeOrInvalid::Valid(insertable::Episode {
         description:  raw.description.clone(),
-        explicit:     raw.explicit.clone(),
+        explicit:     raw.explicit,
         guid:         raw.guid.clone().unwrap(),
         link_url:     raw.link_url.clone(),
         media_url:    raw.media_url.clone().unwrap(),

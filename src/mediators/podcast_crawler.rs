@@ -26,9 +26,7 @@ pub struct PodcastCrawler {
 
 impl PodcastCrawler {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
-        common::log_timed(&log.new(o!("step" => file!())), |ref log| {
-            self.run_inner(&log)
-        })
+        common::log_timed(&log.new(o!("step" => file!())), |log| self.run_inner(log))
     }
 
     pub fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
@@ -47,12 +45,12 @@ impl PodcastCrawler {
                 workers.push(thread::Builder::new()
                     .name(thread_name)
                     .spawn(move || {
-                        work(&log, pool_clone, factory_clone, work_recv_clone);
+                        work(&log, &pool_clone, &*factory_clone, &work_recv_clone);
                     })
                     .map_err(Error::from)?);
             }
 
-            self.page_podcasts(log, work_send)?
+            self.page_podcasts(log, &work_send)?
 
             // `work_send` is dropped, which unblocks our threads' select, passes them a
             // `None` result, and lets them to drop back to main
@@ -71,18 +69,18 @@ impl PodcastCrawler {
     // Steps
     //
 
-    fn page_podcasts(&mut self, log: &Logger, work_send: Sender<PodcastTuple>) -> Result<i64> {
+    fn page_podcasts(&mut self, log: &Logger, work_send: &Sender<PodcastTuple>) -> Result<i64> {
         let log = log.new(o!("thread" => "control"));
-        common::log_timed(&log.new(o!("step" => "page_podcasts")), |ref log| {
+        common::log_timed(&log.new(o!("step" => "page_podcasts")), |log| {
             let conn = &*(self.pool.get().map_err(Error::from))?;
 
             let mut last_id = 0i64;
             let mut num_podcasts = 0i64;
             loop {
-                let podcasts = Self::select_podcasts(&log, &*conn, last_id)?;
+                let podcasts = Self::select_podcasts(log, &*conn, last_id)?;
 
                 // If no results came back, we're done
-                if podcasts.len() == 0 {
+                if podcasts.is_empty() {
                     info!(log, "All podcasts consumed -- finishing");
                     break;
                 }
@@ -106,7 +104,7 @@ impl PodcastCrawler {
     ) -> Result<Vec<PodcastTuple>> {
         let res = common::log_timed(
             &log.new(o!("step" => "query_podcasts", "start_id" => start_id)),
-            |ref _log| {
+            |_log| {
                 // See comment on similar function in podcast_reingester -- unfortunately
                 // Diesel's query DSL cannot handle subselects.
                 diesel::sql_query(
@@ -173,9 +171,9 @@ struct PodcastTuple {
 
 fn work(
     log: &Logger,
-    pool: Pool<ConnectionManager<PgConnection>>,
-    url_fetcher_factory: Box<URLFetcherFactory>,
-    work_recv: Receiver<PodcastTuple>,
+    pool: &Pool<ConnectionManager<PgConnection>>,
+    url_fetcher_factory: &URLFetcherFactory,
+    work_recv: &Receiver<PodcastTuple>,
 ) {
     let conn = match pool.try_get() {
         Some(conn) => conn,
@@ -210,13 +208,13 @@ fn work(
                     disable_shortcut: false,
                     feed_url:    feed_url,
                     url_fetcher: &mut *url_fetcher,
-                }.run(&log);
+                }.run(log);
 
                 if let Err(e) = res {
-                    error_helpers::print_error(&log, &e);
+                    error_helpers::print_error(log, &e);
 
-                    if let Err(inner_e) = error_helpers::report_error(&log, &e) {
-                        error_helpers::print_error(&log, &inner_e);
+                    if let Err(inner_e) = error_helpers::report_error(log, &e) {
+                        error_helpers::print_error(log, &inner_e);
                     }
                 }
             },

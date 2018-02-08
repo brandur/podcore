@@ -16,9 +16,7 @@ pub struct Cleaner {
 
 impl Cleaner {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
-        common::log_timed(&log.new(o!("step" => file!())), |ref log| {
-            self.run_inner(&log)
-        })
+        common::log_timed(&log.new(o!("step" => file!())), |log| self.run_inner(log))
     }
 
     pub fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
@@ -29,7 +27,7 @@ impl Cleaner {
 
             thread::Builder::new()
                 .name(thread_name)
-                .spawn(move || work(&log, pool_clone, &delete_directory_podcast_batch))
+                .spawn(move || work(&log, &pool_clone, &delete_directory_podcast_batch))
                 .map_err(Error::from)?
         };
 
@@ -40,7 +38,7 @@ impl Cleaner {
 
             thread::Builder::new()
                 .name(thread_name)
-                .spawn(move || work(&log, pool_clone, &delete_directory_search_batch))
+                .spawn(move || work(&log, &pool_clone, &delete_directory_search_batch))
                 .map_err(Error::from)?
         };
 
@@ -51,7 +49,7 @@ impl Cleaner {
 
             thread::Builder::new()
                 .name(thread_name)
-                .spawn(move || work(&log, pool_clone, &delete_podcast_feed_content_batch))
+                .spawn(move || work(&log, &pool_clone, &delete_podcast_feed_content_batch))
                 .map_err(Error::from)?
         };
 
@@ -127,7 +125,7 @@ struct DeleteResults {
 fn delete_directory_podcast_batch(log: &Logger, conn: &PgConnection) -> Result<DeleteResults> {
     common::log_timed(
         &log.new(o!("step" => "delete_directory_podcast_batch", "limit" => DELETE_LIMIT)),
-        |ref _log| {
+        |_log| {
             // The idea here is to find "dangling" directory podcasts. Those are directory
             // podcasts that were never reified into a full podcast record (no
             // one ever clicked through to them) and for which there are
@@ -164,7 +162,7 @@ fn delete_directory_podcast_batch(log: &Logger, conn: &PgConnection) -> Result<D
 fn delete_directory_search_batch(log: &Logger, conn: &PgConnection) -> Result<DeleteResults> {
     common::log_timed(
         &log.new(o!("step" => "delete_directory_search_batch", "limit" => DELETE_LIMIT)),
-        |ref _log| {
+        |_log| {
             // This works because directory_podcast_directory_search is ON DELETE CASCADE
             diesel::sql_query(
                 "
@@ -196,7 +194,7 @@ fn delete_directory_search_batch(log: &Logger, conn: &PgConnection) -> Result<De
 fn delete_podcast_feed_content_batch(log: &Logger, conn: &PgConnection) -> Result<DeleteResults> {
     common::log_timed(
         &log.new(o!("step" => "delete_podcast_feed_content_batch", "limit" => DELETE_LIMIT)),
-        |ref _log| {
+        |_log| {
             diesel::sql_query(
                 "
                     WITH numbered AS (
@@ -231,7 +229,7 @@ fn delete_podcast_feed_content_batch(log: &Logger, conn: &PgConnection) -> Resul
 
 fn work(
     log: &Logger,
-    pool: Pool<ConnectionManager<PgConnection>>,
+    pool: &Pool<ConnectionManager<PgConnection>>,
     batch_delete_func: &Fn(&Logger, &PgConnection) -> Result<DeleteResults>,
 ) -> Result<i64> {
     let conn = match pool.try_get() {

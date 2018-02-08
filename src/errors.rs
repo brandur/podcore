@@ -39,7 +39,7 @@ error_chain!{
 pub fn error_strings(error: &Error) -> Vec<String> {
     error
         .iter()
-        .map(|ref e| e.to_string())
+        .map(|e| e.to_string())
         .collect::<Vec<_>>()
         .iter()
         .cloned()

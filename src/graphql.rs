@@ -30,13 +30,10 @@ impl Context {
 
 impl juniper::Context for Context {}
 
+#[derive(Default)]
 pub struct Mutation;
 
-impl Mutation {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
+impl Mutation {}
 
 graphql_object!(
     Mutation: Context | &self | {
@@ -83,11 +80,11 @@ impl<'a> From<&'a model::Episode> for EpisodeObject {
         EpisodeObject {
             id:           e.id.to_string(),
             description:  e.description.clone(),
-            explicit:     e.explicit.clone(),
+            explicit:     e.explicit,
             link_url:     e.link_url.clone(),
             media_url:    e.media_url.to_owned(),
             podcast_id:   e.podcast_id.to_string(),
-            published_at: e.published_at.clone(),
+            published_at: e.published_at,
             title:        e.title.to_owned(),
         }
     }
@@ -125,13 +122,10 @@ impl<'a> From<&'a model::Podcast> for PodcastObject {
     }
 }
 
+#[derive(Default)]
 pub struct Query;
 
-impl Query {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
+impl Query {}
 
 graphql_object!(Query: Context |&self| {
     description: "The root query object of the schema."
@@ -153,7 +147,7 @@ graphql_object!(Query: Context |&self| {
             .load::<model::Episode>(&*context.get_conn()?)
             .chain_err(|| "Error loading episodes from the database")?
             .iter()
-            .map(|p| EpisodeObject::from(p) )
+            .map(EpisodeObject::from)
             .collect::<Vec<_>>();
         Ok(results)
     }
@@ -166,7 +160,7 @@ graphql_object!(Query: Context |&self| {
             .load::<model::Podcast>(&*context.get_conn()?)
             .chain_err(|| "Error loading podcasts from the database")?
             .iter()
-            .map(|p| PodcastObject::from(p) )
+            .map(PodcastObject::from)
             .collect::<Vec<_>>();
         Ok(results)
     }

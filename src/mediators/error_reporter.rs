@@ -24,18 +24,16 @@ pub struct ErrorReporter<'a> {
 
 impl<'a> ErrorReporter<'a> {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
-        common::log_timed(&log.new(o!("step" => file!())), |ref log| {
-            self.run_inner(&log)
-        })
+        common::log_timed(&log.new(o!("step" => file!())), |log| self.run_inner(log))
     }
 
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
-        let error_strings = errors::error_strings(&self.error);
-        let stack_trace = build_stack_trace(&self.error);
-        let event = build_event(error_strings, stack_trace);
+        let error_strings = errors::error_strings(self.error);
+        let stack_trace = build_stack_trace(self.error);
+        let event = build_event(&error_strings, stack_trace);
         info!(log, "Generated event"; "event_id" => event.event_id.as_str());
 
-        let req = build_request(&self.creds, event)?;
+        let req = build_request(self.creds, &event)?;
         post_error(log, self.url_fetcher, req)?;
 
         Ok(RunResult {})
@@ -58,7 +56,7 @@ pub struct SentryCredentials {
 
 impl SentryCredentials {
     /// {SCHEME}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}/{PATH}{PROJECT_ID}/store/
-    fn uri<'a>(&'a self) -> &'a hyper::Uri {
+    fn uri(&self) -> &hyper::Uri {
         &self.uri
     }
 }
@@ -192,7 +190,7 @@ struct StackTrace {
 // Private functions
 //
 
-fn build_event(error_strings: Vec<String>, stack_trace: Option<StackTrace>) -> Event {
+fn build_event(error_strings: &[String], stack_trace: Option<StackTrace>) -> Event {
     Event {
         // required
         event_id:  Uuid::new_v4().simple().to_string(), // `simple` gets an unhyphenated UUID
@@ -212,14 +210,14 @@ fn build_event(error_strings: Vec<String>, stack_trace: Option<StackTrace>) -> E
         stack_trace: stack_trace,
         release:     None, // TODO: Want release,
         tags:        Default::default(),
-        environment: Some(env::var("PODCORE_ENV").unwrap_or("development".to_owned())),
+        environment: Some(env::var("PODCORE_ENV").unwrap_or_else(|_| "development".to_owned())),
         modules:     Default::default(),
         extra:       Default::default(),
         fingerprint: vec!["{{ default }}".to_owned()], // Maybe further customize the fingerprint
     }
 }
 
-fn build_request(creds: &SentryCredentials, event: Event) -> Result<Request> {
+fn build_request(creds: &SentryCredentials, event: &Event) -> Result<Request> {
     let mut req = Request::new(Method::Post, creds.uri().clone());
     let body = serde_json::to_string(&event).map_err(Error::from)?;
     {
@@ -251,17 +249,16 @@ fn build_request(creds: &SentryCredentials, event: Event) -> Result<Request> {
 }
 
 fn build_stack_trace(error: &Error) -> Option<StackTrace> {
-    if error.backtrace().is_none() {
-        return None;
-    }
+    // Returns if None.
+    error.backtrace()?;
 
     let backtrace = error.backtrace().unwrap();
     let mut frames = vec![];
 
-    for ref frame in backtrace.frames() {
+    for frame in backtrace.frames() {
         // TODO: Is this right? Some frames can have no symbols. Try to check backtrace
         // implementation.
-        for ref symbol in frame.symbols() {
+        for symbol in frame.symbols() {
             let name = symbol
                 .name()
                 .map_or("unresolved symbol".to_owned(), |name| name.to_string());
@@ -282,7 +279,7 @@ fn build_stack_trace(error: &Error) -> Option<StackTrace> {
 fn post_error(log: &Logger, url_fetcher: &mut URLFetcher, req: Request) -> Result<()> {
     let (status, body, _final_url) = common::log_timed(
         &log.new(o!("step" => "post_error")),
-        |ref _log| url_fetcher.fetch(req),
+        |_log| url_fetcher.fetch(req),
     )?;
     common::log_body_sample(log, status, &body);
     ensure!(

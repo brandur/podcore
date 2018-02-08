@@ -22,9 +22,9 @@ pub struct DirectoryPodcastUpdater<'a> {
 
 impl<'a> DirectoryPodcastUpdater<'a> {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
-        common::log_timed(&log.new(o!("step" => file!())), |ref log| {
+        common::log_timed(&log.new(o!("step" => file!())), |log| {
             self.conn
-                .transaction::<_, Error, _>(move || self.run_inner(&log))
+                .transaction::<_, Error, _>(move || self.run_inner(log))
                 .chain_err(|| "Error in database transaction")
         })
     }
@@ -35,12 +35,12 @@ impl<'a> DirectoryPodcastUpdater<'a> {
             disable_shortcut: false,
             feed_url:         self.dir_podcast.feed_url.clone(),
             url_fetcher:      self.url_fetcher,
-        }.run(&log);
+        }.run(log);
 
         match res {
             Ok(res) => {
-                self.save_dir_podcast(&log, &res.podcast)?;
-                self.delete_exception(&log)?;
+                self.save_dir_podcast(log, &res.podcast)?;
+                self.delete_exception(log)?;
 
                 Ok(RunResult {
                     dir_podcast:    self.dir_podcast,
@@ -49,9 +49,9 @@ impl<'a> DirectoryPodcastUpdater<'a> {
                 })
             }
             Err(e) => {
-                let ex = self.upsert_exception(&log, &e)?;
-                if let Err(inner_e) = error_helpers::report_error(&log, &e) {
-                    error_helpers::print_error(&log, &inner_e);
+                let ex = self.upsert_exception(log, &e)?;
+                if let Err(inner_e) = error_helpers::report_error(log, &e) {
+                    error_helpers::print_error(log, &inner_e);
                 }
 
                 Ok(RunResult {
@@ -68,7 +68,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
     //
 
     fn delete_exception(&mut self, log: &Logger) -> Result<()> {
-        common::log_timed(&log.new(o!("step" => "save_dir_podcast")), |ref _log| {
+        common::log_timed(&log.new(o!("step" => "save_dir_podcast")), |_log| {
             diesel::delete(schema::directory_podcast_exception::table.filter(
                 schema::directory_podcast_exception::directory_podcast_id.eq(self.dir_podcast.id),
             )).execute(self.conn)
@@ -78,10 +78,10 @@ impl<'a> DirectoryPodcastUpdater<'a> {
     }
 
     fn save_dir_podcast(&mut self, log: &Logger, podcast: &model::Podcast) -> Result<()> {
-        common::log_timed(&log.new(o!("step" => "save_dir_podcast")), |ref _log| {
+        common::log_timed(&log.new(o!("step" => "save_dir_podcast")), |_log| {
             self.dir_podcast.podcast_id = Some(podcast.id);
             self.dir_podcast
-                .save_changes::<model::DirectoryPodcast>(&self.conn)
+                .save_changes::<model::DirectoryPodcast>(self.conn)
                 .chain_err(|| "Error saving changes to directory podcast")
         })?;
         Ok(())
@@ -98,11 +98,11 @@ impl<'a> DirectoryPodcastUpdater<'a> {
             occurred_at:          Utc::now(),
         };
 
-        common::log_timed(&log.new(o!("step" => "upsert_exception")), |ref _log| {
+        common::log_timed(&log.new(o!("step" => "upsert_exception")), |_log| {
             Ok(
                 diesel::insert_into(schema::directory_podcast_exception::table)
                     .values(&ins_ex)
-                    .on_conflict((schema::directory_podcast_exception::directory_podcast_id))
+                    .on_conflict(schema::directory_podcast_exception::directory_podcast_id)
                     .do_update()
                     .set((
                         schema::directory_podcast_exception::errors

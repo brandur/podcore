@@ -31,7 +31,7 @@ pub struct URLFetcherFactoryLive {}
 
 impl URLFetcherFactory for URLFetcherFactoryLive {
     fn clone_box(&self) -> Box<URLFetcherFactory> {
-        return Box::new(Self {});
+        Box::new(Self {})
     }
 
     fn create(&self) -> Box<URLFetcher> {
@@ -53,9 +53,9 @@ pub struct URLFetcherFactoryPassThrough {
 
 impl URLFetcherFactory for URLFetcherFactoryPassThrough {
     fn clone_box(&self) -> Box<URLFetcherFactory> {
-        return Box::new(Self {
+        Box::new(Self {
             data: Arc::clone(&self.data),
-        });
+        })
     }
 
     fn create(&self) -> Box<URLFetcher> {
@@ -105,6 +105,6 @@ pub struct URLFetcherPassThrough {
 impl URLFetcher for URLFetcherPassThrough {
     fn fetch(&mut self, req: Request) -> Result<(StatusCode, Vec<u8>, String)> {
         let uri = req.uri().to_string();
-        return Ok((StatusCode::Ok, (*self.data).clone(), uri));
+        Ok((StatusCode::Ok, (*self.data).clone(), uri))
     }
 }

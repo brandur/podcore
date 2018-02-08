@@ -92,13 +92,13 @@ fn main() {
     let options = parse_global_options(&matches);
 
     let res = match matches.subcommand_name() {
-        Some("add") => add_podcast(matches, &options),
-        Some("api") => serve_api(matches, &options),
-        Some("clean") => clean(matches, &options),
-        Some("crawl") => crawl_podcasts(matches, &options),
-        Some("error") => trigger_error(matches, &options),
-        Some("reingest") => reingest_podcasts(matches, &options),
-        Some("search") => search_podcasts(matches, &options),
+        Some("add") => add_podcast(&matches, &options),
+        Some("api") => serve_api(&matches, &options),
+        Some("clean") => clean(&matches, &options),
+        Some("crawl") => crawl_podcasts(&matches, &options),
+        Some("error") => trigger_error(&matches, &options),
+        Some("reingest") => reingest_podcasts(&matches, &options),
+        Some("search") => search_podcasts(&matches, &options),
         None => {
             app.print_help().unwrap();
             Ok(())
@@ -106,7 +106,7 @@ fn main() {
         _ => unreachable!(),
     };
     if let Err(ref e) = res {
-        handle_error(&e, &options);
+        handle_error(e, &options);
     };
 }
 
@@ -114,7 +114,7 @@ fn main() {
 // Subcommands
 //
 
-fn add_podcast(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
+fn add_podcast(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("add").unwrap();
 
     let core = Core::new().unwrap();
@@ -126,7 +126,7 @@ fn add_podcast(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
         core:   core,
     };
 
-    for url in matches.values_of("URL").unwrap().collect::<Vec<_>>().iter() {
+    for url in matches.values_of("URL").unwrap().collect::<Vec<_>>() {
         PodcastUpdater {
             conn:             &*connection()?,
             disable_shortcut: false,
@@ -137,7 +137,7 @@ fn add_podcast(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
     Ok(())
 }
 
-fn clean(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
+fn clean(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let log = log(options);
     let matches = matches.subcommand_matches("clean").unwrap();
     let mut num_loops = 0;
@@ -166,7 +166,7 @@ fn clean(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
     }
 }
 
-fn crawl_podcasts(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
+fn crawl_podcasts(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let log = log(options);
     let matches = matches.subcommand_matches("crawl").unwrap();
     let mut num_loops = 0;
@@ -193,7 +193,7 @@ fn crawl_podcasts(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
     }
 }
 
-fn reingest_podcasts(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
+fn reingest_podcasts(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let _matches = matches.subcommand_matches("reingest").unwrap();
 
     PodcastReingester {
@@ -203,7 +203,7 @@ fn reingest_podcasts(matches: ArgMatches, options: &GlobalOptions) -> Result<()>
     Ok(())
 }
 
-fn search_podcasts(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
+fn search_podcasts(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("search").unwrap();
 
     let core = Core::new().unwrap();
@@ -224,10 +224,10 @@ fn search_podcasts(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
     Ok(())
 }
 
-fn serve_api(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
+fn serve_api(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("api").unwrap();
 
-    let port = env::var("PORT").unwrap_or("8080".to_owned());
+    let port = env::var("PORT").unwrap_or_else(|_| "8080".to_owned());
     let port = matches.value_of("PORT").unwrap_or_else(|| port.as_str());
     let host = format!("0.0.0.0:{}", port);
     let log = log(options);
@@ -241,8 +241,8 @@ fn serve_api(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
 
     let graphql_endpoint = GraphQLHandler::new(
         move |_: &mut Request| -> graphql::Context { graphql::Context::new(pool.clone()) },
-        graphql::Query::new(),
-        graphql::Mutation::new(),
+        graphql::Query::default(),
+        graphql::Mutation::default(),
     );
     mount.mount("/graphql", graphql_endpoint);
 
@@ -253,7 +253,7 @@ fn serve_api(matches: ArgMatches, options: &GlobalOptions) -> Result<()> {
     Ok(())
 }
 
-fn trigger_error(matches: ArgMatches, _options: &GlobalOptions) -> Result<()> {
+fn trigger_error(matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
     let _matches = matches.subcommand_matches("error").unwrap();
 
     // We chain some extra context on to add a little flavor and to help show what
@@ -324,12 +324,12 @@ fn parse_global_options(matches: &ArgMatches) -> GlobalOptions {
 
         num_connections: env::var("NUM_CONNECTIONS")
             .map(|s| s.parse::<u32>().unwrap())
-            .unwrap_or(
+            .unwrap_or_else(|_| {
                 matches
                     .value_of("NUM_CONNECTIONS")
                     .map(|s| s.parse::<u32>().unwrap())
-                    .unwrap_or(NUM_CONNECTIONS),
-            ),
+                    .unwrap_or(NUM_CONNECTIONS)
+            }),
 
         quiet: matches.is_present("quiet"),
     }

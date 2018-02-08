@@ -48,7 +48,7 @@ pub fn report_error(log: &Logger, error: &Error) -> Result<()> {
 
             let _res = ErrorReporter {
                 creds:       &creds,
-                error:       &error,
+                error:       error,
                 url_fetcher: &mut url_fetcher,
             }.run(log)?;
             Ok(())
