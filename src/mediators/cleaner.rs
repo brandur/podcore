@@ -272,6 +272,7 @@ mod tests {
     use r2d2::PooledConnection;
     use rand::Rng;
     use std::sync::Arc;
+    use time::Duration;
 
     #[test]
     #[ignore]
@@ -329,12 +330,28 @@ mod tests {
             &search,
         );
 
+        // Search is recent and isn't cleaned
         {
             let (mut mediator, log) = bootstrap.mediator();
             let res = mediator.run(&log).unwrap();
 
             assert_eq!(0, res.num_directory_search_cleaned);
             assert_eq!(0, res.num_cleaned);
+        }
+
+        diesel::update(schema::directory_search::table)
+            .filter(schema::directory_search::id.eq(search.id))
+            .set(schema::directory_search::retrieved_at.eq(Utc::now() - Duration::weeks(2)))
+            .execute(&*bootstrap.conn)
+            .unwrap();
+
+        // Search is now expired and gets removed
+        {
+            let (mut mediator, log) = bootstrap.mediator();
+            let res = mediator.run(&log).unwrap();
+
+            assert_eq!(1, res.num_directory_search_cleaned);
+            assert_eq!(1, res.num_cleaned);
         }
     }
 
