@@ -196,19 +196,21 @@ fn delete_podcast_feed_content_batch(log: &Logger, conn: &PgConnection) -> Resul
             diesel::sql_query(
                 "
                     WITH numbered AS (
-                        SELECT podcast_id,
-                            ROW_NUMBER() OVER (ORDER BY podcast_id, retrieved_at DESC)
+                        SELECT id, podcast_id,
+                            ROW_NUMBER() OVER (PARTITION BY podcast_id ORDER BY retrieved_at DESC)
                         FROM podcast_feed_content
+                    ),
+                    excess AS (
+                        SELECT id, podcast_id, row_number
+                        FROM numbered
+                        WHERE row_number > $1
+                        LIMIT $2
                     ),
                     batch AS (
                         DELETE FROM podcast_feed_content
                         WHERE id IN (
                             SELECT id
-                            FROM podcast_feed_content
-                                INNER JOIN numbered
-                                    ON podcast_feed_content.podcast_id = numbered.podcast_id
-                            WHERE row_number > $1
-                            LIMIT $2
+                            FROM excess
                         )
                         RETURNING id
                     )
