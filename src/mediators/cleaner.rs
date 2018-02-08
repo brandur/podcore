@@ -196,7 +196,7 @@ fn delete_podcast_feed_content_batch(log: &Logger, conn: &PgConnection) -> Resul
             diesel::sql_query(
                 "
                     WITH numbered AS (
-                        SELECT id,
+                        SELECT podcast_id,
                             ROW_NUMBER() OVER (ORDER BY podcast_id, retrieved_at DESC)
                         FROM podcast_feed_content
                     ),
@@ -204,7 +204,9 @@ fn delete_podcast_feed_content_batch(log: &Logger, conn: &PgConnection) -> Resul
                         DELETE FROM podcast_feed_content
                         WHERE id IN (
                             SELECT id
-                            FROM numbered
+                            FROM podcast_feed_content
+                                INNER JOIN numbered
+                                    ON podcast_feed_content.podcast_id = numbered.podcast_id
                             WHERE row_number > $1
                             LIMIT $2
                         )
@@ -275,8 +277,15 @@ mod tests {
         for _i in 0..num_contents {
             insert_podcast_feed_content(&bootstrap.log, &*bootstrap.conn, &podcast);
         }
+
+        // This is here to ensure that a different podcast's records (one that only has
+        // one content row) aren't affected by the run
+        let _ = insert_podcast(&bootstrap.log, &*bootstrap.conn);
+
         assert_eq!(
-            Ok(num_contents + 1), // + 1 for the one inserted with the original podcast
+            // +2: one inserted with the original podcast and one more for the other podcast
+            // inserted above
+            Ok(num_contents + 2),
             schema::podcast_feed_content::table
                 .count()
                 .first(&*bootstrap.conn)
@@ -290,9 +299,10 @@ mod tests {
         assert_eq!(expected_num_cleaned, res.num_cleaned);
         assert_eq!(expected_num_cleaned, res.num_podcast_feed_content_cleaned);
 
-        // Expect to have exactly the limit left in the database
+        // Expect to have exactly the limit left in the database plus one more for the
+        // other podcast
         assert_eq!(
-            Ok(PODCAST_FEED_CONTENT_LIMIT),
+            Ok(PODCAST_FEED_CONTENT_LIMIT + 1),
             schema::podcast_feed_content::table
                 .count()
                 .first(&*bootstrap.conn)
