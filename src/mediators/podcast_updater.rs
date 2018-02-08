@@ -532,6 +532,7 @@ fn parse_channel<R: BufRead>(
     Ok((podcast, episodes))
 }
 
+#[cfg_attr(feature = "cargo-clippy", allow(trivial_regex))]
 fn parse_date_time(s: &str) -> Result<DateTime<Utc>> {
     lazy_static! {
         static ref RULES: Vec<DateTimeReplaceRule> = vec!(

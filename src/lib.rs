@@ -40,10 +40,16 @@ extern crate uuid;
 pub mod api;
 pub mod error_helpers;
 pub mod errors;
+
+// Clippy linting problems that come from within juniper macros and which can't
+// currently be fixed.
+#[cfg_attr(feature = "cargo-clippy", allow(double_parens, op_ref))]
 pub mod graphql;
+
 #[cfg(test)]
 #[macro_use]
 mod macros;
+
 pub mod mediators;
 mod model;
 pub mod url_fetcher;
