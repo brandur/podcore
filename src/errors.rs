@@ -17,6 +17,7 @@ error_chain!{
         HyperUri(::hyper::error::UriError);
         Json(::serde_json::Error);
         UrlParse(::url::ParseError);
+        Xml(::quick_xml::errors::Error);
     }
 
     errors {

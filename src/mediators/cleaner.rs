@@ -4,7 +4,7 @@ use mediators::common;
 use diesel;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
-use diesel::types::{BigInt, Text};
+use diesel::sql_types::{BigInt, Text};
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use slog::Logger;
