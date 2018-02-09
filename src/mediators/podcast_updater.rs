@@ -184,17 +184,19 @@ impl<'a> PodcastUpdater<'a> {
     fn parse_feed(log: &Logger, data: &str) -> Result<(raw::Podcast, Vec<raw::Episode>)> {
         common::log_timed(&log.new(o!("step" => "parse_feed")), |log| {
             let mut buf = Vec::new();
+            let mut skip_buf = Vec::new();
 
             let mut reader = Reader::from_str(data);
             reader.trim_text(true).expand_empty_elements(true);
 
             loop {
                 match reader.read_event(&mut buf) {
-                    Ok(Event::Start(ref e)) => {
-                        if e.name() == b"rss" {
+                    Ok(Event::Start(ref e)) => match e.name() {
+                        b"rss" => {
                             return parse_rss(log, &mut reader);
                         }
-                    }
+                        name => reader.read_to_end(name, &mut skip_buf)?,
+                    },
                     Ok(Event::Eof) => break,
                     _ => {}
                 }
@@ -503,6 +505,7 @@ fn parse_channel<R: BufRead>(
     let mut buf = Vec::new();
     let mut episodes: Vec<raw::Episode> = Vec::new();
     let mut podcast = raw::Podcast::new();
+    let mut skip_buf = Vec::new();
 
     loop {
         match reader.read_event(&mut buf) {
@@ -522,7 +525,7 @@ fn parse_channel<R: BufRead>(
                     podcast.title = Some(element_text(log, reader)?);
                     info!(log, "Parsed title"; "title" => podcast.title.clone());
                 }
-                _ => (),
+                name => reader.read_to_end(name, &mut skip_buf)?,
             },
             Ok(Event::Eof) => break,
             _ => {}
@@ -566,14 +569,16 @@ fn parse_rss<R: BufRead>(
     reader: &mut Reader<R>,
 ) -> Result<(raw::Podcast, Vec<raw::Episode>)> {
     let mut buf = Vec::new();
+    let mut skip_buf = Vec::new();
 
     loop {
         match reader.read_event(&mut buf) {
-            Ok(Event::Start(ref e)) => {
-                if e.name() == b"channel" {
+            Ok(Event::Start(ref e)) => match e.name() {
+                b"channel" => {
                     return parse_channel(log, reader);
                 }
-            }
+                name => reader.read_to_end(name, &mut skip_buf)?,
+            },
             Ok(Event::Eof) => break,
             _ => {}
         }
@@ -585,6 +590,7 @@ fn parse_rss<R: BufRead>(
 fn parse_item<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<raw::Episode> {
     let mut buf = Vec::new();
     let mut episode = raw::Episode::new();
+    let mut skip_buf = Vec::new();
 
     loop {
         match reader.read_event(&mut buf) {
@@ -610,7 +616,7 @@ fn parse_item<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<raw::E
                 b"link" => episode.link_url = Some(element_text(log, reader)?),
                 b"pubDate" => episode.published_at = Some(element_text(log, reader)?),
                 b"title" => episode.title = Some(element_text(log, reader)?),
-                _ => (),
+                name => reader.read_to_end(name, &mut skip_buf)?,
             },
             Ok(Event::Eof) => break,
             _ => {}
