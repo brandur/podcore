@@ -121,6 +121,7 @@ fn add_podcast(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let client = Client::configure()
         .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
         .build(&core.handle());
+    let log = log(options);
     let mut url_fetcher = URLFetcherLive {
         client: client,
         core:   core,
@@ -128,11 +129,11 @@ fn add_podcast(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
 
     for url in matches.values_of("URL").unwrap().collect::<Vec<_>>() {
         PodcastUpdater {
-            conn:             &*connection()?,
+            conn:             &*connection(&log)?,
             disable_shortcut: false,
             feed_url:         url.to_owned().to_owned(),
             url_fetcher:      &mut url_fetcher,
-        }.run(&log(options))?;
+        }.run(&log)?;
     }
     Ok(())
 }
@@ -145,7 +146,7 @@ fn clean(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
 
     loop {
         let res = Cleaner {
-            pool: pool(options.num_connections)?.clone(),
+            pool: pool(&log, options.num_connections)?.clone(),
         }.run(&log)?;
 
         num_loops += 1;
@@ -175,7 +176,7 @@ fn crawl_podcasts(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     loop {
         let res = PodcastCrawler {
             num_workers:         options.num_connections - 1,
-            pool:                pool(options.num_connections)?.clone(),
+            pool:                pool(&log, options.num_connections)?.clone(),
             url_fetcher_factory: Box::new(URLFetcherFactoryLive {}),
         }.run(&log)?;
 
@@ -194,12 +195,13 @@ fn crawl_podcasts(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
 }
 
 fn reingest_podcasts(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
+    let log = log(options);
     let _matches = matches.subcommand_matches("reingest").unwrap();
 
     PodcastReingester {
         num_workers: options.num_connections - 1,
-        pool:        pool(options.num_connections)?.clone(),
-    }.run(&log(options))?;
+        pool:        pool(&log, options.num_connections)?.clone(),
+    }.run(&log)?;
     Ok(())
 }
 
@@ -210,6 +212,7 @@ fn search_podcasts(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> 
     let client = Client::configure()
         .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
         .build(&core.handle());
+    let log = log(options);
     let mut url_fetcher = URLFetcherLive {
         client: client,
         core:   core,
@@ -217,10 +220,10 @@ fn search_podcasts(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> 
 
     let query = matches.value_of("QUERY").unwrap();
     DirectoryPodcastSearcher {
-        conn:        &*connection()?,
+        conn:        &*connection(&log)?,
         query:       query.to_owned(),
         url_fetcher: &mut url_fetcher,
-    }.run(&log(options))?;
+    }.run(&log)?;
     Ok(())
 }
 
@@ -232,7 +235,7 @@ fn serve_api(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let host = format!("0.0.0.0:{}", port);
     let log = log(options);
     let num_connections = options.num_connections;
-    let pool = pool(num_connections)?;
+    let pool = pool(&log, num_connections)?;
 
     let mut mount = Mount::new();
 
@@ -281,8 +284,8 @@ struct GlobalOptions {
 
 /// Acquires a single connection from a connection pool. This is suitable for use a shortcut by
 /// subcommands that only need to run one single-threaded task.
-fn connection() -> Result<PooledConnection<ConnectionManager<PgConnection>>> {
-    pool(1)?.get().map_err(Error::from)
+fn connection(log: &Logger) -> Result<PooledConnection<ConnectionManager<PgConnection>>> {
+    pool(log, 1)?.get().map_err(Error::from)
 }
 
 fn handle_error(e: &Error, options: &GlobalOptions) {
@@ -336,7 +339,7 @@ fn parse_global_options(matches: &ArgMatches) -> GlobalOptions {
 }
 
 /// Initializes and returns a connection pool suitable for use across threads.
-fn pool(num_connections: u32) -> Result<Pool<ConnectionManager<PgConnection>>> {
+fn pool(_log: &Logger, num_connections: u32) -> Result<Pool<ConnectionManager<PgConnection>>> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let manager = ConnectionManager::<PgConnection>::new(database_url);
     Pool::builder()
