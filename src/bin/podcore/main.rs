@@ -90,15 +90,16 @@ fn main() {
 
     let matches = app.clone().get_matches();
     let options = parse_global_options(&matches);
+    let log = log(&options);
 
     let res = match matches.subcommand_name() {
-        Some("add") => add_podcast(&matches, &options),
-        Some("api") => serve_api(&matches, &options),
-        Some("clean") => clean(&matches, &options),
-        Some("crawl") => crawl_podcasts(&matches, &options),
-        Some("error") => trigger_error(&matches, &options),
-        Some("reingest") => reingest_podcasts(&matches, &options),
-        Some("search") => search_podcasts(&matches, &options),
+        Some("add") => add_podcast(&log, &matches, &options),
+        Some("api") => serve_api(&log, &matches, &options),
+        Some("clean") => clean(&log, &matches, &options),
+        Some("crawl") => crawl_podcasts(&log, &matches, &options),
+        Some("error") => trigger_error(&log, &matches, &options),
+        Some("reingest") => reingest_podcasts(&log, &matches, &options),
+        Some("search") => search_podcasts(&log, &matches, &options),
         None => {
             app.print_help().unwrap();
             Ok(())
@@ -106,7 +107,7 @@ fn main() {
         _ => unreachable!(),
     };
     if let Err(ref e) = res {
-        handle_error(e, &options);
+        handle_error(&log, e);
     };
 }
 
@@ -114,14 +115,13 @@ fn main() {
 // Subcommands
 //
 
-fn add_podcast(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
+fn add_podcast(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("add").unwrap();
 
     let core = Core::new().unwrap();
     let client = Client::configure()
         .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
         .build(&core.handle());
-    let log = log(options);
     let mut url_fetcher = URLFetcherLive {
         client: client,
         core:   core,
@@ -129,25 +129,24 @@ fn add_podcast(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
 
     for url in matches.values_of("URL").unwrap().collect::<Vec<_>>() {
         PodcastUpdater {
-            conn:             &*connection(&log)?,
+            conn:             &*connection(log)?,
             disable_shortcut: false,
             feed_url:         url.to_owned().to_owned(),
             url_fetcher:      &mut url_fetcher,
-        }.run(&log)?;
+        }.run(log)?;
     }
     Ok(())
 }
 
-fn clean(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
-    let log = log(options);
+fn clean(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("clean").unwrap();
     let mut num_loops = 0;
     let run_once = matches.is_present("run-once");
 
     loop {
         let res = Cleaner {
-            pool: pool(&log, options.num_connections)?.clone(),
-        }.run(&log)?;
+            pool: pool(log, options.num_connections)?.clone(),
+        }.run(log)?;
 
         num_loops += 1;
         info!(log, "Finished work loop";
@@ -167,8 +166,7 @@ fn clean(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     }
 }
 
-fn crawl_podcasts(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
-    let log = log(options);
+fn crawl_podcasts(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("crawl").unwrap();
     let mut num_loops = 0;
     let run_once = matches.is_present("run-once");
@@ -176,9 +174,9 @@ fn crawl_podcasts(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     loop {
         let res = PodcastCrawler {
             num_workers:         options.num_connections - 1,
-            pool:                pool(&log, options.num_connections)?.clone(),
+            pool:                pool(log, options.num_connections)?.clone(),
             url_fetcher_factory: Box::new(URLFetcherFactoryLive {}),
-        }.run(&log)?;
+        }.run(log)?;
 
         num_loops += 1;
         info!(log, "Finished work loop"; "num_loops" => num_loops, "num_podcasts" => res.num_podcasts);
@@ -194,25 +192,23 @@ fn crawl_podcasts(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     }
 }
 
-fn reingest_podcasts(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
-    let log = log(options);
+fn reingest_podcasts(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let _matches = matches.subcommand_matches("reingest").unwrap();
 
     PodcastReingester {
         num_workers: options.num_connections - 1,
-        pool:        pool(&log, options.num_connections)?.clone(),
-    }.run(&log)?;
+        pool:        pool(log, options.num_connections)?.clone(),
+    }.run(log)?;
     Ok(())
 }
 
-fn search_podcasts(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
+fn search_podcasts(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("search").unwrap();
 
     let core = Core::new().unwrap();
     let client = Client::configure()
         .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
         .build(&core.handle());
-    let log = log(options);
     let mut url_fetcher = URLFetcherLive {
         client: client,
         core:   core,
@@ -220,22 +216,21 @@ fn search_podcasts(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> 
 
     let query = matches.value_of("QUERY").unwrap();
     DirectoryPodcastSearcher {
-        conn:        &*connection(&log)?,
+        conn:        &*connection(log)?,
         query:       query.to_owned(),
         url_fetcher: &mut url_fetcher,
-    }.run(&log)?;
+    }.run(log)?;
     Ok(())
 }
 
-fn serve_api(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
+fn serve_api(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("api").unwrap();
 
     let port = env::var("PORT").unwrap_or_else(|_| "8080".to_owned());
     let port = matches.value_of("PORT").unwrap_or_else(|| port.as_str());
     let host = format!("0.0.0.0:{}", port);
-    let log = log(options);
     let num_connections = options.num_connections;
-    let pool = pool(&log, num_connections)?;
+    let pool = pool(log, num_connections)?;
 
     let mut mount = Mount::new();
 
@@ -250,13 +245,13 @@ fn serve_api(matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     mount.mount("/graphql", graphql_endpoint);
 
     info!(log, "API starting on: {}", host);
-    Iron::new(api::chain(&log, mount))
+    Iron::new(api::chain(log, mount))
         .http(host.as_str())
         .chain_err(|| "Error binding API")?;
     Ok(())
 }
 
-fn trigger_error(matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
+fn trigger_error(_log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
     let _matches = matches.subcommand_matches("error").unwrap();
 
     // We chain some extra context on to add a little flavor and to help show what
@@ -288,12 +283,11 @@ fn connection(log: &Logger) -> Result<PooledConnection<ConnectionManager<PgConne
     pool(log, 1)?.get().map_err(Error::from)
 }
 
-fn handle_error(e: &Error, options: &GlobalOptions) {
-    let log = log(options);
-    error_helpers::print_error(&log, e);
+fn handle_error(log: &Logger, e: &Error) {
+    error_helpers::print_error(log, e);
 
-    if let Err(inner_e) = error_helpers::report_error(&log, e) {
-        error_helpers::print_error(&log, &inner_e);
+    if let Err(inner_e) = error_helpers::report_error(log, e) {
+        error_helpers::print_error(log, &inner_e);
     }
 
     ::std::process::exit(1);
