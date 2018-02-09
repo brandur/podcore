@@ -41,8 +41,9 @@ pub mod api;
 pub mod error_helpers;
 pub mod errors;
 
-// Clippy linting problems that come from within juniper macros and which can't
-// currently be fixed.
+// Compiler and Clippy linting problems that come from within juniper macros
+// and which can't currently be fixed.
+#[allow(unused_parens)]
 #[cfg_attr(feature = "cargo-clippy", allow(double_parens, op_ref))]
 pub mod graphql;
 
