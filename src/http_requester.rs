@@ -1,10 +1,12 @@
 use errors::*;
 
 use futures::Stream;
-use hyper::{Body, Client, Request, StatusCode};
+use hyper::{Body, Client, Request, StatusCode, Uri};
 use hyper::client::HttpConnector;
+use hyper::header::Location;
 use hyper_tls::HttpsConnector;
 use slog::Logger;
+use std::str::FromStr;
 use std::sync::Arc;
 use tokio_core::reactor::Core;
 
@@ -85,6 +87,7 @@ impl HTTPRequester for HTTPRequesterLive {
         info!(log, "Executing HTTP request";
             "method" => format!("{}", req.method()), "uri" => format!("{}", req.uri()));
 
+        let method = req.method().clone();
         let uri = req.uri().to_string();
 
         let res = self.core
@@ -92,7 +95,21 @@ impl HTTPRequester for HTTPRequesterLive {
             .chain_err(|| format!("Error fetching feed URL: {}", uri))?;
         let status = res.status();
 
-        // TODO: Follow redirects
+        // Follow redirects and make sure to return the final URL in the chain unless
+        // it was a temporary redirect.
+        if status.is_redirection() {
+            let new_uri = match res.headers().get::<Location>() {
+                Some(uri) => Uri::from_str(uri).map_err(Error::from),
+                None => Err(Error::from(
+                    "Received redirection without `Location` header",
+                )),
+            }?;
+
+            let new_req = Request::new(method, new_uri);
+
+            // TODO: Only return new URL if permanent redirect.
+            return self.execute(log, new_req);
+        }
 
         let body = self.core
             .run(res.body().concat2())
