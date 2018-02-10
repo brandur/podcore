@@ -4,6 +4,7 @@
 
 CREATE TABLE directory (
     id BIGSERIAL PRIMARY KEY,
+
     name TEXT NOT NULL UNIQUE
         CHECK (char_length(name) <= 100)
 );
@@ -23,6 +24,7 @@ INSERT INTO directory (name)
 
 CREATE TABLE directory_search (
     id BIGSERIAL PRIMARY KEY,
+
     directory_id BIGINT NOT NULL
         REFERENCES directory (id) ON DELETE RESTRICT,
     query TEXT NOT NULL
@@ -80,6 +82,7 @@ CREATE UNIQUE INDEX podcast_feed_location_podcast_id_feed_url
 
 CREATE TABLE podcast_feed_content (
     id BIGSERIAL PRIMARY KEY,
+
     content TEXT NOT NULL
         CHECK (char_length(content) <= 1000000),
     podcast_id BIGINT NOT NULL
