@@ -89,7 +89,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
 
         let (status, body, _final_url) =
             common::log_timed(&log.new(o!("step" => "fetch_results")), |_log| {
-                self.url_fetcher.fetch(
+                self.url_fetcher.execute(
                     log,
                     Request::new(
                         Method::Get,

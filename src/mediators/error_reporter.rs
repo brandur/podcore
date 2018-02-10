@@ -279,7 +279,7 @@ fn build_stack_trace(error: &Error) -> Option<StackTrace> {
 fn post_error(log: &Logger, url_fetcher: &mut URLFetcher, req: Request) -> Result<()> {
     let (status, body, _final_url) = common::log_timed(
         &log.new(o!("step" => "post_error")),
-        |_log| url_fetcher.fetch(log, req),
+        |_log| url_fetcher.execute(log, req),
     )?;
     common::log_body_sample(log, status, &body);
     ensure!(

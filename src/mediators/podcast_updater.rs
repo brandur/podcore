@@ -167,7 +167,7 @@ impl<'a> PodcastUpdater<'a> {
     fn fetch_feed(&mut self, log: &Logger) -> Result<(Vec<u8>, String)> {
         let (status, body, final_url) =
             common::log_timed(&log.new(o!("step" => "fetch_feed")), |_log| {
-                self.url_fetcher.fetch(
+                self.url_fetcher.execute(
                     log,
                     Request::new(
                         Method::Get,
