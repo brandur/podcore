@@ -134,7 +134,7 @@ fn delete_directory_podcast_batch(log: &Logger, conn: &PgConnection) -> Result<D
             // cleaner below, but they won't remove any directory podcast records).
             diesel::sql_query(
                 "
-                    WITH batch AS (
+                    WITH deleted_batch AS (
                         DELETE FROM directory_podcast
                         WHERE id IN (
                             SELECT id
@@ -150,7 +150,7 @@ fn delete_directory_podcast_batch(log: &Logger, conn: &PgConnection) -> Result<D
                         RETURNING id
                     )
                     SELECT COUNT(*)
-                    FROM batch
+                    FROM deleted_batch
                 ",
             ).bind::<BigInt, _>(DELETE_LIMIT)
                 .get_result::<DeleteResults>(conn)
@@ -172,7 +172,7 @@ fn delete_directory_search_batch(log: &Logger, conn: &PgConnection) -> Result<De
                         WHERE retrieved_at < NOW() - $1::interval
                         LIMIT $2
                     ),
-                    batch AS (
+                    deleted_batch AS (
                         DELETE FROM directory_search
                         WHERE id IN (
                             SELECT id
@@ -181,7 +181,7 @@ fn delete_directory_search_batch(log: &Logger, conn: &PgConnection) -> Result<De
                         RETURNING id
                     )
                     SELECT COUNT(*)
-                    FROM batch
+                    FROM deleted_batch
                 ",
             ).bind::<Text, _>(DIRECTORY_SEARCH_DELETE_HORIZON)
                 .bind::<BigInt, _>(DELETE_LIMIT)
@@ -199,7 +199,10 @@ fn delete_podcast_feed_content_batch(log: &Logger, conn: &PgConnection) -> Resul
                 "
                     WITH numbered AS (
                         SELECT id, podcast_id,
-                            ROW_NUMBER() OVER (PARTITION BY podcast_id ORDER BY retrieved_at DESC)
+                            ROW_NUMBER() OVER (
+                                PARTITION BY podcast_id
+                                ORDER BY retrieved_at DESC
+                            )
                         FROM podcast_feed_content
                     ),
                     excess AS (
@@ -208,7 +211,7 @@ fn delete_podcast_feed_content_batch(log: &Logger, conn: &PgConnection) -> Resul
                         WHERE row_number > $1
                         LIMIT $2
                     ),
-                    batch AS (
+                    deleted_batch AS (
                         DELETE FROM podcast_feed_content
                         WHERE id IN (
                             SELECT id
@@ -217,7 +220,7 @@ fn delete_podcast_feed_content_batch(log: &Logger, conn: &PgConnection) -> Resul
                         RETURNING id
                     )
                     SELECT COUNT(*)
-                    FROM batch
+                    FROM deleted_batch
                 ",
             ).bind::<BigInt, _>(PODCAST_FEED_CONTENT_LIMIT)
                 .bind::<BigInt, _>(DELETE_LIMIT)
