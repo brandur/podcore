@@ -4,6 +4,7 @@ use futures::Stream;
 use hyper::{Body, Client, Request, StatusCode};
 use hyper::client::HttpConnector;
 use hyper_tls::HttpsConnector;
+use slog::Logger;
 use std::sync::Arc;
 use tokio_core::reactor::Core;
 
@@ -70,8 +71,7 @@ impl URLFetcherFactory for URLFetcherFactoryPassThrough {
 //
 
 pub trait URLFetcher {
-    // TODO: StatusCode should just be entire Response struct
-    fn fetch(&mut self, req: Request) -> Result<(StatusCode, Vec<u8>, String)>;
+    fn fetch(&mut self, log: &Logger, req: Request) -> Result<(StatusCode, Vec<u8>, String)>;
 }
 
 #[derive(Debug)]
@@ -81,7 +81,7 @@ pub struct URLFetcherLive {
 }
 
 impl URLFetcher for URLFetcherLive {
-    fn fetch(&mut self, req: Request) -> Result<(StatusCode, Vec<u8>, String)> {
+    fn fetch(&mut self, _log: &Logger, req: Request) -> Result<(StatusCode, Vec<u8>, String)> {
         let uri = req.uri().to_string();
         let res = self.core
             .run(self.client.request(req))
@@ -103,7 +103,7 @@ pub struct URLFetcherPassThrough {
 }
 
 impl URLFetcher for URLFetcherPassThrough {
-    fn fetch(&mut self, req: Request) -> Result<(StatusCode, Vec<u8>, String)> {
+    fn fetch(&mut self, _log: &Logger, req: Request) -> Result<(StatusCode, Vec<u8>, String)> {
         let uri = req.uri().to_string();
         Ok((StatusCode::Ok, (*self.data).clone(), uri))
     }

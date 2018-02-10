@@ -89,11 +89,15 @@ impl<'a> DirectoryPodcastSearcher<'a> {
 
         let (status, body, _final_url) =
             common::log_timed(&log.new(o!("step" => "fetch_results")), |_log| {
-                self.url_fetcher.fetch(Request::new(
-                    Method::Get,
-                    Uri::from_str(format!("https://itunes.apple.com/search?{}", encoded).as_str())
-                        .map_err(Error::from)?,
-                ))
+                self.url_fetcher.fetch(
+                    log,
+                    Request::new(
+                        Method::Get,
+                        Uri::from_str(
+                            format!("https://itunes.apple.com/search?{}", encoded).as_str(),
+                        ).map_err(Error::from)?,
+                    ),
+                )
             })?;
         common::log_body_sample(log, status, &body);
 

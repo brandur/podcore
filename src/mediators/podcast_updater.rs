@@ -167,10 +167,13 @@ impl<'a> PodcastUpdater<'a> {
     fn fetch_feed(&mut self, log: &Logger) -> Result<(Vec<u8>, String)> {
         let (status, body, final_url) =
             common::log_timed(&log.new(o!("step" => "fetch_feed")), |_log| {
-                self.url_fetcher.fetch(Request::new(
-                    Method::Get,
-                    Uri::from_str(self.feed_url.as_str()).map_err(Error::from)?,
-                ))
+                self.url_fetcher.fetch(
+                    log,
+                    Request::new(
+                        Method::Get,
+                        Uri::from_str(self.feed_url.as_str()).map_err(Error::from)?,
+                    ),
+                )
             })?;
         common::log_body_sample(log, status, &body);
         ensure!(
