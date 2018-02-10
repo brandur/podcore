@@ -88,7 +88,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         info!(log, "Encoded query"; "query" => encoded.clone());
 
         let (status, body, _final_url) =
-            common::log_timed(&log.new(o!("step" => "fetch_results")), |_log| {
+            common::log_timed(&log.new(o!("step" => "fetch_results")), |log| {
                 self.http_requester.execute(
                     log,
                     Request::new(
