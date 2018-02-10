@@ -1,7 +1,7 @@
 use errors;
 use errors::*;
+use http_requester::HTTPRequester;
 use mediators::common;
-use url_fetcher::URLFetcher;
 
 use chrono::Utc;
 use hyper;
@@ -17,9 +17,9 @@ use url;
 use uuid::Uuid;
 
 pub struct ErrorReporter<'a> {
-    pub creds:       &'a SentryCredentials,
-    pub error:       &'a Error,
-    pub url_fetcher: &'a mut URLFetcher,
+    pub creds:          &'a SentryCredentials,
+    pub error:          &'a Error,
+    pub http_requester: &'a mut HTTPRequester,
 }
 
 impl<'a> ErrorReporter<'a> {
@@ -34,7 +34,7 @@ impl<'a> ErrorReporter<'a> {
         info!(log, "Generated event"; "event_id" => event.event_id.as_str());
 
         let req = build_request(self.creds, &event)?;
-        post_error(log, self.url_fetcher, req)?;
+        post_error(log, self.http_requester, req)?;
 
         Ok(RunResult {})
     }
@@ -276,10 +276,10 @@ fn build_stack_trace(error: &Error) -> Option<StackTrace> {
     Some(StackTrace { frames: frames })
 }
 
-fn post_error(log: &Logger, url_fetcher: &mut URLFetcher, req: Request) -> Result<()> {
+fn post_error(log: &Logger, http_requester: &mut HTTPRequester, req: Request) -> Result<()> {
     let (status, body, _final_url) = common::log_timed(
         &log.new(o!("step" => "post_error")),
-        |_log| url_fetcher.execute(log, req),
+        |_log| http_requester.execute(log, req),
     )?;
     common::log_body_sample(log, status, &body);
     ensure!(
@@ -296,9 +296,9 @@ fn post_error(log: &Logger, url_fetcher: &mut URLFetcher, req: Request) -> Resul
 
 #[cfg(test)]
 mod tests {
+    use http_requester::HTTPRequesterPassThrough;
     use mediators::error_reporter::*;
     use test_helpers;
-    use url_fetcher::URLFetcherPassThrough;
 
     use std::sync::Arc;
 
@@ -320,21 +320,21 @@ mod tests {
     // Encapsulates the structures that are needed for tests to run. One should
     // only be obtained by invoking TestBootstrap::new().
     struct TestBootstrap {
-        creds:       SentryCredentials,
-        error:       Error,
-        log:         Logger,
-        url_fetcher: URLFetcherPassThrough,
+        creds:          SentryCredentials,
+        error:          Error,
+        log:            Logger,
+        http_requester: HTTPRequesterPassThrough,
     }
 
     impl TestBootstrap {
         fn new(error: Error) -> TestBootstrap {
             TestBootstrap {
-                creds:       "https://user:pass@sentry.io/1"
+                creds:          "https://user:pass@sentry.io/1"
                     .parse::<SentryCredentials>()
                     .unwrap(),
-                error:       error,
-                log:         test_helpers::log(),
-                url_fetcher: URLFetcherPassThrough {
+                error:          error,
+                log:            test_helpers::log(),
+                http_requester: HTTPRequesterPassThrough {
                     data: Arc::new("{}".as_bytes().to_vec()),
                 },
             }
@@ -343,9 +343,9 @@ mod tests {
         fn mediator(&mut self) -> (ErrorReporter, Logger) {
             (
                 ErrorReporter {
-                    creds:       &self.creds,
-                    error:       &self.error,
-                    url_fetcher: &mut self.url_fetcher,
+                    creds:          &self.creds,
+                    error:          &self.error,
+                    http_requester: &mut self.http_requester,
                 },
                 self.log.clone(),
             )

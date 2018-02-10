@@ -53,7 +53,7 @@ mod macros;
 
 pub mod mediators;
 mod model;
-pub mod url_fetcher;
+pub mod http_requester;
 
 // Generated file: skip rustfmt
 #[cfg_attr(rustfmt, rustfmt_skip)]

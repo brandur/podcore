@@ -1,8 +1,8 @@
 use errors::*;
+use http_requester::HTTPRequester;
 use mediators::common;
 use model;
 use model::insertable;
-use url_fetcher::URLFetcher;
 
 use chrono::Utc;
 use diesel;
@@ -19,9 +19,9 @@ use time::Duration;
 use url::form_urlencoded;
 
 pub struct DirectoryPodcastSearcher<'a> {
-    pub conn:        &'a PgConnection,
-    pub query:       String,
-    pub url_fetcher: &'a mut URLFetcher,
+    pub conn:           &'a PgConnection,
+    pub query:          String,
+    pub http_requester: &'a mut HTTPRequester,
 }
 
 impl<'a> DirectoryPodcastSearcher<'a> {
@@ -89,7 +89,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
 
         let (status, body, _final_url) =
             common::log_timed(&log.new(o!("step" => "fetch_results")), |_log| {
-                self.url_fetcher.execute(
+                self.http_requester.execute(
                     log,
                     Request::new(
                         Method::Get,
@@ -338,9 +338,9 @@ struct SearchResultWrapper {
 
 #[cfg(test)]
 mod tests {
+    use http_requester::HTTPRequesterPassThrough;
     use mediators::directory_podcast_searcher::*;
     use test_helpers;
-    use url_fetcher::URLFetcherPassThrough;
 
     use r2d2::PooledConnection;
     use r2d2_diesel::ConnectionManager;
@@ -477,9 +477,9 @@ mod tests {
     // Encapsulates the structures that are needed for tests to run. One should
     // only be obtained by invoking bootstrap().
     struct TestBootstrap {
-        conn:        PooledConnection<ConnectionManager<PgConnection>>,
-        log:         Logger,
-        url_fetcher: URLFetcherPassThrough,
+        conn:           PooledConnection<ConnectionManager<PgConnection>>,
+        log:            Logger,
+        http_requester: HTTPRequesterPassThrough,
     }
 
     impl TestBootstrap {
@@ -487,9 +487,9 @@ mod tests {
             let conn = test_helpers::connection();
 
             TestBootstrap {
-                conn:        conn,
-                log:         test_helpers::log(),
-                url_fetcher: URLFetcherPassThrough {
+                conn:           conn,
+                log:            test_helpers::log(),
+                http_requester: HTTPRequesterPassThrough {
                     data: Arc::new(data.to_vec()),
                 },
             }
@@ -498,9 +498,9 @@ mod tests {
         fn mediator(&mut self) -> (DirectoryPodcastSearcher, Logger) {
             (
                 DirectoryPodcastSearcher {
-                    conn:        &*self.conn,
-                    query:       DIRECTORY_SEARCH_QUERY.to_owned(),
-                    url_fetcher: &mut self.url_fetcher,
+                    conn:           &*self.conn,
+                    query:          DIRECTORY_SEARCH_QUERY.to_owned(),
+                    http_requester: &mut self.http_requester,
                 },
                 self.log.clone(),
             )

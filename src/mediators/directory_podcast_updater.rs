@@ -1,11 +1,11 @@
 use error_helpers;
 use errors::*;
+use http_requester::HTTPRequester;
 use mediators::common;
 use mediators::podcast_updater::PodcastUpdater;
 use model;
 use model::insertable;
 use schema;
-use url_fetcher::URLFetcher;
 
 use chrono::Utc;
 use diesel;
@@ -15,9 +15,9 @@ use diesel::prelude::*;
 use slog::Logger;
 
 pub struct DirectoryPodcastUpdater<'a> {
-    pub conn:        &'a PgConnection,
-    pub dir_podcast: &'a mut model::DirectoryPodcast,
-    pub url_fetcher: &'a mut URLFetcher,
+    pub conn:           &'a PgConnection,
+    pub dir_podcast:    &'a mut model::DirectoryPodcast,
+    pub http_requester: &'a mut HTTPRequester,
 }
 
 impl<'a> DirectoryPodcastUpdater<'a> {
@@ -34,7 +34,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
             conn:             self.conn,
             disable_shortcut: false,
             feed_url:         self.dir_podcast.feed_url.clone(),
-            url_fetcher:      self.url_fetcher,
+            http_requester:   self.http_requester,
         }.run(log);
 
         match res {
@@ -128,12 +128,12 @@ pub struct RunResult<'a> {
 
 #[cfg(test)]
 mod tests {
+    use http_requester::HTTPRequesterPassThrough;
     use mediators::directory_podcast_updater::*;
     use model;
     use model::insertable;
     use schema;
     use test_helpers;
-    use url_fetcher::URLFetcherPassThrough;
 
     use diesel;
     use r2d2::PooledConnection;
@@ -207,10 +207,10 @@ mod tests {
     // Encapsulates the structures that are needed for tests to run. One should
     // only be obtained by invoking TestBootstrap::new().
     struct TestBootstrap {
-        conn:        PooledConnection<ConnectionManager<PgConnection>>,
-        dir_podcast: model::DirectoryPodcast,
-        log:         Logger,
-        url_fetcher: URLFetcherPassThrough,
+        conn:           PooledConnection<ConnectionManager<PgConnection>>,
+        dir_podcast:    model::DirectoryPodcast,
+        log:            Logger,
+        http_requester: HTTPRequesterPassThrough,
     }
 
     impl TestBootstrap {
@@ -232,10 +232,10 @@ mod tests {
                 .unwrap();
 
             TestBootstrap {
-                conn:        conn,
-                dir_podcast: dir_podcast,
-                log:         test_helpers::log(),
-                url_fetcher: URLFetcherPassThrough {
+                conn:           conn,
+                dir_podcast:    dir_podcast,
+                log:            test_helpers::log(),
+                http_requester: HTTPRequesterPassThrough {
                     data: Arc::new(data.to_vec()),
                 },
             }
@@ -244,9 +244,9 @@ mod tests {
         fn mediator(&mut self) -> (DirectoryPodcastUpdater, Logger) {
             (
                 DirectoryPodcastUpdater {
-                    conn:        &*self.conn,
-                    dir_podcast: &mut self.dir_podcast,
-                    url_fetcher: &mut self.url_fetcher,
+                    conn:           &*self.conn,
+                    dir_podcast:    &mut self.dir_podcast,
+                    http_requester: &mut self.http_requester,
                 },
                 self.log.clone(),
             )

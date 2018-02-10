@@ -1,8 +1,8 @@
 use error_helpers;
 use errors::*;
+use http_requester::HTTPRequesterFactory;
 use mediators::common;
 use mediators::podcast_updater::PodcastUpdater;
-use url_fetcher::URLFetcherFactory;
 
 use chan;
 use chan::{Receiver, Sender};
@@ -20,8 +20,8 @@ pub struct PodcastCrawler {
     // control process.
     pub num_workers: u32,
 
-    pub pool:                Pool<ConnectionManager<PgConnection>>,
-    pub url_fetcher_factory: Box<URLFetcherFactory>,
+    pub pool:                   Pool<ConnectionManager<PgConnection>>,
+    pub http_requester_factory: Box<HTTPRequesterFactory>,
 }
 
 impl PodcastCrawler {
@@ -39,7 +39,7 @@ impl PodcastCrawler {
                 let log =
                     log.new(o!("thread" => thread_name.clone(), "num_threads" => self.num_workers));
                 let pool_clone = self.pool.clone();
-                let factory_clone = self.url_fetcher_factory.clone_box();
+                let factory_clone = self.http_requester_factory.clone_box();
                 let work_recv_clone = work_recv.clone();
 
                 workers.push(thread::Builder::new()
@@ -172,7 +172,7 @@ struct PodcastTuple {
 fn work(
     log: &Logger,
     pool: &Pool<ConnectionManager<PgConnection>>,
-    url_fetcher_factory: &URLFetcherFactory,
+    http_requester_factory: &HTTPRequesterFactory,
     work_recv: &Receiver<PodcastTuple>,
 ) {
     let conn = match pool.try_get() {
@@ -186,7 +186,7 @@ fn work(
         }
     };
     debug!(log, "Thread acquired a connection");
-    let mut url_fetcher = url_fetcher_factory.create();
+    let mut http_requester = http_requester_factory.create();
 
     loop {
         chan_select! {
@@ -207,7 +207,7 @@ fn work(
                     // to be updated
                     disable_shortcut: false,
                     feed_url:    feed_url,
-                    url_fetcher: &mut *url_fetcher,
+                    http_requester: &mut *http_requester,
                 }.run(log);
 
                 if let Err(e) = res {
@@ -226,11 +226,11 @@ fn work(
 mod tests {
     extern crate rand;
 
+    use http_requester::{HTTPRequesterFactoryPassThrough, HTTPRequesterPassThrough};
     use mediators::podcast_crawler::*;
     use mediators::podcast_updater::PodcastUpdater;
     use schema;
     use test_helpers;
-    use url_fetcher::{URLFetcherFactoryPassThrough, URLFetcherPassThrough};
 
     use chrono::Utc;
     use r2d2::{Pool, PooledConnection};
@@ -305,9 +305,9 @@ mod tests {
                     // Number of connections minus one for the reingester's control thread and
                     // minus another one for a connection that a test case
                     // might be using for setup.
-                    num_workers:         test_helpers::NUM_CONNECTIONS - 1 - 1,
-                    pool:                self.pool.clone(),
-                    url_fetcher_factory: Box::new(URLFetcherFactoryPassThrough {
+                    num_workers:            test_helpers::NUM_CONNECTIONS - 1 - 1,
+                    pool:                   self.pool.clone(),
+                    http_requester_factory: Box::new(HTTPRequesterFactoryPassThrough {
                         data: Arc::new(test_helpers::MINIMAL_FEED.to_vec()),
                     }),
                 },
@@ -332,7 +332,7 @@ mod tests {
             // update it over and over.
             feed_url: format!("https://example.com/feed-{}.xml", rng.gen::<u64>()).to_string(),
 
-            url_fetcher: &mut URLFetcherPassThrough {
+            http_requester: &mut HTTPRequesterPassThrough {
                 data: Arc::new(test_helpers::MINIMAL_FEED.to_vec()),
             },
         }.run(log)

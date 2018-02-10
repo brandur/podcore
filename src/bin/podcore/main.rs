@@ -19,12 +19,12 @@ use podcore::api;
 use podcore::error_helpers;
 use podcore::errors::*;
 use podcore::graphql;
+use podcore::http_requester::{HTTPRequesterFactoryLive, HTTPRequesterLive};
 use podcore::mediators::cleaner::Cleaner;
 use podcore::mediators::directory_podcast_searcher::DirectoryPodcastSearcher;
 use podcore::mediators::podcast_crawler::PodcastCrawler;
 use podcore::mediators::podcast_reingester::PodcastReingester;
 use podcore::mediators::podcast_updater::PodcastUpdater;
-use podcore::url_fetcher::{URLFetcherFactoryLive, URLFetcherLive};
 
 use clap::{App, ArgMatches, SubCommand};
 use diesel::pg::PgConnection;
@@ -122,7 +122,7 @@ fn add_podcast(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> 
     let client = Client::configure()
         .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
         .build(&core.handle());
-    let mut url_fetcher = URLFetcherLive {
+    let mut http_requester = HTTPRequesterLive {
         client: client,
         core:   core,
     };
@@ -132,7 +132,7 @@ fn add_podcast(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> 
             conn:             &*connection(log)?,
             disable_shortcut: false,
             feed_url:         url.to_owned().to_owned(),
-            url_fetcher:      &mut url_fetcher,
+            http_requester:   &mut http_requester,
         }.run(log)?;
     }
     Ok(())
@@ -173,9 +173,9 @@ fn crawl_podcasts(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
 
     loop {
         let res = PodcastCrawler {
-            num_workers:         options.num_connections - 1,
-            pool:                pool(log, options.num_connections)?.clone(),
-            url_fetcher_factory: Box::new(URLFetcherFactoryLive {}),
+            num_workers:            options.num_connections - 1,
+            pool:                   pool(log, options.num_connections)?.clone(),
+            http_requester_factory: Box::new(HTTPRequesterFactoryLive {}),
         }.run(log)?;
 
         num_loops += 1;
@@ -209,16 +209,16 @@ fn search_podcasts(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions)
     let client = Client::configure()
         .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
         .build(&core.handle());
-    let mut url_fetcher = URLFetcherLive {
+    let mut http_requester = HTTPRequesterLive {
         client: client,
         core:   core,
     };
 
     let query = matches.value_of("QUERY").unwrap();
     DirectoryPodcastSearcher {
-        conn:        &*connection(log)?,
-        query:       query.to_owned(),
-        url_fetcher: &mut url_fetcher,
+        conn:           &*connection(log)?,
+        query:          query.to_owned(),
+        http_requester: &mut http_requester,
     }.run(log)?;
     Ok(())
 }

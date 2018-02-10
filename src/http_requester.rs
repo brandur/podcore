@@ -17,30 +17,30 @@ pub enum Verb {
 }
 
 //
-// URLFetcherFactory trait + implementations
+// HTTPRequesterFactory trait + implementations
 //
 
-pub trait URLFetcherFactory: Send {
+pub trait HTTPRequesterFactory: Send {
     // This is here because it's difficult to make a trait cloneable.
-    fn clone_box(&self) -> Box<URLFetcherFactory>;
+    fn clone_box(&self) -> Box<HTTPRequesterFactory>;
 
-    fn create(&self) -> Box<URLFetcher>;
+    fn create(&self) -> Box<HTTPRequester>;
 }
 
 #[derive(Clone, Debug)]
-pub struct URLFetcherFactoryLive {}
+pub struct HTTPRequesterFactoryLive {}
 
-impl URLFetcherFactory for URLFetcherFactoryLive {
-    fn clone_box(&self) -> Box<URLFetcherFactory> {
+impl HTTPRequesterFactory for HTTPRequesterFactoryLive {
+    fn clone_box(&self) -> Box<HTTPRequesterFactory> {
         Box::new(Self {})
     }
 
-    fn create(&self) -> Box<URLFetcher> {
+    fn create(&self) -> Box<HTTPRequester> {
         let core = Core::new().unwrap();
         let client = Client::configure()
             .connector(HttpsConnector::new(4, &core.handle()).unwrap())
             .build(&core.handle());
-        Box::new(URLFetcherLive {
+        Box::new(HTTPRequesterLive {
             client: client,
             core:   core,
         })
@@ -48,39 +48,39 @@ impl URLFetcherFactory for URLFetcherFactoryLive {
 }
 
 #[derive(Clone, Debug)]
-pub struct URLFetcherFactoryPassThrough {
+pub struct HTTPRequesterFactoryPassThrough {
     pub data: Arc<Vec<u8>>,
 }
 
-impl URLFetcherFactory for URLFetcherFactoryPassThrough {
-    fn clone_box(&self) -> Box<URLFetcherFactory> {
+impl HTTPRequesterFactory for HTTPRequesterFactoryPassThrough {
+    fn clone_box(&self) -> Box<HTTPRequesterFactory> {
         Box::new(Self {
             data: Arc::clone(&self.data),
         })
     }
 
-    fn create(&self) -> Box<URLFetcher> {
-        Box::new(URLFetcherPassThrough {
+    fn create(&self) -> Box<HTTPRequester> {
+        Box::new(HTTPRequesterPassThrough {
             data: Arc::clone(&self.data),
         })
     }
 }
 
 //
-// URLFetcher trait + implementations
+// HTTPRequester trait + implementations
 //
 
-pub trait URLFetcher {
+pub trait HTTPRequester {
     fn execute(&mut self, log: &Logger, req: Request) -> Result<(StatusCode, Vec<u8>, String)>;
 }
 
 #[derive(Debug)]
-pub struct URLFetcherLive {
+pub struct HTTPRequesterLive {
     pub client: Client<HttpsConnector<HttpConnector>, Body>,
     pub core:   Core,
 }
 
-impl URLFetcher for URLFetcherLive {
+impl HTTPRequester for HTTPRequesterLive {
     fn execute(&mut self, _log: &Logger, req: Request) -> Result<(StatusCode, Vec<u8>, String)> {
         let uri = req.uri().to_string();
         let res = self.core
@@ -98,11 +98,11 @@ impl URLFetcher for URLFetcherLive {
 }
 
 #[derive(Clone, Debug)]
-pub struct URLFetcherPassThrough {
+pub struct HTTPRequesterPassThrough {
     pub data: Arc<Vec<u8>>,
 }
 
-impl URLFetcher for URLFetcherPassThrough {
+impl HTTPRequester for HTTPRequesterPassThrough {
     fn execute(&mut self, _log: &Logger, req: Request) -> Result<(StatusCode, Vec<u8>, String)> {
         let uri = req.uri().to_string();
         Ok((StatusCode::Ok, (*self.data).clone(), uri))

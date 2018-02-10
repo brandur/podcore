@@ -258,13 +258,13 @@ fn work(
 mod tests {
     extern crate rand;
 
+    use http_requester::HTTPRequesterPassThrough;
     use mediators::cleaner::*;
     use mediators::podcast_updater::PodcastUpdater;
     use model;
     use model::insertable;
     use schema;
     use test_helpers;
-    use url_fetcher::URLFetcherPassThrough;
 
     use chrono::Utc;
     use r2d2::PooledConnection;
@@ -504,7 +504,7 @@ mod tests {
             // update it over and over.
             feed_url: format!("https://example.com/feed-{}.xml", rng.gen::<u64>()).to_string(),
 
-            url_fetcher: &mut URLFetcherPassThrough {
+            http_requester: &mut HTTPRequesterPassThrough {
                 data: Arc::new(test_helpers::MINIMAL_FEED.to_vec()),
             },
         }.run(log)

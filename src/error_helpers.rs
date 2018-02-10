@@ -1,12 +1,12 @@
 use errors::*;
 use mediators::error_reporter::{ErrorReporter, SentryCredentials};
 
+use http_requester::HTTPRequesterLive;
 use hyper::Client;
 use hyper_tls::HttpsConnector;
 use slog::Logger;
 use std::env;
 use tokio_core::reactor::Core;
-use url_fetcher::URLFetcherLive;
 
 // Prints an error to stderr.
 pub fn print_error(log: &Logger, error: &Error) {
@@ -41,15 +41,15 @@ pub fn report_error(log: &Logger, error: &Error) -> Result<()> {
                 .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
                 .build(&core.handle());
             let creds = url.parse::<SentryCredentials>().unwrap();
-            let mut url_fetcher = URLFetcherLive {
+            let mut http_requester = HTTPRequesterLive {
                 client: client,
                 core:   core,
             };
 
             let _res = ErrorReporter {
-                creds:       &creds,
-                error:       error,
-                url_fetcher: &mut url_fetcher,
+                creds:          &creds,
+                error:          error,
+                http_requester: &mut http_requester,
             }.run(log)?;
             Ok(())
         }

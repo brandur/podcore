@@ -1,9 +1,9 @@
 use errors::*;
+use http_requester::HTTPRequester;
 use mediators::common;
 use model;
 use model::insertable;
 use schema;
-use url_fetcher::URLFetcher;
 
 use chrono::{DateTime, Utc};
 use crypto::digest::Digest;
@@ -29,8 +29,8 @@ pub struct PodcastUpdater<'a> {
     /// processing.
     pub disable_shortcut: bool,
 
-    pub feed_url:    String,
-    pub url_fetcher: &'a mut URLFetcher,
+    pub feed_url:       String,
+    pub http_requester: &'a mut HTTPRequester,
 }
 
 impl<'a> PodcastUpdater<'a> {
@@ -167,7 +167,7 @@ impl<'a> PodcastUpdater<'a> {
     fn fetch_feed(&mut self, log: &Logger) -> Result<(Vec<u8>, String)> {
         let (status, body, final_url) =
             common::log_timed(&log.new(o!("step" => "fetch_feed")), |_log| {
-                self.url_fetcher.execute(
+                self.http_requester.execute(
                     log,
                     Request::new(
                         Method::Get,
@@ -696,11 +696,11 @@ fn validate_podcast(raw: &raw::Podcast) -> Result<PodcastOrInvalid> {
 
 #[cfg(test)]
 mod tests {
+    use http_requester::HTTPRequesterPassThrough;
     use mediators::podcast_updater::*;
     use model;
     use schema;
     use test_helpers;
-    use url_fetcher::URLFetcherPassThrough;
 
     use chrono::prelude::*;
     use r2d2::PooledConnection;
@@ -1171,19 +1171,19 @@ mod tests {
     // Encapsulates the structures that are needed for tests to run. One should
     // only be obtained by invoking TestBootstrap::new().
     struct TestBootstrap {
-        conn:        PooledConnection<ConnectionManager<PgConnection>>,
-        feed_url:    &'static str,
-        log:         Logger,
-        url_fetcher: URLFetcherPassThrough,
+        conn:           PooledConnection<ConnectionManager<PgConnection>>,
+        feed_url:       &'static str,
+        log:            Logger,
+        http_requester: HTTPRequesterPassThrough,
     }
 
     impl TestBootstrap {
         fn new(data: &[u8]) -> TestBootstrap {
             TestBootstrap {
-                conn:        test_helpers::connection(),
-                feed_url:    "https://example.com/feed.xml",
-                log:         test_helpers::log(),
-                url_fetcher: URLFetcherPassThrough {
+                conn:           test_helpers::connection(),
+                feed_url:       "https://example.com/feed.xml",
+                log:            test_helpers::log(),
+                http_requester: HTTPRequesterPassThrough {
                     data: Arc::new(data.to_vec()),
                 },
             }
@@ -1195,7 +1195,7 @@ mod tests {
                     conn:             &*self.conn,
                     disable_shortcut: false,
                     feed_url:         self.feed_url.to_owned(),
-                    url_fetcher:      &mut self.url_fetcher,
+                    http_requester:   &mut self.http_requester,
                 },
                 self.log.clone(),
             )
