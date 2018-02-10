@@ -81,8 +81,12 @@ pub struct HTTPRequesterLive {
 }
 
 impl HTTPRequester for HTTPRequesterLive {
-    fn execute(&mut self, _log: &Logger, req: Request) -> Result<(StatusCode, Vec<u8>, String)> {
+    fn execute(&mut self, log: &Logger, req: Request) -> Result<(StatusCode, Vec<u8>, String)> {
+        info!(log, "Executing HTTP request";
+            "method" => format!("{}", req.method()), "uri" => format!("{}", req.uri()));
+
         let uri = req.uri().to_string();
+
         let res = self.core
             .run(self.client.request(req))
             .chain_err(|| format!("Error fetching feed URL: {}", uri))?;
