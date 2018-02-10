@@ -95,8 +95,7 @@ impl HTTPRequester for HTTPRequesterLive {
             .chain_err(|| format!("Error fetching feed URL: {}", uri))?;
         let status = res.status();
 
-        // Follow redirects and make sure to return the final URL in the chain unless
-        // it was a temporary redirect.
+        // Follow redirects.
         if status.is_redirection() {
             let new_uri = match res.headers().get::<Location>() {
                 Some(uri) => Uri::from_str(uri).map_err(Error::from),
@@ -106,9 +105,18 @@ impl HTTPRequester for HTTPRequesterLive {
             }?;
 
             let new_req = Request::new(method, new_uri);
+            let (status, body, last_uri) = self.execute(log, new_req)?;
 
-            // TODO: Only return new URL if permanent redirect.
-            return self.execute(log, new_req);
+            // If we got a permanent redirect we return the final URI so that it can be
+            // persisted for next time we need to make this request. Otherwise,
+            // we return the original URI that came in with the request.
+            let uri = if status == StatusCode::PermanentRedirect {
+                last_uri
+            } else {
+                uri
+            };
+
+            return Ok((status, body, uri));
         }
 
         let body = self.core
