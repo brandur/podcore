@@ -72,6 +72,9 @@ impl HTTPRequesterFactory for HTTPRequesterFactoryPassThrough {
 // HTTPRequester trait + implementations
 //
 
+// Maximum number of redirects that we'll follow.
+const REDIRECT_LIMIT: i64 = 5;
+
 pub trait HTTPRequester {
     fn execute(&mut self, log: &Logger, req: Request) -> Result<(StatusCode, Vec<u8>, String)>;
 }
@@ -82,9 +85,18 @@ pub struct HTTPRequesterLive {
     pub core:   Core,
 }
 
-impl HTTPRequester for HTTPRequesterLive {
-    fn execute(&mut self, log: &Logger, req: Request) -> Result<(StatusCode, Vec<u8>, String)> {
-        info!(log, "Executing HTTP request";
+impl HTTPRequesterLive {
+    fn execute_inner(
+        &mut self,
+        log: &Logger,
+        req: Request,
+        redirect_depth: i64,
+    ) -> Result<(StatusCode, Vec<u8>, String)> {
+        if redirect_depth >= REDIRECT_LIMIT {
+            return Err(Error::from("Hit HTTP redirect limit and not continuing"));
+        }
+
+        info!(log, "Executing HTTP request"; "redirect_depth" => redirect_depth,
             "method" => format!("{}", req.method()), "uri" => format!("{}", req.uri()));
 
         let method = req.method().clone();
@@ -105,7 +117,7 @@ impl HTTPRequester for HTTPRequesterLive {
             }?;
 
             let new_req = Request::new(method, new_uri);
-            let (status, body, last_uri) = self.execute(log, new_req)?;
+            let (status, body, last_uri) = self.execute_inner(log, new_req, redirect_depth + 1)?;
 
             // If we got a permanent redirect we return the final URI so that it can be
             // persisted for next time we need to make this request. Otherwise,
@@ -123,6 +135,12 @@ impl HTTPRequester for HTTPRequesterLive {
             .run(res.body().concat2())
             .chain_err(|| format!("Error reading body from URL: {}", uri))?;
         Ok((status, (*body).to_vec(), uri))
+    }
+}
+
+impl HTTPRequester for HTTPRequesterLive {
+    fn execute(&mut self, log: &Logger, req: Request) -> Result<(StatusCode, Vec<u8>, String)> {
+        self.execute_inner(log, req, 0)
     }
 }
 
