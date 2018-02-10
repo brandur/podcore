@@ -396,7 +396,12 @@ mod tests {
             let res = mediator.run(&log).unwrap();
 
             assert_eq!(1, res.num_directory_search_cleaned);
-            assert_eq!(1, res.num_cleaned);
+
+            // We don't check the total number cleaned here (like we do in other tests)
+            // because there's a race condition: cleaning up the directory
+            // search leaves the directory podcast dangling. If the thread
+            // cleaning directory podcasts is a little behind it may also remove
+            // that record, leaving us with two cleaned records in total.
         }
     }
 
