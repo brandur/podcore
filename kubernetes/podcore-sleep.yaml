@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
       - name: podcore
-        image: gcr.io/podcore-194423/podcore:v2
+        image: gcr.io/podcore-194423/podcore:1.0
         command: ["/podcore", "sleep", "3600"]
         env:
         - name: PODCORE_ENV
