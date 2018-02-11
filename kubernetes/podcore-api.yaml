@@ -23,6 +23,9 @@ spec:
             secretKeyRef:
               name: cloudsql-db-credentials
               key: DATABASE_URL
+        # remember that this is per-replica
+        - name: NUM_CONNECTIONS
+          value: "5"
         - name: PODCORE_ENV
           value: "production"
         - name: RUST_BACKTRACE
