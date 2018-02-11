@@ -1,10 +1,5 @@
-/.envrc
-/kubernetes/
-/migrations/
-/scripts/
-/target/
-*.pem
-.git
-Makefile
-README.md
-TODO.md
+# This style of ignore creates a whitelist instead of a blacklist so that we
+# don't have to continually add new files here so that Docker ignores them.
+*
+!/Cargo.*
+!/src/
