@@ -86,6 +86,11 @@ fn main() {
             SubCommand::with_name("search")
                 .about("Search iTunes directory for podcasts")
                 .arg_from_usage("[QUERY]... 'Search query'"),
+        )
+        .subcommand(
+            SubCommand::with_name("sleep")
+                .about("Sleep (useful for attaching to with Docker)")
+                .arg_from_usage("<SLEEP_SECONDS>... 'Number of seconds to sleep'"),
         );
 
     let matches = app.clone().get_matches();
@@ -100,6 +105,7 @@ fn main() {
         Some("error") => trigger_error(&log, &matches, &options),
         Some("reingest") => reingest_podcasts(&log, &matches, &options),
         Some("search") => search_podcasts(&log, &matches, &options),
+        Some("sleep") => sleep(&log, &matches, &options),
         None => {
             app.print_help().unwrap();
             Ok(())
@@ -248,6 +254,21 @@ fn serve_api(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Res
     Iron::new(api::chain(log, mount))
         .http(host.as_str())
         .chain_err(|| "Error binding API")?;
+    Ok(())
+}
+
+fn sleep(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
+    let matches = matches.subcommand_matches("sleep").unwrap();
+
+    let sleep_seconds = matches
+        .value_of("SLEEP_SECONDS")
+        .unwrap()
+        .parse::<u64>()
+        .chain_err(|| "Error parsing integer")?;
+
+    info!(log, "Sleeping"; "seconds" => sleep_seconds);
+    thread::sleep(Duration::from_secs(sleep_seconds));
+
     Ok(())
 }
 
