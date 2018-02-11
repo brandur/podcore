@@ -2,4 +2,5 @@
 # don't have to continually add new files here so that Docker ignores them.
 *
 !/Cargo.*
+!/migrations/
 !/src/

@@ -1,0 +1,49 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: podcore-migration
+  labels:
+    app: podcore-migration
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: podcore-migration
+    spec:
+      containers:
+      - name: podcore
+        image: gcr.io/podcore-194423/podcore:1.0
+        command: ["/podcore", "migration"]
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: cloudsql-db-credentials
+              key: DATABASE_URL
+        - name: PODCORE_ENV
+          value: "production"
+        - name: RUST_BACKTRACE
+          value: "1"
+        - name: SENTRY_URL
+          valueFrom:
+            secretKeyRef:
+              name: sentry-credentials
+              key: SENTRY_URL
+      - name: cloudsql-proxy
+        image: gcr.io/cloudsql-docker/gce-proxy:1.11
+        command: ["/cloud_sql_proxy",
+                  "-instances=podcore-194423:us-central1:core=tcp:3306",
+                  "-credential_file=/secrets/cloudsql/credentials.json"]
+        volumeMounts:
+          - name: cloudsql-instance-credentials
+            mountPath: /secrets/cloudsql
+            readOnly: true
+      volumes:
+        - name: cloudsql-instance-credentials
+          secret:
+            secretName: cloudsql-instance-credentials
+        - name: cloudsql
+          emptyDir:

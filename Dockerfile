@@ -15,6 +15,7 @@ FROM ekidd/rust-musl-builder AS builder
 # Add source code. We do a little micromanagement to avoid the target/
 # directory which could be huge.
 ADD ./Cargo.* ./
+ADD ./migrations/ ./migrations/
 ADD ./src/ ./src/
 
 # Fix permissions on source code.

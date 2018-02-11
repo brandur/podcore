@@ -1,5 +1,7 @@
 extern crate clap;
 extern crate diesel;
+#[macro_use]
+extern crate diesel_migrations;
 extern crate hyper;
 extern crate hyper_tls;
 extern crate iron;
@@ -42,6 +44,10 @@ use std::thread;
 use std::time::Duration;
 use tokio_core::reactor::Core;
 
+// Migrations get pulled into the final binary. This makes it quite a bit
+// easier to run them on remote clusters without trouble.
+embed_migrations!("./migrations");
+
 // Main
 //
 
@@ -78,6 +84,7 @@ fn main() {
             SubCommand::with_name("error")
                 .about("Triggers an error (for testing error output and Sentry)"),
         )
+        .subcommand(SubCommand::with_name("migration").about("Migrates the database"))
         .subcommand(
             SubCommand::with_name("reingest")
                 .about("Reingests podcasts by reusing their stored raw feeds"),
@@ -103,6 +110,7 @@ fn main() {
         Some("clean") => clean(&log, &matches, &options),
         Some("crawl") => crawl_podcasts(&log, &matches, &options),
         Some("error") => trigger_error(&log, &matches, &options),
+        Some("migration") => migrate_database(&log, &matches, &options),
         Some("reingest") => reingest_podcasts(&log, &matches, &options),
         Some("search") => search_podcasts(&log, &matches, &options),
         Some("sleep") => sleep(&log, &matches, &options),
@@ -196,6 +204,21 @@ fn crawl_podcasts(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
             thread::sleep(Duration::from_secs(SLEEP_SECONDS));
         }
     }
+}
+
+fn migrate_database(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
+    let _matches = matches.subcommand_matches("migration").unwrap();
+    let conn = connection(log)?;
+
+    info!(log, "Running migrations");
+
+    if options.quiet {
+        embedded_migrations::run(&*conn)
+    } else {
+        embedded_migrations::run_with_output(&*conn, &mut std::io::stdout())
+    }.chain_err(|| "Error running migrations")?;
+
+    Ok(())
 }
 
 fn reingest_podcasts(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
@@ -354,9 +377,8 @@ fn parse_global_options(matches: &ArgMatches) -> GlobalOptions {
 }
 
 /// Initializes and returns a connection pool suitable for use across threads.
-fn pool(log: &Logger, num_connections: u32) -> Result<Pool<ConnectionManager<PgConnection>>> {
+fn pool(_log: &Logger, num_connections: u32) -> Result<Pool<ConnectionManager<PgConnection>>> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    info!(log, "Value of database configuration"; "DATABASE_URL" => database_url);
     let manager = ConnectionManager::<PgConnection>::new(database_url);
     Pool::builder()
         .idle_timeout(Some(Duration::from_secs(5)))
