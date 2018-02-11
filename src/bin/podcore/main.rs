@@ -8,6 +8,7 @@ extern crate iron;
 extern crate isatty;
 extern crate juniper_iron;
 extern crate mount;
+extern crate openssl_probe;
 extern crate podcore;
 extern crate r2d2;
 extern crate r2d2_diesel;
@@ -52,6 +53,12 @@ embed_migrations!("./migrations");
 //
 
 fn main() {
+    // While the various TLS libraries tend to work out of the box on Mac OS, the
+    // location of CA certs can vary across Linux distributions. This is a
+    // library that helps locate a usable bundle so that we can properly make
+    // TLS requests.
+    openssl_probe::init_ssl_cert_env_vars();
+
     // Note that when using `arg_from_usage`, `<arg>` is required and `[arg]` is
     // optional.
     let mut app = App::new("podcore")

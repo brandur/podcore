@@ -32,6 +32,7 @@ juniper = "*"
 juniper_iron = "*"
 lazy_static = "1.0"
 native-tls = "*"
+openssl-probe = "*"
 
 # This is needed to make sure that Cargo statically links against `libssl`.
 # This should happen automatically, but it doesn't.
