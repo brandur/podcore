@@ -218,7 +218,7 @@ fn migrate_database(log: &Logger, matches: &ArgMatches, options: &GlobalOptions)
         embedded_migrations::run_with_output(&*conn, &mut std::io::stdout())
     }.chain_err(|| "Error running migrations")?;
 
-    info!(log, "Migrations finished");
+    info!(log, "Finished migrations");
     Ok(())
 }
 
@@ -290,8 +290,9 @@ fn sleep(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result
         .parse::<u64>()
         .chain_err(|| "Error parsing integer")?;
 
-    info!(log, "Sleeping"; "seconds" => sleep_seconds);
+    info!(log, "Starting sleep"; "seconds" => sleep_seconds);
     thread::sleep(Duration::from_secs(sleep_seconds));
+    info!(log, "Finished sleep");
 
     Ok(())
 }
