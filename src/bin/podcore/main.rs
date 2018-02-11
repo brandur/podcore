@@ -218,6 +218,7 @@ fn migrate_database(log: &Logger, matches: &ArgMatches, options: &GlobalOptions)
         embedded_migrations::run_with_output(&*conn, &mut std::io::stdout())
     }.chain_err(|| "Error running migrations")?;
 
+    info!(log, "Migrations finished");
     Ok(())
 }
 
