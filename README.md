@@ -59,6 +59,17 @@ cargo test test_minimal_feed
 RUST_TEST_NOCAPTURE=1 cargo test
 ```
 
+## Kubernetes
+
+Build an Alpine-based binary target for MUSL, push to GCP container registry,
+then run Kubernetes deployment:
+
+```
+docker build -t gcr.io/${PROJECT_ID}/podcore:v3 .
+gcloud docker -- push gcr.io/${PROJECT_ID}/podcore:v3
+kubectl apply -f kubernetes/podcore-crawl.yaml
+```
+
 <!--
 # vim: set tw=79:
 -->

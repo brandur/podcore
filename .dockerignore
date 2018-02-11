@@ -1,0 +1,10 @@
+/.envrc
+/kubernetes/
+/migrations/
+/scripts/
+/target/
+*.pem
+.git
+Makefile
+README.md
+TODO.md

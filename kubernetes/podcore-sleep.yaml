@@ -1,0 +1,27 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: podcore-sleep
+  labels:
+    app: podcore-sleep
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: podcore-sleep
+    spec:
+      containers:
+      - name: podcore
+        image: gcr.io/podcore-194423/podcore:v2
+        command: ["/podcore", "sleep", "3600"]
+        env:
+        - name: PODCORE_ENV
+          value: "production"
+        - name: RUST_BACKTRACE
+          value: "1"
+        - name: SENTRY_URL
+          valueFrom:
+            secretKeyRef:
+              name: sentry-credentials
+              key: SENTRY_URL

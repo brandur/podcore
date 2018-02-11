@@ -31,6 +31,14 @@ juniper = "*"
 juniper_iron = "*"
 lazy_static = "1.0"
 native-tls = "*"
+
+# This is needed to make sure that Cargo statically links against `libssl`.
+# This should happen automatically, but it doesn't.
+#
+# At some point, double-check that this is still the case in the README of
+# emk/rust-musl-builder.
+openssl-sys = "0.9"
+
 quick-xml = "0.10.1"
 r2d2 = { version = "*" }
 r2d2-diesel = { version = "1.0.0-rc1" }
@@ -47,3 +55,10 @@ time = { version = "*" }
 tokio-core = "0.1"
 url = "*"
 uuid = { version = "0.5", features = ["v4"] }
+
+[patch.crates-io]
+# This is needed to handle cross-compilation of libpq.
+#
+# At some point, double-check that this is still the case in the README of
+# emk/rust-musl-builder.
+pq-sys = { git = 'https://github.com/golddranks/pq-sys' }
