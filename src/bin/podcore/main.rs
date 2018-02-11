@@ -354,8 +354,9 @@ fn parse_global_options(matches: &ArgMatches) -> GlobalOptions {
 }
 
 /// Initializes and returns a connection pool suitable for use across threads.
-fn pool(_log: &Logger, num_connections: u32) -> Result<Pool<ConnectionManager<PgConnection>>> {
+fn pool(log: &Logger, num_connections: u32) -> Result<Pool<ConnectionManager<PgConnection>>> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    info!(log, "Value of database configuration"; "DATABASE_URL" => database_url);
     let manager = ConnectionManager::<PgConnection>::new(database_url);
     Pool::builder()
         .idle_timeout(Some(Duration::from_secs(5)))
