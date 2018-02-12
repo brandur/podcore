@@ -70,6 +70,7 @@ fn main() {
         .subcommand(
             SubCommand::with_name("add")
                 .about("Fetches a podcast and adds it to the database")
+                .arg_from_usage("--force 'Force the podcast to be readded even if it exists'")
                 .arg_from_usage("<URL>... 'URL(s) to fetch'"),
         )
         .subcommand(
@@ -138,6 +139,7 @@ fn main() {
 
 fn add_podcast(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("add").unwrap();
+    let force = matches.is_present("force");
 
     let core = Core::new().unwrap();
     let client = Client::configure()
@@ -151,7 +153,7 @@ fn add_podcast(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> 
     for url in matches.values_of("URL").unwrap().collect::<Vec<_>>() {
         PodcastUpdater {
             conn:             &*connection(log)?,
-            disable_shortcut: false,
+            disable_shortcut: force,
             feed_url:         url.to_owned().to_owned(),
             http_requester:   &mut http_requester,
         }.run(log)?;
