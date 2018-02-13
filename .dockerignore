@@ -4,3 +4,7 @@
 !/Cargo.*
 !/migrations/
 !/src/
+
+# Send all of src/ except for this directory which contains various resources
+# that aren't needed outside of the test suite.
+/src/test_documents/
