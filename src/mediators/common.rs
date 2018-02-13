@@ -18,7 +18,7 @@ where
 }
 
 pub fn log_body_sample(log: &Logger, status: StatusCode, body: &[u8]) {
-    let sample = body.iter().take(100).cloned().collect::<Vec<u8>>();
+    let sample = body.iter().take(200).cloned().collect::<Vec<u8>>();
     let string = String::from_utf8_lossy(sample.as_slice()).replace("\n", "");
     info!(log, "Response (sample)"; "status" => status.to_string(), "body" => format!("{}...", string));
 }
