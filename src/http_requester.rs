@@ -3,7 +3,7 @@ use errors::*;
 use futures::Stream;
 use hyper::{Body, Client, Request, StatusCode, Uri};
 use hyper::client::HttpConnector;
-use hyper::header::Location;
+use hyper::header::{Location, UserAgent};
 use hyper_tls::HttpsConnector;
 use slog::Logger;
 use std::str::FromStr;
@@ -95,6 +95,8 @@ impl HTTPRequesterLive {
         if redirect_depth >= REDIRECT_LIMIT {
             return Err(Error::from("Hit HTTP redirect limit and not continuing"));
         }
+
+        req.headers().set::<UserAgent>("Podcore/1.0");
 
         info!(log, "Executing HTTP request"; "redirect_depth" => redirect_depth,
             "method" => format!("{}", req.method()), "uri" => format!("{}", req.uri()));
