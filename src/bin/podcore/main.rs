@@ -26,6 +26,7 @@ use podcore::http_requester::{HTTPRequesterFactoryLive, HTTPRequesterLive};
 use podcore::mediators::cleaner::Cleaner;
 use podcore::mediators::directory_podcast_searcher::DirectoryPodcastSearcher;
 use podcore::mediators::podcast_crawler::PodcastCrawler;
+use podcore::mediators::podcast_feed_content_compressor::PodcastFeedContentCompressor;
 use podcore::mediators::podcast_reingester::PodcastReingester;
 use podcore::mediators::podcast_updater::PodcastUpdater;
 
@@ -84,6 +85,10 @@ fn main() {
                 .arg_from_usage("--run-once 'Run only one time instead of looping'"),
         )
         .subcommand(
+            SubCommand::with_name("compress-contents")
+                .about("Migration tool that compress contents to contents_gzip"),
+        )
+        .subcommand(
             SubCommand::with_name("crawl")
                 .about("Crawls the web to retrieve podcasts that need to be updated")
                 .arg_from_usage("--run-once 'Run only one time instead of looping'"),
@@ -116,6 +121,7 @@ fn main() {
         Some("add") => add_podcast(&log, &matches, &options),
         Some("api") => serve_api(&log, &matches, &options),
         Some("clean") => clean(&log, &matches, &options),
+        Some("compress_contents") => compress_contents(&log, &matches, &options),
         Some("crawl") => crawl_podcasts(&log, &matches, &options),
         Some("error") => trigger_error(&log, &matches, &options),
         Some("migration") => migrate_database(&log, &matches, &options),
@@ -187,6 +193,17 @@ fn clean(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<
             thread::sleep(Duration::from_secs(SLEEP_SECONDS));
         }
     }
+}
+
+fn compress_contents(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
+    let _matches = matches.subcommand_matches("compress-contents").unwrap();
+
+    let res = PodcastFeedContentCompressor {
+        conn: &*connection(log)?,
+    }.run(log)?;
+
+    info!(log, "Compressed feed contents"; "num_compressed" => res.num_compressed);
+    Ok(())
 }
 
 fn crawl_podcasts(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
