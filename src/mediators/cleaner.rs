@@ -271,8 +271,11 @@ mod tests {
     use test_helpers;
 
     use chrono::Utc;
+    use flate2::Compression;
+    use flate2::write::GzEncoder;
     use r2d2::PooledConnection;
     use rand::Rng;
+    use std::io::prelude::*;
     use std::sync::Arc;
     use time::Duration;
 
@@ -522,10 +525,15 @@ mod tests {
     }
 
     fn insert_podcast_feed_content(_log: &Logger, conn: &PgConnection, podcast: &model::Podcast) {
+        let body = "feed body".to_owned();
         let mut rng = rand::thread_rng();
 
+        let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+        encoder.write(body.as_bytes()).unwrap();
+
         let content_ins = insertable::PodcastFeedContent {
-            content:      "feed body".to_owned(),
+            content:      body,
+            content_gzip: encoder.finish().unwrap(),
             podcast_id:   podcast.id,
             retrieved_at: Utc::now(),
 

@@ -102,6 +102,7 @@ pub struct Podcast {
 pub struct PodcastFeedContent {
     pub id:           i64,
     pub content:      String,
+    pub content_gzip: Option<Vec<u8>>,
     pub podcast_id:   i64,
     pub retrieved_at: DateTime<Utc>,
     pub sha256_hash:  String,
@@ -186,6 +187,7 @@ pub mod insertable {
     #[table_name = "podcast_feed_content"]
     pub struct PodcastFeedContent {
         pub content:      String,
+        pub content_gzip: Vec<u8>,
         pub podcast_id:   i64,
         pub retrieved_at: DateTime<Utc>,
         pub sha256_hash:  String,

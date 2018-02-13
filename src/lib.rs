@@ -8,6 +8,7 @@ extern crate crypto;
 extern crate diesel;
 #[macro_use]
 extern crate error_chain;
+extern crate flate2;
 extern crate futures;
 #[macro_use]
 extern crate hyper;

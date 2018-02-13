@@ -19,6 +19,7 @@ clap = "*"
 diesel = { version = "1.0.0-rc1", features = ["chrono", "postgres"] }
 diesel_migrations = "*"
 error-chain = { version = "*" }
+flate2 = "*"
 futures = "0.1"
 hyper = "0.11"
 hyper-tls = "*"

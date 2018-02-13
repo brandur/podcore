@@ -12,12 +12,15 @@ use diesel;
 use diesel::pg::PgConnection;
 use diesel::pg::upsert::excluded;
 use diesel::prelude::*;
+use flate2::Compression;
+use flate2::write::GzEncoder;
 use hyper::{Method, Request, StatusCode, Uri};
 use quick_xml::events::{BytesText, Event};
 use quick_xml::reader::Reader;
 use regex::Regex;
 use slog::Logger;
 use std::io::BufRead;
+use std::io::prelude::*;
 use std::str;
 use std::str::FromStr;
 
@@ -286,12 +289,17 @@ impl<'a> PodcastUpdater<'a> {
         body: String,
         sha256_hash: String,
     ) -> Result<()> {
+        let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+        encoder.write_all(body.as_bytes())?;
+
         let content_ins = insertable::PodcastFeedContent {
             content:      body,
+            content_gzip: encoder.finish()?,
             podcast_id:   podcast.id,
             retrieved_at: Utc::now(),
             sha256_hash:  sha256_hash,
         };
+
         common::log_timed(
             &log.new(o!("step" => "upsert_podcast_feed_content")),
             |_log| {

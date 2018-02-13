@@ -75,6 +75,7 @@ table! {
         podcast_id -> Int8,
         retrieved_at -> Timestamptz,
         sha256_hash -> Text,
+        content_gzip -> Nullable<Bytea>,
     }
 }
 
