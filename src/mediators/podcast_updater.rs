@@ -109,7 +109,7 @@ impl<'a> PodcastUpdater<'a> {
 
         // Store the podcast's raw content. Note that this is a relatively expensive
         // operation because a feed's body can be quite large.
-        self.upsert_podcast_feed_content(log, &podcast, body, sha256_hash)?;
+        self.upsert_podcast_feed_content(log, &podcast, body.as_str(), sha256_hash)?;
 
         let ins_episodes = Self::convert_episodes(log, raw_episodes, &podcast)?;
 
@@ -339,7 +339,7 @@ impl<'a> PodcastUpdater<'a> {
         &mut self,
         log: &Logger,
         podcast: &model::Podcast,
-        body: String,
+        body: &str,
         sha256_hash: String,
     ) -> Result<()> {
         let mut encoder = GzEncoder::new(Vec::new(), Compression::default());

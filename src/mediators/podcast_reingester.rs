@@ -9,10 +9,12 @@ use chan::{Receiver, Sender};
 use diesel;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
-use diesel::sql_types::{BigInt, Text};
+use diesel::sql_types::{BigInt, Bytea, Text};
+use flate2::read::GzDecoder;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use slog::Logger;
+use std::io::prelude::*;
 use std::sync::Arc;
 use std::thread;
 
@@ -125,7 +127,7 @@ impl PodcastReingester {
                     "
                 SELECT id,
                     (
-                       SELECT content
+                       SELECT content_gzip
                        FROM podcast_feed_content
                        WHERE podcast_feed_content.podcast_id = podcast.id
                        ORDER BY retrieved_at DESC
@@ -172,8 +174,8 @@ struct PodcastTuple {
     #[sql_type = "BigInt"]
     id: i64,
 
-    #[sql_type = "Text"]
-    content: String,
+    #[sql_type = "Bytea"]
+    content_gzip: Vec<u8>,
 
     #[sql_type = "Text"]
     feed_url: String,
@@ -210,21 +212,7 @@ fn work(
                     }
                 };
 
-                let content = podcast_tuple.content.as_bytes().to_vec();
-                let feed_url = podcast_tuple.feed_url.to_string();
-
-                let res = PodcastUpdater {
-                    conn: &*conn,
-
-                    // The whole purpose of this mediator is to redo past work, so we need to make
-                    // sure that we've disabled any shortcuts that might otherwise be enabled.
-                    disable_shortcut: true,
-
-                    feed_url:    feed_url,
-                    http_requester: &mut HTTPRequesterPassThrough { data: Arc::new(content) },
-                }.run(log);
-
-                if let Err(e) = res {
+                if let Err(e) = work_inner(log, &*conn, &podcast_tuple) {
                     error_helpers::print_error(log, &e);
 
                     if let Err(inner_e) = error_helpers::report_error(log, &e) {
@@ -234,6 +222,29 @@ fn work(
             },
         }
     }
+}
+
+fn work_inner(log: &Logger, conn: &PgConnection, podcast_tuple: &PodcastTuple) -> Result<()> {
+    let mut decoder = GzDecoder::new(podcast_tuple.content_gzip.as_slice());
+    let mut content: Vec<u8> = Vec::new();
+    decoder.read_to_end(&mut content)?;
+
+    let feed_url = podcast_tuple.feed_url.to_string();
+
+    PodcastUpdater {
+        conn: conn,
+
+        // The whole purpose of this mediator is to redo past work, so we need to make
+        // sure that we've disabled any shortcuts that might otherwise be enabled.
+        disable_shortcut: true,
+
+        feed_url:       feed_url,
+        http_requester: &mut HTTPRequesterPassThrough {
+            data: Arc::new(content),
+        },
+    }.run(log)?;
+
+    Ok(())
 }
 
 #[cfg(test)]
