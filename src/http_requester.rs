@@ -89,14 +89,15 @@ impl HTTPRequesterLive {
     fn execute_inner(
         &mut self,
         log: &Logger,
-        req: Request,
+        mut req: Request,
         redirect_depth: i64,
     ) -> Result<(StatusCode, Vec<u8>, String)> {
         if redirect_depth >= REDIRECT_LIMIT {
             return Err(Error::from("Hit HTTP redirect limit and not continuing"));
         }
 
-        req.headers().set::<UserAgent>("Podcore/1.0");
+        req.headers_mut()
+            .set::<UserAgent>(UserAgent::new("Podcore/1.0".to_owned()));
 
         info!(log, "Executing HTTP request"; "redirect_depth" => redirect_depth,
             "method" => format!("{}", req.method()), "uri" => format!("{}", req.uri()));
