@@ -546,10 +546,7 @@ fn parse_channel<R: BufRead>(
                     podcast.title = Some(element_text(log, reader)?);
                     info!(log, "Parsed title"; "title" => podcast.title.clone());
                 }
-                name => {
-                    info!(log, "Skipped element"; "name" => format!("{}", String::from_utf8_lossy(name)));
-                    reader.read_to_end(name, &mut skip_buf)?
-                }
+                name => reader.read_to_end(name, &mut skip_buf)?,
             },
             Ok(Event::End(_e)) => break,
             Ok(Event::Eof) => return Err(Error::from("Unexpected EOF while parsing <channel> tag")),
@@ -660,10 +657,7 @@ fn parse_item<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<raw::E
                 b"link" => episode.link_url = Some(element_text(log, reader)?),
                 b"pubDate" => episode.published_at = Some(element_text(log, reader)?),
                 b"title" => episode.title = Some(element_text(log, reader)?),
-                name => {
-                    info!(log, "Skipped element"; "name" => format!("{}", String::from_utf8_lossy(name)));
-                    reader.read_to_end(name, &mut skip_buf)?
-                }
+                name => reader.read_to_end(name, &mut skip_buf)?,
             },
             Ok(Event::End(_e)) => break,
             Ok(Event::Eof) => return Err(Error::from("Unexpected EOF while parsing <item> tag")),
