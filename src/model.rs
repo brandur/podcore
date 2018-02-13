@@ -185,7 +185,6 @@ pub mod insertable {
     #[derive(Insertable)]
     #[table_name = "podcast_feed_content"]
     pub struct PodcastFeedContent {
-        pub content:      String,
         pub content_gzip: Vec<u8>,
         pub podcast_id:   i64,
         pub retrieved_at: DateTime<Utc>,

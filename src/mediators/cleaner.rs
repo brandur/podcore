@@ -532,7 +532,6 @@ mod tests {
         encoder.write(body.as_bytes()).unwrap();
 
         let content_ins = insertable::PodcastFeedContent {
-            content:      body,
             content_gzip: encoder.finish().unwrap(),
             podcast_id:   podcast.id,
             retrieved_at: Utc::now(),
