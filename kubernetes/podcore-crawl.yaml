@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
       - name: podcore
-        image: gcr.io/podcore-194423/podcore:1.3
+        image: gcr.io/podcore-194423/podcore:1.4
         command: ["/podcore", "crawl"]
         ports:
         - containerPort: 8080
