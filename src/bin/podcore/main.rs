@@ -121,7 +121,7 @@ fn main() {
         Some("add") => add_podcast(&log, &matches, &options),
         Some("api") => serve_api(&log, &matches, &options),
         Some("clean") => clean(&log, &matches, &options),
-        Some("compress_contents") => compress_contents(&log, &matches, &options),
+        Some("compress-contents") => compress_contents(&log, &matches, &options),
         Some("crawl") => crawl_podcasts(&log, &matches, &options),
         Some("error") => trigger_error(&log, &matches, &options),
         Some("migration") => migrate_database(&log, &matches, &options),
