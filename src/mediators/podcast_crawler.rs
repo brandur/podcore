@@ -119,10 +119,12 @@ impl PodcastCrawler {
                             )
                         FROM podcast
                         WHERE id > $1
-                            AND last_retrieved_at <= NOW() - $2::interval
+                            AND last_retrieved_at - trunc(random() * $2) * '1 minute'::interval
+                                <= NOW() - $3::interval
                         ORDER BY id
-                        LIMIT $3",
+                        LIMIT $4",
                 ).bind::<BigInt, _>(start_id)
+                    .bind::<BigInt, _>(JITTER_MINUTES)
                     .bind::<Text, _>(REFRESH_INTERVAL)
                     .bind::<BigInt, _>(PAGE_SIZE)
                     .load::<PodcastTuple>(conn)
@@ -140,6 +142,16 @@ pub struct RunResult {
 //
 // Private constants
 //
+
+// A random number of minutes applied to timestamps when calculating what
+// podcasts are ready to be refreshed.
+//
+// Jitter is integrated to space out big clumps of podcasts that might
+// otherwise all get worked at once and generally try to even out the crawler's
+// workload as much as possible. This is particularly useful if the `reingest`
+// command is ever used because without some jitter all podcast timestamps
+// would stay in hourly lockstep.
+const JITTER_MINUTES: i64 = 10;
 
 const PAGE_SIZE: i64 = 100;
 
