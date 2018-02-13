@@ -62,6 +62,11 @@ impl<'a> PodcastUpdater<'a> {
         // directories have two entries for the same podcast with different URLs (say
         // one is the newer version that old one 301s to), this should still
         // work.
+        //
+        // As a side effect, the upsert also sets the podcast's `last_retrieved_at`
+        // field so that the crawler will know not to try and update it again
+        // right away even if the mediator short circuits early because it
+        // already existed.
         let podcast = self.upsert_podcast(log, &ins_podcast, final_url.as_str())?;
 
         // The final URL of the feed may be different than what a directory gave us.
