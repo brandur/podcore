@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
       - name: podcore
-        image: gcr.io/podcore-194423/podcore:1.4
+        image: gcr.io/podcore-194423/podcore:1.7
         command: ["/podcore", "clean"]
         ports:
         - containerPort: 8080
