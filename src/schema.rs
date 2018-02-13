@@ -71,7 +71,6 @@ table! {
 table! {
     podcast_feed_content (id) {
         id -> Int8,
-        content -> Text,
         podcast_id -> Int8,
         retrieved_at -> Timestamptz,
         sha256_hash -> Text,

@@ -101,7 +101,6 @@ pub struct Podcast {
 #[derive(Queryable)]
 pub struct PodcastFeedContent {
     pub id:           i64,
-    pub content:      String,
     pub podcast_id:   i64,
     pub retrieved_at: DateTime<Utc>,
     pub sha256_hash:  String,

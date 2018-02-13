@@ -346,7 +346,6 @@ impl<'a> PodcastUpdater<'a> {
         encoder.write_all(body.as_bytes())?;
 
         let content_ins = insertable::PodcastFeedContent {
-            content:      body,
             content_gzip: encoder.finish()?,
             podcast_id:   podcast.id,
             retrieved_at: Utc::now(),
