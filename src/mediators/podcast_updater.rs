@@ -176,11 +176,11 @@ impl<'a> PodcastUpdater<'a> {
                 )
             })?;
         common::log_body_sample(log, status, &body);
-        ensure!(
-            status == StatusCode::Ok,
-            "Unexpected status while fetching feed: {}",
-            status
-        );
+        if status != StatusCode::Ok {
+            let string = String::from_utf8_lossy(body.as_slice()).replace("\n", "");
+            info!(log, "Body of errored request"; "body" => string.as_str());
+            bail!("Unexpected status while fetching feed: {}", status);
+        }
         Ok((body, final_url))
     }
 
