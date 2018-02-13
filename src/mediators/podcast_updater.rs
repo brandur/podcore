@@ -1,3 +1,4 @@
+use error_helpers;
 use errors::*;
 use http_requester::HTTPRequester;
 use mediators::common;
@@ -39,9 +40,27 @@ pub struct PodcastUpdater<'a> {
 impl<'a> PodcastUpdater<'a> {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
         common::log_timed(&log.new(o!("step" => file!())), |log| {
-            self.conn
-                .transaction::<_, Error, _>(|| self.run_inner(log))
-                .chain_err(|| "Error in database transaction")
+            match self.conn.transaction::<_, Error, _>(|| self.run_inner(log)) {
+                Ok(r) => Ok(r),
+                Err(e) => {
+                    // As a latch ditch effort, update the timestamp indicating when the podcast
+                    // was last retrieved in the case of a previously succeeding podcast that now
+                    // fails. Otherwise, the crawler will attempt to process it over and over again
+                    // because the entire transaction rolled back.
+                    if let Err(e) = self.conn
+                        .transaction::<_, Error, _>(|| self.update_podcast_last_retrieved_at(log))
+                    {
+                        error_helpers::print_error(log, &e);
+
+                        if let Err(inner_e) = error_helpers::report_error(log, &e) {
+                            error_helpers::print_error(log, &inner_e);
+                        }
+                    }
+
+                    // Return the original error because it's going to be more useful.
+                    Err(e.chain_err(|| "Error in database transaction"))
+                }
+            }
         })
     }
 
@@ -103,6 +122,7 @@ impl<'a> PodcastUpdater<'a> {
         })
     }
 
+    //
     // Steps
     //
 
@@ -280,6 +300,39 @@ impl<'a> PodcastUpdater<'a> {
                     .chain_err(|| "Error inserting podcast")
             })
         }
+    }
+
+    fn update_podcast_last_retrieved_at(&mut self, log: &Logger) -> Result<()> {
+        common::log_timed(
+            &log.new(o!("step" => "update_podcast_last_retrieved_at")),
+            |log| {
+                info!(
+                    log,
+                    "Podcast update failed -- backing off to updating `last_retrieved_at`"
+                );
+                let num_rows_updated: usize = diesel::update(
+                    schema::podcast::table.filter(
+                        schema::podcast::id.eq_any(
+                            schema::podcast::table
+                                .left_join(
+                                    schema::podcast_feed_location::table.on(schema::podcast::id
+                                        .eq(schema::podcast_feed_location::podcast_id)),
+                                )
+                                .filter(
+                                    schema::podcast_feed_location::feed_url
+                                        .eq(self.feed_url.as_str()),
+                                )
+                                .select(schema::podcast::id),
+                        ),
+                    ),
+                ).set(
+                    schema::podcast::last_retrieved_at.eq(Utc::now()),
+                )
+                    .execute(self.conn)?;
+                info!(log, "Update complete"; "num_rows_updated" => num_rows_updated);
+                Ok(())
+            },
+        )
     }
 
     fn upsert_podcast_feed_content(
