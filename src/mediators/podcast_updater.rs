@@ -144,7 +144,7 @@ impl<'a> PodcastUpdater<'a> {
                 }
             }
             info!(log, "Converted episodes";
-            "num_valid" => episodes.len(), "num_invalid" => num_candidates - episodes.len());
+                "num_valid" => episodes.len(), "num_invalid" => num_candidates - episodes.len());
 
             Ok(episodes)
         })
@@ -200,9 +200,11 @@ impl<'a> PodcastUpdater<'a> {
                         }
                         name => reader.read_to_end(name, &mut skip_buf)?,
                     },
+                    Ok(Event::End(_e)) => break,
                     Ok(Event::Eof) => break,
                     _ => {}
                 }
+                buf.clear();
             }
 
             Err("No rss tag found".into())
@@ -489,16 +491,29 @@ fn content_hash(content: &[u8]) -> String {
 }
 
 fn element_text<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<String> {
+    let mut content: Option<String> = None;
     let mut buf = Vec::new();
-    match reader.read_event(&mut buf) {
-        Ok(Event::CData(ref e)) | Ok(Event::Text(ref e)) => {
-            let val = safe_unescape_and_decode(log, e, reader);
-            return Ok(val.clone());
+    let mut skip_buf = Vec::new();
+
+    loop {
+        match reader.read_event(&mut buf)? {
+            Event::Start(element) => {
+                reader.read_to_end(element.name(), &mut skip_buf)?;
+            }
+            Event::CData(ref e) | Event::Text(ref e) => {
+                let val = safe_unescape_and_decode(log, e, reader);
+                content = Some(val.clone());
+            }
+            Event::End(_) | Event::Eof => break,
+            _ => {}
         }
-        _ => {}
+        buf.clear();
     }
 
-    Err("No content found".into())
+    match content {
+        Some(s) => Ok(s),
+        None => Err("No content found in tag".into()),
+    }
 }
 
 fn parse_channel<R: BufRead>(
@@ -516,23 +531,31 @@ fn parse_channel<R: BufRead>(
                 b"item" => episodes.push(parse_item(log, reader)?),
                 b"language" => podcast.language = Some(element_text(log, reader)?),
                 b"link" => podcast.link_url = Some(element_text(log, reader)?),
-                b"media:thumbnail" => for attr in e.attributes().with_checks(false) {
-                    if let Ok(attr) = attr {
-                        if attr.key == b"url" {
-                            podcast.image_url = Some(attr.unescape_and_decode_value(reader)
-                                .chain_err(|| "Error unescaping and decoding attribute")?);
+                b"media:thumbnail" => {
+                    for attr in e.attributes().with_checks(false) {
+                        if let Ok(attr) = attr {
+                            if attr.key == b"url" {
+                                podcast.image_url = Some(attr.unescape_and_decode_value(reader)
+                                    .chain_err(|| "Error unescaping and decoding attribute")?);
+                            }
                         }
                     }
-                },
+                    reader.read_to_end(e.name(), &mut skip_buf)?;
+                }
                 b"title" => {
                     podcast.title = Some(element_text(log, reader)?);
                     info!(log, "Parsed title"; "title" => podcast.title.clone());
                 }
-                name => reader.read_to_end(name, &mut skip_buf)?,
+                name => {
+                    info!(log, "Skipped element"; "name" => format!("{}", String::from_utf8_lossy(name)));
+                    reader.read_to_end(name, &mut skip_buf)?
+                }
             },
-            Ok(Event::Eof) => break,
+            Ok(Event::End(_e)) => break,
+            Ok(Event::Eof) => return Err(Error::from("Unexpected EOF while parsing <channel> tag")),
             _ => {}
         }
+        buf.clear();
     }
 
     Ok((podcast, episodes))
@@ -573,21 +596,34 @@ fn parse_rss<R: BufRead>(
 ) -> Result<(raw::Podcast, Vec<raw::Episode>)> {
     let mut buf = Vec::new();
     let mut skip_buf = Vec::new();
+    let mut res: Option<(raw::Podcast, Vec<raw::Episode>)> = None;
 
     loop {
         match reader.read_event(&mut buf) {
             Ok(Event::Start(ref e)) => match e.name() {
                 b"channel" => {
-                    return parse_channel(log, reader);
+                    if res.is_none() {
+                        res = Some(parse_channel(log, reader)?);
+                    } else {
+                        info!(
+                            log,
+                            "Found channel tag, but already parsed a channel -- skipping"
+                        );
+                    }
                 }
                 name => reader.read_to_end(name, &mut skip_buf)?,
             },
-            Ok(Event::Eof) => break,
+            Ok(Event::End(_e)) => break,
+            Ok(Event::Eof) => return Err(Error::from("Unexpected EOF while parsing <rss> tag")),
             _ => {}
         }
+        buf.clear();
     }
 
-    Err("No channel tag found".into())
+    match res {
+        Some(t) => Ok(t),
+        None => Err("No channel tag found in feed".into()),
+    }
 }
 
 fn parse_item<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<raw::Episode> {
@@ -599,31 +635,41 @@ fn parse_item<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<raw::E
         match reader.read_event(&mut buf) {
             Ok(Event::Start(ref e)) => match e.name() {
                 b"description" => episode.description = Some(element_text(log, reader)?),
-                b"enclosure" | b"media:content" => for attr in e.attributes().with_checks(false) {
-                    if let Ok(attr) = attr {
-                        match attr.key {
-                            b"type" => {
-                                episode.media_type = Some(attr.unescape_and_decode_value(reader)
-                                    .chain_err(|| "Error unescaping and decoding attribute")?);
+                b"enclosure" | b"media:content" => {
+                    for attr in e.attributes().with_checks(false) {
+                        if let Ok(attr) = attr {
+                            match attr.key {
+                                b"type" => {
+                                    episode.media_type = Some(attr.unescape_and_decode_value(
+                                        reader,
+                                    ).chain_err(|| "Error unescaping and decoding attribute")?);
+                                }
+                                b"url" => {
+                                    episode.media_url = Some(attr.unescape_and_decode_value(
+                                        reader,
+                                    ).chain_err(|| "Error unescaping and decoding attribute")?);
+                                }
+                                _ => (),
                             }
-                            b"url" => {
-                                episode.media_url = Some(attr.unescape_and_decode_value(reader)
-                                    .chain_err(|| "Error unescaping and decoding attribute")?);
-                            }
-                            _ => (),
                         }
                     }
-                },
+                    reader.read_to_end(e.name(), &mut skip_buf)?;
+                }
                 b"guid" => episode.guid = Some(element_text(log, reader)?),
                 b"itunes:explicit" => episode.explicit = Some(element_text(log, reader)? == "yes"),
                 b"link" => episode.link_url = Some(element_text(log, reader)?),
                 b"pubDate" => episode.published_at = Some(element_text(log, reader)?),
                 b"title" => episode.title = Some(element_text(log, reader)?),
-                name => reader.read_to_end(name, &mut skip_buf)?,
+                name => {
+                    info!(log, "Skipped element"; "name" => format!("{}", String::from_utf8_lossy(name)));
+                    reader.read_to_end(name, &mut skip_buf)?
+                }
             },
-            Ok(Event::Eof) => break,
+            Ok(Event::End(_e)) => break,
+            Ok(Event::Eof) => return Err(Error::from("Unexpected EOF while parsing <item> tag")),
             _ => {}
         }
+        buf.clear();
     }
 
     Ok(episode)
@@ -738,7 +784,7 @@ mod tests {
         //
 
         let episodes = res.episodes.unwrap();
-        assert_eq!(1, episodes.len());
+        assert_eq!(2, episodes.len());
 
         let episode = &episodes[0];
         assert_ne!(0, episode.id);
@@ -750,6 +796,19 @@ mod tests {
         assert_eq!(res.podcast.id, episode.podcast_id);
         assert_eq!(
             Utc.ymd(2017, 12, 24).and_hms(21, 37, 32),
+            episode.published_at
+        );
+
+        let episode = &episodes[1];
+        assert_ne!(0, episode.id);
+        assert_eq!(Some("Item 2 description".to_owned()), episode.description);
+        assert_eq!(Some(true), episode.explicit);
+        assert_eq!("2", episode.guid);
+        assert_eq!(Some("audio/mpeg".to_owned()), episode.media_type);
+        assert_eq!("https://example.com/item-2", episode.media_url);
+        assert_eq!(res.podcast.id, episode.podcast_id);
+        assert_eq!(
+            Utc.ymd(2017, 12, 23).and_hms(21, 37, 32),
             episode.published_at
         );
     }
@@ -844,6 +903,33 @@ mod tests {
                 .count()
                 .first(&*bootstrap.conn)
         );
+    }
+
+    #[test]
+    fn test_truncated_feed() {
+        let mut bootstrap = TestBootstrap::new(
+            br#"
+<?xml version="1.0" encoding="UTF-8"?>
+<rss>
+  <channel>
+    <language>en-US</language>"#,
+        );
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log);
+
+        assert_eq!(true, res.is_err());
+        let err = res.err().unwrap();
+        let mut err_iter = err.iter();
+
+        assert_eq!(
+            "Error in database transaction",
+            err_iter.next().unwrap().to_string()
+        );
+        assert_eq!(
+            "Unexpected EOF while parsing <channel> tag",
+            err_iter.next().unwrap().to_string()
+        );
+        assert_eq!(true, err_iter.next().is_none());
     }
 
     #[test]

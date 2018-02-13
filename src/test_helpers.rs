@@ -17,6 +17,11 @@ use std::time::Duration;
 // Public constants
 //
 
+// An "ideal" feed that has proper formatting and the standard set of expected
+// fields.
+//
+// I've previously run into bugs where we were only processing one episode, so
+// try to keep at least two items in this list.
 pub const IDEAL_FEED: &[u8] = br#"
 <?xml version="1.0" encoding="UTF-8"?>
 <rss>
@@ -32,6 +37,14 @@ pub const IDEAL_FEED: &[u8] = br#"
       <media:content url="https://example.com/item-1" type="audio/mpeg"/>
       <pubDate>Sun, 24 Dec 2017 21:37:32 +0000</pubDate>
       <title>Item 1 Title</title>
+    </item>
+    <item>
+      <description><![CDATA[Item 2 description]]></description>
+      <guid>2</guid>
+      <itunes:explicit>yes</itunes:explicit>
+      <media:content url="https://example.com/item-2" type="audio/mpeg"/>
+      <pubDate>Sat, 23 Dec 2017 21:37:32 +0000</pubDate>
+      <title>Item 2 Title</title>
     </item>
   </channel>
 </rss>"#;
