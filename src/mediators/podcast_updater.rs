@@ -47,16 +47,9 @@ impl<'a> PodcastUpdater<'a> {
                     // As a latch ditch effort, update the timestamp indicating when the podcast
                     // was last retrieved in the case of a previously succeeding podcast that now
                     // fails. Otherwise, the crawler will attempt to process it over and over again
-                    // because the entire transaction rolled back.
-                    if let Err(e) = self.conn
-                        .transaction::<_, Error, _>(|| self.update_podcast_last_retrieved_at(log))
-                    {
-                        error_helpers::print_error(log, &e);
-
-                        if let Err(inner_e) = error_helpers::report_error(log, &e) {
-                            error_helpers::print_error(log, &inner_e);
-                        }
-                    }
+                    // because the entire transaction rolled back. We also store an exception
+                    // record to ease debugging.
+                    self.run_recovery(log, &e);
 
                     // Return the original error because it's going to be more useful.
                     Err(e.chain_err(|| "Error in database transaction"))
@@ -116,11 +109,33 @@ impl<'a> PodcastUpdater<'a> {
 
         let episodes = self.upsert_episodes(log, &ins_episodes)?;
 
+        // Now that we've had a successful run, remove any existing exceptions.
+        self.delete_exception(log, &podcast)?;
+
         Ok(RunResult {
             episodes: Some(episodes),
             location: location,
             podcast:  podcast,
         })
+    }
+
+    fn run_recovery(&mut self, log: &Logger, e: &Error) {
+        let res = self.conn.transaction::<_, Error, _>(|| {
+            let res = query_podcast(log, self.conn, self.feed_url.as_str())?;
+            if let Some(podcast_id) = res {
+                self.update_podcast_last_retrieved_at(log, podcast_id)?;
+                self.upsert_exception(log, podcast_id, e)?;
+            }
+            Ok(())
+        });
+
+        if let Err(e) = res {
+            error_helpers::print_error(log, &e);
+
+            if let Err(inner_e) = error_helpers::report_error(log, &e) {
+                error_helpers::print_error(log, &inner_e);
+            }
+        }
     }
 
     //
@@ -191,6 +206,17 @@ impl<'a> PodcastUpdater<'a> {
                 }
             },
         )
+    }
+
+    fn delete_exception(&mut self, log: &Logger, podcast: &model::Podcast) -> Result<()> {
+        common::log_timed(&log.new(o!("step" => "delete_exception")), |_log| {
+            diesel::delete(
+                schema::podcast_exception::table
+                    .filter(schema::podcast_exception::podcast_id.eq(podcast.id)),
+            ).execute(self.conn)
+                .chain_err(|| "Error deleting podcast exception")
+        })?;
+        Ok(())
     }
 
     fn fetch_feed(&mut self, log: &Logger) -> Result<(Vec<u8>, String)> {
@@ -265,24 +291,37 @@ impl<'a> PodcastUpdater<'a> {
         })
     }
 
+    fn upsert_exception(&mut self, log: &Logger, podcast_id: i64, e: &Error) -> Result<()> {
+        let ins_ex = insertable::PodcastException {
+            podcast_id:  podcast_id,
+            errors:      error_strings(e),
+            occurred_at: Utc::now(),
+        };
+
+        common::log_timed(&log.new(o!("step" => "upsert_exception")), |_log| {
+            diesel::insert_into(schema::podcast_exception::table)
+                .values(&ins_ex)
+                .on_conflict(schema::podcast_exception::podcast_id)
+                .do_update()
+                .set((
+                    schema::podcast_exception::errors
+                        .eq(excluded(schema::podcast_exception::errors)),
+                    schema::podcast_exception::occurred_at
+                        .eq(excluded(schema::podcast_exception::occurred_at)),
+                ))
+                .execute(self.conn)
+                .chain_err(|| "Error upserting podcast exception")
+        })?;
+        Ok(())
+    }
+
     fn upsert_podcast(
         &mut self,
         log: &Logger,
         ins_podcast: &insertable::Podcast,
         final_url: &str,
     ) -> Result<model::Podcast> {
-        let podcast_id: Option<i64> =
-            common::log_timed(&log.new(o!("step" => "query_podcast")), |_log| {
-                schema::podcast::table
-                    .left_join(
-                        schema::podcast_feed_location::table
-                            .on(schema::podcast::id.eq(schema::podcast_feed_location::podcast_id)),
-                    )
-                    .filter(schema::podcast_feed_location::feed_url.eq(final_url))
-                    .select(schema::podcast::id)
-                    .first(self.conn)
-                    .optional()
-            })?;
+        let podcast_id: Option<i64> = query_podcast(log, self.conn, final_url)?;
 
         if let Some(podcast_id) = podcast_id {
             info!(log, "Found existing podcast ID {}", podcast_id);
@@ -303,7 +342,7 @@ impl<'a> PodcastUpdater<'a> {
         }
     }
 
-    fn update_podcast_last_retrieved_at(&mut self, log: &Logger) -> Result<()> {
+    fn update_podcast_last_retrieved_at(&mut self, log: &Logger, podcast_id: i64) -> Result<()> {
         common::log_timed(
             &log.new(o!("step" => "update_podcast_last_retrieved_at")),
             |log| {
@@ -311,25 +350,11 @@ impl<'a> PodcastUpdater<'a> {
                     log,
                     "Podcast update failed -- backing off to updating `last_retrieved_at`"
                 );
-                let num_rows_updated: usize = diesel::update(
-                    schema::podcast::table.filter(
-                        schema::podcast::id.eq_any(
-                            schema::podcast::table
-                                .left_join(
-                                    schema::podcast_feed_location::table.on(schema::podcast::id
-                                        .eq(schema::podcast_feed_location::podcast_id)),
-                                )
-                                .filter(
-                                    schema::podcast_feed_location::feed_url
-                                        .eq(self.feed_url.as_str()),
-                                )
-                                .select(schema::podcast::id),
-                        ),
-                    ),
-                ).set(
-                    schema::podcast::last_retrieved_at.eq(Utc::now()),
-                )
-                    .execute(self.conn)?;
+                let num_rows_updated: usize =
+                    diesel::update(
+                        schema::podcast::table.filter(schema::podcast::id.eq(podcast_id)),
+                    ).set(schema::podcast::last_retrieved_at.eq(Utc::now()))
+                        .execute(self.conn)?;
                 info!(log, "Update complete"; "num_rows_updated" => num_rows_updated);
                 Ok(())
             },
@@ -780,6 +805,21 @@ pub fn safe_unescape_and_decode<'b, B: BufRead>(
             reader.decode(&*bytes).into_owned()
         }
     }
+}
+
+fn query_podcast(log: &Logger, conn: &PgConnection, url: &str) -> Result<Option<i64>> {
+    common::log_timed(&log.new(o!("step" => "query_podcast")), |_log| {
+        schema::podcast::table
+            .left_join(
+                schema::podcast_feed_location::table
+                    .on(schema::podcast::id.eq(schema::podcast_feed_location::podcast_id)),
+            )
+            .filter(schema::podcast_feed_location::feed_url.eq(url))
+            .select(schema::podcast::id)
+            .first(conn)
+            .optional()
+            .chain_err(|| "Error querying podcast")
+    })
 }
 
 fn validate_episode(raw: &raw::Episode, podcast: &model::Podcast) -> Result<EpisodeOrInvalid> {

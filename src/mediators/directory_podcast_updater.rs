@@ -68,7 +68,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
     //
 
     fn delete_exception(&mut self, log: &Logger) -> Result<()> {
-        common::log_timed(&log.new(o!("step" => "save_dir_podcast")), |_log| {
+        common::log_timed(&log.new(o!("step" => "delete_exception")), |_log| {
             diesel::delete(schema::directory_podcast_exception::table.filter(
                 schema::directory_podcast_exception::directory_podcast_id.eq(self.dir_podcast.id),
             )).execute(self.conn)

@@ -69,12 +69,21 @@ table! {
 }
 
 table! {
+    podcast_exception (id) {
+        id -> Int8,
+        podcast_id -> Int8,
+        errors -> Array<Text>,
+        occurred_at -> Timestamptz,
+    }
+}
+
+table! {
     podcast_feed_content (id) {
         id -> Int8,
         podcast_id -> Int8,
         retrieved_at -> Timestamptz,
         sha256_hash -> Text,
-        content_gzip -> Nullable<Bytea>,
+        content_gzip -> Bytea,
     }
 }
 
@@ -95,6 +104,7 @@ joinable!(directory_podcast_directory_search -> directory_search (directory_sear
 joinable!(directory_podcast_exception -> directory_podcast (directory_podcast_id));
 joinable!(directory_search -> directory (directory_id));
 joinable!(episode -> podcast (podcast_id));
+joinable!(podcast_exception -> podcast (podcast_id));
 joinable!(podcast_feed_content -> podcast (podcast_id));
 joinable!(podcast_feed_location -> podcast (podcast_id));
 
@@ -106,6 +116,7 @@ allow_tables_to_appear_in_same_query!(
     directory_search,
     episode,
     podcast,
+    podcast_exception,
     podcast_feed_content,
     podcast_feed_location,
 );
