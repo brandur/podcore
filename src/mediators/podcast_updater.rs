@@ -749,14 +749,10 @@ fn parse_item<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<raw::E
                         if let Ok(attr) = attr {
                             match attr.key {
                                 b"type" => {
-                                    episode.media_type = Some(attr.unescape_and_decode_value(
-                                        reader,
-                                    ).chain_err(|| "Error unescaping and decoding attribute")?);
+                                    episode.media_type = Some(attribute_text(log, reader, &attr)?);
                                 }
                                 b"url" => {
-                                    episode.media_url = Some(attr.unescape_and_decode_value(
-                                        reader,
-                                    ).chain_err(|| "Error unescaping and decoding attribute")?);
+                                    episode.media_url = Some(attribute_text(log, reader, &attr)?);
                                 }
                                 _ => (),
                             }
