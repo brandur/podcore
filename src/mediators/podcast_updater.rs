@@ -94,6 +94,10 @@ impl<'a> PodcastUpdater<'a> {
         // this podcast in the past and can save ourselves some work by
         // skipping it.
         if !self.disable_shortcut && self.already_processed(log, &podcast, sha256_hash.as_str())? {
+            info!(
+                log,
+                "Already processed identical content -- short circuiting"
+            );
             return Ok(RunResult {
                 episodes: None,
                 location: location,
@@ -1068,11 +1072,43 @@ mod tests {
     }
 
     #[test]
+    fn test_podcast_exception_creation() {
+        // Establish one connection with an open transaction for which data will live
+        // across this whole test.
+        let conn = test_helpers::connection();
+
+        // Run once to get a podcast record.
+        let res = {
+            let mut bootstrap = TestBootstrapWithConn::new(test_helpers::MINIMAL_FEED, &*conn);
+            let (mut mediator, log) = bootstrap.mediator();
+            mediator.run(&log).unwrap()
+        };
+
+        assert_eq!(Ok(1), schema::podcast::table.count().first(&*conn));
+
+        // Run again with an invalid feed. `feed_url` is consistent across all
+        // `TestBootstrap` instances, so this will target the same podcast.
+        {
+            let mut bootstrap = TestBootstrapWithConn::new(b"not a feed", &*conn);
+            let (mut mediator, log) = bootstrap.mediator();
+            let res = mediator.run(&log);
+            assert_eq!(true, res.is_err());
+        }
+
+        let podcast_ex: model::PodcastException =
+            schema::podcast_exception::table.first(&*conn).unwrap();
+        assert_eq!(res.podcast.id, podcast_ex.podcast_id);
+    }
+
+    #[test]
     fn test_podcast_exception_removal() {
-        let mut bootstrap = TestBootstrap::new(test_helpers::MINIMAL_FEED);
+        // Establish one connection with an open transaction for which data will live
+        // across this whole test.
+        let conn = test_helpers::connection();
 
         // Run once to get a podcast record to target.
         let res = {
+            let mut bootstrap = TestBootstrapWithConn::new(test_helpers::MINIMAL_FEED, &*conn);
             let (mut mediator, log) = bootstrap.mediator();
             mediator.run(&log).unwrap()
         };
@@ -1084,10 +1120,11 @@ mod tests {
         };
         diesel::insert_into(schema::podcast_exception::table)
             .values(&podcast_ex_ins)
-            .execute(&*bootstrap.conn)
+            .execute(&*conn)
             .unwrap();
 
         {
+            let mut bootstrap = TestBootstrapWithConn::new(test_helpers::MINIMAL_FEED, &*conn);
             let (mut mediator, log) = bootstrap.mediator();
 
             // If the shortcut is taken the exception isn't removed. We need a full run.
@@ -1099,9 +1136,7 @@ mod tests {
         // Exception count should now be back down to zero
         assert_eq!(
             Ok(0),
-            schema::podcast_exception::table
-                .count()
-                .first(&*bootstrap.conn)
+            schema::podcast_exception::table.count().first(&*conn)
         );
     }
 
@@ -1434,6 +1469,41 @@ mod tests {
             (
                 PodcastUpdater {
                     conn:             &*self.conn,
+                    disable_shortcut: false,
+                    feed_url:         self.feed_url.to_owned(),
+                    http_requester:   &mut self.http_requester,
+                },
+                self.log.clone(),
+            )
+        }
+    }
+
+    // The suite runs on test transactions that are connection-specific, so this
+    // version of `TestBootStrap` is useful for sharing state across multiple
+    // bootstraps.
+    struct TestBootstrapWithConn<'a> {
+        conn:           &'a PgConnection,
+        feed_url:       &'static str,
+        log:            Logger,
+        http_requester: HTTPRequesterPassThrough,
+    }
+
+    impl<'a> TestBootstrapWithConn<'a> {
+        fn new(data: &[u8], conn: &'a PgConnection) -> TestBootstrapWithConn<'a> {
+            TestBootstrapWithConn {
+                conn:           conn,
+                feed_url:       "https://example.com/feed.xml",
+                log:            test_helpers::log(),
+                http_requester: HTTPRequesterPassThrough {
+                    data: Arc::new(data.to_vec()),
+                },
+            }
+        }
+
+        fn mediator(&mut self) -> (PodcastUpdater, Logger) {
+            (
+                PodcastUpdater {
+                    conn:             self.conn,
                     disable_shortcut: false,
                     feed_url:         self.feed_url.to_owned(),
                     http_requester:   &mut self.http_requester,
