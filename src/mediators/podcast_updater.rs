@@ -21,6 +21,7 @@ use quick_xml::events::attributes::Attribute;
 use quick_xml::reader::Reader;
 use regex::Regex;
 use slog::Logger;
+use std::collections::HashSet;
 use std::io::BufRead;
 use std::io::prelude::*;
 use std::str;
@@ -175,6 +176,7 @@ impl<'a> PodcastUpdater<'a> {
         podcast: &model::Podcast,
     ) -> Result<Vec<insertable::Episode>> {
         common::log_timed(&log.new(o!("step" => "convert_episodes")), |log| {
+            let mut guids: HashSet<String> = HashSet::new();
             let num_candidates = raws.len();
             let mut episodes = Vec::with_capacity(num_candidates);
 
@@ -182,7 +184,15 @@ impl<'a> PodcastUpdater<'a> {
                 match validate_episode(&raw, podcast)
                     .chain_err(|| format!("Failed to convert: {:?}", raw))?
                 {
-                    EpisodeOrInvalid::Valid(e) => episodes.push(e),
+                    EpisodeOrInvalid::Valid(e) => {
+                        if guids.contains(&e.guid) {
+                            info!(log, "Found duplicate item <guid> -- discarding episode";
+                                "guid" => e.guid);
+                        } else {
+                            guids.insert(e.guid.clone());
+                            episodes.push(e);
+                        }
+                    }
                     EpisodeOrInvalid::Invalid {
                         message: m,
                         guid: g,
@@ -871,7 +881,7 @@ mod tests {
     use std::sync::Arc;
 
     #[test]
-    fn test_ideal_feed() {
+    fn test_feed_ideal() {
         let mut bootstrap = TestBootstrap::new(test_helpers::IDEAL_FEED);
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
@@ -915,6 +925,7 @@ mod tests {
             Utc.ymd(2017, 12, 24).and_hms(21, 37, 32),
             episode.published_at
         );
+        assert_eq!("Item 1 Title", episode.title);
 
         let episode = &episodes[1];
         assert_ne!(0, episode.id);
@@ -928,10 +939,11 @@ mod tests {
             Utc.ymd(2017, 12, 23).and_hms(21, 37, 32),
             episode.published_at
         );
+        assert_eq!("Item 2 Title", episode.title);
     }
 
     #[test]
-    fn test_minimal_feed() {
+    fn test_feed_minimal() {
         let mut bootstrap = TestBootstrap::new(test_helpers::MINIMAL_FEED);
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
@@ -948,6 +960,7 @@ mod tests {
             Utc.ymd(2017, 12, 24).and_hms(21, 37, 32),
             episode.published_at
         );
+        assert_eq!("Item 1 Title", episode.title);
     }
 
     #[test]
@@ -1023,7 +1036,39 @@ mod tests {
     }
 
     #[test]
-    fn test_truncated_feed() {
+    fn test_feed_duplicated_guids() {
+        let mut bootstrap = TestBootstrap::new(
+            br#"
+<?xml version="1.0" encoding="UTF-8"?>
+<rss>
+  <channel>
+    <title>Title</title>
+    <item>
+      <guid>1</guid>
+      <media:content url="https://example.com/item-1" type="audio/mpeg"/>
+      <pubDate>Sun, 24 Dec 2017 21:37:32 +0000</pubDate>
+      <title>Item 1 Title</title>
+    </item>
+    <item>
+      <guid>1</guid><!-- Note this is the same as the first! -->
+      <media:content url="https://example.com/item-1" type="audio/mpeg"/>
+      <pubDate>Sun, 24 Dec 2017 21:37:32 +0000</pubDate>
+      <title>Item 1 Duplicate</title>
+    </item>
+  </channel>
+</rss>"#,
+        );
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
+
+        // There were two episodes, but because they had duplicate GUIDs, one was
+        // discarded.
+        let episodes = res.episodes.unwrap();
+        assert_eq!(1, episodes.len());
+    }
+
+    #[test]
+    fn test_feed_truncated() {
         let mut bootstrap = TestBootstrap::new(
             br#"
 <?xml version="1.0" encoding="UTF-8"?>
@@ -1050,7 +1095,7 @@ mod tests {
     }
 
     #[test]
-    fn test_garbage() {
+    fn test_feed_invalid() {
         let mut bootstrap = TestBootstrap::new(b"not a feed");
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log);
