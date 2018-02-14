@@ -1,11 +1,13 @@
 use errors::*;
 
+use flate2::read::GzDecoder;
 use futures::Stream;
 use hyper::{Body, Client, Request, StatusCode, Uri};
 use hyper::client::HttpConnector;
-use hyper::header::{Location, UserAgent};
+use hyper::header::{qitem, AcceptEncoding, ContentEncoding, Encoding, Location, UserAgent};
 use hyper_tls::HttpsConnector;
 use slog::Logger;
+use std::io::prelude::*;
 use std::str::FromStr;
 use std::sync::Arc;
 use tokio_core::reactor::Core;
@@ -96,8 +98,11 @@ impl HTTPRequesterLive {
             return Err(Error::from("Hit HTTP redirect limit and not continuing"));
         }
 
-        req.headers_mut()
-            .set::<UserAgent>(UserAgent::new("Podcore/1.0".to_owned()));
+        {
+            let headers = req.headers_mut();
+            headers.set::<AcceptEncoding>(AcceptEncoding(vec![qitem(Encoding::Gzip)]));
+            headers.set::<UserAgent>(UserAgent::new("Podcore/1.0".to_owned()));
+        }
 
         info!(log, "Executing HTTP request"; "redirect_depth" => redirect_depth,
             "method" => format!("{}", req.method()), "uri" => format!("{}", req.uri()));
@@ -134,10 +139,27 @@ impl HTTPRequesterLive {
             return Ok((status, body, uri));
         }
 
-        let body = self.core
+        let gzipped = match res.headers().get::<ContentEncoding>() {
+            Some(e) => e.contains(&Encoding::Gzip),
+            None => false,
+        };
+
+        let body_chunk = self.core
             .run(res.body().concat2())
             .chain_err(|| format!("Error reading body from URL: {}", uri))?;
-        Ok((status, (*body).to_vec(), uri))
+
+        let mut body = (*body_chunk).to_vec();
+        if gzipped {
+            info!(log, "Decoding gzip-encoded body"; "body_length" => body.len());
+            let mut body_decoded: Vec<u8> = Vec::new();
+            {
+                let mut decoder = GzDecoder::new(body.as_slice());
+                decoder.read_to_end(&mut body_decoded)?;
+            }
+            body = body_decoded;
+        }
+
+        Ok((status, body, uri))
     }
 }
 
