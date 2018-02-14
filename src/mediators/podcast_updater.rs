@@ -293,8 +293,8 @@ impl<'a> PodcastUpdater<'a> {
 
     fn upsert_exception(&mut self, log: &Logger, podcast_id: i64, e: &Error) -> Result<()> {
         let ins_ex = insertable::PodcastException {
-            podcast_id:  podcast_id,
             errors:      error_strings(e),
+            podcast_id:  podcast_id,
             occurred_at: Utc::now(),
         };
 
@@ -1065,6 +1065,44 @@ mod tests {
         );
         assert_eq!("No rss tag found", err_iter.next().unwrap().to_string());
         assert_eq!(true, err_iter.next().is_none());
+    }
+
+    #[test]
+    fn test_podcast_exception_removal() {
+        let mut bootstrap = TestBootstrap::new(test_helpers::MINIMAL_FEED);
+
+        // Run once to get a podcast record to target.
+        let res = {
+            let (mut mediator, log) = bootstrap.mediator();
+            mediator.run(&log).unwrap()
+        };
+
+        let podcast_ex_ins = insertable::PodcastException {
+            errors:      vec!["a".to_owned(), "b".to_owned()],
+            podcast_id:  res.podcast.id,
+            occurred_at: Utc::now(),
+        };
+        diesel::insert_into(schema::podcast_exception::table)
+            .values(&podcast_ex_ins)
+            .execute(&*bootstrap.conn)
+            .unwrap();
+
+        {
+            let (mut mediator, log) = bootstrap.mediator();
+
+            // If the shortcut is taken the exception isn't removed. We need a full run.
+            mediator.disable_shortcut = true;
+
+            let _res = mediator.run(&log).unwrap();
+        }
+
+        // Exception count should now be back down to zero
+        assert_eq!(
+            Ok(0),
+            schema::podcast_exception::table
+                .count()
+                .first(&*bootstrap.conn)
+        );
     }
 
     #[test]

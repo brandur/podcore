@@ -101,8 +101,8 @@ pub struct Podcast {
 #[derive(Queryable)]
 pub struct PodcastException {
     pub id:          i64,
-    pub podcast_id:  i64,
     pub errors:      Vec<String>,
+    pub podcast_id:  i64,
     pub occurred_at: DateTime<Utc>,
 }
 
@@ -194,8 +194,8 @@ pub mod insertable {
     #[derive(Insertable)]
     #[table_name = "podcast_exception"]
     pub struct PodcastException {
-        pub podcast_id:  i64,
         pub errors:      Vec<String>,
+        pub podcast_id:  i64,
         pub occurred_at: DateTime<Utc>,
     }
 
