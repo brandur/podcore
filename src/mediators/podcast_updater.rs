@@ -17,6 +17,7 @@ use flate2::Compression;
 use flate2::write::GzEncoder;
 use hyper::{Method, Request, StatusCode, Uri};
 use quick_xml::events::{BytesText, Event};
+use quick_xml::events::attributes::Attribute;
 use quick_xml::reader::Reader;
 use regex::Regex;
 use slog::Logger;
@@ -549,12 +550,30 @@ mod raw {
 // Private functions
 //
 
+// Extracts a value from an XML attribute.
+//
+// If any content is found, it's trimmed of whitespace.
+fn attribute_text<R: BufRead>(
+    _log: &Logger,
+    reader: &mut Reader<R>,
+    attr: &Attribute,
+) -> Result<String> {
+    Ok(attr.unescape_and_decode_value(reader)
+        .chain_err(|| "Error unescaping and decoding attribute")?
+        .trim()
+        .to_owned())
+}
+
 fn content_hash(content: &[u8]) -> String {
     let mut sha = Sha256::new();
     sha.input(content);
     sha.result_str()
 }
 
+// Extracts any text or content in cdata tags found within the reader's current
+// element.
+//
+// If any content is found, it's trimmed of whitespace.
 fn element_text<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<String> {
     let mut content: Option<String> = None;
     let mut buf = Vec::new();
@@ -576,7 +595,7 @@ fn element_text<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<Stri
     }
 
     match content {
-        Some(s) => Ok(s),
+        Some(s) => Ok(s.trim().to_owned()),
         None => Err("No content found in tag".into()),
     }
 }
@@ -600,8 +619,7 @@ fn parse_channel<R: BufRead>(
                     for attr in e.attributes().with_checks(false) {
                         if let Ok(attr) = attr {
                             if attr.key == b"url" {
-                                podcast.image_url = Some(attr.unescape_and_decode_value(reader)
-                                    .chain_err(|| "Error unescaping and decoding attribute")?);
+                                podcast.image_url = Some(attribute_text(log, reader, &attr)?);
                             }
                         }
                     }
