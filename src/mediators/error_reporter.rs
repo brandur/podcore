@@ -320,6 +320,7 @@ mod tests {
     // Encapsulates the structures that are needed for tests to run. One should
     // only be obtained by invoking TestBootstrap::new().
     struct TestBootstrap {
+        _common:        test_helpers::CommonTestBootstrap,
         creds:          SentryCredentials,
         error:          Error,
         log:            Logger,
@@ -329,6 +330,7 @@ mod tests {
     impl TestBootstrap {
         fn new(error: Error) -> TestBootstrap {
             TestBootstrap {
+                _common:        test_helpers::CommonTestBootstrap::new(),
                 creds:          "https://user:pass@sentry.io/1"
                     .parse::<SentryCredentials>()
                     .unwrap(),

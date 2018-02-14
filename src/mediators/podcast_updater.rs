@@ -1488,6 +1488,7 @@ mod tests {
     // Encapsulates the structures that are needed for tests to run. One should
     // only be obtained by invoking TestBootstrap::new().
     struct TestBootstrap {
+        _common:        test_helpers::CommonTestBootstrap,
         conn:           PooledConnection<ConnectionManager<PgConnection>>,
         feed_url:       &'static str,
         log:            Logger,
@@ -1497,6 +1498,7 @@ mod tests {
     impl TestBootstrap {
         fn new(data: &[u8]) -> TestBootstrap {
             TestBootstrap {
+                _common:        test_helpers::CommonTestBootstrap::new(),
                 conn:           test_helpers::connection(),
                 feed_url:       "https://example.com/feed.xml",
                 log:            test_helpers::log(),
@@ -1523,6 +1525,7 @@ mod tests {
     // version of `TestBootStrap` is useful for sharing state across multiple
     // bootstraps.
     struct TestBootstrapWithConn<'a> {
+        _common:        test_helpers::CommonTestBootstrap,
         conn:           &'a PgConnection,
         feed_url:       &'static str,
         log:            Logger,
@@ -1532,6 +1535,7 @@ mod tests {
     impl<'a> TestBootstrapWithConn<'a> {
         fn new(data: &[u8], conn: &'a PgConnection) -> TestBootstrapWithConn<'a> {
             TestBootstrapWithConn {
+                _common:        test_helpers::CommonTestBootstrap::new(),
                 conn:           conn,
                 feed_url:       "https://example.com/feed.xml",
                 log:            test_helpers::log(),

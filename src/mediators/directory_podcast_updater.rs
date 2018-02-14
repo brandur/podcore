@@ -207,6 +207,7 @@ mod tests {
     // Encapsulates the structures that are needed for tests to run. One should
     // only be obtained by invoking TestBootstrap::new().
     struct TestBootstrap {
+        _common:        test_helpers::CommonTestBootstrap,
         conn:           PooledConnection<ConnectionManager<PgConnection>>,
         dir_podcast:    model::DirectoryPodcast,
         log:            Logger,
@@ -232,6 +233,7 @@ mod tests {
                 .unwrap();
 
             TestBootstrap {
+                _common:        test_helpers::CommonTestBootstrap::new(),
                 conn:           conn,
                 dir_podcast:    dir_podcast,
                 log:            test_helpers::log(),

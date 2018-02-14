@@ -283,9 +283,10 @@ mod tests {
     //
 
     struct TestBootstrap {
-        conn: PooledConnection<ConnectionManager<PgConnection>>,
-        log:  Logger,
-        pool: Pool<ConnectionManager<PgConnection>>,
+        _common: test_helpers::CommonTestBootstrap,
+        conn:    PooledConnection<ConnectionManager<PgConnection>>,
+        log:     Logger,
+        pool:    Pool<ConnectionManager<PgConnection>>,
     }
 
     impl TestBootstrap {
@@ -293,9 +294,10 @@ mod tests {
             let pool = test_helpers::pool();
             let conn = pool.get().map_err(Error::from).unwrap();
             TestBootstrap {
-                conn: conn,
-                log:  test_helpers::log_sync(),
-                pool: pool,
+                _common: test_helpers::CommonTestBootstrap::new(),
+                conn:    conn,
+                log:     test_helpers::log_sync(),
+                pool:    pool,
             }
         }
 

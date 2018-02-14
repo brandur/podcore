@@ -64,6 +64,26 @@ pub const MINIMAL_FEED: &[u8] = br#"
 </rss>"#;
 
 //
+// Public types
+//
+
+// Gives us a place for adding code that can be run before and after any test.
+//
+// This struct should be a member on *every* `TestBootstrap` throughout the
+// suite.
+pub struct CommonTestBootstrap {}
+
+impl CommonTestBootstrap {
+    pub fn new() -> CommonTestBootstrap {
+        // Make sure that nothing from the test suite is ever capable of reporting to
+        // Sentry, even if the key is set in our environment.
+        env::remove_var("SENTRY_URL");
+
+        CommonTestBootstrap {}
+    }
+}
+
+//
 // Public functions
 //
 
