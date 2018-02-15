@@ -623,9 +623,13 @@ fn element_text<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<Stri
             Event::Start(element) => {
                 reader.read_to_end(element.name(), &mut skip_buf)?;
             }
-            Event::CData(ref e) | Event::Text(ref e) => {
+            Event::CData(ref e) => {
+                let val = reader.decode(&*e).into_owned();
+                content = Some(val);
+            }
+            Event::Text(ref e) => {
                 let val = safe_unescape_and_decode(log, e, reader);
-                content = Some(val.clone());
+                content = Some(val);
             }
             Event::End(_) | Event::Eof => break,
             _ => {}
