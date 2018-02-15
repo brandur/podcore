@@ -109,23 +109,43 @@ impl PodcastCrawler {
                 // Diesel's query DSL cannot handle subselects.
                 diesel::sql_query(
                     "
+                        --
+                        -- Differentiate podcasts that have seen some kind of update even remotely
+                        -- recently and those that haven't. This allows us to back off to a much --
+                        -- more conservative crawl cadence for podcasts that almost never see updates
+                        -- (and in some cases, may never see an update again).
+                        --
+                        WITH podcast_with_refresh_interval AS (
+                            SELECT podcast.id,
+                                podcast.last_retrieved_at,
+                                CASE
+                                    WHEN podcast_feed_content.retrieved_at > NOW() - '1 month'::interval
+                                        THEN $1::interval
+                                    ELSE $2::interval
+                                END AS refresh_interval
+                            FROM podcast
+                                INNER JOIN podcast_feed_content
+                                    ON podcast.id = podcast_feed_content.podcast_id
+                        )
                         SELECT id,
                             (
                                SELECT feed_url
                                FROM podcast_feed_location
-                               WHERE podcast_feed_location.podcast_id = podcast.id
+                               WHERE podcast_feed_location.podcast_id = podcast_with_refresh_interval.id
                                ORDER BY last_retrieved_at DESC
                                LIMIT 1
                             )
-                        FROM podcast
-                        WHERE id > $1
-                            AND last_retrieved_at - trunc(random() * $2) * '1 minute'::interval
-                                <= NOW() - $3::interval
+                        FROM podcast_with_refresh_interval
+                        WHERE id > $3
+                            AND last_retrieved_at - trunc(random() * $4) * '1 minute'::interval
+                                <= NOW() - refresh_interval
                         ORDER BY id
-                        LIMIT $4",
-                ).bind::<BigInt, _>(start_id)
+                        LIMIT $5",
+                )
+                    .bind::<Text, _>(REFRESH_INTERVAL_SHORT)
+                    .bind::<Text, _>(REFRESH_INTERVAL_LONG)
+                    .bind::<BigInt, _>(start_id)
                     .bind::<BigInt, _>(JITTER_MINUTES)
-                    .bind::<Text, _>(REFRESH_INTERVAL)
                     .bind::<BigInt, _>(PAGE_SIZE)
                     .load::<PodcastTuple>(conn)
             },
@@ -155,11 +175,24 @@ const JITTER_MINUTES: i64 = 10;
 
 const PAGE_SIZE: i64 = 100;
 
-// Target interval at which we want to refresh every podcast feed.
+// Target interval at which we want to refresh podcast feeds that are updated
+// infrequently. We back of these a little bit so that we're not incessantly
+// crawling feeds that are almost never updated (and which in some cases may
+// never be updated again). This interval shouldn't be *too* long because there
+// are some high-quality podcasts that almost never see updates, but which we'd
+// still like to see new episodes of as soon as possible (e.g., "Hardcore
+// History").
 //
 // Should be formatted as a string that's coercable to the Postgres interval
 // type.
-static REFRESH_INTERVAL: &'static str = "1 hours";
+static REFRESH_INTERVAL_LONG: &'static str = "1 day";
+
+// Target interval at which we want to refresh podcast feeds that are updated
+// relatively frequently.
+//
+// Should be formatted as a string that's coercable to the Postgres interval
+// type.
+static REFRESH_INTERVAL_SHORT: &'static str = "1 hour";
 
 //
 // Private types
@@ -253,7 +286,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    fn test_crawler_update() {
+    fn test_crawler_short_interval_update() {
         let mut bootstrap = TestBootstrap::new();
 
         // Insert lots of data to be crawled
@@ -277,13 +310,67 @@ mod tests {
 
     #[test]
     #[ignore]
-    fn test_crawler_no_update() {
+    fn test_crawler_short_interval_no_update() {
         let mut bootstrap = TestBootstrap::new();
 
         // Just add one podcast given no data will be crawled anyway: any inserted
         // podcasts are marked as last_retrieved_at too recently, so the
         // crawler will ignore them
         insert_podcast(&bootstrap.log, &*bootstrap.conn);
+
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
+        assert_eq!(0, res.num_podcasts);
+    }
+
+    #[test]
+    #[ignore]
+    fn test_crawler_long_interval_update() {
+        let mut bootstrap = TestBootstrap::new();
+
+        insert_podcast(&bootstrap.log, &*bootstrap.conn);
+
+        diesel::update(schema::podcast_feed_content::table)
+            .set(schema::podcast_feed_content::retrieved_at.eq(Utc::now() - Duration::weeks(52)))
+            .execute(&*bootstrap.conn)
+            .unwrap();
+
+        // Mark podcast as *very* stale so that the crawler will find them despite it
+        // not having been updated in a long time.
+        diesel::update(schema::podcast::table)
+            .set(schema::podcast::last_retrieved_at.eq(Utc::now() - Duration::weeks(1)))
+            .execute(&*bootstrap.conn)
+            .unwrap();
+
+        debug!(&bootstrap.log, "Finished setup (starting the real test)");
+
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
+        assert_eq!(1, res.num_podcasts);
+    }
+
+    #[test]
+    #[ignore]
+    fn test_crawler_long_interval_no_update() {
+        let mut bootstrap = TestBootstrap::new();
+
+        insert_podcast(&bootstrap.log, &*bootstrap.conn);
+
+        diesel::update(schema::podcast_feed_content::table)
+            .set(schema::podcast_feed_content::retrieved_at.eq(Utc::now() - Duration::weeks(52)))
+            .execute(&*bootstrap.conn)
+            .unwrap();
+
+        // Mark podcast as somewhere between the refresh intervals of our long and
+        // short intervals (with a good bit of padding to avoid non-determinism
+        // that might be caused by jitter). not having been updated in a long
+        // time.
+        diesel::update(schema::podcast::table)
+            .set(schema::podcast::last_retrieved_at.eq(Utc::now() - Duration::hours(12)))
+            .execute(&*bootstrap.conn)
+            .unwrap();
+
+        debug!(&bootstrap.log, "Finished setup (starting the real test)");
 
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
