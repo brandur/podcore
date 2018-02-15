@@ -12,11 +12,10 @@
 
 FROM ekidd/rust-musl-builder AS builder
 
-# Add source code. We do a little micromanagement to avoid the target/
-# directory which could be huge.
-ADD ./Cargo.* ./
-ADD ./migrations/ ./migrations/
-ADD ./src/ ./src/
+# Add source code. Note that `.dockerignore` will take care of excluding the
+# vast majority of files in the current directory and just bring in the couple
+# core files that we need.
+ADD ./ ./
 
 # Fix permissions on source code.
 RUN sudo chown -R rust:rust /home/rust
