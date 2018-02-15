@@ -62,6 +62,7 @@ impl PodcastReingester {
             let _ = worker.join();
         }
 
+        info!(log, "Finished reingesting"; "num_podcast" => num_podcasts);
         Ok(RunResult {
             num_podcasts: num_podcasts,
         })

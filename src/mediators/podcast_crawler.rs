@@ -61,6 +61,7 @@ impl PodcastCrawler {
             let _ = worker.join();
         }
 
+        info!(log, "Finished crawling"; "num_podcast" => num_podcasts);
         Ok(RunResult {
             num_podcasts: num_podcasts,
         })
