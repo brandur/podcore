@@ -132,27 +132,8 @@ fn delete_directory_podcast_batch(log: &Logger, conn: &PgConnection) -> Result<D
             // directory searches still pointing to (directory searches will
             // themselves be removed after a certain time period of disuse by another
             // cleaner below, but they won't remove any directory podcast records).
-            diesel::sql_query(
-                "
-                    WITH deleted_batch AS (
-                        DELETE FROM directory_podcast
-                        WHERE id IN (
-                            SELECT id
-                            FROM directory_podcast
-                            WHERE podcast_id IS NULL
-                                AND NOT EXISTS (
-                                    SELECT 1
-                                    FROM directory_podcast_directory_search
-                                    WHERE directory_podcast_id = directory_podcast.id
-                                )
-                            LIMIT $1
-                        )
-                        RETURNING id
-                    )
-                    SELECT COUNT(*)
-                    FROM deleted_batch
-                ",
-            ).bind::<BigInt, _>(DELETE_LIMIT)
+            diesel::sql_query(include_str!("../sql/cleaner_directory_podcast.sql"))
+                .bind::<BigInt, _>(DELETE_LIMIT)
                 .get_result::<DeleteResults>(conn)
                 .chain_err(|| "Error deleting directory podcast content batch")
         },
@@ -164,26 +145,8 @@ fn delete_directory_search_batch(log: &Logger, conn: &PgConnection) -> Result<De
         &log.new(o!("step" => "delete_directory_search_batch", "limit" => DELETE_LIMIT)),
         |_log| {
             // This works because directory_podcast_directory_search is ON DELETE CASCADE
-            diesel::sql_query(
-                "
-                    WITH expired AS (
-                        SELECT id
-                        FROM directory_search
-                        WHERE retrieved_at < NOW() - $1::interval
-                        LIMIT $2
-                    ),
-                    deleted_batch AS (
-                        DELETE FROM directory_search
-                        WHERE id IN (
-                            SELECT id
-                            FROM expired
-                        )
-                        RETURNING id
-                    )
-                    SELECT COUNT(*)
-                    FROM deleted_batch
-                ",
-            ).bind::<Text, _>(DIRECTORY_SEARCH_DELETE_HORIZON)
+            diesel::sql_query(include_str!("../sql/cleaner_directory_search.sql"))
+                .bind::<Text, _>(DIRECTORY_SEARCH_DELETE_HORIZON)
                 .bind::<BigInt, _>(DELETE_LIMIT)
                 .get_result::<DeleteResults>(conn)
                 .chain_err(|| "Error deleting directory search content batch")
@@ -195,34 +158,8 @@ fn delete_podcast_feed_content_batch(log: &Logger, conn: &PgConnection) -> Resul
     common::log_timed(
         &log.new(o!("step" => "delete_podcast_feed_content_batch", "limit" => DELETE_LIMIT)),
         |_log| {
-            diesel::sql_query(
-                "
-                    WITH numbered AS (
-                        SELECT id, podcast_id,
-                            ROW_NUMBER() OVER (
-                                PARTITION BY podcast_id
-                                ORDER BY retrieved_at DESC
-                            )
-                        FROM podcast_feed_content
-                    ),
-                    excess AS (
-                        SELECT id, podcast_id, row_number
-                        FROM numbered
-                        WHERE row_number > $1
-                        LIMIT $2
-                    ),
-                    deleted_batch AS (
-                        DELETE FROM podcast_feed_content
-                        WHERE id IN (
-                            SELECT id
-                            FROM excess
-                        )
-                        RETURNING id
-                    )
-                    SELECT COUNT(*)
-                    FROM deleted_batch
-                ",
-            ).bind::<BigInt, _>(PODCAST_FEED_CONTENT_LIMIT)
+            diesel::sql_query(include_str!("../sql/cleaner_podcast_feed_content.sql"))
+                .bind::<BigInt, _>(PODCAST_FEED_CONTENT_LIMIT)
                 .bind::<BigInt, _>(DELETE_LIMIT)
                 .get_result::<DeleteResults>(conn)
                 .chain_err(|| "Error deleting directory podcast content batch")
