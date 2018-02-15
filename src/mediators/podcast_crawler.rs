@@ -174,6 +174,11 @@ pub struct RunResult {
 // would stay in hourly lockstep.
 const JITTER_MINUTES: i64 = 10;
 
+// Work is chunked so that the database fetcher and workers and able to get
+// some parallelism. It's also useful for protecting us against the degenerate
+// case where the system has been down for a while and everything needs
+// crawling simultaneously. That initial fetch might take a significant
+// amount of time to come back.
 const PAGE_SIZE: i64 = 100;
 
 // Target interval at which we want to refresh podcast feeds that are updated
