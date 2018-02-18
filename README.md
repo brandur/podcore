@@ -37,13 +37,11 @@ Schema changes:
 diesel print-schema > src/schema.rs
 ```
 
-Rustfmt (run on `nightly` because rustfmt can't seem to detach itself from
-`nightly`)::
+Rustfmt:
 
 ```
-rustup install nightly
-cargo install rustfmt-nightly
-rustup run nightly cargo fmt
+rustup component add --toolchain=nightly rustfmt-preview
+cargo +nightly fmt
 ```
 
 Tests:
