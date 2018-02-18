@@ -297,15 +297,7 @@ impl<'a> PodcastUpdater<'a> {
         // This should be runnable in only one query, but Diesel's query builder
         // doesn't currently support referencing the same table twice in a
         // single query so we have to fall back to two separate queries.
-        let podcast_id: Option<i64> =
-            common::log_timed(&log.new(o!("step" => "select_podcast_id")), |_log| {
-                schema::podcast_feed_location::table
-                    .filter(schema::podcast_feed_location::feed_url.eq(url))
-                    .select(schema::podcast_feed_location::podcast_id)
-                    .first(self.conn)
-                    .optional()
-                    .chain_err(|| "Error selecting podcast ID")
-            })?;
+        let podcast_id: Option<i64> = query_podcast(log, self.conn, url)?;
 
         if let Some(podcast_id) = podcast_id {
             let latest_url: Option<String> =
@@ -325,7 +317,7 @@ impl<'a> PodcastUpdater<'a> {
             }
         }
 
-        return Ok(url.to_owned());
+        Ok(url.to_owned())
     }
 
     fn upsert_episodes(
@@ -871,16 +863,12 @@ pub fn safe_unescape_and_decode<'b, B: BufRead>(
 
 fn query_podcast(log: &Logger, conn: &PgConnection, url: &str) -> Result<Option<i64>> {
     common::log_timed(&log.new(o!("step" => "query_podcast")), |_log| {
-        schema::podcast::table
-            .left_join(
-                schema::podcast_feed_location::table
-                    .on(schema::podcast::id.eq(schema::podcast_feed_location::podcast_id)),
-            )
+        schema::podcast_feed_location::table
             .filter(schema::podcast_feed_location::feed_url.eq(url))
-            .select(schema::podcast::id)
+            .select(schema::podcast_feed_location::podcast_id)
             .first(conn)
             .optional()
-            .chain_err(|| "Error querying podcast")
+            .chain_err(|| "Error selecting podcast ID")
     })
 }
 
