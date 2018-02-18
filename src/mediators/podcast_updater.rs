@@ -931,6 +931,7 @@ mod tests {
     use r2d2::PooledConnection;
     use r2d2_diesel::ConnectionManager;
     use std::sync::Arc;
+    use time::Duration;
 
     #[test]
     fn test_feed_ideal() {
@@ -1085,6 +1086,53 @@ mod tests {
                 .count()
                 .first(&*bootstrap.conn)
         );
+    }
+
+    #[test]
+    fn test_prefer_latest_url() {
+        // Establish one connection with an open transaction for which data will live
+        // across this whole test.
+        let conn = test_helpers::connection();
+
+        let mut bootstrap = TestBootstrapWithConn::new(test_helpers::MINIMAL_FEED, &*conn);
+
+        let res = {
+            let (mut mediator, log) = bootstrap.mediator();
+            mediator.run(&log).unwrap()
+        };
+
+        // Running the updater above will have inserted one location record in the
+        // database for our bootstra's default URL. Here we add a second one
+        // which will be preferred on our next run. To ensure this, we cheat a
+        // bit by setting its freshness timestamp a little into the future to
+        // make sure that ordering comes out right.
+        let location_ins = insertable::PodcastFeedLocation {
+            first_retrieved_at: Utc::now(),
+            feed_url:           "https://example.com/new-feed.xml".to_owned(),
+            last_retrieved_at:  Utc::now() + Duration::minutes(10),
+            podcast_id:         res.podcast.id,
+        };
+        diesel::insert_into(schema::podcast_feed_location::table)
+            .values(&location_ins)
+            .execute(&*conn)
+            .unwrap();
+
+        // Now run it again.
+        {
+            let (mut mediator, log) = bootstrap.mediator();
+            mediator.run(&log).unwrap();
+        };
+
+        // Make sure that our new URL wasn't superseded by the default one that comes
+        // from the bootstrap.
+        let latest_url: String = schema::podcast_feed_location::table
+            .filter(schema::podcast_feed_location::podcast_id.eq(res.podcast.id))
+            .select(schema::podcast_feed_location::feed_url)
+            .order(schema::podcast_feed_location::last_retrieved_at.desc())
+            .limit(1)
+            .first(&*conn)
+            .unwrap();
+        assert_eq!("https://example.com/new-feed.xml", latest_url.as_str());
     }
 
     #[test]
