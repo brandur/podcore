@@ -26,6 +26,7 @@ use podcore::http_requester::{HTTPRequesterFactoryLive, HTTPRequesterLive};
 use podcore::mediators::cleaner::Cleaner;
 use podcore::mediators::directory_podcast_searcher::DirectoryPodcastSearcher;
 use podcore::mediators::podcast_crawler::PodcastCrawler;
+use podcore::mediators::podcast_feed_location_upgrader::PodcastFeedLocationUpgrader;
 use podcore::mediators::podcast_reingester::PodcastReingester;
 use podcore::mediators::podcast_updater::PodcastUpdater;
 
@@ -106,6 +107,10 @@ fn main() {
             SubCommand::with_name("sleep")
                 .about("Sleep (useful for attaching to with Docker)")
                 .arg_from_usage("<SLEEP_SECONDS>... 'Number of seconds to sleep'"),
+        )
+        .subcommand(
+            SubCommand::with_name("upgrade-https")
+                .about("Upgrades podcast locations to HTTPS for hosts known to support it"),
         );
 
     let matches = app.clone().get_matches();
@@ -122,6 +127,7 @@ fn main() {
         Some("reingest") => reingest_podcasts(&log, &matches, &options),
         Some("search") => search_podcasts(&log, &matches, &options),
         Some("sleep") => sleep(&log, &matches, &options),
+        Some("upgrade-https") => upgrade_https(&log, &matches, &options),
         None => {
             app.print_help().unwrap();
             Ok(())
@@ -314,6 +320,17 @@ fn trigger_error(_log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) 
     Err(Error::from("Error triggered by user request")
         .chain_err(|| "Chained context 1")
         .chain_err(|| "Chained context 2"))
+}
+
+fn upgrade_https(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
+    let _matches = matches.subcommand_matches("upgrade-https").unwrap();
+
+    let res = PodcastFeedLocationUpgrader {
+        conn: &*connection(log)?,
+    }.run(log)?;
+
+    info!(log, "Finished podcast HTTPS upgrade"; "num_upgraded" => res.num_upgraded);
+    Ok(())
 }
 
 //
