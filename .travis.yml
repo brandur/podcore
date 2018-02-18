@@ -25,11 +25,8 @@ before_script:
   - which diesel || cargo install diesel_cli --no-default-features --features postgres
   - createdb podcore-test
   - DATABASE_URL=$TEST_DATABASE_URL diesel migration run
+  - if [[ $NIGHTLY == 'true' ]]; then rustup component add rustfmt-preview; fi
   - if [[ $NIGHTLY == 'true' ]]; then cargo +nightly install clippy --force; fi
-  - if [[ $NIGHTLY == 'true' ]]; then cargo install rustfmt-nightly --force; fi
-  # For some reason `which rustfmt` may show success even if `cargo fmt` fails.
-  # Add this back after this whole nightly-required disaster has ended.
-  #- if [[ $NIGHTLY == 'true' ]]; then which rustfmt || cargo install rustfmt-nightly --force; fi
 
 script:
   - cargo test --verbose
@@ -41,7 +38,10 @@ script:
   # specify that we want only a single test thread.
   - cargo test --verbose -- --ignored --test-threads=1
 
-  - if [[ $NIGHTLY == 'true' ]]; then cargo +nightly fmt -- --write-mode=diff; fi
+  # Rustfmt is finally available as a preview component outside of nightly, but
+  # unfortunately we're using a few configuration options that are considered
+  # unstable so it still only works on nightly.
+  - if [[ $NIGHTLY == 'true' ]]; then cargo +nightly fmt --all -- --write-mode=diff; fi
 
   # The `-D warnings` argument means that Clippy will send a non-zero exit code
   # if it encounters any linting problems (thus failing the build).
