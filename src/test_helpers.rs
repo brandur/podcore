@@ -138,7 +138,7 @@ pub fn pool() -> Pool<ConnectionManager<PgConnection>> {
         // Basically don't allow a thread pool that doesn't have slack -- all tests should be
         // optimized so that they aren't requesting connections that can't be had, and if they are
         // it's indicative of a bug.
-        .connection_timeout(Duration::from_secs(1))
+        .connection_timeout(Duration::from_secs(5))
         .error_handler(Box::new(LoggingErrorHandler {}))
         .max_size(NUM_CONNECTIONS)
         .build(manager)
