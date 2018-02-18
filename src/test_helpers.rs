@@ -1,3 +1,4 @@
+use error_helpers;
 use errors::*;
 use schema;
 
@@ -132,22 +133,13 @@ pub fn log_sync() -> Logger {
 
 /// Initializes and returns a connection pool suitable for use across threads.
 pub fn pool() -> Pool<ConnectionManager<PgConnection>> {
-    let database_url = env::var("TEST_DATABASE_URL").expect("TEST_DATABASE_URL must be set");
-    let manager = ConnectionManager::<PgConnection>::new(database_url);
-    let pool = Pool::builder()
-        // Basically don't allow a thread pool that doesn't have slack -- all tests should be
-        // optimized so that they aren't requesting connections that can't be had, and if they are
-        // it's indicative of a bug.
-        .connection_timeout(Duration::from_secs(5))
-        .error_handler(Box::new(LoggingErrorHandler {}))
-        .max_size(NUM_CONNECTIONS)
-        .build(manager)
-        .expect("Failed to create pool.");
-
-    let conn = pool.get().map_err(Error::from).unwrap();
-    check_database(&*conn);
-
-    pool
+    match pool_inner() {
+        Ok(pool) => pool,
+        Err(e) => {
+            error_helpers::print_error(&log_sync(), &e);
+            ::std::process::exit(1);
+        }
+    }
 }
 
 //
@@ -169,17 +161,20 @@ where
 
 pub static NUM_CONNECTIONS: u32 = 10;
 
-fn check_database(conn: &PgConnection) {
+fn check_database(conn: &PgConnection) -> Result<()> {
     // Note that we only check one table's count as a proxy for the state of the
     // entire database. This isn't bullet proof, but will hopefully be enough
     // to avoid most stupid problems.
-    match schema::podcast::table.count().first(conn) {
-        Ok(0) => (),
-        Ok(n) => panic!(
+    match schema::podcast::table
+        .count()
+        .first(conn)
+        .chain_err(|| "Error testing database connection")?
+    {
+        0 => Ok(()),
+        n => Err(Error::from(format!(
             "Expected test database to be empty, but found {} podcast(s). Please reset it.",
             n
-        ),
-        Err(e) => panic!("Error testing database connection: {}", e),
+        ))),
     }
 }
 
@@ -188,4 +183,22 @@ fn nocapture() -> bool {
         Ok(val) => &val != "0",
         Err(_) => false,
     }
+}
+
+fn pool_inner() -> Result<Pool<ConnectionManager<PgConnection>>> {
+    let database_url = env::var("TEST_DATABASE_URL").chain_err(|| "TEST_DATABASE_URL must be set")?;
+    let manager = ConnectionManager::<PgConnection>::new(database_url);
+    let pool = Pool::builder()
+        // Basically don't allow a thread pool that doesn't have slack -- all tests should be
+        // optimized so that they aren't requesting connections that can't be had, and if they are
+        // it's indicative of a bug.
+        .connection_timeout(Duration::from_secs(5))
+        .error_handler(Box::new(LoggingErrorHandler {}))
+        .max_size(NUM_CONNECTIONS)
+        .build(manager)
+        .chain_err(|| "Error creating thread pool")?;
+
+    let conn = pool.get().map_err(Error::from)?;
+    check_database(&*conn)?;
+    Ok(pool)
 }
