@@ -53,13 +53,15 @@ mod tests {
     use mediators::podcast_feed_location_upgrader::*;
     use mediators::podcast_updater::PodcastUpdater;
     use model;
+    use model::insertable;
     use schema;
     use test_helpers;
 
+    use chrono::Utc;
     use std::sync::Arc;
 
     #[test]
-    fn test_upgrades_location() {
+    fn test_upgrades_unsecured_location() {
         // Establish one connection with an open transaction for which data will live
         // across this whole test.
         let conn = test_helpers::connection();
@@ -69,7 +71,7 @@ mod tests {
         // Insert one feed with HTTPS. This will allow our query to discover that
         // example.com supports encrypted connections, and upgraded any other
         // non-HTTPS URLs that it discovers at that domain.
-        let _secured_podcast = insert_podcast(
+        let _ = insert_podcast(
             &bootstrap.log,
             &*bootstrap.conn,
             "https://example.com/secured.xml",
@@ -77,7 +79,7 @@ mod tests {
 
         // And insert another podcast that's not secured, but at the same domain as our
         // archetype.
-        let unsecured_podcast = insert_podcast(
+        let podcast = insert_podcast(
             &bootstrap.log,
             &*bootstrap.conn,
             "http://example.com/feed.xml",
@@ -85,21 +87,105 @@ mod tests {
 
         assert_eq!(
             vec!["http://example.com/feed.xml"],
-            select_feed_urls(&*conn, &unsecured_podcast)
+            select_feed_urls(&*conn, &podcast)
         );
 
-        let (mut mediator, log) = bootstrap.mediator();
-        let res = mediator.run(&log).unwrap();
+        {
+            let (mut mediator, log) = bootstrap.mediator();
+            let res = mediator.run(&log).unwrap();
+            assert_eq!(1, res.num_upgraded);
+        }
 
         assert_eq!(
             vec![
                 "http://example.com/feed.xml",
                 "https://example.com/feed.xml",
             ],
-            select_feed_urls(&*conn, &unsecured_podcast)
+            select_feed_urls(&*conn, &podcast)
         );
 
-        assert_eq!(1, res.num_upgraded);
+        // Another run should have no effect
+        {
+            let (mut mediator, log) = bootstrap.mediator();
+            let res = mediator.run(&log).unwrap();
+            assert_eq!(0, res.num_upgraded);
+        }
+    }
+
+    #[test]
+    fn test_ignores_other_hosts() {
+        let conn = test_helpers::connection();
+        let mut bootstrap = TestBootstrapWithConn::new(&*conn);
+
+        let _ = insert_podcast(
+            &bootstrap.log,
+            &*bootstrap.conn,
+            "https://example.com/secured.xml",
+        );
+
+        // Insert an unsecured podcast, but at a different host (even a subdomain is a
+        // different host). This should be ignored by the mediator's run
+        // because we don't know whether or not it supports HTTPS.
+        let podcast = insert_podcast(
+            &bootstrap.log,
+            &*bootstrap.conn,
+            "http://subdomain.example.com/feed.xml",
+        );
+
+        {
+            let (mut mediator, log) = bootstrap.mediator();
+            let res = mediator.run(&log).unwrap();
+            assert_eq!(0, res.num_upgraded);
+        }
+
+        assert_eq!(
+            vec!["http://subdomain.example.com/feed.xml"],
+            select_feed_urls(&*conn, &podcast)
+        );
+    }
+
+    #[test]
+    fn test_ignores_secured_location() {
+        let conn = test_helpers::connection();
+        let mut bootstrap = TestBootstrapWithConn::new(&*conn);
+
+        let _ = insert_podcast(
+            &bootstrap.log,
+            &*bootstrap.conn,
+            "https://example.com/secured.xml",
+        );
+
+        let podcast = insert_podcast(
+            &bootstrap.log,
+            &*bootstrap.conn,
+            "http://example.com/feed.xml",
+        );
+
+        // Unlike our previous example, here we insert an additional record for the
+        // same podcast that is HTTPS.
+        diesel::insert_into(schema::podcast_feed_location::table)
+            .values(&insertable::PodcastFeedLocation {
+                first_retrieved_at: Utc::now(),
+                feed_url:           "https://example.com/feed.xml".to_owned(),
+                last_retrieved_at:  Utc::now(),
+                podcast_id:         podcast.id,
+            })
+            .execute(&*conn)
+            .unwrap();
+
+        {
+            let (mut mediator, log) = bootstrap.mediator();
+            let res = mediator.run(&log).unwrap();
+            assert_eq!(0, res.num_upgraded);
+        }
+
+        assert_eq!(
+            vec![
+                "http://example.com/feed.xml",
+                "https://example.com/feed.xml",
+            ],
+            select_feed_urls(&*conn, &podcast)
+        );
     }
 
     //
