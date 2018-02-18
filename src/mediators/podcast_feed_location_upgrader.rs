@@ -83,29 +83,20 @@ mod tests {
             "http://example.com/feed.xml",
         );
 
-        let feed_urls: Vec<String> = schema::podcast_feed_location::table
-            .filter(schema::podcast_feed_location::podcast_id.eq(unsecured_podcast.id))
-            .select(schema::podcast_feed_location::feed_url)
-            .order(schema::podcast_feed_location::feed_url)
-            .load(&*conn)
-            .unwrap();
-        assert_eq!(vec!["http://example.com/feed.xml"], feed_urls);
+        assert_eq!(
+            vec!["http://example.com/feed.xml"],
+            select_feed_urls(&*conn, &unsecured_podcast)
+        );
 
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
 
-        let feed_urls: Vec<String> = schema::podcast_feed_location::table
-            .filter(schema::podcast_feed_location::podcast_id.eq(unsecured_podcast.id))
-            .select(schema::podcast_feed_location::feed_url)
-            .order(schema::podcast_feed_location::feed_url)
-            .load(&*conn)
-            .unwrap();
         assert_eq!(
             vec![
                 "http://example.com/feed.xml",
                 "https://example.com/feed.xml",
             ],
-            feed_urls
+            select_feed_urls(&*conn, &unsecured_podcast)
         );
 
         assert_eq!(1, res.num_upgraded);
@@ -149,5 +140,14 @@ mod tests {
         }.run(log)
             .unwrap()
             .podcast
+    }
+
+    fn select_feed_urls(conn: &PgConnection, podcast: &model::Podcast) -> Vec<String> {
+        schema::podcast_feed_location::table
+            .filter(schema::podcast_feed_location::podcast_id.eq(podcast.id))
+            .select(schema::podcast_feed_location::feed_url)
+            .order(schema::podcast_feed_location::feed_url)
+            .load(&*conn)
+            .unwrap()
     }
 }
