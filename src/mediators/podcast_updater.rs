@@ -60,8 +60,20 @@ impl<'a> PodcastUpdater<'a> {
     }
 
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
+        // Try to find a more up-to-date URL than the one we've been given to retrieve
+        // the same podcast at. This is helpful in case a directory's URL has
+        // become out-of-date, or we've manually inserted a record to say supersede an
+        // `http` url with an `https` URL.
+        //
+        // In the case where only the given URL exists, the same URL will simply be
+        // re-selected and returned with no harm done.
+        //
+        // In the case where no URLs existed, the function just returns the same URL
+        // back to us.
+        let latest_url = self.select_latest_url(log, self.feed_url.as_str())?;
+
         // the "final URL" is one that might include a permanent redirect
-        let (body, final_url) = self.fetch_feed(log)?;
+        let (body, final_url) = self.fetch_feed(log, latest_url.as_str())?;
 
         let sha256_hash = content_hash(&body);
 
@@ -233,15 +245,12 @@ impl<'a> PodcastUpdater<'a> {
         Ok(())
     }
 
-    fn fetch_feed(&mut self, log: &Logger) -> Result<(Vec<u8>, String)> {
+    fn fetch_feed(&mut self, log: &Logger, url: &str) -> Result<(Vec<u8>, String)> {
         let (status, body, final_url) =
             common::log_timed(&log.new(o!("step" => "fetch_feed")), |_log| {
                 self.http_requester.execute(
                     log,
-                    Request::new(
-                        Method::Get,
-                        Uri::from_str(self.feed_url.as_str()).map_err(Error::from)?,
-                    ),
+                    Request::new(Method::Get, Uri::from_str(url).map_err(Error::from)?),
                 )
             })?;
         common::log_body_sample(log, status, &body);
@@ -278,6 +287,45 @@ impl<'a> PodcastUpdater<'a> {
 
             Err("No rss tag found".into())
         })
+    }
+
+    fn select_latest_url(&self, log: &Logger, url: &str) -> Result<String> {
+        // First see if we have any record for this podcast in the database already,
+        // and if so, get the most up-to-date URL that we have recorded for it
+        // (not necessarily the one that a directory gave us).
+        //
+        // This should be runnable in only one query, but Diesel's query builder
+        // doesn't currently support referencing the same table twice in a
+        // single query so we have to fall back to two separate queries.
+        let podcast_id: Option<i64> =
+            common::log_timed(&log.new(o!("step" => "select_podcast_id")), |_log| {
+                schema::podcast_feed_location::table
+                    .filter(schema::podcast_feed_location::feed_url.eq(url))
+                    .select(schema::podcast_feed_location::podcast_id)
+                    .first(self.conn)
+                    .optional()
+                    .chain_err(|| "Error selecting podcast ID")
+            })?;
+
+        if let Some(podcast_id) = podcast_id {
+            let latest_url: Option<String> =
+                common::log_timed(&log.new(o!("step" => "select_latest_url")), |_log| {
+                    schema::podcast_feed_location::table
+                        .filter(schema::podcast_feed_location::podcast_id.eq(podcast_id))
+                        .select(schema::podcast_feed_location::feed_url)
+                        .order(schema::podcast_feed_location::last_retrieved_at.desc())
+                        .limit(1)
+                        .first(self.conn)
+                        .optional()
+                        .chain_err(|| "Error selecting latest URL")
+                })?;
+            if let Some(latest_url) = latest_url {
+                info!(log, "Found newer URL to use"; "url" => latest_url.as_str());
+                return Ok(latest_url);
+            }
+        }
+
+        return Ok(url.to_owned());
     }
 
     fn upsert_episodes(
