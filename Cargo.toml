@@ -12,7 +12,6 @@ name = "podcore"
 path = "src/bin/podcore/main.rs"
 
 [dependencies]
-isatty = "*"
 chan = "*"
 chrono = "0.4"
 clap = "*"
@@ -27,6 +26,7 @@ hyper-tls = "*"
 # Locking iron/mount to particular versions because the HTTP-related packages
 # don't seem to play nicely together.
 iron = "0.5.1"
+isatty = "*"
 mount = "^0.3.0"
 
 juniper = "*"
