@@ -113,6 +113,39 @@ mod tests {
     }
 
     #[test]
+    fn test_upgrades_whitelisted_host() {
+        let conn = test_helpers::connection();
+        let mut bootstrap = TestBootstrapWithConn::new(&*conn);
+
+        // And insert another podcast that's not secured, but at the same domain as our
+        // archetype.
+        let podcast = insert_podcast(
+            &bootstrap.log,
+            &*bootstrap.conn,
+            "http://example.libsyn.com/feed.xml",
+        );
+
+        assert_eq!(
+            vec!["http://example.libsyn.com/feed.xml"],
+            select_feed_urls(&*conn, &podcast)
+        );
+
+        {
+            let (mut mediator, log) = bootstrap.mediator();
+            let res = mediator.run(&log).unwrap();
+            assert_eq!(1, res.num_upgraded);
+        }
+
+        assert_eq!(
+            vec![
+                "http://example.libsyn.com/feed.xml",
+                "https://example.libsyn.com/feed.xml",
+            ],
+            select_feed_urls(&*conn, &podcast)
+        );
+    }
+
+    #[test]
     fn test_ignores_other_hosts() {
         let conn = test_helpers::connection();
         let mut bootstrap = TestBootstrapWithConn::new(&*conn);
