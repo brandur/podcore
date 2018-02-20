@@ -13,6 +13,8 @@ extern crate error_chain;
 extern crate flate2;
 extern crate futures;
 #[macro_use]
+extern crate horrorshow;
+#[macro_use]
 extern crate hyper;
 extern crate hyper_tls;
 extern crate iron;

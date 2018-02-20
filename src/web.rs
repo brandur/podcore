@@ -3,6 +3,8 @@ use errors::*;
 use actix;
 use actix_web;
 use diesel::pg::PgConnection;
+use horrorshow::helper::doctype;
+use horrorshow::prelude::*;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use slog::Logger;
@@ -59,7 +61,21 @@ struct State {
 // Web handlers
 //
 
-fn index(req: actix_web::HttpRequest<State>) -> &'static str {
+fn index(req: actix_web::HttpRequest<State>) -> String {
     info!(req.state().log, "Serving hello");
-    "Hello world!"
+
+    (html! {
+        : doctype::HTML;
+        html {
+            head {
+                title: "Hello world!";
+            }
+            body {
+                p {
+                    : "Hello! This is <html />"
+                }
+            }
+        }
+    }).into_string()
+        .unwrap()
 }

@@ -26,6 +26,7 @@ diesel_migrations = "*"
 error-chain = { version = "*" }
 flate2 = "*"
 futures = "0.1"
+horrorshow = "*"
 hyper = "0.11"
 hyper-tls = "*"
 
