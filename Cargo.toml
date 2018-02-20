@@ -12,8 +12,12 @@ name = "podcore"
 path = "src/bin/podcore/main.rs"
 
 [dependencies]
+# Make sure that the versions of `actix` and `actix-web` are compatible with
+# each other, because a second `actix` as a transitive dependency through
+# `actix-web` can cause some serious grief.
 actix = "0.4"
 actix-web = "0.3"
+
 chan = "*"
 chrono = "0.4"
 clap = "*"
