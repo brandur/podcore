@@ -150,6 +150,34 @@ fn main() {
 // Subcommands
 //
 
+fn subcommand_api(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
+    let matches = matches.subcommand_matches("api").unwrap();
+
+    let port = env::var("PORT").unwrap_or_else(|_| "8080".to_owned());
+    let port = matches.value_of("PORT").unwrap_or_else(|| port.as_str());
+    let host = format!("0.0.0.0:{}", port);
+    let num_connections = options.num_connections;
+    let pool = pool(log, num_connections)?;
+
+    let mut mount = Mount::new();
+
+    let graphiql_endpoint = GraphiQLHandler::new("/graphql");
+    mount.mount("/", graphiql_endpoint);
+
+    let graphql_endpoint = GraphQLHandler::new(
+        move |_: &mut Request| -> graphql::Context { graphql::Context::new(pool.clone()) },
+        graphql::Query::default(),
+        graphql::Mutation::default(),
+    );
+    mount.mount("/graphql", graphql_endpoint);
+
+    info!(log, "API starting"; "host" => host.as_str());
+    Iron::new(api::chain(log, mount))
+        .http(host.as_str())
+        .chain_err(|| "Error binding API")?;
+    Ok(())
+}
+
 fn subcommand_add(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("add").unwrap();
     let force = matches.is_present("force");
@@ -228,6 +256,16 @@ fn subcommand_crawl(log: &Logger, matches: &ArgMatches, options: &GlobalOptions)
     }
 }
 
+fn subcommand_error(_log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
+    let _matches = matches.subcommand_matches("error").unwrap();
+
+    // We chain some extra context on to add a little flavor and to help show what
+    // output would look like
+    Err(Error::from("Error triggered by user request")
+        .chain_err(|| "Chained context 1")
+        .chain_err(|| "Chained context 2"))
+}
+
 fn subcommand_migrate(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let _matches = matches.subcommand_matches("migration").unwrap();
     let conn = connection(log)?;
@@ -275,49 +313,6 @@ fn subcommand_search(log: &Logger, matches: &ArgMatches, _options: &GlobalOption
     Ok(())
 }
 
-fn subcommand_api(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
-    let matches = matches.subcommand_matches("api").unwrap();
-
-    let port = env::var("PORT").unwrap_or_else(|_| "8080".to_owned());
-    let port = matches.value_of("PORT").unwrap_or_else(|| port.as_str());
-    let host = format!("0.0.0.0:{}", port);
-    let num_connections = options.num_connections;
-    let pool = pool(log, num_connections)?;
-
-    let mut mount = Mount::new();
-
-    let graphiql_endpoint = GraphiQLHandler::new("/graphql");
-    mount.mount("/", graphiql_endpoint);
-
-    let graphql_endpoint = GraphQLHandler::new(
-        move |_: &mut Request| -> graphql::Context { graphql::Context::new(pool.clone()) },
-        graphql::Query::default(),
-        graphql::Mutation::default(),
-    );
-    mount.mount("/graphql", graphql_endpoint);
-
-    info!(log, "API starting"; "host" => host.as_str());
-    Iron::new(api::chain(log, mount))
-        .http(host.as_str())
-        .chain_err(|| "Error binding API")?;
-    Ok(())
-}
-
-fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
-    let matches = matches.subcommand_matches("web").unwrap();
-
-    // TODO: Extract to a helper
-    let port = env::var("PORT").unwrap_or_else(|_| "8080".to_owned());
-    let port = matches.value_of("PORT").unwrap_or_else(|| port.as_str());
-
-    let num_connections = options.num_connections;
-    let pool = pool(log, num_connections)?;
-
-    let server = WebServer::new(log.clone(), pool, port);
-    server.run()?;
-    Ok(())
-}
-
 fn subcommand_sleep(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("sleep").unwrap();
 
@@ -334,16 +329,6 @@ fn subcommand_sleep(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions
     Ok(())
 }
 
-fn subcommand_error(_log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
-    let _matches = matches.subcommand_matches("error").unwrap();
-
-    // We chain some extra context on to add a little flavor and to help show what
-    // output would look like
-    Err(Error::from("Error triggered by user request")
-        .chain_err(|| "Chained context 1")
-        .chain_err(|| "Chained context 2"))
-}
-
 fn subcommand_upgrade_https(
     log: &Logger,
     matches: &ArgMatches,
@@ -356,6 +341,21 @@ fn subcommand_upgrade_https(
     }.run(log)?;
 
     info!(log, "Finished podcast HTTPS upgrade"; "num_upgraded" => res.num_upgraded);
+    Ok(())
+}
+
+fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
+    let matches = matches.subcommand_matches("web").unwrap();
+
+    // TODO: Extract to a helper
+    let port = env::var("PORT").unwrap_or_else(|_| "8080".to_owned());
+    let port = matches.value_of("PORT").unwrap_or_else(|| port.as_str());
+
+    let num_connections = options.num_connections;
+    let pool = pool(log, num_connections)?;
+
+    let server = WebServer::new(log.clone(), pool, port);
+    server.run()?;
     Ok(())
 }
 
