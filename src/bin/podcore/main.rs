@@ -124,17 +124,17 @@ fn main() {
     let log = log(&options);
 
     let res = match matches.subcommand_name() {
-        Some("add") => add_podcast(&log, &matches, &options),
-        Some("api") => serve_api(&log, &matches, &options),
-        Some("clean") => clean(&log, &matches, &options),
-        Some("crawl") => crawl_podcasts(&log, &matches, &options),
-        Some("error") => trigger_error(&log, &matches, &options),
-        Some("migration") => migrate_database(&log, &matches, &options),
-        Some("reingest") => reingest_podcasts(&log, &matches, &options),
-        Some("search") => search_podcasts(&log, &matches, &options),
-        Some("sleep") => sleep(&log, &matches, &options),
-        Some("upgrade-https") => upgrade_https(&log, &matches, &options),
-        Some("web") => serve_web(&log, &matches, &options),
+        Some("add") => subcommand_add(&log, &matches, &options),
+        Some("api") => subcommand_api(&log, &matches, &options),
+        Some("clean") => subcommand_clean(&log, &matches, &options),
+        Some("crawl") => subcommand_crawl(&log, &matches, &options),
+        Some("error") => subcommand_error(&log, &matches, &options),
+        Some("migration") => subcommand_migrate(&log, &matches, &options),
+        Some("reingest") => subcommand_reingest(&log, &matches, &options),
+        Some("search") => subcommand_search(&log, &matches, &options),
+        Some("sleep") => subcommand_sleep(&log, &matches, &options),
+        Some("upgrade-https") => subcommand_upgrade_https(&log, &matches, &options),
+        Some("web") => subcommand_web(&log, &matches, &options),
         None => {
             app.print_help().unwrap();
             Ok(())
@@ -150,7 +150,7 @@ fn main() {
 // Subcommands
 //
 
-fn add_podcast(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
+fn subcommand_add(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("add").unwrap();
     let force = matches.is_present("force");
 
@@ -174,7 +174,7 @@ fn add_podcast(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> 
     Ok(())
 }
 
-fn clean(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
+fn subcommand_clean(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("clean").unwrap();
     let mut num_loops = 0;
     let run_once = matches.is_present("run-once");
@@ -202,7 +202,7 @@ fn clean(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<
     }
 }
 
-fn crawl_podcasts(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
+fn subcommand_crawl(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("crawl").unwrap();
     let mut num_loops = 0;
     let run_once = matches.is_present("run-once");
@@ -228,7 +228,7 @@ fn crawl_podcasts(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
     }
 }
 
-fn migrate_database(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
+fn subcommand_migrate(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let _matches = matches.subcommand_matches("migration").unwrap();
     let conn = connection(log)?;
 
@@ -244,7 +244,7 @@ fn migrate_database(log: &Logger, matches: &ArgMatches, options: &GlobalOptions)
     Ok(())
 }
 
-fn reingest_podcasts(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
+fn subcommand_reingest(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let _matches = matches.subcommand_matches("reingest").unwrap();
 
     PodcastReingester {
@@ -254,7 +254,7 @@ fn reingest_podcasts(log: &Logger, matches: &ArgMatches, options: &GlobalOptions
     Ok(())
 }
 
-fn search_podcasts(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
+fn subcommand_search(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("search").unwrap();
 
     let core = Core::new().unwrap();
@@ -275,7 +275,7 @@ fn search_podcasts(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions)
     Ok(())
 }
 
-fn serve_api(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
+fn subcommand_api(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("api").unwrap();
 
     let port = env::var("PORT").unwrap_or_else(|_| "8080".to_owned());
@@ -303,7 +303,7 @@ fn serve_api(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Res
     Ok(())
 }
 
-fn serve_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
+fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("web").unwrap();
 
     // TODO: Extract to a helper
@@ -318,7 +318,7 @@ fn serve_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Res
     Ok(())
 }
 
-fn sleep(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
+fn subcommand_sleep(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("sleep").unwrap();
 
     let sleep_seconds = matches
@@ -334,7 +334,7 @@ fn sleep(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result
     Ok(())
 }
 
-fn trigger_error(_log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
+fn subcommand_error(_log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
     let _matches = matches.subcommand_matches("error").unwrap();
 
     // We chain some extra context on to add a little flavor and to help show what
@@ -344,7 +344,11 @@ fn trigger_error(_log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) 
         .chain_err(|| "Chained context 2"))
 }
 
-fn upgrade_https(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
+fn subcommand_upgrade_https(
+    log: &Logger,
+    matches: &ArgMatches,
+    _options: &GlobalOptions,
+) -> Result<()> {
     let _matches = matches.subcommand_matches("upgrade-https").unwrap();
 
     let res = PodcastFeedLocationUpgrader {
