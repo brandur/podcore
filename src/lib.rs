@@ -1,5 +1,7 @@
 #![recursion_limit = "128"]
 
+extern crate actix;
+extern crate actix_web;
 #[macro_use]
 extern crate chan;
 extern crate chrono;
@@ -62,3 +64,5 @@ mod schema;
 
 #[cfg(test)]
 mod test_helpers;
+
+pub mod web;

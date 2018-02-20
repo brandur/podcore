@@ -29,6 +29,7 @@ use podcore::mediators::podcast_crawler::PodcastCrawler;
 use podcore::mediators::podcast_feed_location_upgrader::PodcastFeedLocationUpgrader;
 use podcore::mediators::podcast_reingester::PodcastReingester;
 use podcore::mediators::podcast_updater::PodcastUpdater;
+use podcore::web::WebServer;
 
 use clap::{App, ArgMatches, SubCommand};
 use diesel::pg::PgConnection;
@@ -111,6 +112,11 @@ fn main() {
         .subcommand(
             SubCommand::with_name("upgrade-https")
                 .about("Upgrades podcast locations to HTTPS for hosts known to support it"),
+        )
+        .subcommand(
+            SubCommand::with_name("web")
+                .about("Starts the web server")
+                .arg_from_usage("-p, --port [PORT] 'Port to bind server to'"),
         );
 
     let matches = app.clone().get_matches();
@@ -128,6 +134,7 @@ fn main() {
         Some("search") => search_podcasts(&log, &matches, &options),
         Some("sleep") => sleep(&log, &matches, &options),
         Some("upgrade-https") => upgrade_https(&log, &matches, &options),
+        Some("web") => serve_web(&log, &matches, &options),
         None => {
             app.print_help().unwrap();
             Ok(())
@@ -289,10 +296,25 @@ fn serve_api(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Res
     );
     mount.mount("/graphql", graphql_endpoint);
 
-    info!(log, "API starting on: {}", host);
+    info!(log, "API starting"; "host" => host.as_str());
     Iron::new(api::chain(log, mount))
         .http(host.as_str())
         .chain_err(|| "Error binding API")?;
+    Ok(())
+}
+
+fn serve_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
+    let matches = matches.subcommand_matches("web").unwrap();
+
+    // TODO: Extract to a helper
+    let port = env::var("PORT").unwrap_or_else(|_| "8080".to_owned());
+    let port = matches.value_of("PORT").unwrap_or_else(|| port.as_str());
+
+    let num_connections = options.num_connections;
+    let pool = pool(log, num_connections)?;
+
+    let server = WebServer::new(log.clone(), pool, port);
+    server.run()?;
     Ok(())
 }
 
