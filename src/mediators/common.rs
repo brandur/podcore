@@ -1,6 +1,7 @@
+use time_helpers;
+
 use hyper::StatusCode;
 use slog::Logger;
-use std::str;
 use time::precise_time_ns;
 
 #[inline]
@@ -12,8 +13,7 @@ where
     info!(log, "Start");
     let res = f(log);
     let elapsed = precise_time_ns() - start;
-    let (div, unit) = unit(elapsed);
-    info!(log, "Finish"; "elapsed" => format!("{:.*}{}", 3, ((elapsed as f64) / div), unit));
+    info!(log, "Finish"; "elapsed" => time_helpers::unit_str(elapsed));
     res
 }
 
@@ -30,22 +30,7 @@ pub fn thread_name(n: u32) -> String {
     format!("thread_{:03}", n).to_string()
 }
 
-// Private functions
 //
-
-#[inline]
-fn unit(ns: u64) -> (f64, &'static str) {
-    if ns >= 1_000_000_000 {
-        (1_000_000_000_f64, "s")
-    } else if ns >= 1_000_000 {
-        (1_000_000_f64, "ms")
-    } else if ns >= 1_000 {
-        (1_000_f64, "µs")
-    } else {
-        (1_f64, "ns")
-    }
-}
-
 // Tests
 //
 
@@ -81,13 +66,5 @@ mod tests {
         assert_eq!("thread_000".to_string(), thread_name(0));
         assert_eq!("thread_999".to_string(), thread_name(999));
         assert_eq!("thread_1000".to_string(), thread_name(1000));
-    }
-
-    #[test]
-    fn test_unit() {
-        assert_eq!((1_f64, "ns"), unit(2_u64));
-        assert_eq!((1_000_f64, "µs"), unit(2_000_u64));
-        assert_eq!((1_000_000_f64, "ms"), unit(2_000_000_u64));
-        assert_eq!((1_000_000_000_f64, "s"), unit(2_000_000_000_u64));
     }
 }

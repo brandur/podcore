@@ -1,6 +1,7 @@
 use errors::*;
 use model;
 use schema;
+use time_helpers;
 
 use actix;
 use actix_web;
@@ -104,8 +105,9 @@ impl<S: State> Middleware<S> for RequestResponseLogger {
         req: &mut HttpRequest<S>,
         resp: HttpResponse,
     ) -> actix_web::Result<Response> {
-        let delta = time::precise_time_ns() - req.extensions().get::<StartTime>().unwrap().0;
-        info!(req.state().log(), "Request finished"; "time_ms" => (delta as f64) / 1000000.0);
+        let elapsed = time::precise_time_ns() - req.extensions().get::<StartTime>().unwrap().0;
+        info!(req.state().log(), "Request finished";
+            "elapsed" => time_helpers::unit_str(elapsed));
         Ok(Response::Done(resp))
     }
 }
