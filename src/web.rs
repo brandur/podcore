@@ -5,6 +5,7 @@ use schema;
 use actix;
 use actix_web;
 use actix_web::{HttpRequest, HttpResponse, StatusCode};
+use actix_web::middleware::{Middleware, Response, Started};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use horrorshow::helper::doctype;
@@ -12,6 +13,7 @@ use horrorshow::prelude::*;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use slog::Logger;
+use time;
 
 pub struct WebServer {
     log:  Logger,
@@ -41,7 +43,7 @@ impl WebServer {
             actix_web::Application::with_state(State {
                 log:  log.clone(),
                 pool: pool.clone(),
-            }).middleware(actix_web::middleware::Logger::default())
+            }).middleware(RequestResponseLogger)
                 .resource("/{name}", |r| {
                     r.method(actix_web::Method::GET).f(handle_index)
                 })
@@ -62,14 +64,49 @@ impl WebServer {
 // Private types
 //
 
+trait StateWithLog {
+    fn log(&self) -> &Logger;
+}
+
 struct State {
     log:  Logger,
     pool: Pool<ConnectionManager<PgConnection>>,
 }
 
+impl StateWithLog for State {
+    fn log(&self) -> &Logger {
+        return &self.log;
+    }
+}
+
 impl From<Error> for actix_web::error::Error {
     fn from(error: Error) -> Self {
         actix_web::error::ErrorInternalServerError(error.to_string()).into()
+    }
+}
+
+//
+// Middleware
+//
+
+struct RequestResponseLogger;
+
+struct StartTime(u64);
+
+impl<S: StateWithLog> Middleware<S> for RequestResponseLogger {
+    fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
+        req.extensions().insert(StartTime(time::precise_time_ns()));
+        Ok(Started::Done)
+    }
+
+    fn response(
+        &self,
+        req: &mut HttpRequest<S>,
+        resp: HttpResponse,
+    ) -> actix_web::Result<Response> {
+        let delta = time::precise_time_ns() - req.extensions().get::<StartTime>().unwrap().0;
+        info!(req.state().log(), "Request finished"; "time_ms" => (delta as f64) / 1000000.0);
+        Ok(Response::Done(resp))
     }
 }
 
