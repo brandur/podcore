@@ -41,7 +41,8 @@ impl WebServer {
             actix_web::Application::with_state(StateImpl {
                 log:  log.clone(),
                 pool: pool.clone(),
-            }).middleware(middleware::request_response_logger::Middleware)
+            }).middleware(middleware::log_initializer::Middleware)
+                .middleware(middleware::request_response_logger::Middleware)
                 .resource("/podcasts/{id}", |r| {
                     r.method(actix_web::Method::GET).f(handle_show_podcast)
                 })
@@ -92,6 +93,30 @@ mod middleware {
         fn log(&self) -> &Logger;
     }
 
+    pub mod log_initializer {
+        use web::middleware::*;
+
+        pub struct Middleware;
+
+        pub struct Log(pub Logger);
+
+        impl<S: State> actix_web::middleware::Middleware<S> for Middleware {
+            fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
+                let log = req.state().log().clone();
+                req.extensions().insert(Log(log));
+                Ok(Started::Done)
+            }
+
+            fn response(
+                &self,
+                _req: &mut HttpRequest<S>,
+                resp: HttpResponse,
+            ) -> actix_web::Result<Response> {
+                Ok(Response::Done(resp))
+            }
+        }
+    }
+
     pub mod request_response_logger {
         use web::middleware::*;
 
@@ -112,9 +137,14 @@ mod middleware {
                 req: &mut HttpRequest<S>,
                 resp: HttpResponse,
             ) -> actix_web::Result<Response> {
+                let log = req.extensions()
+                    .get::<log_initializer::Log>()
+                    .unwrap()
+                    .0
+                    .clone();
                 let elapsed =
                     time::precise_time_ns() - req.extensions().get::<StartTime>().unwrap().0;
-                info!(req.state().log(), "Request finished";
+                info!(log, "Request finished";
                     "elapsed" => time_helpers::unit_str(elapsed),
                     "method"  => req.method().as_str(),
                     "path"    => req.path(),
