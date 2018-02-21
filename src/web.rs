@@ -74,6 +74,14 @@ impl From<Error> for actix_web::error::Error {
 }
 
 //
+// View models
+//
+
+struct ShowPodcastViewModel {
+    podcast: model::Podcast,
+}
+
+//
 // Web handlers
 //
 
@@ -97,13 +105,17 @@ fn handle_index(req: HttpRequest<State>) -> String {
 }
 
 fn handle_show_podcast(req: HttpRequest<State>) -> actix_web::Result<HttpResponse> {
-    let id = req.match_info().get("name").unwrap();
+    let id = req.match_info()
+        .get("id")
+        .unwrap()
+        .parse::<i64>()
+        .chain_err(|| "Error parsing ID")?;
     info!(req.state().log, "Serving podcast"; "id" => id);
 
     let podcast = {
         let conn = req.state().pool.get().map_err(Error::from)?;
         schema::podcast::table
-            //.filter(schema::podcast::id.eq(id))
+            .filter(schema::podcast::id.eq(id))
             .first(&*conn)
             .optional()
             .chain_err(|| "Error selecting podcast")
@@ -111,7 +123,8 @@ fn handle_show_podcast(req: HttpRequest<State>) -> actix_web::Result<HttpRespons
 
     match podcast {
         Some(podcast) => {
-            let html = render_show_podcast(&podcast).map_err(Error::from)?;
+            let view_model = ShowPodcastViewModel { podcast: podcast };
+            let html = render_show_podcast(&view_model).map_err(Error::from)?;
             Ok(HttpResponse::build(StatusCode::OK)
                 .content_type("text/html; charset=utf-8")
                 .body(html)
@@ -136,14 +149,15 @@ fn handle_404() -> Result<HttpResponse> {
 // Views
 //
 
-fn render_show_podcast(_podcast: &model::Podcast) -> Result<String> {
+fn render_show_podcast(view_model: &ShowPodcastViewModel) -> Result<String> {
     (html! {
         : doctype::HTML;
         html {
             head {
-                title: "Hello world!";
+                title: format_args!("Podcast: {}", view_model.podcast.title);
             }
             body {
+                h1: view_model.podcast.title.as_str();
                 p {
                     : "Hello! This is <html />"
                 }
