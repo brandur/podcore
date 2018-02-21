@@ -1,12 +1,10 @@
 use errors::*;
 use model;
 use schema;
-use time_helpers;
 
 use actix;
 use actix_web;
 use actix_web::{HttpRequest, HttpResponse, StatusCode};
-use actix_web::middleware::{Middleware, Response, Started};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use horrorshow::helper::doctype;
@@ -14,7 +12,6 @@ use horrorshow::prelude::*;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use slog::Logger;
-use time;
 
 pub struct WebServer {
     log:  Logger,
@@ -44,7 +41,7 @@ impl WebServer {
             actix_web::Application::with_state(StateImpl {
                 log:  log.clone(),
                 pool: pool.clone(),
-            }).middleware(RequestResponseLogger)
+            }).middleware(middleware::request_response_logger::Middleware)
                 .resource("/podcasts/{id}", |r| {
                     r.method(actix_web::Method::GET).f(handle_show_podcast)
                 })
@@ -62,16 +59,12 @@ impl WebServer {
 // Private types
 //
 
-trait State {
-    fn log(&self) -> &Logger;
-}
-
 struct StateImpl {
     log:  Logger,
     pool: Pool<ConnectionManager<PgConnection>>,
 }
 
-impl State for StateImpl {
+impl middleware::State for StateImpl {
     fn log(&self) -> &Logger {
         return &self.log;
     }
@@ -87,29 +80,49 @@ impl From<Error> for actix_web::error::Error {
 // Middleware
 //
 
-struct RequestResponseLogger;
+mod middleware {
+    use time_helpers;
 
-struct StartTime(u64);
+    use actix_web;
+    use actix_web::{HttpRequest, HttpResponse};
+    use actix_web::middleware::{Response, Started};
+    use slog::Logger;
 
-impl<S: State> Middleware<S> for RequestResponseLogger {
-    fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
-        req.extensions().insert(StartTime(time::precise_time_ns()));
-        Ok(Started::Done)
+    pub trait State {
+        fn log(&self) -> &Logger;
     }
 
-    fn response(
-        &self,
-        req: &mut HttpRequest<S>,
-        resp: HttpResponse,
-    ) -> actix_web::Result<Response> {
-        let elapsed = time::precise_time_ns() - req.extensions().get::<StartTime>().unwrap().0;
-        info!(req.state().log(), "Request finished";
-            "elapsed" => time_helpers::unit_str(elapsed),
-            "method"  => req.method().as_str(),
-            "path"    => req.path(),
-            "status"  => resp.status().as_u16(),
-        );
-        Ok(Response::Done(resp))
+    pub mod request_response_logger {
+        use web::middleware::*;
+
+        use time;
+
+        pub struct Middleware;
+
+        struct StartTime(u64);
+
+        impl<S: State> actix_web::middleware::Middleware<S> for Middleware {
+            fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
+                req.extensions().insert(StartTime(time::precise_time_ns()));
+                Ok(Started::Done)
+            }
+
+            fn response(
+                &self,
+                req: &mut HttpRequest<S>,
+                resp: HttpResponse,
+            ) -> actix_web::Result<Response> {
+                let elapsed =
+                    time::precise_time_ns() - req.extensions().get::<StartTime>().unwrap().0;
+                info!(req.state().log(), "Request finished";
+                    "elapsed" => time_helpers::unit_str(elapsed),
+                    "method"  => req.method().as_str(),
+                    "path"    => req.path(),
+                    "status"  => resp.status().as_u16(),
+                );
+                Ok(Response::Done(resp))
+            }
+        }
     }
 }
 
