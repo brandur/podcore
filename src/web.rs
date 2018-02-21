@@ -45,9 +45,6 @@ impl WebServer {
                 log:  log.clone(),
                 pool: pool.clone(),
             }).middleware(RequestResponseLogger)
-                .resource("/{name}", |r| {
-                    r.method(actix_web::Method::GET).f(handle_index)
-                })
                 .resource("/podcasts/{id}", |r| {
                     r.method(actix_web::Method::GET).f(handle_show_podcast)
                 })
@@ -128,25 +125,6 @@ struct ShowPodcastViewModel {
 //
 // Web handlers
 //
-
-fn handle_index(req: HttpRequest<StateImpl>) -> String {
-    info!(req.state().log, "Serving hello");
-
-    (html! {
-        : doctype::HTML;
-        html {
-            head {
-                title: "Hello world!";
-            }
-            body {
-                p {
-                    : "Hello! This is <html />"
-                }
-            }
-        }
-    }).into_string()
-        .unwrap()
-}
 
 fn handle_show_podcast(req: HttpRequest<StateImpl>) -> actix_web::Result<HttpResponse> {
     let id = req.match_info()
