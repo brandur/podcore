@@ -143,7 +143,7 @@ graphql_object!(Query: Context |&self| {
         let results = schema::episode::table
             .filter(schema::episode::podcast_id.eq(id))
             .order(schema::episode::published_at.desc())
-            .limit(20)
+            .limit(50)
             .load::<model::Episode>(&*context.get_conn()?)
             .chain_err(|| "Error loading episodes from the database")?
             .iter()

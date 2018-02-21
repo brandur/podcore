@@ -78,7 +78,8 @@ impl From<Error> for actix_web::error::Error {
 //
 
 struct ShowPodcastViewModel {
-    podcast: model::Podcast,
+    episodes: Vec<model::Episode>,
+    podcast:  model::Podcast,
 }
 
 //
@@ -112,26 +113,39 @@ fn handle_show_podcast(req: HttpRequest<State>) -> actix_web::Result<HttpRespons
         .chain_err(|| "Error parsing ID")?;
     info!(req.state().log, "Serving podcast"; "id" => id);
 
-    let podcast = {
+    let view_model: Option<ShowPodcastViewModel> = {
         let conn = req.state().pool.get().map_err(Error::from)?;
-        schema::podcast::table
+        let podcast: Option<model::Podcast> = schema::podcast::table
             .filter(schema::podcast::id.eq(id))
             .first(&*conn)
             .optional()
-            .chain_err(|| "Error selecting podcast")
-    }?;
-
-    match podcast {
-        Some(podcast) => {
-            let view_model = ShowPodcastViewModel { podcast: podcast };
-            let html = render_show_podcast(&view_model).map_err(Error::from)?;
-            Ok(HttpResponse::build(StatusCode::OK)
-                .content_type("text/html; charset=utf-8")
-                .body(html)
-                .map_err(Error::from)?)
+            .chain_err(|| "Error selecting podcast")?;
+        match podcast {
+            Some(podcast) => {
+                let episodes: Vec<model::Episode> = schema::episode::table
+                    .filter(schema::episode::podcast_id.eq(podcast.id))
+                    .order(schema::episode::published_at.desc())
+                    .limit(50)
+                    .load(&*conn)
+                    .chain_err(|| "Error selecting episodes")?;
+                Some(ShowPodcastViewModel {
+                    episodes: episodes,
+                    podcast:  podcast,
+                })
+            }
+            None => None,
         }
-        None => Ok(handle_404()?),
+    };
+
+    if view_model.is_none() {
+        return Ok(handle_404()?);
     }
+
+    let html = render_show_podcast(&view_model.unwrap()).map_err(Error::from)?;
+    Ok(HttpResponse::build(StatusCode::OK)
+        .content_type("text/html; charset=utf-8")
+        .body(html)
+        .map_err(Error::from)?)
 }
 
 //
@@ -160,6 +174,11 @@ fn render_show_podcast(view_model: &ShowPodcastViewModel) -> Result<String> {
                 h1: view_model.podcast.title.as_str();
                 p {
                     : "Hello! This is <html />"
+                }
+                ul {
+                    @ for ref episode in view_model.episodes.iter() {
+                        li: episode.title.as_str();
+                    }
                 }
             }
         }
