@@ -42,6 +42,7 @@ impl WebServer {
                 log:  log.clone(),
                 pool: pool.clone(),
             }).middleware(middleware::log_initializer::Middleware)
+                .middleware(middleware::request_id::Middleware)
                 .middleware(middleware::request_response_logger::Middleware)
                 .resource("/podcasts/{id}", |r| {
                     r.method(actix_web::Method::GET).f(handle_show_podcast)
@@ -117,6 +118,37 @@ mod middleware {
         }
     }
 
+    pub mod request_id {
+        use web::middleware::*;
+
+        use uuid::Uuid;
+
+        pub struct Middleware;
+
+        impl<S: State> actix_web::middleware::Middleware<S> for Middleware {
+            fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
+                let log = req.extensions().remove::<log_initializer::Log>().unwrap().0;
+
+                let request_id = Uuid::new_v4().simple().to_string();
+                debug!(&log, "Generated request ID"; "request_id" => request_id.as_str());
+
+                req.extensions().insert(log_initializer::Log(log.new(
+                    o!("request_id" => request_id),
+                )));
+
+                Ok(Started::Done)
+            }
+
+            fn response(
+                &self,
+                _req: &mut HttpRequest<S>,
+                resp: HttpResponse,
+            ) -> actix_web::Result<Response> {
+                Ok(Response::Done(resp))
+            }
+        }
+    }
+
     pub mod request_response_logger {
         use web::middleware::*;
 
@@ -169,13 +201,18 @@ struct ShowPodcastViewModel {
 // Web handlers
 //
 
-fn handle_show_podcast(req: HttpRequest<StateImpl>) -> actix_web::Result<HttpResponse> {
+fn handle_show_podcast(mut req: HttpRequest<StateImpl>) -> actix_web::Result<HttpResponse> {
     let id = req.match_info()
         .get("id")
         .unwrap()
         .parse::<i64>()
         .chain_err(|| "Error parsing ID")?;
-    info!(req.state().log, "Serving podcast"; "id" => id);
+    let log = req.extensions()
+        .get::<middleware::log_initializer::Log>()
+        .unwrap()
+        .0
+        .new(o!("step" => "execute"));
+    info!(&log, "Serving podcast"; "id" => id);
 
     let view_model: Option<ShowPodcastViewModel> = {
         let conn = req.state().pool.get().map_err(Error::from)?;
