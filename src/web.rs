@@ -68,7 +68,7 @@ struct StateImpl {
 
 impl middleware::State for StateImpl {
     fn log(&self) -> &Logger {
-        return &self.log;
+        &self.log
     }
 }
 
