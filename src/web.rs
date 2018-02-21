@@ -277,7 +277,7 @@ fn render_show_podcast(view_model: &ShowPodcastViewModel) -> Result<String> {
                     : "Hello! This is <html />"
                 }
                 ul {
-                    @ for ref episode in view_model.episodes.iter() {
+                    @ for episode in &view_model.episodes {
                         li: episode.title.as_str();
                     }
                 }
