@@ -137,7 +137,7 @@ pub fn pool() -> Pool<ConnectionManager<PgConnection>> {
         Ok(pool) => pool,
         Err(e) => {
             error_helpers::print_error(&log_sync(), &e);
-            panic!();
+            panic!("{}", e);
         }
     }
 }
