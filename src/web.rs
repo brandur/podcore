@@ -40,7 +40,7 @@ impl WebServer {
         let system = actix::System::new("podcore-web");
 
         let server = actix_web::HttpServer::new(move || {
-            actix_web::Application::with_state(State {
+            actix_web::Application::with_state(StateImpl {
                 log:  log.clone(),
                 pool: pool.clone(),
             }).middleware(RequestResponseLogger)
@@ -64,16 +64,16 @@ impl WebServer {
 // Private types
 //
 
-trait StateWithLog {
+trait State {
     fn log(&self) -> &Logger;
 }
 
-struct State {
+struct StateImpl {
     log:  Logger,
     pool: Pool<ConnectionManager<PgConnection>>,
 }
 
-impl StateWithLog for State {
+impl State for StateImpl {
     fn log(&self) -> &Logger {
         return &self.log;
     }
@@ -93,7 +93,7 @@ struct RequestResponseLogger;
 
 struct StartTime(u64);
 
-impl<S: StateWithLog> Middleware<S> for RequestResponseLogger {
+impl<S: State> Middleware<S> for RequestResponseLogger {
     fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
         req.extensions().insert(StartTime(time::precise_time_ns()));
         Ok(Started::Done)
@@ -123,7 +123,7 @@ struct ShowPodcastViewModel {
 // Web handlers
 //
 
-fn handle_index(req: HttpRequest<State>) -> String {
+fn handle_index(req: HttpRequest<StateImpl>) -> String {
     info!(req.state().log, "Serving hello");
 
     (html! {
@@ -142,7 +142,7 @@ fn handle_index(req: HttpRequest<State>) -> String {
         .unwrap()
 }
 
-fn handle_show_podcast(req: HttpRequest<State>) -> actix_web::Result<HttpResponse> {
+fn handle_show_podcast(req: HttpRequest<StateImpl>) -> actix_web::Result<HttpResponse> {
     let id = req.match_info()
         .get("id")
         .unwrap()
