@@ -107,7 +107,11 @@ impl<S: State> Middleware<S> for RequestResponseLogger {
     ) -> actix_web::Result<Response> {
         let elapsed = time::precise_time_ns() - req.extensions().get::<StartTime>().unwrap().0;
         info!(req.state().log(), "Request finished";
-            "elapsed" => time_helpers::unit_str(elapsed));
+            "elapsed" => time_helpers::unit_str(elapsed),
+            "method"  => req.method().as_str(),
+            "path"    => req.path(),
+            "status"  => resp.status().as_u16(),
+        );
         Ok(Response::Done(resp))
     }
 }
