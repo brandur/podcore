@@ -1,8 +1,12 @@
 use errors::*;
+use model;
+use schema;
 
 use actix;
 use actix_web;
+use actix_web::{HttpRequest, HttpResponse, StatusCode};
 use diesel::pg::PgConnection;
+use diesel::prelude::*;
 use horrorshow::helper::doctype;
 use horrorshow::prelude::*;
 use r2d2::Pool;
@@ -38,7 +42,13 @@ impl WebServer {
                 log:  log.clone(),
                 pool: pool.clone(),
             }).middleware(actix_web::middleware::Logger::default())
-                .resource("/{name}", |r| r.method(actix_web::Method::GET).f(index))
+                .resource("/{name}", |r| {
+                    r.method(actix_web::Method::GET).f(handle_index)
+                })
+                .resource("/podcasts/{id}", |r| {
+                    r.method(actix_web::Method::GET).f(handle_show_podcast)
+                })
+                .default_resource(|r| r.h(actix_web::NormalizePath::default()))
         });
 
         let _addr = server.bind(host)?.start();
@@ -57,11 +67,17 @@ struct State {
     pool: Pool<ConnectionManager<PgConnection>>,
 }
 
+impl From<Error> for actix_web::error::Error {
+    fn from(error: Error) -> Self {
+        actix_web::error::ErrorInternalServerError(error.to_string()).into()
+    }
+}
+
 //
 // Web handlers
 //
 
-fn index(req: actix_web::HttpRequest<State>) -> String {
+fn handle_index(req: HttpRequest<State>) -> String {
     info!(req.state().log, "Serving hello");
 
     (html! {
@@ -78,4 +94,61 @@ fn index(req: actix_web::HttpRequest<State>) -> String {
         }
     }).into_string()
         .unwrap()
+}
+
+fn handle_show_podcast(req: HttpRequest<State>) -> actix_web::Result<HttpResponse> {
+    let id = req.match_info().get("name").unwrap();
+    info!(req.state().log, "Serving podcast"; "id" => id);
+
+    let podcast = {
+        let conn = req.state().pool.get().map_err(Error::from)?;
+        schema::podcast::table
+            //.filter(schema::podcast::id.eq(id))
+            .first(&*conn)
+            .optional()
+            .chain_err(|| "Error selecting podcast")
+    }?;
+
+    match podcast {
+        Some(podcast) => {
+            let html = render_show_podcast(&podcast).map_err(Error::from)?;
+            Ok(HttpResponse::build(StatusCode::OK)
+                .content_type("text/html; charset=utf-8")
+                .body(html)
+                .map_err(Error::from)?)
+        }
+        None => Ok(handle_404()?),
+    }
+}
+
+//
+// Error handlers
+//
+
+fn handle_404() -> Result<HttpResponse> {
+    Ok(HttpResponse::build(StatusCode::NOT_FOUND)
+        .content_type("text/html; charset=utf-8")
+        .body("404!")
+        .map_err(Error::from)?)
+}
+
+//
+// Views
+//
+
+fn render_show_podcast(_podcast: &model::Podcast) -> Result<String> {
+    (html! {
+        : doctype::HTML;
+        html {
+            head {
+                title: "Hello world!";
+            }
+            body {
+                p {
+                    : "Hello! This is <html />"
+                }
+            }
+        }
+    }).into_string()
+        .map_err(Error::from)
 }

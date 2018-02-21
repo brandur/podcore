@@ -11,11 +11,13 @@ error_chain!{
     foreign_links {
         Database(::diesel::result::Error);
         DatabaseConnectionPool(::r2d2::Error);
-        HyperError(::hyper::Error);
+        Http(::http::Error);
+        Hyper(::hyper::Error);
         Io(::std::io::Error);
         NativeTls(::native_tls::Error);
         HyperUri(::hyper::error::UriError);
         Json(::serde_json::Error);
+        Template(::horrorshow::Error);
         UrlParse(::url::ParseError);
         Xml(::quick_xml::errors::Error);
     }

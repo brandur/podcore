@@ -14,6 +14,7 @@ extern crate flate2;
 extern crate futures;
 #[macro_use]
 extern crate horrorshow;
+extern crate http;
 #[macro_use]
 extern crate hyper;
 extern crate hyper_tls;
