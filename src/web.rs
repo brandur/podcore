@@ -197,6 +197,7 @@ mod middleware {
 
 struct CommonViewModel {
     assets_version: String,
+    title:          String,
 }
 
 struct ShowPodcastViewModel {
@@ -241,6 +242,7 @@ fn handle_show_podcast(mut req: HttpRequest<StateImpl>) -> actix_web::Result<Htt
                 Some(ShowPodcastViewModel {
                     common: CommonViewModel {
                         assets_version: req.state().assets_version.clone(),
+                        title:          format!("Podcast: {}", podcast.title),
                     },
 
                     episodes: episodes,
@@ -277,29 +279,39 @@ fn handle_404() -> Result<HttpResponse> {
 // Views
 //
 
-fn render_show_podcast(view_model: &ShowPodcastViewModel) -> Result<String> {
+fn render_layout(view_model: &CommonViewModel, content: String) -> Result<String> {
     (html! {
         : doctype::HTML;
         html {
             head {
-                title: format_args!("Podcast: {}", view_model.podcast.title);
+                title: view_model.title.as_str();
 
                 meta(content="text/html; charset=utf-8", http-equiv="Content-Type");
 
-                link(href=format_args!("/assets/{}/app.css", view_model.common.assets_version), media="screen", rel="stylesheet", type="text/css");
+                link(href=format_args!("/assets/{}/app.css", view_model.assets_version), media="screen", rel="stylesheet", type="text/css");
             }
             body {
-                h1: view_model.podcast.title.as_str();
-                p {
-                    : "Hello! This is <html />"
-                }
-                ul {
-                    @ for episode in &view_model.episodes {
-                        li: episode.title.as_str();
-                    }
-                }
+                : Raw(content.as_str())
             }
         }
     }).into_string()
         .map_err(Error::from)
+}
+
+fn render_show_podcast(view_model: &ShowPodcastViewModel) -> Result<String> {
+    render_layout(
+        &view_model.common,
+        (html! {
+            h1: view_model.podcast.title.as_str();
+            p {
+                : "Hello! This is <html />"
+            }
+            ul {
+                @ for episode in &view_model.episodes {
+                    li: episode.title.as_str();
+                }
+            }
+        }).into_string()
+            .map_err(Error::from)?,
+    )
 }
