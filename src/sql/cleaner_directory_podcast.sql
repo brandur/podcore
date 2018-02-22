@@ -9,6 +9,11 @@ WITH deleted_batch AS (
                 FROM directory_podcast_directory_search
                 WHERE directory_podcast_id = directory_podcast.id
             )
+            AND NOT EXISTS (
+                SELECT 1
+                FROM directory_podcast_exception
+                WHERE directory_podcast_id = directory_podcast.id
+            )
         LIMIT $1
     )
     RETURNING id

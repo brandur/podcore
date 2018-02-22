@@ -298,6 +298,14 @@ mod tests {
             );
         }
 
+        // This directory podcast is attached to an exception, and so shouldn't be
+        // deleted.
+        {
+            let dir_podcast = insert_directory_podcast(&bootstrap.log, &*bootstrap.conn, None);
+            let search = insert_directory_search(&bootstrap.log, &*bootstrap.conn);
+            insert_directory_podcast_exception(&bootstrap.log, &*bootstrap.conn, &dir_podcast);
+        }
+
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
 
@@ -424,6 +432,23 @@ mod tests {
 
         diesel::insert_into(schema::directory_podcast_directory_search::table)
             .values(&join_ins)
+            .execute(conn)
+            .unwrap();
+    }
+
+    fn insert_directory_podcast_exception(
+        _log: &Logger,
+        conn: &PgConnection,
+        dir_podcast: &model::DirectoryPodcast,
+    ) {
+        let ex_ins = insertable::DirectoryPodcastException {
+            directory_podcast_id: dir_podcast.id,
+            errors:               vec!["error1".to_owned(), "error2".to_owned()],
+            occurred_at:          Utc::now(),
+        };
+
+        diesel::insert_into(schema::directory_podcast_exception::table)
+            .values(&ex_ins)
             .execute(conn)
             .unwrap();
     }
