@@ -456,7 +456,17 @@ fn render_show_search(view_model: &ShowSearchViewModel) -> Result<String> {
             }
             ul {
                 @ for dir_podcast in &view_model.directory_podcasts {
-                    li: dir_podcast.title.as_str();
+                    li {
+                        @ if let Some(podcast_id) = dir_podcast.podcast_id {
+                            a(href=format_args!("/podcasts/{}", podcast_id)) {
+                                : dir_podcast.title.as_str()
+                            }
+                        } else {
+                            a(href=format_args!("/directory-podcasts/{}", dir_podcast.id)) {
+                                : dir_podcast.title.as_str()
+                            }
+                        }
+                    }
                 }
             }
         }).into_string()?
