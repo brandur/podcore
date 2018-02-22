@@ -213,16 +213,25 @@ struct ShowPodcastViewModel {
 //
 
 fn handle_show_podcast(mut req: HttpRequest<StateImpl>) -> actix_web::Result<HttpResponse> {
+    let log = req.extensions()
+        .get::<middleware::log_initializer::Log>()
+        .unwrap()
+        .0
+        .clone();
+    time_helpers::log_timed(&log.new(o!("step" => "execute")), |log| {
+        handle_show_podcast_inner(log, req)
+    })
+}
+
+fn handle_show_podcast_inner(
+    log: &Logger,
+    req: HttpRequest<StateImpl>,
+) -> actix_web::Result<HttpResponse> {
     let id = req.match_info()
         .get("id")
         .unwrap()
         .parse::<i64>()
         .chain_err(|| "Error parsing ID")?;
-    let log = req.extensions()
-        .get::<middleware::log_initializer::Log>()
-        .unwrap()
-        .0
-        .new(o!("step" => "execute"));
     info!(&log, "Serving podcast"; "id" => id);
 
     let view_model: Option<ShowPodcastViewModel> = time_helpers::log_timed(
