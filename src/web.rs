@@ -43,6 +43,12 @@ impl WebServer {
             }).middleware(middleware::log_initializer::Middleware)
                 .middleware(middleware::request_id::Middleware)
                 .middleware(middleware::request_response_logger::Middleware)
+                .resource("/search", |r| {
+                    r.method(actix_web::Method::GET).f(handle_show_search)
+                })
+                .resource("/search-home", |r| {
+                    r.method(actix_web::Method::GET).f(handle_show_search_home)
+                })
                 .resource("/podcasts/{id}", |r| {
                     r.method(actix_web::Method::GET).f(handle_show_podcast)
                 })
@@ -208,9 +214,93 @@ struct ShowPodcastViewModel {
     podcast:  model::Podcast,
 }
 
+struct ShowSearchHomeViewModel {
+    common: CommonViewModel,
+}
+
+struct ShowSearchViewModel {
+    common: CommonViewModel,
+
+    query: String,
+}
+
 //
 // Web handlers
 //
+
+fn handle_show_search(mut req: HttpRequest<StateImpl>) -> actix_web::Result<HttpResponse> {
+    let log = req.extensions()
+        .get::<middleware::log_initializer::Log>()
+        .unwrap()
+        .0
+        .clone();
+    time_helpers::log_timed(&log.new(o!("step" => "execute")), |log| {
+        handle_show_search_inner(log, &req)
+    })
+}
+
+fn handle_show_search_inner(
+    log: &Logger,
+    req: &HttpRequest<StateImpl>,
+) -> actix_web::Result<HttpResponse> {
+    let query = match req.query().get("q") {
+        Some(q) => q,
+        None => {
+            return Ok(HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
+                .header("Location", "/search-home")
+                .finish()?);
+        }
+    };
+    info!(log, "Searching directory podcasts"; "query" => query);
+
+    let view_model = ShowSearchViewModel {
+        common: CommonViewModel {
+            assets_version: req.state().assets_version.clone(),
+            title:          format!("Search: {}", query),
+        },
+
+        query: query.to_owned(),
+    };
+
+    let html = time_helpers::log_timed(&log.new(o!("step" => "render_view")), |_log| {
+        render_show_search(&view_model)
+    })?;
+
+    Ok(HttpResponse::build(StatusCode::OK)
+        .content_type("text/html; charset=utf-8")
+        .body(html)?)
+}
+
+fn handle_show_search_home(mut req: HttpRequest<StateImpl>) -> actix_web::Result<HttpResponse> {
+    let log = req.extensions()
+        .get::<middleware::log_initializer::Log>()
+        .unwrap()
+        .0
+        .clone();
+    time_helpers::log_timed(&log.new(o!("step" => "execute")), |log| {
+        handle_show_search_home_inner(log, &req)
+    })
+}
+
+fn handle_show_search_home_inner(
+    log: &Logger,
+    req: &HttpRequest<StateImpl>,
+) -> actix_web::Result<HttpResponse> {
+    let view_model = ShowSearchHomeViewModel {
+        common: CommonViewModel {
+            assets_version: req.state().assets_version.clone(),
+            title:          "Search".to_owned(),
+        },
+    };
+
+    let html = time_helpers::log_timed(&log.new(o!("step" => "render_view")), |_log| {
+        render_show_search_home(&view_model)
+    })?;
+
+    Ok(HttpResponse::build(StatusCode::OK)
+        .content_type("text/html; charset=utf-8")
+        .body(html)?)
+}
 
 fn handle_show_podcast(mut req: HttpRequest<StateImpl>) -> actix_web::Result<HttpResponse> {
     let log = req.extensions()
@@ -322,6 +412,32 @@ fn render_show_podcast(view_model: &ShowPodcastViewModel) -> Result<String> {
                 @ for episode in &view_model.episodes {
                     li: episode.title.as_str();
                 }
+            }
+        }).into_string()?
+            .as_str(),
+    )
+}
+
+fn render_show_search(view_model: &ShowSearchViewModel) -> Result<String> {
+    render_layout(
+        &view_model.common,
+        (html! {
+            p {
+                : format_args!("Query: {}", view_model.query);
+            }
+        }).into_string()?
+            .as_str(),
+    )
+}
+
+fn render_show_search_home(view_model: &ShowSearchHomeViewModel) -> Result<String> {
+    render_layout(
+        &view_model.common,
+        (html! {
+            h1: "Search";
+            form(action="/search", method="get") {
+                input(type="text", name="q");
+                input(type="submit", value="Submit");
             }
         }).into_string()?
             .as_str(),
