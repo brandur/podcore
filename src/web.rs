@@ -219,20 +219,20 @@ fn handle_show_podcast(mut req: HttpRequest<StateImpl>) -> actix_web::Result<Htt
         .0
         .clone();
     time_helpers::log_timed(&log.new(o!("step" => "execute")), |log| {
-        handle_show_podcast_inner(log, req)
+        handle_show_podcast_inner(log, &req)
     })
 }
 
 fn handle_show_podcast_inner(
     log: &Logger,
-    req: HttpRequest<StateImpl>,
+    req: &HttpRequest<StateImpl>,
 ) -> actix_web::Result<HttpResponse> {
     let id = req.match_info()
         .get("id")
         .unwrap()
         .parse::<i64>()
         .chain_err(|| "Error parsing ID")?;
-    info!(&log, "Serving podcast"; "id" => id);
+    info!(log, "Serving podcast"; "id" => id);
 
     let view_model: Option<ShowPodcastViewModel> = time_helpers::log_timed(
         &log.new(o!("step" => "build_view_model")),
@@ -291,7 +291,7 @@ fn handle_404() -> Result<HttpResponse> {
 // Views
 //
 
-fn render_layout(view_model: &CommonViewModel, content: String) -> Result<String> {
+fn render_layout(view_model: &CommonViewModel, content: &str) -> Result<String> {
     (html! {
         : doctype::HTML;
         html {
@@ -303,7 +303,7 @@ fn render_layout(view_model: &CommonViewModel, content: String) -> Result<String
                 link(href=format_args!("/assets/{}/app.css", view_model.assets_version), media="screen", rel="stylesheet", type="text/css");
             }
             body {
-                : Raw(content.as_str())
+                : Raw(content)
             }
         }
     }).into_string()
@@ -323,6 +323,7 @@ fn render_show_podcast(view_model: &ShowPodcastViewModel) -> Result<String> {
                     li: episode.title.as_str();
                 }
             }
-        }).into_string()?,
+        }).into_string()?
+            .as_str(),
     )
 }
