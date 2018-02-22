@@ -237,20 +237,18 @@ fn handle_show_podcast_inner(
     let view_model: Option<ShowPodcastViewModel> = time_helpers::log_timed(
         &log.new(o!("step" => "build_view_model")),
         |_log| -> Result<Option<ShowPodcastViewModel>> {
-            let conn = req.state().pool.get().map_err(Error::from)?;
+            let conn = req.state().pool.get()?;
             let podcast: Option<model::Podcast> = schema::podcast::table
                 .filter(schema::podcast::id.eq(id))
                 .first(&*conn)
-                .optional()
-                .chain_err(|| "Error selecting podcast")?;
+                .optional()?;
             match podcast {
                 Some(podcast) => {
                     let episodes: Vec<model::Episode> = schema::episode::table
                         .filter(schema::episode::podcast_id.eq(podcast.id))
                         .order(schema::episode::published_at.desc())
                         .limit(50)
-                        .load(&*conn)
-                        .chain_err(|| "Error selecting episodes")?;
+                        .load(&*conn)?;
                     Ok(Some(ShowPodcastViewModel {
                         common: CommonViewModel {
                             assets_version: req.state().assets_version.clone(),
@@ -272,12 +270,11 @@ fn handle_show_podcast_inner(
 
     let html = time_helpers::log_timed(&log.new(o!("step" => "render_view")), |_log| {
         render_show_podcast(&view_model.unwrap())
-    }).map_err(Error::from)?;
+    })?;
 
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("text/html; charset=utf-8")
-        .body(html)
-        .map_err(Error::from)?)
+        .body(html)?)
 }
 
 //
@@ -287,8 +284,7 @@ fn handle_show_podcast_inner(
 fn handle_404() -> Result<HttpResponse> {
     Ok(HttpResponse::build(StatusCode::NOT_FOUND)
         .content_type("text/html; charset=utf-8")
-        .body("404!")
-        .map_err(Error::from)?)
+        .body("404!")?)
 }
 
 //
@@ -327,7 +323,6 @@ fn render_show_podcast(view_model: &ShowPodcastViewModel) -> Result<String> {
                     li: episode.title.as_str();
                 }
             }
-        }).into_string()
-            .map_err(Error::from)?,
+        }).into_string()?,
     )
 }
