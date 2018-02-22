@@ -35,6 +35,9 @@ RUN apk --no-cache add ca-certificates
 COPY --from=builder \
     /home/rust/src/target/x86_64-unknown-linux-musl/release/podcore \
     /
+COPY --from=builder \
+    /home/rust/src/assets/ \
+    /assets/
 
 ENV PORT 8080
 ENTRYPOINT ["/podcore"]

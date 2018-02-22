@@ -14,39 +14,41 @@ use r2d2_diesel::ConnectionManager;
 use slog::Logger;
 
 pub struct WebServer {
-    log:  Logger,
-    pool: Pool<ConnectionManager<PgConnection>>,
-    port: String,
+    pub assets_version: String,
+    pub log:            Logger,
+    pub pool:           Pool<ConnectionManager<PgConnection>>,
+    pub port:           String,
 }
 
 impl WebServer {
-    pub fn new(log: Logger, pool: Pool<ConnectionManager<PgConnection>>, port: &str) -> WebServer {
-        WebServer {
-            log:  log,
-            pool: pool,
-            port: port.to_owned(),
-        }
-    }
-
     pub fn run(&self) -> Result<()> {
+        let assets_version = self.assets_version.clone();
         let log = self.log.clone();
         let pool = self.pool.clone();
 
+        // Must appear up here because we're going to move `log` into server closure.
         let host = format!("127.0.0.1:{}", self.port.as_str());
         info!(log, "Web server starting"; "host" => host.as_str());
 
+        // Although not referenced in the server definition, a `System` must be defined
+        // or the server will crash on `start()`.
         let system = actix::System::new("podcore-web");
 
         let server = actix_web::HttpServer::new(move || {
             actix_web::Application::with_state(StateImpl {
-                log:  log.clone(),
-                pool: pool.clone(),
+                assets_version: assets_version.clone(),
+                log:            log.clone(),
+                pool:           pool.clone(),
             }).middleware(middleware::log_initializer::Middleware)
                 .middleware(middleware::request_id::Middleware)
                 .middleware(middleware::request_response_logger::Middleware)
                 .resource("/podcasts/{id}", |r| {
                     r.method(actix_web::Method::GET).f(handle_show_podcast)
                 })
+                .handler(
+                    format!("/assets/{}/", assets_version.as_str()).as_str(),
+                    actix_web::fs::StaticFiles::new("./assets/", false),
+                )
                 .default_resource(|r| r.h(actix_web::NormalizePath::default()))
         });
 
@@ -62,8 +64,9 @@ impl WebServer {
 //
 
 struct StateImpl {
-    log:  Logger,
-    pool: Pool<ConnectionManager<PgConnection>>,
+    assets_version: String,
+    log:            Logger,
+    pool:           Pool<ConnectionManager<PgConnection>>,
 }
 
 impl middleware::State for StateImpl {
@@ -192,7 +195,13 @@ mod middleware {
 // View models
 //
 
+struct CommonViewModel {
+    assets_version: String,
+}
+
 struct ShowPodcastViewModel {
+    common: CommonViewModel,
+
     episodes: Vec<model::Episode>,
     podcast:  model::Podcast,
 }
@@ -230,6 +239,10 @@ fn handle_show_podcast(mut req: HttpRequest<StateImpl>) -> actix_web::Result<Htt
                     .load(&*conn)
                     .chain_err(|| "Error selecting episodes")?;
                 Some(ShowPodcastViewModel {
+                    common: CommonViewModel {
+                        assets_version: req.state().assets_version.clone(),
+                    },
+
                     episodes: episodes,
                     podcast:  podcast,
                 })
@@ -270,6 +283,10 @@ fn render_show_podcast(view_model: &ShowPodcastViewModel) -> Result<String> {
         html {
             head {
                 title: format_args!("Podcast: {}", view_model.podcast.title);
+
+                meta(content="text/html; charset=utf-8", http-equiv="Content-Type");
+
+                link(href=format_args!("/assets/{}/app.css", view_model.common.assets_version), media="screen", rel="stylesheet", type="text/css");
             }
             body {
                 h1: view_model.podcast.title.as_str();

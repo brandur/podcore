@@ -347,6 +347,8 @@ fn subcommand_upgrade_https(
 fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("web").unwrap();
 
+    let assets_version = env::var("ASSETS_VERSION").unwrap_or_else(|_| "1".to_owned());
+
     // TODO: Extract to a helper
     let port = env::var("PORT").unwrap_or_else(|_| "8080".to_owned());
     let port = matches.value_of("PORT").unwrap_or_else(|| port.as_str());
@@ -354,7 +356,12 @@ fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
     let num_connections = options.num_connections;
     let pool = pool(log, num_connections)?;
 
-    let server = WebServer::new(log.clone(), pool, port);
+    let server = WebServer {
+        assets_version: assets_version,
+        log:            log.clone(),
+        pool:           pool,
+        port:           port.to_owned(),
+    };
     server.run()?;
     Ok(())
 }
