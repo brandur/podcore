@@ -3,6 +3,7 @@ use errors::*;
 use http_requester::HTTPRequesterPassThrough;
 use mediators::common;
 use mediators::podcast_updater::PodcastUpdater;
+use time_helpers;
 
 use chan;
 use chan::{Receiver, Sender};
@@ -28,7 +29,7 @@ pub struct PodcastReingester {
 
 impl PodcastReingester {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
-        common::log_timed(&log.new(o!("step" => file!())), |log| self.run_inner(log))
+        time_helpers::log_timed(&log.new(o!("step" => file!())), |log| self.run_inner(log))
     }
 
     pub fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
@@ -73,7 +74,7 @@ impl PodcastReingester {
 
     fn page_podcasts(&mut self, log: &Logger, work_send: &Sender<PodcastTuple>) -> Result<i64> {
         let log = log.new(o!("thread" => "control"));
-        common::log_timed(&log.new(o!("step" => "page_podcasts")), |log| {
+        time_helpers::log_timed(&log.new(o!("step" => "page_podcasts")), |log| {
             let conn = &*(self.pool.get().map_err(Error::from))?;
 
             let mut last_id = 0i64;
@@ -104,7 +105,7 @@ impl PodcastReingester {
         conn: &PgConnection,
         start_id: i64,
     ) -> Result<Vec<PodcastTuple>> {
-        let res = common::log_timed(
+        let res = time_helpers::log_timed(
             &log.new(o!("step" => "query_podcasts", "start_id" => start_id)),
             |_log| {
                 // Fell back to `sql_query` because implementing this in Diesel's query language

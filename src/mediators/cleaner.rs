@@ -1,5 +1,5 @@
 use errors::*;
-use mediators::common;
+use time_helpers;
 
 use diesel;
 use diesel::pg::PgConnection;
@@ -16,7 +16,7 @@ pub struct Cleaner {
 
 impl Cleaner {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
-        common::log_timed(&log.new(o!("step" => file!())), |log| self.run_inner(log))
+        time_helpers::log_timed(&log.new(o!("step" => file!())), |log| self.run_inner(log))
     }
 
     pub fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
@@ -123,7 +123,7 @@ struct DeleteResults {
 //
 
 fn delete_directory_podcast_batch(log: &Logger, conn: &PgConnection) -> Result<DeleteResults> {
-    common::log_timed(
+    time_helpers::log_timed(
         &log.new(o!("step" => "delete_directory_podcast_batch", "limit" => DELETE_LIMIT)),
         |_log| {
             // The idea here is to find "dangling" directory podcasts. Those are directory
@@ -141,7 +141,7 @@ fn delete_directory_podcast_batch(log: &Logger, conn: &PgConnection) -> Result<D
 }
 
 fn delete_directory_search_batch(log: &Logger, conn: &PgConnection) -> Result<DeleteResults> {
-    common::log_timed(
+    time_helpers::log_timed(
         &log.new(o!("step" => "delete_directory_search_batch", "limit" => DELETE_LIMIT)),
         |_log| {
             // This works because directory_podcast_directory_search is ON DELETE CASCADE
@@ -155,7 +155,7 @@ fn delete_directory_search_batch(log: &Logger, conn: &PgConnection) -> Result<De
 }
 
 fn delete_podcast_feed_content_batch(log: &Logger, conn: &PgConnection) -> Result<DeleteResults> {
-    common::log_timed(
+    time_helpers::log_timed(
         &log.new(o!("step" => "delete_podcast_feed_content_batch", "limit" => DELETE_LIMIT)),
         |_log| {
             diesel::sql_query(include_str!("../sql/cleaner_podcast_feed_content.sql"))

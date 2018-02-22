@@ -2,6 +2,7 @@ use errors;
 use errors::*;
 use http_requester::HTTPRequester;
 use mediators::common;
+use time_helpers;
 
 use chrono::Utc;
 use hyper;
@@ -24,7 +25,7 @@ pub struct ErrorReporter<'a> {
 
 impl<'a> ErrorReporter<'a> {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
-        common::log_timed(&log.new(o!("step" => file!())), |log| self.run_inner(log))
+        time_helpers::log_timed(&log.new(o!("step" => file!())), |log| self.run_inner(log))
     }
 
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
@@ -277,7 +278,7 @@ fn build_stack_trace(error: &Error) -> Option<StackTrace> {
 }
 
 fn post_error(log: &Logger, http_requester: &mut HTTPRequester, req: Request) -> Result<()> {
-    let (status, body, _final_url) = common::log_timed(
+    let (status, body, _final_url) = time_helpers::log_timed(
         &log.new(o!("step" => "post_error")),
         |log| http_requester.execute(log, req),
     )?;

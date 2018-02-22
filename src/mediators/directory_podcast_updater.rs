@@ -1,11 +1,11 @@
 use error_helpers;
 use errors::*;
 use http_requester::HTTPRequester;
-use mediators::common;
 use mediators::podcast_updater::PodcastUpdater;
 use model;
 use model::insertable;
 use schema;
+use time_helpers;
 
 use chrono::Utc;
 use diesel;
@@ -22,7 +22,7 @@ pub struct DirectoryPodcastUpdater<'a> {
 
 impl<'a> DirectoryPodcastUpdater<'a> {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
-        common::log_timed(&log.new(o!("step" => file!())), |log| {
+        time_helpers::log_timed(&log.new(o!("step" => file!())), |log| {
             self.conn
                 .transaction::<_, Error, _>(move || self.run_inner(log))
                 .chain_err(|| "Error in database transaction")
@@ -68,7 +68,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
     //
 
     fn delete_exception(&mut self, log: &Logger) -> Result<()> {
-        common::log_timed(&log.new(o!("step" => "delete_exception")), |_log| {
+        time_helpers::log_timed(&log.new(o!("step" => "delete_exception")), |_log| {
             diesel::delete(schema::directory_podcast_exception::table.filter(
                 schema::directory_podcast_exception::directory_podcast_id.eq(self.dir_podcast.id),
             )).execute(self.conn)
@@ -78,7 +78,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
     }
 
     fn save_dir_podcast(&mut self, log: &Logger, podcast: &model::Podcast) -> Result<()> {
-        common::log_timed(&log.new(o!("step" => "save_dir_podcast")), |_log| {
+        time_helpers::log_timed(&log.new(o!("step" => "save_dir_podcast")), |_log| {
             self.dir_podcast.podcast_id = Some(podcast.id);
             self.dir_podcast
                 .save_changes::<model::DirectoryPodcast>(self.conn)
@@ -98,7 +98,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
             occurred_at:          Utc::now(),
         };
 
-        common::log_timed(&log.new(o!("step" => "upsert_exception")), |_log| {
+        time_helpers::log_timed(&log.new(o!("step" => "upsert_exception")), |_log| {
             Ok(
                 diesel::insert_into(schema::directory_podcast_exception::table)
                     .values(&ins_ex)

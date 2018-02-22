@@ -3,6 +3,7 @@ use http_requester::HTTPRequester;
 use mediators::common;
 use model;
 use model::insertable;
+use time_helpers;
 
 use chrono::Utc;
 use diesel;
@@ -26,7 +27,7 @@ pub struct DirectoryPodcastSearcher<'a> {
 
 impl<'a> DirectoryPodcastSearcher<'a> {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
-        common::log_timed(&log.new(o!("step" => file!())), |log| {
+        time_helpers::log_timed(&log.new(o!("step" => file!())), |log| {
             self.conn
                 .transaction::<_, Error, _>(|| self.run_inner(log))
                 .chain_err(|| "Error in database transaction")
@@ -88,7 +89,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         info!(log, "Encoded query"; "query" => encoded.clone());
 
         let (status, body, _final_url) =
-            common::log_timed(&log.new(o!("step" => "fetch_results")), |log| {
+            time_helpers::log_timed(&log.new(o!("step" => "fetch_results")), |log| {
                 self.http_requester.execute(
                     log,
                     Request::new(
@@ -116,7 +117,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         log: &Logger,
         directory: &model::Directory,
     ) -> Result<model::DirectorySearch> {
-        common::log_timed(&log.new(o!("step" => "insert_directory_search")), |_log| {
+        time_helpers::log_timed(&log.new(o!("step" => "insert_directory_search")), |_log| {
             diesel::insert_into(schema::directory_search::table)
                 .values(&insertable::DirectorySearch {
                     directory_id: directory.id,
@@ -129,7 +130,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
     }
 
     fn parse_results(log: &Logger, data: &[u8]) -> Result<Vec<SearchResult>> {
-        let wrapper: SearchResultWrapper = common::log_timed(
+        let wrapper: SearchResultWrapper = time_helpers::log_timed(
             &log.new(o!("step" => "parse_results")),
             |_log| serde_json::from_slice(data).chain_err(|| "Error parsing search results JSON"),
         )?;
@@ -143,7 +144,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         directory_search: &model::DirectorySearch,
         directory_podcasts: &[model::DirectoryPodcast],
     ) -> Result<Vec<model::DirectoryPodcastDirectorySearch>> {
-        common::log_timed(&log.new(o!("step" => "delete_joins")), |_log| {
+        time_helpers::log_timed(&log.new(o!("step" => "delete_joins")), |_log| {
             diesel::delete(
                 schema::directory_podcast_directory_search::table.filter(
                     schema::directory_podcast_directory_search::directory_search_id
@@ -161,7 +162,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
             })
             .collect();
 
-        common::log_timed(&log.new(o!("step" => "insert_joins")), |_log| {
+        time_helpers::log_timed(&log.new(o!("step" => "insert_joins")), |_log| {
             diesel::insert_into(schema::directory_podcast_directory_search::table)
                 .values(&ins_joins)
                 .get_results(self.conn)
@@ -180,7 +181,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
             Vec<model::DirectoryPodcastDirectorySearch>,
         ),
     > {
-        let joins = common::log_timed(&log.new(o!("step" => "select_joins")), |_log| {
+        let joins = time_helpers::log_timed(&log.new(o!("step" => "select_joins")), |_log| {
             schema::directory_podcast_directory_search::table
                 .filter(
                     schema::directory_podcast_directory_search::directory_search_id.eq(search.id),
@@ -190,7 +191,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
                 .chain_err(|| "Error loading joins")
         })?;
 
-        let directory_podcasts = common::log_timed(
+        let directory_podcasts = time_helpers::log_timed(
             &log.new(o!("step" => "select_directory_podcasts")),
             |_log| {
                 schema::directory_podcast::table
@@ -215,7 +216,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         log: &Logger,
         directory: &model::Directory,
     ) -> Result<Option<model::DirectorySearch>> {
-        common::log_timed(&log.new(o!("step" => "select_directory_search")), |_log| {
+        time_helpers::log_timed(&log.new(o!("step" => "select_directory_search")), |_log| {
             schema::directory_search::table
                 .filter(schema::directory_search::directory_id.eq(directory.id))
                 .filter(schema::directory_search::query.eq(self.query.as_str()))
@@ -230,7 +231,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         log: &Logger,
         search: &model::DirectorySearch,
     ) -> Result<model::DirectorySearch> {
-        common::log_timed(&log.new(o!("step" => "update_directory_search")), |_log| {
+        time_helpers::log_timed(&log.new(o!("step" => "update_directory_search")), |_log| {
             diesel::update(
                 schema::directory_search::table.filter(schema::directory_search::id.eq(search.id)),
             ).set(schema::directory_search::retrieved_at.eq(Utc::now()))
@@ -275,7 +276,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
             ins_podcast.podcast_id = podcast_id_map.get(&ins_podcast.feed_url).cloned();
         }
 
-        common::log_timed(
+        time_helpers::log_timed(
             &log.new(o!("step" => "upsert_directory_podcasts")),
             |_log| {
                 Ok(diesel::insert_into(schema::directory_podcast::table)

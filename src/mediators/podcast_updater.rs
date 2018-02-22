@@ -5,6 +5,7 @@ use mediators::common;
 use model;
 use model::insertable;
 use schema;
+use time_helpers;
 
 use chrono::{DateTime, Utc};
 use crypto::digest::Digest;
@@ -41,7 +42,7 @@ pub struct PodcastUpdater<'a> {
 
 impl<'a> PodcastUpdater<'a> {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
-        common::log_timed(&log.new(o!("step" => file!())), |log| {
+        time_helpers::log_timed(&log.new(o!("step" => file!())), |log| {
             match self.conn.transaction::<_, Error, _>(|| self.run_inner(log)) {
                 Ok(r) => Ok(r),
                 Err(e) => {
@@ -165,7 +166,7 @@ impl<'a> PodcastUpdater<'a> {
         podcast: &model::Podcast,
         sha256_hash: &str,
     ) -> Result<bool> {
-        let matching_content_count: i64 = common::log_timed(
+        let matching_content_count: i64 = time_helpers::log_timed(
             &log.new(o!("step" => "query_podcast_feed_content")),
             |_log| {
                 schema::podcast_feed_content::table
@@ -187,7 +188,7 @@ impl<'a> PodcastUpdater<'a> {
         raws: Vec<raw::Episode>,
         podcast: &model::Podcast,
     ) -> Result<Vec<insertable::Episode>> {
-        common::log_timed(&log.new(o!("step" => "convert_episodes")), |log| {
+        time_helpers::log_timed(&log.new(o!("step" => "convert_episodes")), |log| {
             let mut guids: HashSet<String> = HashSet::new();
             let num_candidates = raws.len();
             let mut episodes = Vec::with_capacity(num_candidates);
@@ -221,7 +222,7 @@ impl<'a> PodcastUpdater<'a> {
     }
 
     fn convert_podcast(log: &Logger, raw_podcast: &raw::Podcast) -> Result<insertable::Podcast> {
-        common::log_timed(
+        time_helpers::log_timed(
             &log.new(o!("step" => "convert_podcast")),
             |_log| -> Result<insertable::Podcast> {
                 match validate_podcast(raw_podcast)
@@ -235,7 +236,7 @@ impl<'a> PodcastUpdater<'a> {
     }
 
     fn delete_exception(&mut self, log: &Logger, podcast: &model::Podcast) -> Result<()> {
-        common::log_timed(&log.new(o!("step" => "delete_exception")), |_log| {
+        time_helpers::log_timed(&log.new(o!("step" => "delete_exception")), |_log| {
             diesel::delete(
                 schema::podcast_exception::table
                     .filter(schema::podcast_exception::podcast_id.eq(podcast.id)),
@@ -247,7 +248,7 @@ impl<'a> PodcastUpdater<'a> {
 
     fn fetch_feed(&mut self, log: &Logger, url: &str) -> Result<(Vec<u8>, String)> {
         let (status, body, final_url) =
-            common::log_timed(&log.new(o!("step" => "fetch_feed")), |_log| {
+            time_helpers::log_timed(&log.new(o!("step" => "fetch_feed")), |_log| {
                 self.http_requester.execute(
                     log,
                     Request::new(Method::Get, Uri::from_str(url).map_err(Error::from)?),
@@ -263,7 +264,7 @@ impl<'a> PodcastUpdater<'a> {
     }
 
     fn parse_feed(log: &Logger, data: &str) -> Result<(raw::Podcast, Vec<raw::Episode>)> {
-        common::log_timed(&log.new(o!("step" => "parse_feed")), |log| {
+        time_helpers::log_timed(&log.new(o!("step" => "parse_feed")), |log| {
             let mut buf = Vec::new();
             let mut skip_buf = Vec::new();
 
@@ -301,7 +302,7 @@ impl<'a> PodcastUpdater<'a> {
 
         if let Some(podcast_id) = podcast_id {
             let latest_url: Option<String> =
-                common::log_timed(&log.new(o!("step" => "select_latest_url")), |_log| {
+                time_helpers::log_timed(&log.new(o!("step" => "select_latest_url")), |_log| {
                     schema::podcast_feed_location::table
                         .filter(schema::podcast_feed_location::podcast_id.eq(podcast_id))
                         .select(schema::podcast_feed_location::feed_url)
@@ -325,7 +326,7 @@ impl<'a> PodcastUpdater<'a> {
         log: &Logger,
         ins_episodes: &[insertable::Episode],
     ) -> Result<Vec<model::Episode>> {
-        common::log_timed(&log.new(o!("step" => "upsert_episodes")), |_log| {
+        time_helpers::log_timed(&log.new(o!("step" => "upsert_episodes")), |_log| {
             Ok(diesel::insert_into(schema::episode::table)
                 .values(ins_episodes)
                 .on_conflict((schema::episode::podcast_id, schema::episode::guid))
@@ -352,7 +353,7 @@ impl<'a> PodcastUpdater<'a> {
             occurred_at: Utc::now(),
         };
 
-        common::log_timed(&log.new(o!("step" => "upsert_exception")), |_log| {
+        time_helpers::log_timed(&log.new(o!("step" => "upsert_exception")), |_log| {
             diesel::insert_into(schema::podcast_exception::table)
                 .values(&ins_ex)
                 .on_conflict(schema::podcast_exception::podcast_id)
@@ -379,7 +380,7 @@ impl<'a> PodcastUpdater<'a> {
 
         if let Some(podcast_id) = podcast_id {
             info!(log, "Found existing podcast ID {}", podcast_id);
-            common::log_timed(&log.new(o!("step" => "update_podcast")), |_log| {
+            time_helpers::log_timed(&log.new(o!("step" => "update_podcast")), |_log| {
                 diesel::update(schema::podcast::table.filter(schema::podcast::id.eq(podcast_id)))
                     .set(ins_podcast)
                     .get_result(self.conn)
@@ -387,7 +388,7 @@ impl<'a> PodcastUpdater<'a> {
             })
         } else {
             info!(log, "No existing podcast found; inserting new");
-            common::log_timed(&log.new(o!("step" => "insert_podcast")), |_log| {
+            time_helpers::log_timed(&log.new(o!("step" => "insert_podcast")), |_log| {
                 diesel::insert_into(schema::podcast::table)
                     .values(ins_podcast)
                     .get_result(self.conn)
@@ -397,7 +398,7 @@ impl<'a> PodcastUpdater<'a> {
     }
 
     fn update_podcast_last_retrieved_at(&mut self, log: &Logger, podcast_id: i64) -> Result<()> {
-        common::log_timed(
+        time_helpers::log_timed(
             &log.new(o!("step" => "update_podcast_last_retrieved_at")),
             |log| {
                 info!(
@@ -432,7 +433,7 @@ impl<'a> PodcastUpdater<'a> {
             sha256_hash:  sha256_hash,
         };
 
-        common::log_timed(
+        time_helpers::log_timed(
             &log.new(o!("step" => "upsert_podcast_feed_content")),
             |_log| {
                 diesel::insert_into(schema::podcast_feed_content::table)
@@ -466,7 +467,7 @@ impl<'a> PodcastUpdater<'a> {
             last_retrieved_at:  Utc::now(),
             podcast_id:         podcast.id,
         };
-        common::log_timed(
+        time_helpers::log_timed(
             &log.new(o!("step" => "upsert_podcast_feed_location")),
             |_log| {
                 diesel::insert_into(schema::podcast_feed_location::table)
@@ -862,7 +863,7 @@ pub fn safe_unescape_and_decode<'b, B: BufRead>(
 }
 
 fn query_podcast(log: &Logger, conn: &PgConnection, url: &str) -> Result<Option<i64>> {
-    common::log_timed(&log.new(o!("step" => "query_podcast")), |_log| {
+    time_helpers::log_timed(&log.new(o!("step" => "query_podcast")), |_log| {
         schema::podcast_feed_location::table
             .filter(schema::podcast_feed_location::feed_url.eq(url))
             .select(schema::podcast_feed_location::podcast_id)

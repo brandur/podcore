@@ -1,5 +1,5 @@
 use errors::*;
-use mediators::common;
+use time_helpers;
 
 use diesel;
 use diesel::pg::PgConnection;
@@ -12,7 +12,7 @@ pub struct PodcastFeedLocationUpgrader<'a> {
 
 impl<'a> PodcastFeedLocationUpgrader<'a> {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
-        common::log_timed(&log.new(o!("step" => file!())), |log| {
+        time_helpers::log_timed(&log.new(o!("step" => file!())), |log| {
             self.conn.transaction::<_, Error, _>(|| self.run_inner(log))
         })
     }
@@ -28,7 +28,7 @@ impl<'a> PodcastFeedLocationUpgrader<'a> {
     //
 
     fn insert_https_feed_locations(log: &Logger, conn: &PgConnection) -> Result<i64> {
-        let res = common::log_timed(
+        let res = time_helpers::log_timed(
             &log.new(o!("step" => "insert_https_feed_locations")),
             |_log| {
                 // We select into a custom type because Diesel's query DSL cannot handle

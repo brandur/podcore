@@ -1,3 +1,19 @@
+use slog::Logger;
+use time;
+
+#[inline]
+pub fn log_timed<T, F>(log: &Logger, f: F) -> T
+where
+    F: FnOnce(&Logger) -> T,
+{
+    let start = time::precise_time_ns();
+    info!(log, "Start");
+    let res = f(log);
+    let elapsed = time::precise_time_ns() - start;
+    info!(log, "Finish"; "elapsed" => unit_str(elapsed));
+    res
+}
+
 #[inline]
 pub fn unit_str(ns: u64) -> String {
     let (div, unit) = unit(ns);

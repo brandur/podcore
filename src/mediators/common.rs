@@ -1,21 +1,5 @@
-use time_helpers;
-
 use hyper::StatusCode;
 use slog::Logger;
-use time::precise_time_ns;
-
-#[inline]
-pub fn log_timed<T, F>(log: &Logger, f: F) -> T
-where
-    F: FnOnce(&Logger) -> T,
-{
-    let start = precise_time_ns();
-    info!(log, "Start");
-    let res = f(log);
-    let elapsed = precise_time_ns() - start;
-    info!(log, "Finish"; "elapsed" => time_helpers::unit_str(elapsed));
-    res
-}
 
 pub fn log_body_sample(log: &Logger, status: StatusCode, body: &[u8]) {
     let sample = body.iter().take(200).cloned().collect::<Vec<u8>>();
