@@ -1,4 +1,6 @@
 use errors::*;
+use http_requester::HTTPRequesterLive;
+use mediators::directory_podcast_searcher::DirectoryPodcastSearcher;
 use model;
 use schema;
 use time_helpers;
@@ -10,9 +12,12 @@ use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use horrorshow::helper::doctype;
 use horrorshow::prelude::*;
+use hyper::Client;
+use hyper_tls::HttpsConnector;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use slog::Logger;
+use tokio_core::reactor::Core;
 
 pub struct WebServer {
     pub assets_version: String,
@@ -221,7 +226,8 @@ struct ShowSearchHomeViewModel {
 struct ShowSearchViewModel {
     common: CommonViewModel,
 
-    query: String,
+    directory_podcasts: Vec<model::DirectoryPodcast>,
+    query:              String,
 }
 
 //
@@ -253,14 +259,38 @@ fn handle_show_search_inner(
     };
     info!(log, "Searching directory podcasts"; "query" => query);
 
-    let view_model = ShowSearchViewModel {
-        common: CommonViewModel {
-            assets_version: req.state().assets_version.clone(),
-            title:          format!("Search: {}", query),
-        },
-
-        query: query.to_owned(),
+    let core = Core::new().unwrap();
+    let client = Client::configure()
+        .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
+        .build(&core.handle());
+    let mut http_requester = HTTPRequesterLive {
+        client: client,
+        core:   core,
     };
+
+    // TODO: Kill some of these type annotations
+    let view_model: ShowSearchViewModel = time_helpers::log_timed(
+        &log.new(o!("step" => "build_view_model")),
+        |log| -> Result<ShowSearchViewModel> {
+            let conn = req.state().pool.get()?;
+
+            let res = DirectoryPodcastSearcher {
+                conn:           &*conn,
+                query:          query.to_owned(),
+                http_requester: &mut http_requester,
+            }.run(log)?;
+
+            Ok(ShowSearchViewModel {
+                common: CommonViewModel {
+                    assets_version: req.state().assets_version.clone(),
+                    title:          format!("Search: {}", query),
+                },
+
+                directory_podcasts: res.directory_podcasts,
+                query:              query.to_owned(),
+            })
+        },
+    )?;
 
     let html = time_helpers::log_timed(&log.new(o!("step" => "render_view")), |_log| {
         render_show_search(&view_model)
@@ -424,6 +454,11 @@ fn render_show_search(view_model: &ShowSearchViewModel) -> Result<String> {
         (html! {
             p {
                 : format_args!("Query: {}", view_model.query);
+            }
+            ul {
+                @ for dir_podcast in &view_model.directory_podcasts {
+                    li: dir_podcast.title.as_str();
+                }
             }
         }).into_string()?
             .as_str(),
