@@ -50,6 +50,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
             }
             Err(e) => {
                 let ex = self.upsert_exception(log, &e)?;
+                error_helpers::print_error(log, &e);
                 if let Err(inner_e) = error_helpers::report_error(log, &e) {
                     error_helpers::print_error(log, &inner_e);
                 }

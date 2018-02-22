@@ -149,7 +149,6 @@ impl<'a> PodcastUpdater<'a> {
 
         if let Err(e) = res {
             error_helpers::print_error(log, &e);
-
             if let Err(inner_e) = error_helpers::report_error(log, &e) {
                 error_helpers::print_error(log, &inner_e);
             }
