@@ -268,8 +268,7 @@ fn handle_show_search_inner(
         core:   core,
     };
 
-    // TODO: Kill some of these type annotations
-    let view_model: ShowSearchViewModel = time_helpers::log_timed(
+    let view_model = time_helpers::log_timed(
         &log.new(o!("step" => "build_view_model")),
         |log| -> Result<ShowSearchViewModel> {
             let conn = req.state().pool.get()?;
