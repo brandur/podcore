@@ -1,6 +1,7 @@
 use errors::*;
 use model;
 use schema;
+use time_helpers;
 
 use actix;
 use actix_web;
@@ -224,40 +225,46 @@ fn handle_show_podcast(mut req: HttpRequest<StateImpl>) -> actix_web::Result<Htt
         .new(o!("step" => "execute"));
     info!(&log, "Serving podcast"; "id" => id);
 
-    let view_model: Option<ShowPodcastViewModel> = {
-        let conn = req.state().pool.get().map_err(Error::from)?;
-        let podcast: Option<model::Podcast> = schema::podcast::table
-            .filter(schema::podcast::id.eq(id))
-            .first(&*conn)
-            .optional()
-            .chain_err(|| "Error selecting podcast")?;
-        match podcast {
-            Some(podcast) => {
-                let episodes: Vec<model::Episode> = schema::episode::table
-                    .filter(schema::episode::podcast_id.eq(podcast.id))
-                    .order(schema::episode::published_at.desc())
-                    .limit(50)
-                    .load(&*conn)
-                    .chain_err(|| "Error selecting episodes")?;
-                Some(ShowPodcastViewModel {
-                    common: CommonViewModel {
-                        assets_version: req.state().assets_version.clone(),
-                        title:          format!("Podcast: {}", podcast.title),
-                    },
+    let view_model: Option<ShowPodcastViewModel> = time_helpers::log_timed(
+        &log.new(o!("step" => "build_view_model")),
+        |_log| -> Result<Option<ShowPodcastViewModel>> {
+            let conn = req.state().pool.get().map_err(Error::from)?;
+            let podcast: Option<model::Podcast> = schema::podcast::table
+                .filter(schema::podcast::id.eq(id))
+                .first(&*conn)
+                .optional()
+                .chain_err(|| "Error selecting podcast")?;
+            match podcast {
+                Some(podcast) => {
+                    let episodes: Vec<model::Episode> = schema::episode::table
+                        .filter(schema::episode::podcast_id.eq(podcast.id))
+                        .order(schema::episode::published_at.desc())
+                        .limit(50)
+                        .load(&*conn)
+                        .chain_err(|| "Error selecting episodes")?;
+                    Ok(Some(ShowPodcastViewModel {
+                        common: CommonViewModel {
+                            assets_version: req.state().assets_version.clone(),
+                            title:          format!("Podcast: {}", podcast.title),
+                        },
 
-                    episodes: episodes,
-                    podcast:  podcast,
-                })
+                        episodes: episodes,
+                        podcast:  podcast,
+                    }))
+                }
+                None => Ok(None),
             }
-            None => None,
-        }
-    };
+        },
+    )?;
 
     if view_model.is_none() {
         return Ok(handle_404()?);
     }
 
-    let html = render_show_podcast(&view_model.unwrap()).map_err(Error::from)?;
+    let html = time_helpers::log_timed(&log.new(o!("step" => "render_view")), |_log| {
+        render_show_podcast(&view_model.unwrap())
+    }).map_err(Error::from)?;
+
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("text/html; charset=utf-8")
         .body(html)
