@@ -1,6 +1,7 @@
 use errors::*;
 use http_requester::HTTPRequesterLive;
 use mediators::directory_podcast_searcher::DirectoryPodcastSearcher;
+use mediators::directory_podcast_updater::DirectoryPodcastUpdater;
 use model;
 use schema;
 use time_helpers;
@@ -48,6 +49,10 @@ impl WebServer {
             }).middleware(middleware::log_initializer::Middleware)
                 .middleware(middleware::request_id::Middleware)
                 .middleware(middleware::request_response_logger::Middleware)
+                .resource("/directory-podcasts/{id}", |r| {
+                    r.method(actix_web::Method::GET)
+                        .f(handle_show_directory_podcast)
+                })
                 .resource("/search", |r| {
                     r.method(actix_web::Method::GET).f(handle_show_search)
                 })
@@ -212,6 +217,13 @@ struct CommonViewModel {
     title:          String,
 }
 
+struct ShowDirectoryPodcastViewModel {
+    _common: CommonViewModel,
+
+    dir_podcast_ex: Option<model::DirectoryPodcastException>,
+    podcast:        Option<model::Podcast>,
+}
+
 struct ShowPodcastViewModel {
     common: CommonViewModel,
 
@@ -233,6 +245,91 @@ struct ShowSearchViewModel {
 //
 // Web handlers
 //
+
+fn handle_show_directory_podcast(
+    mut req: HttpRequest<StateImpl>,
+) -> actix_web::Result<HttpResponse> {
+    let log = req.extensions()
+        .get::<middleware::log_initializer::Log>()
+        .unwrap()
+        .0
+        .clone();
+    time_helpers::log_timed(&log.new(o!("step" => "execute")), |log| {
+        handle_show_directory_podcast_inner(log, &req)
+    })
+}
+
+fn handle_show_directory_podcast_inner(
+    log: &Logger,
+    req: &HttpRequest<StateImpl>,
+) -> actix_web::Result<HttpResponse> {
+    let id = req.match_info()
+        .get("id")
+        .unwrap()
+        .parse::<i64>()
+        .chain_err(|| "Error parsing ID")?;
+    info!(log, "Expanding directory podcast"; "id" => id);
+
+    let core = Core::new().unwrap();
+    let client = Client::configure()
+        .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
+        .build(&core.handle());
+    let mut http_requester = HTTPRequesterLive {
+        client: client,
+        core:   core,
+    };
+
+    let view_model: Option<ShowDirectoryPodcastViewModel> = time_helpers::log_timed(
+        &log.new(o!("step" => "build_view_model")),
+        |log| -> Result<Option<ShowDirectoryPodcastViewModel>> {
+            let conn = req.state().pool.get()?;
+            let dir_podcast: Option<model::DirectoryPodcast> = schema::directory_podcast::table
+                .filter(schema::directory_podcast::id.eq(id))
+                .first(&*conn)
+                .optional()?;
+            match dir_podcast {
+                Some(mut dir_podcast) => {
+                    let mut mediator = DirectoryPodcastUpdater {
+                        conn:           &*conn,
+                        dir_podcast:    &mut dir_podcast,
+                        http_requester: &mut http_requester,
+                    };
+                    let res = mediator.run(log)?;
+
+                    Ok(Some(ShowDirectoryPodcastViewModel {
+                        _common: CommonViewModel {
+                            assets_version: req.state().assets_version.clone(),
+                            title:          "".to_owned(),
+                        },
+
+                        dir_podcast_ex: res.dir_podcast_ex,
+                        podcast:        res.podcast,
+                    }))
+                }
+                None => Ok(None),
+            }
+        },
+    )?;
+
+    if view_model.is_none() {
+        return Ok(handle_404()?);
+    }
+
+    let view_model = view_model.unwrap();
+
+    // TODO: This error should be more elaborate: recover more gracefully and show
+    // more information.
+    if let Some(_dir_podcast_ex) = view_model.dir_podcast_ex {
+        return Err(Error::from("Couldn't expand directory podcast").into());
+    }
+
+    Ok(HttpResponse::build(StatusCode::PERMANENT_REDIRECT)
+        .header(
+            "Location",
+            format!("/podcasts/{}", view_model.podcast.unwrap().id).as_str(),
+        )
+        .finish()?)
+}
 
 fn handle_show_search(mut req: HttpRequest<StateImpl>) -> actix_web::Result<HttpResponse> {
     let log = req.extensions()
