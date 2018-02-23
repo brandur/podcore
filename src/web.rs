@@ -49,6 +49,10 @@ impl WebServer {
             }).middleware(middleware::log_initializer::Middleware)
                 .middleware(middleware::request_id::Middleware)
                 .middleware(middleware::request_response_logger::Middleware)
+                .resource("/", |r| {
+                    r.method(actix_web::Method::GET)
+                        .f(|_req| actix_web::httpcodes::HTTPOk)
+                })
                 .resource("/directory-podcasts/{id}", |r| {
                     r.method(actix_web::Method::GET)
                         .f(handle_show_directory_podcast)
