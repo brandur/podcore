@@ -428,6 +428,7 @@ mod tests {
         let join_ins = insertable::DirectoryPodcastDirectorySearch {
             directory_podcast_id: dir_podcast.id,
             directory_search_id:  search.id,
+            position:             0,
         };
 
         diesel::insert_into(schema::directory_podcast_directory_search::table)

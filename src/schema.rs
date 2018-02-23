@@ -21,6 +21,7 @@ table! {
         id -> Int8,
         directory_podcast_id -> Int8,
         directory_search_id -> Int8,
+        position -> Nullable<Int4>,
     }
 }
 

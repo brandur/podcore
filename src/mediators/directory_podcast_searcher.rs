@@ -154,13 +154,15 @@ impl<'a> DirectoryPodcastSearcher<'a> {
                 .chain_err(|| "Error selecting directory podcast")
         })?;
 
-        let ins_joins: Vec<insertable::DirectoryPodcastDirectorySearch> = directory_podcasts
-            .iter()
-            .map(|p| insertable::DirectoryPodcastDirectorySearch {
-                directory_podcast_id: p.id,
+        let mut ins_joins: Vec<insertable::DirectoryPodcastDirectorySearch> =
+            Vec::with_capacity(directory_podcasts.len());
+        for i in 0..directory_podcasts.len() {
+            ins_joins.push(insertable::DirectoryPodcastDirectorySearch {
+                directory_podcast_id: directory_podcasts[i].id,
                 directory_search_id:  directory_search.id,
-            })
-            .collect();
+                position:             i as i32,
+            });
+        }
 
         time_helpers::log_timed(&log.new(o!("step" => "insert_joins")), |_log| {
             diesel::insert_into(schema::directory_podcast_directory_search::table)
@@ -186,7 +188,7 @@ impl<'a> DirectoryPodcastSearcher<'a> {
                 .filter(
                     schema::directory_podcast_directory_search::directory_search_id.eq(search.id),
                 )
-                .order(schema::directory_podcast_directory_search::id)
+                .order(schema::directory_podcast_directory_search::position)
                 .load::<model::DirectoryPodcastDirectorySearch>(self.conn)
                 .chain_err(|| "Error loading joins")
         })?;
