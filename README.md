@@ -63,8 +63,8 @@ Build an Alpine-based binary target for MUSL, push to GCP container registry,
 then run Kubernetes deployment:
 
 ```
-docker build -t gcr.io/${PROJECT_ID}/podcore:1.22 .
-gcloud docker -- push gcr.io/${PROJECT_ID}/podcore:1.22
+docker build -t gcr.io/${PROJECT_ID}/podcore:1.23 .
+gcloud docker -- push gcr.io/${PROJECT_ID}/podcore:1.23
 kubectl apply -f kubernetes/
 kubectl apply -f kubernetes/podcore-crawl.yaml
 kubectl logs -l name=podcore-crawl -c podcore
