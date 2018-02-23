@@ -16,7 +16,7 @@ spec:
         image: gcr.io/podcore-194423/podcore:1.27
         command: ["/podcore", "web"]
         ports:
-        - containerPort: 8080
+        - containerPort: 8083
         env:
         - name: DATABASE_URL
           valueFrom:
@@ -28,6 +28,8 @@ spec:
           value: "5"
         - name: PODCORE_ENV
           value: "production"
+        - name: PORT
+          value: "8083"
         - name: RUST_BACKTRACE
           value: "1"
         - name: SENTRY_URL
@@ -38,7 +40,7 @@ spec:
         readinessProbe:
           httpGet:
             path: /health
-            port: 8080
+            port: 8083
           initialDelaySeconds: 5
           periodSeconds: 5
       - name: cloudsql-proxy

@@ -15,8 +15,6 @@ spec:
       - name: podcore
         image: gcr.io/podcore-194423/podcore:1.27
         command: ["/podcore", "clean"]
-        ports:
-        - containerPort: 8080
         env:
         - name: DATABASE_URL
           valueFrom:

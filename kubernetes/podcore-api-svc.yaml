@@ -6,7 +6,7 @@ metadata:
     name: podcore-api
 spec:
   ports:
-  - port: 8080
+  - port: 8082
     protocol: TCP
   selector:
     name: podcore-api

@@ -11,10 +11,10 @@ spec:
       paths:
       - backend:
           serviceName: podcore-api
-          servicePort: 8080
+          servicePort: 8082
   - host: podcore.mutelight.org
     http:
       paths:
       - backend:
           serviceName: podcore-web
-          servicePort: 8080
+          servicePort: 8083
