@@ -156,9 +156,9 @@ impl<'a> DirectoryPodcastSearcher<'a> {
 
         let mut ins_joins: Vec<insertable::DirectoryPodcastDirectorySearch> =
             Vec::with_capacity(directory_podcasts.len());
-        for i in 0..directory_podcasts.len() {
+        for (i, dir_podcast) in directory_podcasts.iter().enumerate() {
             ins_joins.push(insertable::DirectoryPodcastDirectorySearch {
-                directory_podcast_id: directory_podcasts[i].id,
+                directory_podcast_id: dir_podcast.id,
                 directory_search_id:  directory_search.id,
                 position:             i as i32,
             });
