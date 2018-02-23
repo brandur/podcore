@@ -302,7 +302,6 @@ mod tests {
         // deleted.
         {
             let dir_podcast = insert_directory_podcast(&bootstrap.log, &*bootstrap.conn, None);
-            let search = insert_directory_search(&bootstrap.log, &*bootstrap.conn);
             insert_directory_podcast_exception(&bootstrap.log, &*bootstrap.conn, &dir_podcast);
         }
 
