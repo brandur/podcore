@@ -10,3 +10,4 @@ spec:
     protocol: TCP
   selector:
     name: podcore-api
+  type: NodePort
