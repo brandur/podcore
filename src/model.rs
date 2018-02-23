@@ -63,7 +63,7 @@ pub struct DirectoryPodcastDirectorySearch {
     pub id:                   i64,
     pub directory_podcast_id: i64,
     pub directory_search_id:  i64,
-    pub position:             Option<i32>,
+    pub position:             i32,
 }
 
 #[derive(Queryable)]
