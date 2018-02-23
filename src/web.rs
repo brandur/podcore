@@ -53,6 +53,10 @@ impl WebServer {
                     r.method(actix_web::Method::GET)
                         .f(handle_show_directory_podcast)
                 })
+                .resource("/health", |r| {
+                    r.method(actix_web::Method::GET)
+                        .f(|_req| actix_web::httpcodes::HTTPOk)
+                })
                 .resource("/search", |r| {
                     r.method(actix_web::Method::GET).f(handle_show_search)
                 })
