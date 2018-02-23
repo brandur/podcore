@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
       - name: podcore
-        image: gcr.io/podcore-194423/podcore:1.25
+        image: gcr.io/podcore-194423/podcore:1.27
         command: ["/podcore", "web"]
         ports:
         - containerPort: 8080
@@ -35,6 +35,12 @@ spec:
             secretKeyRef:
               name: sentry-credentials
               key: SENTRY_URL
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
       - name: cloudsql-proxy
         image: gcr.io/cloudsql-docker/gce-proxy:1.11
         command: ["/cloud_sql_proxy",
