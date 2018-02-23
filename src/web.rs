@@ -34,7 +34,7 @@ impl WebServer {
         let pool = self.pool.clone();
 
         // Must appear up here because we're going to move `log` into server closure.
-        let host = format!("127.0.0.1:{}", self.port.as_str());
+        let host = format!("0.0.0.0:{}", self.port.as_str());
         info!(log, "Web server starting"; "host" => host.as_str());
 
         // Although not referenced in the server definition, a `System` must be defined
