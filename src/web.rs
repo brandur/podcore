@@ -64,8 +64,8 @@ impl WebServer {
                 .resource("/search", |r| {
                     r.method(actix_web::Method::GET).f(handle_show_search)
                 })
-                .resource("/search-home", |r| {
-                    r.method(actix_web::Method::GET).f(handle_show_search_home)
+                .resource("/search/new", |r| {
+                    r.method(actix_web::Method::GET).f(handle_show_search_new)
                 })
                 .resource("/podcasts/{id}", |r| {
                     r.method(actix_web::Method::GET).f(handle_show_podcast)
@@ -239,7 +239,7 @@ struct ShowPodcastViewModel {
     podcast:  model::Podcast,
 }
 
-struct ShowSearchHomeViewModel {
+struct ShowSearchNewViewModel {
     common: CommonViewModel,
 }
 
@@ -405,22 +405,22 @@ fn handle_show_search_inner(
         .body(html)?)
 }
 
-fn handle_show_search_home(mut req: HttpRequest<StateImpl>) -> actix_web::Result<HttpResponse> {
+fn handle_show_search_new(mut req: HttpRequest<StateImpl>) -> actix_web::Result<HttpResponse> {
     let log = req.extensions()
         .get::<middleware::log_initializer::Log>()
         .unwrap()
         .0
         .clone();
     time_helpers::log_timed(&log.new(o!("step" => "execute")), |log| {
-        handle_show_search_home_inner(log, &req)
+        handle_show_search_new_inner(log, &req)
     })
 }
 
-fn handle_show_search_home_inner(
+fn handle_show_search_new_inner(
     log: &Logger,
     req: &HttpRequest<StateImpl>,
 ) -> actix_web::Result<HttpResponse> {
-    let view_model = ShowSearchHomeViewModel {
+    let view_model = ShowSearchNewViewModel {
         common: CommonViewModel {
             assets_version: req.state().assets_version.clone(),
             title:          "Search".to_owned(),
@@ -428,7 +428,7 @@ fn handle_show_search_home_inner(
     };
 
     let html = time_helpers::log_timed(&log.new(o!("step" => "render_view")), |_log| {
-        render_show_search_home(&view_model)
+        render_show_search_new(&view_model)
     })?;
 
     Ok(HttpResponse::build(StatusCode::OK)
@@ -579,7 +579,7 @@ fn render_show_search(view_model: &ShowSearchViewModel) -> Result<String> {
     )
 }
 
-fn render_show_search_home(view_model: &ShowSearchHomeViewModel) -> Result<String> {
+fn render_show_search_new(view_model: &ShowSearchNewViewModel) -> Result<String> {
     render_layout(
         &view_model.common,
         (html! {
