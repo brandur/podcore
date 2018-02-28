@@ -293,32 +293,28 @@ mod endpoints {
         use tokio_core::reactor::Core;
 
         // TODO: This should probably be a generic class.
-        pub struct ShowDirectoryPodcastParams {
+        pub struct Params {
             pub log: Logger,
 
             pub id: i64,
         }
 
         // TODO: `ResponseType` will change to `Message`
-        impl actix::prelude::ResponseType for ShowDirectoryPodcastParams {
-            type Item = Option<ShowDirectoryPodcastResult>;
+        impl actix::prelude::ResponseType for Params {
+            type Item = Option<Response>;
             type Error = Error;
         }
 
         // TODO: Consolidate with view model
-        pub struct ShowDirectoryPodcastResult {
+        pub struct Response {
             pub dir_podcast_ex: Option<model::DirectoryPodcastException>,
             pub podcast:        Option<model::Podcast>,
         }
 
-        impl actix::prelude::Handler<ShowDirectoryPodcastParams> for endpoints::SyncExecutor {
-            type Result = actix::prelude::MessageResult<ShowDirectoryPodcastParams>;
+        impl actix::prelude::Handler<Params> for endpoints::SyncExecutor {
+            type Result = actix::prelude::MessageResult<Params>;
 
-            fn handle(
-                &mut self,
-                params: ShowDirectoryPodcastParams,
-                _: &mut Self::Context,
-            ) -> Self::Result {
+            fn handle(&mut self, params: Params, _: &mut Self::Context) -> Self::Result {
                 let conn = self.pool.get()?;
                 let log = params.log;
 
@@ -341,7 +337,7 @@ mod endpoints {
                         };
                         let res = mediator.run(&log)?;
 
-                        Ok(Some(ShowDirectoryPodcastResult {
+                        Ok(Some(Response {
                             dir_podcast_ex: res.dir_podcast_ex,
                             podcast:        res.podcast,
                         }))
@@ -359,7 +355,7 @@ mod endpoints {
 
 fn build_show_directory_podcast_response(
     req: &HttpRequest<StateImpl>,
-    res: Result<Option<endpoints::directory_podcast_show::ShowDirectoryPodcastResult>>,
+    res: Result<Option<endpoints::directory_podcast_show::Response>>,
 ) -> Result<HttpResponse> {
     let res = res?;
 
@@ -417,7 +413,7 @@ fn handle_show_directory_podcast(
     let id = id.unwrap();
     info!(log, "Expanding directory podcast"; "id" => id);
 
-    let params = endpoints::directory_podcast_show::ShowDirectoryPodcastParams {
+    let params = endpoints::directory_podcast_show::Params {
         id:  id,
         log: log.clone(),
     };
