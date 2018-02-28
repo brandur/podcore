@@ -13,7 +13,12 @@ use slog::Logger;
 //
 
 pub trait ExecutorResponse {}
-pub trait Params {}
+
+pub trait Params: Sized {
+    type State: common::State;
+
+    fn build(req: &HttpRequest<Self::State>) -> Result<Self>;
+}
 
 pub trait ViewModel {
     type ExecutorResponse: ExecutorResponse;
@@ -91,7 +96,19 @@ pub mod directory_podcast_show {
         pub id: i64,
     }
 
-    impl endpoints::Params for Params {}
+    impl endpoints::Params for Params {
+        type State = endpoints::StateImpl;
+
+        fn build(req: &HttpRequest<Self::State>) -> Result<Self> {
+            Ok(Self {
+                id: req.match_info()
+                    .get("id")
+                    .unwrap()
+                    .parse::<i64>()
+                    .chain_err(|| "Error parsing ID")?,
+            })
+        }
+    }
 
     // TODO: `ResponseType` will change to `Message`
     impl actix::prelude::ResponseType for endpoints::Message<Params> {
@@ -151,6 +168,8 @@ pub mod directory_podcast_show {
         ) -> Self::Result {
             let conn = self.pool.get()?;
             let log = message.log;
+
+            info!(log, "Expanding directory podcast"; "id" => message.params.id);
 
             let core = Core::new().unwrap();
             let client = Client::configure()

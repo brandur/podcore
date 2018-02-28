@@ -2,6 +2,7 @@ mod common;
 mod endpoints;
 mod middleware;
 
+use self::endpoints::Params;
 use self::endpoints::ViewModel;
 use errors::*;
 use http_requester::HTTPRequesterLive;
@@ -146,22 +147,16 @@ fn handle_show_directory_podcast(
         .0
         .clone();
 
-    let id = req.match_info()
-        .get("id")
-        .unwrap()
-        .parse::<i64>()
-        .chain_err(|| "Error parsing ID");
-
-    if let Err(e) = id {
-        return Box::new(future::err(e));
-    }
-    let id = id.unwrap();
-    info!(log, "Expanding directory podcast"; "id" => id);
+    let params = match endpoints::directory_podcast_show::Params::build(&req) {
+        Ok(params) => params,
+        Err(e) => return Box::new(future::err(e)),
+    };
 
     let message = endpoints::Message {
-        log:    log.clone(),
-        params: endpoints::directory_podcast_show::Params { id },
+        log: log.clone(),
+        params,
     };
+
     req.state()
         .sync_addr
         .call_fut(message)
