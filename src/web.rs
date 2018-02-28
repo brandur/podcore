@@ -1,7 +1,6 @@
 use errors::*;
 use http_requester::HTTPRequesterLive;
 use mediators::directory_podcast_searcher::DirectoryPodcastSearcher;
-use mediators::directory_podcast_updater::DirectoryPodcastUpdater;
 use model;
 use schema;
 use time_helpers;
@@ -45,7 +44,7 @@ impl WebServer {
 
         // TODO: Get rid of this once StateImpl no longers takes a pool
         let pool_clone = pool.clone();
-        let sync_addr = actix::SyncArbiter::start(3, move || SyncExecutor {
+        let sync_addr = actix::SyncArbiter::start(3, move || endpoints::SyncExecutor {
             pool: pool_clone.clone(),
         });
 
@@ -101,7 +100,7 @@ struct StateImpl {
     assets_version: String,
     log:            Logger,
     pool:           Pool<ConnectionManager<PgConnection>>,
-    sync_addr:      actix::prelude::SyncAddress<SyncExecutor>,
+    sync_addr:      actix::prelude::SyncAddress<endpoints::SyncExecutor>,
 }
 
 impl middleware::State for StateImpl {
@@ -264,69 +263,92 @@ struct ShowSearchViewModel {
 // SyncExecutor
 //
 
-pub struct SyncExecutor {
-    pool: Pool<ConnectionManager<PgConnection>>,
-}
+mod endpoints {
+    use actix;
+    use diesel::pg::PgConnection;
+    use r2d2::Pool;
+    use r2d2_diesel::ConnectionManager;
 
-impl actix::Actor for SyncExecutor {
-    type Context = actix::SyncContext<Self>;
-}
+    pub struct SyncExecutor {
+        pub pool: Pool<ConnectionManager<PgConnection>>,
+    }
 
-// TODO: This should probably be a generic class.
-pub struct ShowDirectoryPodcastParams {
-    pub log: Logger,
+    impl actix::Actor for SyncExecutor {
+        type Context = actix::SyncContext<Self>;
+    }
 
-    pub id: i64,
-}
+    pub mod directory_podcast_show {
+        use errors::*;
+        use http_requester::HTTPRequesterLive;
+        use mediators::directory_podcast_updater::DirectoryPodcastUpdater;
+        use model;
+        use schema;
+        use web::endpoints;
 
-// TODO: `ResponseType` will change to `Message`
-impl actix::prelude::ResponseType for ShowDirectoryPodcastParams {
-    type Item = Option<ShowDirectoryPodcastResult>;
-    type Error = Error;
-}
+        use actix;
+        use diesel::prelude::*;
+        use hyper::Client;
+        use hyper_tls::HttpsConnector;
+        use slog::Logger;
+        use tokio_core::reactor::Core;
 
-// TODO: Consolidate with view model
-pub struct ShowDirectoryPodcastResult {
-    dir_podcast_ex: Option<model::DirectoryPodcastException>,
-    podcast:        Option<model::Podcast>,
-}
+        // TODO: This should probably be a generic class.
+        pub struct ShowDirectoryPodcastParams {
+            pub log: Logger,
 
-impl actix::prelude::Handler<ShowDirectoryPodcastParams> for SyncExecutor {
-    type Result = actix::prelude::MessageResult<ShowDirectoryPodcastParams>;
+            pub id: i64,
+        }
 
-    fn handle(
-        &mut self,
-        params: ShowDirectoryPodcastParams,
-        _: &mut Self::Context,
-    ) -> Self::Result {
-        let conn = self.pool.get()?;
-        let log = params.log;
+        // TODO: `ResponseType` will change to `Message`
+        impl actix::prelude::ResponseType for ShowDirectoryPodcastParams {
+            type Item = Option<ShowDirectoryPodcastResult>;
+            type Error = Error;
+        }
 
-        let core = Core::new().unwrap();
-        let client = Client::configure()
-            .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
-            .build(&core.handle());
-        let mut http_requester = HTTPRequesterLive { client, core };
+        // TODO: Consolidate with view model
+        pub struct ShowDirectoryPodcastResult {
+            pub dir_podcast_ex: Option<model::DirectoryPodcastException>,
+            pub podcast:        Option<model::Podcast>,
+        }
 
-        let dir_podcast: Option<model::DirectoryPodcast> = schema::directory_podcast::table
-            .filter(schema::directory_podcast::id.eq(params.id))
-            .first(&*conn)
-            .optional()?;
-        match dir_podcast {
-            Some(mut dir_podcast) => {
-                let mut mediator = DirectoryPodcastUpdater {
-                    conn:           &*conn,
-                    dir_podcast:    &mut dir_podcast,
-                    http_requester: &mut http_requester,
-                };
-                let res = mediator.run(&log)?;
+        impl actix::prelude::Handler<ShowDirectoryPodcastParams> for endpoints::SyncExecutor {
+            type Result = actix::prelude::MessageResult<ShowDirectoryPodcastParams>;
 
-                Ok(Some(ShowDirectoryPodcastResult {
-                    dir_podcast_ex: res.dir_podcast_ex,
-                    podcast:        res.podcast,
-                }))
+            fn handle(
+                &mut self,
+                params: ShowDirectoryPodcastParams,
+                _: &mut Self::Context,
+            ) -> Self::Result {
+                let conn = self.pool.get()?;
+                let log = params.log;
+
+                let core = Core::new().unwrap();
+                let client = Client::configure()
+                    .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
+                    .build(&core.handle());
+                let mut http_requester = HTTPRequesterLive { client, core };
+
+                let dir_podcast: Option<model::DirectoryPodcast> = schema::directory_podcast::table
+                    .filter(schema::directory_podcast::id.eq(params.id))
+                    .first(&*conn)
+                    .optional()?;
+                match dir_podcast {
+                    Some(mut dir_podcast) => {
+                        let mut mediator = DirectoryPodcastUpdater {
+                            conn:           &*conn,
+                            dir_podcast:    &mut dir_podcast,
+                            http_requester: &mut http_requester,
+                        };
+                        let res = mediator.run(&log)?;
+
+                        Ok(Some(ShowDirectoryPodcastResult {
+                            dir_podcast_ex: res.dir_podcast_ex,
+                            podcast:        res.podcast,
+                        }))
+                    }
+                    None => Ok(None),
+                }
             }
-            None => Ok(None),
         }
     }
 }
@@ -337,7 +359,7 @@ impl actix::prelude::Handler<ShowDirectoryPodcastParams> for SyncExecutor {
 
 fn build_show_directory_podcast_response(
     req: &HttpRequest<StateImpl>,
-    res: Result<Option<ShowDirectoryPodcastResult>>,
+    res: Result<Option<endpoints::directory_podcast_show::ShowDirectoryPodcastResult>>,
 ) -> Result<HttpResponse> {
     let res = res?;
 
@@ -395,7 +417,7 @@ fn handle_show_directory_podcast(
     let id = id.unwrap();
     info!(log, "Expanding directory podcast"; "id" => id);
 
-    let params = ShowDirectoryPodcastParams {
+    let params = endpoints::directory_podcast_show::ShowDirectoryPodcastParams {
         id:  id,
         log: log.clone(),
     };
