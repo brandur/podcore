@@ -32,12 +32,7 @@ error_chain!{
     }
 }
 
-// Found in sccache's implementation. Not sure if I want this given that
-// explicitness is currently a major helping hand with the learning curve.
-//pub type SFuture<T> = Box<Future<Item = T, Error = Error>>;
-
 pub trait FutureChainErr<T> {
-    //fn chain_err<F, E>(self, callback: F) -> SFuture<T>
     fn chain_err<F, E>(self, callback: F) -> Box<Future<Item = T, Error = Error>>
     where
         F: FnOnce() -> E + 'static,
@@ -49,7 +44,6 @@ where
     F: Future + 'static,
     F::Error: error::Error + Send + 'static,
 {
-    //fn chain_err<C, E>(self, callback: C) -> SFuture<F::Item>
     fn chain_err<C, E>(self, callback: C) -> Box<Future<Item = F::Item, Error = Error>>
     where
         C: FnOnce() -> E + 'static,
