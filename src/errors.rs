@@ -3,6 +3,9 @@
 //     http://brson.github.io/2016/11/30/starting-with-error-chain
 //
 
+use futures::Future;
+use std::error;
+
 // Create the Error, ErrorKind, ResultExt, and Result types
 error_chain!{
     // Automatic conversions between this error chain and other error types not defined by the
@@ -26,6 +29,33 @@ error_chain!{
         SentryCredentialParseError {
             description("Invalid Sentry DSN syntax. Expected the form `(http|https)://{public key}:{private key}@{host}:{port}/{project id}`")
         }
+    }
+}
+
+// Found in sccache's implementation. Not sure if I want this given that
+// explicitness is currently a major helping hand with the learning curve.
+//pub type SFuture<T> = Box<Future<Item = T, Error = Error>>;
+
+pub trait FutureChainErr<T> {
+    //fn chain_err<F, E>(self, callback: F) -> SFuture<T>
+    fn chain_err<F, E>(self, callback: F) -> Box<Future<Item = T, Error = Error>>
+    where
+        F: FnOnce() -> E + 'static,
+        E: Into<ErrorKind>;
+}
+
+impl<F> FutureChainErr<F::Item> for F
+where
+    F: Future + 'static,
+    F::Error: error::Error + Send + 'static,
+{
+    //fn chain_err<C, E>(self, callback: C) -> SFuture<F::Item>
+    fn chain_err<C, E>(self, callback: C) -> Box<Future<Item = F::Item, Error = Error>>
+    where
+        C: FnOnce() -> E + 'static,
+        E: Into<ErrorKind>,
+    {
+        Box::new(self.then(|r| r.chain_err(callback)))
     }
 }
 
