@@ -118,18 +118,18 @@ pub mod directory_podcast_show {
 
         fn build(req: &HttpRequest<Self::State>, response: Self::Response) -> Self {
             ViewModel {
-                _common:  endpoints::CommonViewModel {
+                _common: endpoints::CommonViewModel {
                     assets_version: req.state().assets_version.clone(),
                     title:          "".to_owned(),
                 },
-                response: response,
+                response,
             }
         }
 
         fn render(&self, _req: &HttpRequest<Self::State>) -> Result<HttpResponse> {
             match self.response {
                 Response::Exception(ref _dir_podcast_ex) => {
-                    Err(Error::from("Couldn't expand directory podcast").into())
+                    Err(Error::from("Couldn't expand directory podcast"))
                 }
                 Response::NotFound => Ok(endpoints::handle_404()?),
                 Response::Podcast(ref podcast) => {
@@ -175,7 +175,7 @@ pub mod directory_podcast_show {
                         return Ok(Response::Exception(dir_podcast_ex));
                     }
 
-                    return Ok(Response::Podcast(res.podcast.unwrap()));
+                    Ok(Response::Podcast(res.podcast.unwrap()))
                 }
                 None => Ok(Response::NotFound),
             }

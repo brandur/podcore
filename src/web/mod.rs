@@ -173,7 +173,7 @@ fn handle_show_directory_podcast(
 
     let message = endpoints::Message {
         log:    log.clone(),
-        params: endpoints::directory_podcast_show::Params { id: id },
+        params: endpoints::directory_podcast_show::Params { id },
     };
     req.state()
         .sync_addr
