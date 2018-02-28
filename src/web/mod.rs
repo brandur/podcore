@@ -134,19 +134,6 @@ struct ShowSearchViewModel {
 }
 
 //
-// ViewModel construction
-//
-
-fn build_show_directory_podcast_response(
-    req: &HttpRequest<endpoints::StateImpl>,
-    res: Result<endpoints::directory_podcast_show::ExecutorResponse>,
-) -> Result<HttpResponse> {
-    let response = res?;
-    let view_model = endpoints::directory_podcast_show::ViewModel::build(req, response);
-    view_model.render(req)
-}
-
-//
 // Web handlers
 //
 
@@ -180,7 +167,11 @@ fn handle_show_directory_podcast(
         .call_fut(message)
         .chain_err(|| "Error from SyncExecutor")
         .from_err()
-        .and_then(move |res| build_show_directory_podcast_response(&req, res))
+        .and_then(move |res| {
+            let response = res?;
+            let view_model = endpoints::directory_podcast_show::ViewModel::build(&req, response);
+            view_model.render(&req)
+        })
         .responder()
 }
 
