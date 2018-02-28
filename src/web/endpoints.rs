@@ -1,9 +1,12 @@
 use errors::*;
 use web::common;
+use web::middleware;
 
 use actix;
 use actix_web::{HttpRequest, HttpResponse, StatusCode};
 use diesel::pg::PgConnection;
+use futures::future;
+use futures::future::Future;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use slog::Logger;
@@ -18,20 +21,47 @@ pub trait Handler {
     type ExecutorResponse: ExecutorResponse;
     type Params: Params;
     type ViewModel: ViewModel;
+
+    fn handle(mut req: HttpRequest<StateImpl>) -> Box<Future<Item = HttpResponse, Error = Error>> {
+        let log = req.extensions()
+            .get::<middleware::log_initializer::Log>()
+            .unwrap()
+            .0
+            .clone();
+
+        let params = match Self::Params::build(&req) {
+            Ok(params) => params,
+            Err(e) => return Box::new(future::err(e)),
+        };
+
+        let message = Message {
+            log: log.clone(),
+            params,
+        };
+
+        req.state()
+            .sync_addr
+            .call_fut(message)
+            .chain_err(|| "Error from SyncExecutor")
+            .from_err()
+            .and_then(move |res| {
+                let response = res?;
+                let view_model = Self::ViewModel::build(&req, response);
+                view_model.render(&req)
+            })
+            .responder()
+    }
 }
 
 pub trait Params: Sized {
-    type State: common::State;
-
-    fn build(req: &HttpRequest<Self::State>) -> Result<Self>;
+    fn build(req: &HttpRequest<StateImpl>) -> Result<Self>;
 }
 
 pub trait ViewModel {
     type ExecutorResponse: ExecutorResponse;
-    type State: common::State;
 
-    fn build(req: &HttpRequest<Self::State>, response: Self::ExecutorResponse) -> Self;
-    fn render(&self, req: &HttpRequest<Self::State>) -> Result<HttpResponse>;
+    fn build(req: &HttpRequest<StateImpl>, response: Self::ExecutorResponse) -> Self;
+    fn render(&self, req: &HttpRequest<StateImpl>) -> Result<HttpResponse>;
 }
 
 //
@@ -119,9 +149,7 @@ pub mod directory_podcast_show {
     }
 
     impl endpoints::Params for Params {
-        type State = endpoints::StateImpl;
-
-        fn build(req: &HttpRequest<Self::State>) -> Result<Self> {
+        fn build(req: &HttpRequest<endpoints::StateImpl>) -> Result<Self> {
             Ok(Self {
                 id: req.match_info()
                     .get("id")
@@ -145,9 +173,11 @@ pub mod directory_podcast_show {
 
     impl endpoints::ViewModel for ViewModel {
         type ExecutorResponse = ExecutorResponse;
-        type State = endpoints::StateImpl;
 
-        fn build(req: &HttpRequest<Self::State>, response: Self::ExecutorResponse) -> Self {
+        fn build(
+            req: &HttpRequest<endpoints::StateImpl>,
+            response: Self::ExecutorResponse,
+        ) -> Self {
             ViewModel {
                 _common: endpoints::CommonViewModel {
                     assets_version: req.state().assets_version.clone(),
@@ -157,7 +187,7 @@ pub mod directory_podcast_show {
             }
         }
 
-        fn render(&self, _req: &HttpRequest<Self::State>) -> Result<HttpResponse> {
+        fn render(&self, _req: &HttpRequest<endpoints::StateImpl>) -> Result<HttpResponse> {
             match self.response {
                 ExecutorResponse::Exception(ref _dir_podcast_ex) => {
                     Err(Error::from("Couldn't expand directory podcast"))
