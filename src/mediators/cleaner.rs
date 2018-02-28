@@ -67,9 +67,9 @@ impl Cleaner {
             num_cleaned: num_directory_podcast_cleaned + num_directory_search_cleaned
                 + num_podcast_feed_content_cleaned,
 
-            num_directory_podcast_cleaned:    num_directory_podcast_cleaned,
-            num_directory_search_cleaned:     num_directory_search_cleaned,
-            num_podcast_feed_content_cleaned: num_podcast_feed_content_cleaned,
+            num_directory_podcast_cleaned,
+            num_directory_search_cleaned,
+            num_podcast_feed_content_cleaned,
         })
     }
 }

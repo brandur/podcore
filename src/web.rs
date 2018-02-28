@@ -282,10 +282,7 @@ fn handle_show_directory_podcast_inner(
     let client = Client::configure()
         .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
         .build(&core.handle());
-    let mut http_requester = HTTPRequesterLive {
-        client: client,
-        core:   core,
-    };
+    let mut http_requester = HTTPRequesterLive { client, core };
 
     let view_model: Option<ShowDirectoryPodcastViewModel> = time_helpers::log_timed(
         &log.new(o!("step" => "build_view_model")),
@@ -368,10 +365,7 @@ fn handle_show_search_inner(
     let client = Client::configure()
         .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
         .build(&core.handle());
-    let mut http_requester = HTTPRequesterLive {
-        client: client,
-        core:   core,
-    };
+    let mut http_requester = HTTPRequesterLive { client, core };
 
     let view_model = time_helpers::log_timed(
         &log.new(o!("step" => "build_view_model")),
@@ -479,8 +473,8 @@ fn handle_show_podcast_inner(
                             title:          format!("Podcast: {}", podcast.title),
                         },
 
-                        episodes: episodes,
-                        podcast:  podcast,
+                        episodes,
+                        podcast,
                     }))
                 }
                 None => Ok(None),

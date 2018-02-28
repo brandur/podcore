@@ -114,8 +114,8 @@ impl<'a> PodcastUpdater<'a> {
             );
             return Ok(RunResult {
                 episodes: None,
-                location: location,
-                podcast:  podcast,
+                location,
+                podcast,
             });
         }
 
@@ -132,8 +132,8 @@ impl<'a> PodcastUpdater<'a> {
 
         Ok(RunResult {
             episodes: Some(episodes),
-            location: location,
-            podcast:  podcast,
+            location,
+            podcast,
         })
     }
 
@@ -347,8 +347,8 @@ impl<'a> PodcastUpdater<'a> {
 
     fn upsert_exception(&mut self, log: &Logger, podcast_id: i64, e: &Error) -> Result<()> {
         let ins_ex = insertable::PodcastException {
-            errors:      error_strings(e),
-            podcast_id:  podcast_id,
+            errors: error_strings(e),
+            podcast_id,
             occurred_at: Utc::now(),
         };
 
@@ -427,9 +427,9 @@ impl<'a> PodcastUpdater<'a> {
 
         let content_ins = insertable::PodcastFeedContent {
             content_gzip: encoder.finish()?,
-            podcast_id:   podcast.id,
+            podcast_id: podcast.id,
             retrieved_at: Utc::now(),
-            sha256_hash:  sha256_hash,
+            sha256_hash,
         };
 
         time_helpers::log_timed(

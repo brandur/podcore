@@ -41,14 +41,11 @@ pub fn report_error(log: &Logger, error: &Error) -> Result<()> {
                 .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
                 .build(&core.handle());
             let creds = url.parse::<SentryCredentials>().unwrap();
-            let mut http_requester = HTTPRequesterLive {
-                client: client,
-                core:   core,
-            };
+            let mut http_requester = HTTPRequesterLive { client, core };
 
             let _res = ErrorReporter {
-                creds:          &creds,
-                error:          error,
+                creds: &creds,
+                error,
                 http_requester: &mut http_requester,
             }.run(log)?;
             Ok(())

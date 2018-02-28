@@ -194,26 +194,26 @@ struct StackTrace {
 fn build_event(error_strings: &[String], stack_trace: Option<StackTrace>) -> Event {
     Event {
         // required
-        event_id:  Uuid::new_v4().simple().to_string(), // `simple` gets an unhyphenated UUID
-        message:   error_strings.join("\n"),
+        event_id: Uuid::new_v4().simple().to_string(), // `simple` gets an unhyphenated UUID
+        message: error_strings.join("\n"),
         timestamp: Utc::now().to_rfc3339(),
-        level:     "fatal".to_owned(),
-        logger:    "panic".to_owned(),
-        platform:  "other".to_owned(),
-        sdk:       SDK {
+        level: "fatal".to_owned(),
+        logger: "panic".to_owned(),
+        platform: "other".to_owned(),
+        sdk: SDK {
             name:    env!("CARGO_PKG_NAME").to_owned(),
             version: env!("CARGO_PKG_VERSION").to_owned(),
         },
 
         // optional
-        culprit:     None,
+        culprit: None,
         server_name: None, // TODO: Want server name
-        stack_trace: stack_trace,
-        release:     None, // TODO: Want release,
-        tags:        Default::default(),
+        stack_trace,
+        release: None, // TODO: Want release,
+        tags: Default::default(),
         environment: Some(env::var("PODCORE_ENV").unwrap_or_else(|_| "development".to_owned())),
-        modules:     Default::default(),
-        extra:       Default::default(),
+        modules: Default::default(),
+        extra: Default::default(),
         fingerprint: vec!["{{ default }}".to_owned()], // Maybe further customize the fingerprint
     }
 }
@@ -260,7 +260,7 @@ fn build_stack_trace(error: &Error) -> Option<StackTrace> {
         // TODO: Is this right? Some frames can have no symbols. Try to check backtrace
         // implementation.
         for symbol in frame.symbols() {
-            let name = symbol
+            let function = symbol
                 .name()
                 .map_or("unresolved symbol".to_owned(), |name| name.to_string());
             let filename = symbol
@@ -268,13 +268,13 @@ fn build_stack_trace(error: &Error) -> Option<StackTrace> {
                 .map_or("".to_owned(), |sym| sym.to_string_lossy().into_owned());
             let lineno = symbol.lineno().unwrap_or(0);
             frames.push(StackFrame {
-                filename: filename,
-                function: name,
-                lineno:   lineno,
+                filename,
+                function,
+                lineno,
             });
         }
     }
-    Some(StackTrace { frames: frames })
+    Some(StackTrace { frames })
 }
 
 fn post_error(log: &Logger, http_requester: &mut HTTPRequester, req: Request) -> Result<()> {

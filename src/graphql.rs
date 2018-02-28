@@ -20,7 +20,7 @@ pub struct Context {
 
 impl Context {
     pub fn new(pool: DieselPool) -> Self {
-        Context { pool: pool }
+        Context { pool }
     }
 
     fn get_conn(&self) -> Result<DieselConnection> {

@@ -63,9 +63,7 @@ impl PodcastCrawler {
         }
 
         info!(log, "Finished crawling"; "num_podcast" => num_podcasts);
-        Ok(RunResult {
-            num_podcasts: num_podcasts,
-        })
+        Ok(RunResult { num_podcasts })
     }
 
     //
@@ -225,7 +223,7 @@ fn work(
                     // Allow the updater to short circuit if it turns out the podcast doesn't need
                     // to be updated
                     disable_shortcut: false,
-                    feed_url:    feed_url,
+                    feed_url,
                     http_requester: &mut *http_requester,
                 }.run(log);
 

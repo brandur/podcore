@@ -37,28 +37,29 @@ impl<'a> DirectoryPodcastSearcher<'a> {
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
         let directory = model::Directory::itunes(self.conn)?;
         let directory_search = match self.select_directory_search(log, &directory)? {
-            Some(search) => {
+            Some(directory_search) => {
                 // The cache is fresh. Retrieve directory podcasts and search results, then
                 // return early.
-                if search.retrieved_at > Utc::now() - Duration::hours(1) {
+                if directory_search.retrieved_at > Utc::now() - Duration::hours(1) {
                     info!(log, "Query cached and fresh";
-                        "retrieved_at" => search.retrieved_at.to_rfc3339());
+                        "retrieved_at" => directory_search.retrieved_at.to_rfc3339());
 
-                    let (directory_podcasts, joins) = self.select_cached_results(log, &search)?;
+                    let (directory_podcasts, joins) =
+                        self.select_cached_results(log, &directory_search)?;
                     return Ok(RunResult {
-                        cached:             true,
-                        directory_podcasts: directory_podcasts,
-                        directory_search:   search,
-                        joins:              joins,
+                        cached: true,
+                        directory_podcasts,
+                        directory_search,
+                        joins,
                     });
                 }
 
                 info!(log, "Query cached, but stale";
-                    "retrieved_at" => search.retrieved_at.to_rfc3339());
+                    "retrieved_at" => directory_search.retrieved_at.to_rfc3339());
 
                 // The cache is stale. We can reuse the search row (after updating its retrieval
                 // time), but we'll redo all the normal work below.
-                self.update_directory_search(log, &search)?
+                self.update_directory_search(log, &directory_search)?
             }
             None => {
                 info!(log, "Query not cached");
@@ -70,10 +71,10 @@ impl<'a> DirectoryPodcastSearcher<'a> {
         let directory_podcasts = self.upsert_directory_podcasts(log, &results, &directory)?;
         let joins = self.refresh_joins(log, &directory_search, &directory_podcasts)?;
         Ok(RunResult {
-            cached:             false,
-            directory_podcasts: directory_podcasts,
-            directory_search:   directory_search,
-            joins:              joins,
+            cached: false,
+            directory_podcasts,
+            directory_search,
+            joins,
         })
     }
 

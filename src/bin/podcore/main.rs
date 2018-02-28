@@ -186,10 +186,7 @@ fn subcommand_add(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) 
     let client = Client::configure()
         .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
         .build(&core.handle());
-    let mut http_requester = HTTPRequesterLive {
-        client: client,
-        core:   core,
-    };
+    let mut http_requester = HTTPRequesterLive { client, core };
 
     for url in matches.values_of("URL").unwrap().collect::<Vec<_>>() {
         PodcastUpdater {
@@ -299,10 +296,7 @@ fn subcommand_search(log: &Logger, matches: &ArgMatches, _options: &GlobalOption
     let client = Client::configure()
         .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
         .build(&core.handle());
-    let mut http_requester = HTTPRequesterLive {
-        client: client,
-        core:   core,
-    };
+    let mut http_requester = HTTPRequesterLive { client, core };
 
     let query = matches.value_of("QUERY").unwrap();
     DirectoryPodcastSearcher {
@@ -357,10 +351,10 @@ fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
     let pool = pool(log, num_connections)?;
 
     let server = WebServer {
-        assets_version: assets_version,
-        log:            log.clone(),
-        pool:           pool,
-        port:           port.to_owned(),
+        assets_version,
+        log: log.clone(),
+        pool,
+        port: port.to_owned(),
     };
     server.run()?;
     Ok(())

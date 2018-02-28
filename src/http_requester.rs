@@ -44,10 +44,7 @@ impl HTTPRequesterFactory for HTTPRequesterFactoryLive {
         let client = Client::configure()
             .connector(HttpsConnector::new(4, &core.handle()).unwrap())
             .build(&core.handle());
-        Box::new(HTTPRequesterLive {
-            client: client,
-            core:   core,
-        })
+        Box::new(HTTPRequesterLive { client, core })
     }
 }
 

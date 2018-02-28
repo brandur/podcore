@@ -64,9 +64,7 @@ impl PodcastReingester {
         }
 
         info!(log, "Finished reingesting"; "num_podcast" => num_podcasts);
-        Ok(RunResult {
-            num_podcasts: num_podcasts,
-        })
+        Ok(RunResult { num_podcasts })
     }
 
     // Steps
@@ -234,13 +232,13 @@ fn work_inner(log: &Logger, conn: &PgConnection, podcast_tuple: &PodcastTuple) -
     let feed_url = podcast_tuple.feed_url.to_string();
 
     PodcastUpdater {
-        conn: conn,
+        conn,
 
         // The whole purpose of this mediator is to redo past work, so we need to make
         // sure that we've disabled any shortcuts that might otherwise be enabled.
         disable_shortcut: true,
 
-        feed_url:       feed_url,
+        feed_url,
         http_requester: &mut HTTPRequesterPassThrough {
             data: Arc::new(content),
         },
