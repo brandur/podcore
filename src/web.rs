@@ -332,7 +332,7 @@ impl actix::prelude::Handler<ShowDirectoryPodcastParams> for SyncExecutor {
 }
 
 //
-// Web handlers
+// ViewModel construction
 //
 
 fn build_show_directory_podcast_response(
@@ -369,6 +369,10 @@ fn build_show_directory_podcast_response(
         )
         .finish()?)
 }
+
+//
+// Web handlers
+//
 
 fn handle_show_directory_podcast(
     mut req: HttpRequest<StateImpl>,
