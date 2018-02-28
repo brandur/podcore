@@ -1,3 +1,4 @@
+use self::endpoints::ViewModel;
 use errors::*;
 use http_requester::HTTPRequesterLive;
 use mediators::directory_podcast_searcher::DirectoryPodcastSearcher;
@@ -49,7 +50,7 @@ impl WebServer {
         });
 
         let server = actix_web::HttpServer::new(move || {
-            actix_web::Application::with_state(StateImpl {
+            actix_web::Application::with_state(endpoints::StateImpl {
                 assets_version: assets_version.clone(),
                 log:            log.clone(),
                 pool:           pool.clone(),
@@ -93,21 +94,20 @@ impl WebServer {
 }
 
 //
-// Private types
+// Common traits/types
 //
 
-struct StateImpl {
-    assets_version: String,
-    log:            Logger,
-    pool:           Pool<ConnectionManager<PgConnection>>,
-    sync_addr:      actix::prelude::SyncAddress<endpoints::SyncExecutor>,
-}
+mod common {
+    use slog::Logger;
 
-impl middleware::State for StateImpl {
-    fn log(&self) -> &Logger {
-        &self.log
+    pub trait State {
+        fn log(&self) -> &Logger;
     }
 }
+
+//
+// Error handling
+//
 
 impl From<Error> for actix_web::error::Error {
     fn from(error: Error) -> Self {
@@ -121,15 +121,12 @@ impl From<Error> for actix_web::error::Error {
 
 mod middleware {
     use time_helpers;
+    use web::common;
 
     use actix_web;
     use actix_web::{HttpRequest, HttpResponse};
     use actix_web::middleware::{Response, Started};
     use slog::Logger;
-
-    pub trait State {
-        fn log(&self) -> &Logger;
-    }
 
     pub mod log_initializer {
         use web::middleware::*;
@@ -138,7 +135,7 @@ mod middleware {
 
         pub struct Log(pub Logger);
 
-        impl<S: State> actix_web::middleware::Middleware<S> for Middleware {
+        impl<S: common::State> actix_web::middleware::Middleware<S> for Middleware {
             fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
                 let log = req.state().log().clone();
                 req.extensions().insert(Log(log));
@@ -162,7 +159,7 @@ mod middleware {
 
         pub struct Middleware;
 
-        impl<S: State> actix_web::middleware::Middleware<S> for Middleware {
+        impl<S: common::State> actix_web::middleware::Middleware<S> for Middleware {
             fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
                 let log = req.extensions().remove::<log_initializer::Log>().unwrap().0;
 
@@ -195,7 +192,7 @@ mod middleware {
 
         struct StartTime(u64);
 
-        impl<S: State> actix_web::middleware::Middleware<S> for Middleware {
+        impl<S: common::State> actix_web::middleware::Middleware<S> for Middleware {
             fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
                 req.extensions().insert(StartTime(time::precise_time_ns()));
                 Ok(Started::Done)
@@ -229,13 +226,6 @@ mod middleware {
 // View models
 //
 
-struct ShowDirectoryPodcastViewModel {
-    _common: endpoints::CommonViewModel,
-
-    dir_podcast_ex: Option<model::DirectoryPodcastException>,
-    podcast:        Option<model::Podcast>,
-}
-
 struct ShowPodcastViewModel {
     common: endpoints::CommonViewModel,
 
@@ -259,11 +249,34 @@ struct ShowSearchViewModel {
 //
 
 mod endpoints {
+    use errors::*;
+    use web::common;
+
     use actix;
+    use actix_web::{HttpRequest, HttpResponse, StatusCode};
     use diesel::pg::PgConnection;
     use r2d2::Pool;
     use r2d2_diesel::ConnectionManager;
     use slog::Logger;
+
+    //
+    // Traits
+    //
+
+    pub trait Params {}
+    pub trait Response {}
+
+    pub trait ViewModel {
+        type Response: Response;
+        type State: common::State;
+
+        fn build(req: &HttpRequest<Self::State>, response: Self::Response) -> Self;
+        fn render(&self, req: &HttpRequest<Self::State>) -> Result<HttpResponse>;
+    }
+
+    //
+    // Structs
+    //
 
     pub struct CommonViewModel {
         pub assets_version: String,
@@ -275,7 +288,18 @@ mod endpoints {
         pub params: P,
     }
 
-    pub trait Params {}
+    pub struct StateImpl {
+        pub assets_version: String,
+        pub log:            Logger,
+        pub pool:           Pool<ConnectionManager<PgConnection>>,
+        pub sync_addr:      actix::prelude::SyncAddress<SyncExecutor>,
+    }
+
+    impl common::State for StateImpl {
+        fn log(&self) -> &Logger {
+            &self.log
+        }
+    }
 
     pub struct SyncExecutor {
         pub pool: Pool<ConnectionManager<PgConnection>>,
@@ -284,6 +308,20 @@ mod endpoints {
     impl actix::Actor for SyncExecutor {
         type Context = actix::SyncContext<Self>;
     }
+
+    //
+    // Error handlers
+    //
+
+    pub fn handle_404() -> Result<HttpResponse> {
+        Ok(HttpResponse::build(StatusCode::NOT_FOUND)
+            .content_type("text/html; charset=utf-8")
+            .body("404!")?)
+    }
+
+    //
+    // Endpoints
+    //
 
     pub mod directory_podcast_show {
         use errors::*;
@@ -294,6 +332,7 @@ mod endpoints {
         use web::endpoints;
 
         use actix;
+        use actix_web::{HttpRequest, HttpResponse, StatusCode};
         use diesel::prelude::*;
         use hyper::Client;
         use hyper_tls::HttpsConnector;
@@ -307,23 +346,49 @@ mod endpoints {
 
         // TODO: `ResponseType` will change to `Message`
         impl actix::prelude::ResponseType for endpoints::Message<Params> {
-            type Item = Option<Response>;
+            type Item = Response;
             type Error = Error;
         }
 
-        // TODO: Consolidate with view model
-        pub struct Response {
-            pub dir_podcast_ex: Option<model::DirectoryPodcastException>,
-            pub podcast:        Option<model::Podcast>,
+        pub enum Response {
+            Exception(model::DirectoryPodcastException),
+            NotFound,
+            Podcast(model::Podcast),
         }
 
+        impl endpoints::Response for Response {}
+
         pub struct ViewModel {
+            _common:  endpoints::CommonViewModel,
             response: Response,
         }
 
-        impl From<Response> for ViewModel {
-            fn from(response: Response) -> Self {
-                ViewModel { response }
+        impl endpoints::ViewModel for ViewModel {
+            type Response = Response;
+            type State = endpoints::StateImpl;
+
+            fn build(req: &HttpRequest<Self::State>, response: Self::Response) -> Self {
+                ViewModel {
+                    _common:  endpoints::CommonViewModel {
+                        assets_version: req.state().assets_version.clone(),
+                        title:          "".to_owned(),
+                    },
+                    response: response,
+                }
+            }
+
+            fn render(&self, _req: &HttpRequest<Self::State>) -> Result<HttpResponse> {
+                match self.response {
+                    Response::Exception(ref _dir_podcast_ex) => {
+                        Err(Error::from("Couldn't expand directory podcast").into())
+                    }
+                    Response::NotFound => Ok(endpoints::handle_404()?),
+                    Response::Podcast(ref podcast) => {
+                        Ok(HttpResponse::build(StatusCode::PERMANENT_REDIRECT)
+                            .header("Location", format!("/podcasts/{}", podcast.id).as_str())
+                            .finish()?)
+                    }
+                }
             }
         }
 
@@ -357,12 +422,13 @@ mod endpoints {
                         };
                         let res = mediator.run(&log)?;
 
-                        Ok(Some(Response {
-                            dir_podcast_ex: res.dir_podcast_ex,
-                            podcast:        res.podcast,
-                        }))
+                        if let Some(dir_podcast_ex) = res.dir_podcast_ex {
+                            return Ok(Response::Exception(dir_podcast_ex));
+                        }
+
+                        return Ok(Response::Podcast(res.podcast.unwrap()));
                     }
-                    None => Ok(None),
+                    None => Ok(Response::NotFound),
                 }
             }
         }
@@ -374,38 +440,12 @@ mod endpoints {
 //
 
 fn build_show_directory_podcast_response(
-    req: &HttpRequest<StateImpl>,
-    res: Result<Option<endpoints::directory_podcast_show::Response>>,
+    req: &HttpRequest<endpoints::StateImpl>,
+    res: Result<endpoints::directory_podcast_show::Response>,
 ) -> Result<HttpResponse> {
-    let res = res?;
-
-    if res.is_none() {
-        return Ok(handle_404()?);
-    }
-    let res = res.unwrap();
-
-    let view_model = ShowDirectoryPodcastViewModel {
-        _common: endpoints::CommonViewModel {
-            assets_version: req.state().assets_version.clone(),
-            title:          "".to_owned(),
-        },
-
-        dir_podcast_ex: res.dir_podcast_ex,
-        podcast:        res.podcast,
-    };
-
-    // TODO: This error should be more elaborate: recover more gracefully and show
-    // more information.
-    if let Some(_dir_podcast_ex) = view_model.dir_podcast_ex {
-        return Err(Error::from("Couldn't expand directory podcast").into());
-    }
-
-    Ok(HttpResponse::build(StatusCode::PERMANENT_REDIRECT)
-        .header(
-            "Location",
-            format!("/podcasts/{}", view_model.podcast.unwrap().id).as_str(),
-        )
-        .finish()?)
+    let response = res?;
+    let view_model = endpoints::directory_podcast_show::ViewModel::build(req, response);
+    view_model.render(req)
 }
 
 //
@@ -413,7 +453,7 @@ fn build_show_directory_podcast_response(
 //
 
 fn handle_show_directory_podcast(
-    mut req: HttpRequest<StateImpl>,
+    mut req: HttpRequest<endpoints::StateImpl>,
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
     let log = req.extensions()
         .get::<middleware::log_initializer::Log>()
@@ -446,7 +486,9 @@ fn handle_show_directory_podcast(
         .responder()
 }
 
-fn handle_show_search(mut req: HttpRequest<StateImpl>) -> actix_web::Result<HttpResponse> {
+fn handle_show_search(
+    mut req: HttpRequest<endpoints::StateImpl>,
+) -> actix_web::Result<HttpResponse> {
     let log = req.extensions()
         .get::<middleware::log_initializer::Log>()
         .unwrap()
@@ -459,7 +501,7 @@ fn handle_show_search(mut req: HttpRequest<StateImpl>) -> actix_web::Result<Http
 
 fn handle_show_search_inner(
     log: &Logger,
-    req: &HttpRequest<StateImpl>,
+    req: &HttpRequest<endpoints::StateImpl>,
 ) -> actix_web::Result<HttpResponse> {
     let query = match req.query().get("q") {
         Some(q) => q,
@@ -509,7 +551,9 @@ fn handle_show_search_inner(
         .body(html)?)
 }
 
-fn handle_show_search_new(mut req: HttpRequest<StateImpl>) -> actix_web::Result<HttpResponse> {
+fn handle_show_search_new(
+    mut req: HttpRequest<endpoints::StateImpl>,
+) -> actix_web::Result<HttpResponse> {
     let log = req.extensions()
         .get::<middleware::log_initializer::Log>()
         .unwrap()
@@ -522,7 +566,7 @@ fn handle_show_search_new(mut req: HttpRequest<StateImpl>) -> actix_web::Result<
 
 fn handle_show_search_new_inner(
     log: &Logger,
-    req: &HttpRequest<StateImpl>,
+    req: &HttpRequest<endpoints::StateImpl>,
 ) -> actix_web::Result<HttpResponse> {
     let view_model = ShowSearchNewViewModel {
         common: endpoints::CommonViewModel {
@@ -540,7 +584,9 @@ fn handle_show_search_new_inner(
         .body(html)?)
 }
 
-fn handle_show_podcast(mut req: HttpRequest<StateImpl>) -> actix_web::Result<HttpResponse> {
+fn handle_show_podcast(
+    mut req: HttpRequest<endpoints::StateImpl>,
+) -> actix_web::Result<HttpResponse> {
     let log = req.extensions()
         .get::<middleware::log_initializer::Log>()
         .unwrap()
@@ -553,7 +599,7 @@ fn handle_show_podcast(mut req: HttpRequest<StateImpl>) -> actix_web::Result<Htt
 
 fn handle_show_podcast_inner(
     log: &Logger,
-    req: &HttpRequest<StateImpl>,
+    req: &HttpRequest<endpoints::StateImpl>,
 ) -> actix_web::Result<HttpResponse> {
     let id = req.match_info()
         .get("id")
@@ -593,7 +639,7 @@ fn handle_show_podcast_inner(
     )?;
 
     if view_model.is_none() {
-        return Ok(handle_404()?);
+        return Ok(endpoints::handle_404()?);
     }
 
     let html = time_helpers::log_timed(&log.new(o!("step" => "render_view")), |_log| {
@@ -608,12 +654,6 @@ fn handle_show_podcast_inner(
 //
 // Error handlers
 //
-
-fn handle_404() -> Result<HttpResponse> {
-    Ok(HttpResponse::build(StatusCode::NOT_FOUND)
-        .content_type("text/html; charset=utf-8")
-        .body("404!")?)
-}
 
 //
 // Views
