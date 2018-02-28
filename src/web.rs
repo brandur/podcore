@@ -268,6 +268,14 @@ mod endpoints {
     use diesel::pg::PgConnection;
     use r2d2::Pool;
     use r2d2_diesel::ConnectionManager;
+    use slog::Logger;
+
+    pub struct Message<P: Params> {
+        pub log:    Logger,
+        pub params: P,
+    }
+
+    pub trait Params {}
 
     pub struct SyncExecutor {
         pub pool: Pool<ConnectionManager<PgConnection>>,
@@ -289,18 +297,16 @@ mod endpoints {
         use diesel::prelude::*;
         use hyper::Client;
         use hyper_tls::HttpsConnector;
-        use slog::Logger;
         use tokio_core::reactor::Core;
 
-        // TODO: This should probably be a generic class.
         pub struct Params {
-            pub log: Logger,
-
             pub id: i64,
         }
 
+        impl endpoints::Params for Params {}
+
         // TODO: `ResponseType` will change to `Message`
-        impl actix::prelude::ResponseType for Params {
+        impl actix::prelude::ResponseType for endpoints::Message<Params> {
             type Item = Option<Response>;
             type Error = Error;
         }
@@ -311,12 +317,16 @@ mod endpoints {
             pub podcast:        Option<model::Podcast>,
         }
 
-        impl actix::prelude::Handler<Params> for endpoints::SyncExecutor {
-            type Result = actix::prelude::MessageResult<Params>;
+        impl actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
+            type Result = actix::prelude::MessageResult<endpoints::Message<Params>>;
 
-            fn handle(&mut self, params: Params, _: &mut Self::Context) -> Self::Result {
+            fn handle(
+                &mut self,
+                message: endpoints::Message<Params>,
+                _: &mut Self::Context,
+            ) -> Self::Result {
                 let conn = self.pool.get()?;
-                let log = params.log;
+                let log = message.log;
 
                 let core = Core::new().unwrap();
                 let client = Client::configure()
@@ -325,7 +335,7 @@ mod endpoints {
                 let mut http_requester = HTTPRequesterLive { client, core };
 
                 let dir_podcast: Option<model::DirectoryPodcast> = schema::directory_podcast::table
-                    .filter(schema::directory_podcast::id.eq(params.id))
+                    .filter(schema::directory_podcast::id.eq(message.params.id))
                     .first(&*conn)
                     .optional()?;
                 match dir_podcast {
@@ -413,13 +423,13 @@ fn handle_show_directory_podcast(
     let id = id.unwrap();
     info!(log, "Expanding directory podcast"; "id" => id);
 
-    let params = endpoints::directory_podcast_show::Params {
-        id:  id,
-        log: log.clone(),
+    let message = endpoints::Message {
+        log:    log.clone(),
+        params: endpoints::directory_podcast_show::Params { id: id },
     };
     req.state()
         .sync_addr
-        .call_fut(params)
+        .call_fut(message)
         .chain_err(|| "Error from SyncExecutor")
         .from_err()
         .and_then(move |res| build_show_directory_podcast_response(&req, res))
