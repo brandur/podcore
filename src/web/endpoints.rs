@@ -12,14 +12,14 @@ use slog::Logger;
 // Traits
 //
 
+pub trait ExecutorResponse {}
 pub trait Params {}
-pub trait Response {}
 
 pub trait ViewModel {
-    type Response: Response;
+    type ExecutorResponse: ExecutorResponse;
     type State: common::State;
 
-    fn build(req: &HttpRequest<Self::State>, response: Self::Response) -> Self;
+    fn build(req: &HttpRequest<Self::State>, response: Self::ExecutorResponse) -> Self;
     fn render(&self, req: &HttpRequest<Self::State>) -> Result<HttpResponse>;
 }
 
@@ -95,28 +95,28 @@ pub mod directory_podcast_show {
 
     // TODO: `ResponseType` will change to `Message`
     impl actix::prelude::ResponseType for endpoints::Message<Params> {
-        type Item = Response;
+        type Item = ExecutorResponse;
         type Error = Error;
     }
 
-    pub enum Response {
+    pub enum ExecutorResponse {
         Exception(model::DirectoryPodcastException),
         NotFound,
         Podcast(model::Podcast),
     }
 
-    impl endpoints::Response for Response {}
+    impl endpoints::ExecutorResponse for ExecutorResponse {}
 
     pub struct ViewModel {
         _common:  endpoints::CommonViewModel,
-        response: Response,
+        response: ExecutorResponse,
     }
 
     impl endpoints::ViewModel for ViewModel {
-        type Response = Response;
+        type ExecutorResponse = ExecutorResponse;
         type State = endpoints::StateImpl;
 
-        fn build(req: &HttpRequest<Self::State>, response: Self::Response) -> Self {
+        fn build(req: &HttpRequest<Self::State>, response: Self::ExecutorResponse) -> Self {
             ViewModel {
                 _common: endpoints::CommonViewModel {
                     assets_version: req.state().assets_version.clone(),
@@ -128,11 +128,11 @@ pub mod directory_podcast_show {
 
         fn render(&self, _req: &HttpRequest<Self::State>) -> Result<HttpResponse> {
             match self.response {
-                Response::Exception(ref _dir_podcast_ex) => {
+                ExecutorResponse::Exception(ref _dir_podcast_ex) => {
                     Err(Error::from("Couldn't expand directory podcast"))
                 }
-                Response::NotFound => Ok(endpoints::handle_404()?),
-                Response::Podcast(ref podcast) => {
+                ExecutorResponse::NotFound => Ok(endpoints::handle_404()?),
+                ExecutorResponse::Podcast(ref podcast) => {
                     Ok(HttpResponse::build(StatusCode::PERMANENT_REDIRECT)
                         .header("Location", format!("/podcasts/{}", podcast.id).as_str())
                         .finish()?)
@@ -172,12 +172,12 @@ pub mod directory_podcast_show {
                     let res = mediator.run(&log)?;
 
                     if let Some(dir_podcast_ex) = res.dir_podcast_ex {
-                        return Ok(Response::Exception(dir_podcast_ex));
+                        return Ok(ExecutorResponse::Exception(dir_podcast_ex));
                     }
 
-                    Ok(Response::Podcast(res.podcast.unwrap()))
+                    Ok(ExecutorResponse::Podcast(res.podcast.unwrap()))
                 }
-                None => Ok(Response::NotFound),
+                None => Ok(ExecutorResponse::NotFound),
             }
         }
     }

@@ -139,7 +139,7 @@ struct ShowSearchViewModel {
 
 fn build_show_directory_podcast_response(
     req: &HttpRequest<endpoints::StateImpl>,
-    res: Result<endpoints::directory_podcast_show::Response>,
+    res: Result<endpoints::directory_podcast_show::ExecutorResponse>,
 ) -> Result<HttpResponse> {
     let response = res?;
     let view_model = endpoints::directory_podcast_show::ViewModel::build(req, response);
