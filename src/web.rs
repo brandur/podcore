@@ -229,31 +229,26 @@ mod middleware {
 // View models
 //
 
-struct CommonViewModel {
-    assets_version: String,
-    title:          String,
-}
-
 struct ShowDirectoryPodcastViewModel {
-    _common: CommonViewModel,
+    _common: endpoints::CommonViewModel,
 
     dir_podcast_ex: Option<model::DirectoryPodcastException>,
     podcast:        Option<model::Podcast>,
 }
 
 struct ShowPodcastViewModel {
-    common: CommonViewModel,
+    common: endpoints::CommonViewModel,
 
     episodes: Vec<model::Episode>,
     podcast:  model::Podcast,
 }
 
 struct ShowSearchNewViewModel {
-    common: CommonViewModel,
+    common: endpoints::CommonViewModel,
 }
 
 struct ShowSearchViewModel {
-    common: CommonViewModel,
+    common: endpoints::CommonViewModel,
 
     directory_podcasts: Vec<model::DirectoryPodcast>,
     query:              String,
@@ -269,6 +264,11 @@ mod endpoints {
     use r2d2::Pool;
     use r2d2_diesel::ConnectionManager;
     use slog::Logger;
+
+    pub struct CommonViewModel {
+        pub assets_version: String,
+        pub title:          String,
+    }
 
     pub struct Message<P: Params> {
         pub log:    Logger,
@@ -315,6 +315,16 @@ mod endpoints {
         pub struct Response {
             pub dir_podcast_ex: Option<model::DirectoryPodcastException>,
             pub podcast:        Option<model::Podcast>,
+        }
+
+        pub struct ViewModel {
+            response: Response,
+        }
+
+        impl From<Response> for ViewModel {
+            fn from(response: Response) -> Self {
+                ViewModel { response }
+            }
         }
 
         impl actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
@@ -375,7 +385,7 @@ fn build_show_directory_podcast_response(
     let res = res.unwrap();
 
     let view_model = ShowDirectoryPodcastViewModel {
-        _common: CommonViewModel {
+        _common: endpoints::CommonViewModel {
             assets_version: req.state().assets_version.clone(),
             title:          "".to_owned(),
         },
@@ -479,7 +489,7 @@ fn handle_show_search_inner(
             }.run(log)?;
 
             Ok(ShowSearchViewModel {
-                common: CommonViewModel {
+                common: endpoints::CommonViewModel {
                     assets_version: req.state().assets_version.clone(),
                     title:          format!("Search: {}", query),
                 },
@@ -515,7 +525,7 @@ fn handle_show_search_new_inner(
     req: &HttpRequest<StateImpl>,
 ) -> actix_web::Result<HttpResponse> {
     let view_model = ShowSearchNewViewModel {
-        common: CommonViewModel {
+        common: endpoints::CommonViewModel {
             assets_version: req.state().assets_version.clone(),
             title:          "Search".to_owned(),
         },
@@ -568,7 +578,7 @@ fn handle_show_podcast_inner(
                         .limit(50)
                         .load(&*conn)?;
                     Ok(Some(ShowPodcastViewModel {
-                        common: CommonViewModel {
+                        common: endpoints::CommonViewModel {
                             assets_version: req.state().assets_version.clone(),
                             title:          format!("Podcast: {}", podcast.title),
                         },
@@ -609,7 +619,7 @@ fn handle_404() -> Result<HttpResponse> {
 // Views
 //
 
-fn render_layout(view_model: &CommonViewModel, content: &str) -> Result<String> {
+fn render_layout(view_model: &endpoints::CommonViewModel, content: &str) -> Result<String> {
     (html! {
         : doctype::HTML;
         html {
