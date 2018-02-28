@@ -14,6 +14,12 @@ use slog::Logger;
 
 pub trait ExecutorResponse {}
 
+pub trait Handler {
+    type ExecutorResponse: ExecutorResponse;
+    type Params: Params;
+    type ViewModel: ViewModel;
+}
+
 pub trait Params: Sized {
     type State: common::State;
 
@@ -92,6 +98,22 @@ pub mod directory_podcast_show {
     use hyper_tls::HttpsConnector;
     use tokio_core::reactor::Core;
 
+    pub enum ExecutorResponse {
+        Exception(model::DirectoryPodcastException),
+        NotFound,
+        Podcast(model::Podcast),
+    }
+
+    impl endpoints::ExecutorResponse for ExecutorResponse {}
+
+    pub trait Handler {}
+
+    impl endpoints::Handler for Handler {
+        type ExecutorResponse = ExecutorResponse;
+        type Params = Params;
+        type ViewModel = ViewModel;
+    }
+
     pub struct Params {
         pub id: i64,
     }
@@ -115,14 +137,6 @@ pub mod directory_podcast_show {
         type Item = ExecutorResponse;
         type Error = Error;
     }
-
-    pub enum ExecutorResponse {
-        Exception(model::DirectoryPodcastException),
-        NotFound,
-        Podcast(model::Podcast),
-    }
-
-    impl endpoints::ExecutorResponse for ExecutorResponse {}
 
     pub struct ViewModel {
         _common:  endpoints::CommonViewModel,
