@@ -1,68 +1,97 @@
 use errors::*;
 use web::common;
-//use web::middleware;
 
 use actix;
 use actix_web::{HttpRequest, HttpResponse, StatusCode};
 use diesel::pg::PgConnection;
-//use futures::future;
-//use futures::future::Future;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use slog::Logger;
 
 //
+// Macros
+//
+
+/// Creates an asynchronous HTTP handler function suitable for use with Actix for the current
+/// endpoint module.
+///
+/// The key point to understand here is that because we have a convention so that all `Params` and
+/// `ViewModel`s are given the same name in every module, this can be pulled in and expanded while
+/// still properly resolving symbols.
+///
+/// Honestly, I would've preferred not to have to sink into a macro to get this working, but I
+/// started running into some serious typing problems when trying to make this a generic function.
+/// Be it with generics or associated types I'd always get a complaint from the compiler that there
+/// was no implementation for the generic version when sending a message to Actix (and in a few
+/// other places). After trying many different approaches and failing on all of them, I eventually
+/// just resorted to this. To keep things clean, offload as much work as possible to functions
+/// outside of the macro. Try to change this as little as possible.
+macro_rules! handler {
+    () => (
+        pub fn handler(
+            mut req: HttpRequest<endpoints::StateImpl>,
+        ) -> Box<Future<Item = HttpResponse, Error = Error>> {
+            use web::endpoints;
+            // Imported so that we can use the traits, but assigned a different name to avoid
+            // clashing with the module's implementations.
+            use web::endpoints::Params as P;
+            use web::endpoints::ViewModel as VM;
+            use web::middleware;
+
+            use actix_web::AsyncResponder;
+            use futures::future;
+
+            let log = middleware::log_initializer::log(&mut req);
+
+            let params = match Params::build(&req) {
+                Ok(params) => params,
+                Err(e) => return Box::new(future::err(e)),
+            };
+
+            let message = endpoints::Message::new(&log, params);
+
+            req.state()
+                .sync_addr
+                .call_fut(message)
+                .chain_err(|| "Error from SyncExecutor")
+                .from_err()
+                .and_then(move |res| {
+                    let response = res?;
+                    let view_model = ViewModel::build(&req, response);
+                    view_model.render(&req)
+                })
+                .responder()
+        }
+    )
+}
+
+//
 // Traits
 //
 
+/// A trait to be implemented for the typed responses that come back from `SyncExecutor`. This
+/// usually contains information loaded from a database.
 pub trait ExecutorResponse {}
 
-pub trait Handler {
-    type ExecutorResponse: ExecutorResponse;
-    type Params: Params;
-    type ViewModel: ViewModel;
-
-    /*
-    fn handle(mut req: HttpRequest<StateImpl>) -> Box<Future<Item = HttpResponse, Error = Error>> {
-        let log = req.extensions()
-            .get::<middleware::log_initializer::Log>()
-            .unwrap()
-            .0
-            .clone();
-
-        let params = match Self::Params::build(&req) {
-            Ok(params) => params,
-            Err(e) => return Box::new(future::err(e)),
-        };
-
-        let message = Message {
-            log: log.clone(),
-            params,
-        };
-
-        req.state()
-            .sync_addr
-            .call_fut::<Message<Self::Params>>(message)
-            .chain_err(|| "Error from SyncExecutor")
-            .from_err()
-            .and_then(move |res| {
-                let response = res?;
-                let view_model = Self::ViewModel::build(&req, response);
-                view_model.render(&req)
-            })
-            .responder()
-    }
-*/
-}
-
+/// A trait to be implemented for parameters that are decoded from an incoming HTTP request. It's
+/// also reused as a message to be received by `SyncExecutor` containing enough information to run
+/// its synchronous database operations.
 pub trait Params: Sized {
     fn build(req: &HttpRequest<StateImpl>) -> Result<Self>;
 }
 
+/// A trait to be implemented by the view models that render views. A view model is a model
+/// containing all the information needed to build a view. In our case it wraps a response that
+/// comes from from `SyncExecutor`.
 pub trait ViewModel {
     type ExecutorResponse: ExecutorResponse;
 
+    /// Builds a `ViewModel` implementation from an HTTP request and a response from
+    /// `SyncExecutor`.
     fn build(req: &HttpRequest<StateImpl>, response: Self::ExecutorResponse) -> Self;
+
+    /// Renders a `ViewModel` implementation to an HTTP response. This could be a standard HTML
+    /// page, but could also be any arbitrary response like a redirect.
     fn render(&self, req: &HttpRequest<StateImpl>) -> Result<HttpResponse>;
 }
 
@@ -131,18 +160,16 @@ pub mod directory_podcast_show {
     use model;
     use schema;
     use web::endpoints;
-    use web::endpoints::Params as P;
-    use web::endpoints::ViewModel as VM;
-    use web::middleware;
 
     use actix;
-    use actix_web::{AsyncResponder, HttpRequest, HttpResponse, StatusCode};
+    use actix_web::{HttpRequest, HttpResponse, StatusCode};
     use diesel::prelude::*;
-    use futures::future;
     use futures::future::Future;
     use hyper::Client;
     use hyper_tls::HttpsConnector;
     use tokio_core::reactor::Core;
+
+    handler!();
 
     pub enum ExecutorResponse {
         Exception(model::DirectoryPodcastException),
@@ -151,41 +178,6 @@ pub mod directory_podcast_show {
     }
 
     impl endpoints::ExecutorResponse for ExecutorResponse {}
-
-    pub struct Handler {}
-
-    impl Handler {
-        pub fn handle(
-            mut req: HttpRequest<endpoints::StateImpl>,
-        ) -> Box<Future<Item = HttpResponse, Error = Error>> {
-            let log = middleware::log_initializer::log(&mut req);
-
-            let params = match Params::build(&req) {
-                Ok(params) => params,
-                Err(e) => return Box::new(future::err(e)),
-            };
-
-            let message = endpoints::Message::new(&log, params);
-
-            req.state()
-                .sync_addr
-                .call_fut(message)
-                .chain_err(|| "Error from SyncExecutor")
-                .from_err()
-                .and_then(move |res| {
-                    let response = res?;
-                    let view_model = ViewModel::build(&req, response);
-                    view_model.render(&req)
-                })
-                .responder()
-        }
-    }
-
-    impl endpoints::Handler for Handler {
-        type ExecutorResponse = ExecutorResponse;
-        type Params = Params;
-        type ViewModel = ViewModel;
-    }
 
     pub struct Params {
         pub id: i64,
@@ -245,9 +237,7 @@ pub mod directory_podcast_show {
         }
     }
 
-    impl actix::prelude::Handler<endpoints::Message<<Handler as endpoints::Handler>::Params>>
-        for endpoints::SyncExecutor
-    {
+    impl actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
         type Result = actix::prelude::MessageResult<endpoints::Message<Params>>;
 
         fn handle(

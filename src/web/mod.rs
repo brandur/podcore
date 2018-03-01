@@ -65,7 +65,7 @@ impl WebServer {
                 })
                 .resource("/directory-podcasts/{id}", |r| {
                     r.method(actix_web::Method::GET)
-                        .a(endpoints::directory_podcast_show::Handler::handle)
+                        .a(endpoints::directory_podcast_show::handler)
                 })
                 .resource("/health", |r| {
                     r.method(actix_web::Method::GET)
