@@ -4,6 +4,8 @@ use web::common;
 use actix;
 use actix_web::{HttpRequest, HttpResponse, StatusCode};
 use diesel::pg::PgConnection;
+use horrorshow::helper::doctype;
+use horrorshow::prelude::*;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use slog::Logger;
@@ -152,13 +154,32 @@ impl actix::Actor for SyncExecutor {
 }
 
 //
-// Error handlers
+// Functions
 //
 
 pub fn handle_404() -> Result<HttpResponse> {
     Ok(HttpResponse::build(StatusCode::NOT_FOUND)
         .content_type("text/html; charset=utf-8")
         .body("404!")?)
+}
+
+pub fn render_layout(view_model: &CommonViewModel, content: &str) -> Result<String> {
+    (html! {
+        : doctype::HTML;
+        html {
+            head {
+                title: view_model.title.as_str();
+
+                meta(content="text/html; charset=utf-8", http-equiv="Content-Type");
+
+                link(href=format_args!("/assets/{}/app.css", view_model.assets_version), media="screen", rel="stylesheet", type="text/css");
+            }
+            body {
+                : Raw(content)
+            }
+        }
+    }).into_string()
+        .map_err(Error::from)
 }
 
 //
@@ -228,14 +249,14 @@ pub mod directory_podcast_show {
         fn build(
             _log: &Logger,
             req: &HttpRequest<endpoints::StateImpl>,
-            response: Self::ExecutorResponse,
+            res: Self::ExecutorResponse,
         ) -> Self {
             ViewModel {
-                _common: endpoints::CommonViewModel {
+                _common:  endpoints::CommonViewModel {
                     assets_version: req.state().assets_version.clone(),
                     title:          "".to_owned(),
                 },
-                response,
+                response: res,
             }
         }
 
@@ -304,5 +325,94 @@ pub mod directory_podcast_show {
             }
             None => Ok(ExecutorResponse::NotFound),
         }
+    }
+}
+
+pub mod search_home_show {
+    use errors::*;
+    use web::endpoints;
+
+    use actix;
+    use actix_web::{HttpRequest, HttpResponse, StatusCode};
+    use futures::future::Future;
+    use horrorshow::prelude::*;
+    use slog::Logger;
+
+    handler!();
+
+    type MessageResult = actix::prelude::MessageResult<endpoints::Message<Params>>;
+
+    pub struct ExecutorResponse {}
+    impl endpoints::ExecutorResponse for ExecutorResponse {}
+
+    struct Params {}
+    impl endpoints::Params for Params {
+        fn build(_log: &Logger, _req: &HttpRequest<endpoints::StateImpl>) -> Result<Self> {
+            Ok(Self {})
+        }
+    }
+
+    // TODO: `ResponseType` will change to `Message`
+    impl actix::prelude::ResponseType for endpoints::Message<Params> {
+        type Item = ExecutorResponse;
+        type Error = Error;
+    }
+
+    struct ViewModel {
+        common: endpoints::CommonViewModel,
+    }
+
+    impl endpoints::ViewModel for ViewModel {
+        type ExecutorResponse = ExecutorResponse;
+
+        fn build(
+            _log: &Logger,
+            req: &HttpRequest<endpoints::StateImpl>,
+            _res: Self::ExecutorResponse,
+        ) -> Self {
+            ViewModel {
+                common: endpoints::CommonViewModel {
+                    assets_version: req.state().assets_version.clone(),
+                    title:          "Search".to_owned(),
+                },
+            }
+        }
+
+        fn render(
+            &self,
+            _log: &Logger,
+            _req: &HttpRequest<endpoints::StateImpl>,
+        ) -> Result<HttpResponse> {
+            let html = render_view(&self)?;
+            Ok(HttpResponse::build(StatusCode::OK)
+                .content_type("text/html; charset=utf-8")
+                .body(html)?)
+        }
+    }
+
+    impl actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
+        type Result = MessageResult;
+
+        fn handle(
+            &mut self,
+            _message: endpoints::Message<Params>,
+            _: &mut Self::Context,
+        ) -> Self::Result {
+            Ok(ExecutorResponse {})
+        }
+    }
+
+    fn render_view(view_model: &ViewModel) -> Result<String> {
+        endpoints::render_layout(
+            &view_model.common,
+            (html! {
+                h1: "Search";
+                form(action="/search", method="get") {
+                    input(type="text", name="q");
+                    input(type="submit", value="Submit");
+                }
+            }).into_string()?
+                .as_str(),
+        )
     }
 }

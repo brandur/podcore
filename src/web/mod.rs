@@ -14,7 +14,6 @@ use actix_web;
 use actix_web::{HttpRequest, HttpResponse, StatusCode};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
-use horrorshow::helper::doctype;
 use horrorshow::prelude::*;
 use hyper::Client;
 use hyper_tls::HttpsConnector;
@@ -77,7 +76,8 @@ impl WebServer {
                     r.method(actix_web::Method::GET).f(handle_show_search)
                 })
                 .resource("/search/new", |r| {
-                    r.method(actix_web::Method::GET).f(handle_show_search_new)
+                    r.method(actix_web::Method::GET)
+                        .a(endpoints::search_home_show::handler)
                 })
                 .resource("/podcasts/{id}", |r| {
                     r.method(actix_web::Method::GET).f(handle_show_podcast)
@@ -119,10 +119,6 @@ struct ShowPodcastViewModel {
 
     episodes: Vec<model::Episode>,
     podcast:  model::Podcast,
-}
-
-struct ShowSearchNewViewModel {
-    common: endpoints::CommonViewModel,
 }
 
 struct ShowSearchViewModel {
@@ -194,39 +190,6 @@ fn handle_show_search_inner(
 
     let html = time_helpers::log_timed(&log.new(o!("step" => "render_view")), |_log| {
         render_show_search(&view_model)
-    })?;
-
-    Ok(HttpResponse::build(StatusCode::OK)
-        .content_type("text/html; charset=utf-8")
-        .body(html)?)
-}
-
-fn handle_show_search_new(
-    mut req: HttpRequest<endpoints::StateImpl>,
-) -> actix_web::Result<HttpResponse> {
-    let log = req.extensions()
-        .get::<middleware::log_initializer::Log>()
-        .unwrap()
-        .0
-        .clone();
-    time_helpers::log_timed(&log.new(o!("step" => "execute")), |log| {
-        handle_show_search_new_inner(log, &req)
-    })
-}
-
-fn handle_show_search_new_inner(
-    log: &Logger,
-    req: &HttpRequest<endpoints::StateImpl>,
-) -> actix_web::Result<HttpResponse> {
-    let view_model = ShowSearchNewViewModel {
-        common: endpoints::CommonViewModel {
-            assets_version: req.state().assets_version.clone(),
-            title:          "Search".to_owned(),
-        },
-    };
-
-    let html = time_helpers::log_timed(&log.new(o!("step" => "render_view")), |_log| {
-        render_show_search_new(&view_model)
     })?;
 
     Ok(HttpResponse::build(StatusCode::OK)
@@ -309,27 +272,8 @@ fn handle_show_podcast_inner(
 // Views
 //
 
-fn render_layout(view_model: &endpoints::CommonViewModel, content: &str) -> Result<String> {
-    (html! {
-        : doctype::HTML;
-        html {
-            head {
-                title: view_model.title.as_str();
-
-                meta(content="text/html; charset=utf-8", http-equiv="Content-Type");
-
-                link(href=format_args!("/assets/{}/app.css", view_model.assets_version), media="screen", rel="stylesheet", type="text/css");
-            }
-            body {
-                : Raw(content)
-            }
-        }
-    }).into_string()
-        .map_err(Error::from)
-}
-
 fn render_show_podcast(view_model: &ShowPodcastViewModel) -> Result<String> {
-    render_layout(
+    endpoints::render_layout(
         &view_model.common,
         (html! {
             h1: view_model.podcast.title.as_str();
@@ -347,7 +291,7 @@ fn render_show_podcast(view_model: &ShowPodcastViewModel) -> Result<String> {
 }
 
 fn render_show_search(view_model: &ShowSearchViewModel) -> Result<String> {
-    render_layout(
+    endpoints::render_layout(
         &view_model.common,
         (html! {
             p {
@@ -367,20 +311,6 @@ fn render_show_search(view_model: &ShowSearchViewModel) -> Result<String> {
                         }
                     }
                 }
-            }
-        }).into_string()?
-            .as_str(),
-    )
-}
-
-fn render_show_search_new(view_model: &ShowSearchNewViewModel) -> Result<String> {
-    render_layout(
-        &view_model.common,
-        (html! {
-            h1: "Search";
-            form(action="/search", method="get") {
-                input(type="text", name="q");
-                input(type="submit", value="Submit");
             }
         }).into_string()?
             .as_str(),
