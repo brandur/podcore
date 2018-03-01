@@ -31,6 +31,7 @@ macro_rules! handler {
         pub fn handler(
             mut req: HttpRequest<endpoints::StateImpl>,
         ) -> Box<Future<Item = HttpResponse, Error = Error>> {
+            use time_helpers;
             use web::endpoints;
             // Imported so that we can use the traits, but assigned a different name to avoid
             // clashing with the module's implementations.
@@ -43,7 +44,10 @@ macro_rules! handler {
 
             let log = middleware::log_initializer::log(&mut req);
 
-            let params = match Params::build(&log, &req) {
+            let params_res = time_helpers::log_timed(&log.new(o!("step" => "build_params")), |log| {
+                Params::build(log, &req)
+            });
+            let params = match params_res {
                 Ok(params) => params,
                 Err(e) => return Box::new(future::err(e)),
             };
@@ -57,8 +61,14 @@ macro_rules! handler {
                 .from_err()
                 .and_then(move |res| {
                     let response = res?;
-                    let view_model = ViewModel::build(&log, &req, response);
-                    view_model.render(&log, &req)
+                    let view_model = time_helpers::log_timed(
+                        &log.new(o!("step" => "build_view_model")), |log| {
+                            ViewModel::build(log, &req, response)
+                        }
+                    );
+                    time_helpers::log_timed(&log.new(o!("step" => "render_view_model")), |log| {
+                        view_model.render(log, &req)
+                    })
                 })
                 .responder()
         }
@@ -161,6 +171,7 @@ pub mod directory_podcast_show {
     use mediators::directory_podcast_updater::DirectoryPodcastUpdater;
     use model;
     use schema;
+    use time_helpers;
     use web::endpoints;
 
     use actix;
@@ -173,6 +184,8 @@ pub mod directory_podcast_show {
     use tokio_core::reactor::Core;
 
     handler!();
+
+    type MessageResult = actix::prelude::MessageResult<endpoints::Message<Params>>;
 
     pub enum ExecutorResponse {
         Exception(model::DirectoryPodcastException),
@@ -246,7 +259,7 @@ pub mod directory_podcast_show {
     }
 
     impl actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
-        type Result = actix::prelude::MessageResult<endpoints::Message<Params>>;
+        type Result = MessageResult;
 
         fn handle(
             &mut self,
@@ -254,37 +267,42 @@ pub mod directory_podcast_show {
             _: &mut Self::Context,
         ) -> Self::Result {
             let conn = self.pool.get()?;
-            let log = message.log;
+            let log = message.log.clone();
+            time_helpers::log_timed(&log.new(o!("step" => "render_view_model")), |log| {
+                handle_inner(&log, &*conn, &message.params)
+            })
+        }
+    }
 
-            info!(log, "Expanding directory podcast"; "id" => message.params.id);
+    fn handle_inner(log: &Logger, conn: &PgConnection, params: &Params) -> MessageResult {
+        info!(log, "Expanding directory podcast"; "id" => params.id);
 
-            let core = Core::new().unwrap();
-            let client = Client::configure()
-                .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
-                .build(&core.handle());
-            let mut http_requester = HTTPRequesterLive { client, core };
+        let core = Core::new().unwrap();
+        let client = Client::configure()
+            .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
+            .build(&core.handle());
+        let mut http_requester = HTTPRequesterLive { client, core };
 
-            let dir_podcast: Option<model::DirectoryPodcast> = schema::directory_podcast::table
-                .filter(schema::directory_podcast::id.eq(message.params.id))
-                .first(&*conn)
-                .optional()?;
-            match dir_podcast {
-                Some(mut dir_podcast) => {
-                    let mut mediator = DirectoryPodcastUpdater {
-                        conn:           &*conn,
-                        dir_podcast:    &mut dir_podcast,
-                        http_requester: &mut http_requester,
-                    };
-                    let res = mediator.run(&log)?;
+        let dir_podcast: Option<model::DirectoryPodcast> = schema::directory_podcast::table
+            .filter(schema::directory_podcast::id.eq(params.id))
+            .first(conn)
+            .optional()?;
+        match dir_podcast {
+            Some(mut dir_podcast) => {
+                let mut mediator = DirectoryPodcastUpdater {
+                    conn:           conn,
+                    dir_podcast:    &mut dir_podcast,
+                    http_requester: &mut http_requester,
+                };
+                let res = mediator.run(log)?;
 
-                    if let Some(dir_podcast_ex) = res.dir_podcast_ex {
-                        return Ok(ExecutorResponse::Exception(dir_podcast_ex));
-                    }
-
-                    Ok(ExecutorResponse::Podcast(res.podcast.unwrap()))
+                if let Some(dir_podcast_ex) = res.dir_podcast_ex {
+                    return Ok(ExecutorResponse::Exception(dir_podcast_ex));
                 }
-                None => Ok(ExecutorResponse::NotFound),
+
+                Ok(ExecutorResponse::Podcast(res.podcast.unwrap()))
             }
+            None => Ok(ExecutorResponse::NotFound),
         }
     }
 }
