@@ -1,12 +1,12 @@
 use errors::*;
 use web::common;
-use web::middleware;
+//use web::middleware;
 
 use actix;
 use actix_web::{HttpRequest, HttpResponse, StatusCode};
 use diesel::pg::PgConnection;
-use futures::future;
-use futures::future::Future;
+//use futures::future;
+//use futures::future::Future;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use slog::Logger;
@@ -22,6 +22,7 @@ pub trait Handler {
     type Params: Params;
     type ViewModel: ViewModel;
 
+    /*
     fn handle(mut req: HttpRequest<StateImpl>) -> Box<Future<Item = HttpResponse, Error = Error>> {
         let log = req.extensions()
             .get::<middleware::log_initializer::Log>()
@@ -41,7 +42,7 @@ pub trait Handler {
 
         req.state()
             .sync_addr
-            .call_fut(message)
+            .call_fut::<Message<Self::Params>>(message)
             .chain_err(|| "Error from SyncExecutor")
             .from_err()
             .and_then(move |res| {
@@ -51,6 +52,7 @@ pub trait Handler {
             })
             .responder()
     }
+*/
 }
 
 pub trait Params: Sized {
@@ -120,10 +122,15 @@ pub mod directory_podcast_show {
     use model;
     use schema;
     use web::endpoints;
+    use web::endpoints::Params as P;
+    use web::endpoints::ViewModel as VM;
+    use web::middleware;
 
     use actix;
-    use actix_web::{HttpRequest, HttpResponse, StatusCode};
+    use actix_web::{AsyncResponder, HttpRequest, HttpResponse, StatusCode};
     use diesel::prelude::*;
+    use futures::future;
+    use futures::future::Future;
     use hyper::Client;
     use hyper_tls::HttpsConnector;
     use tokio_core::reactor::Core;
@@ -136,7 +143,41 @@ pub mod directory_podcast_show {
 
     impl endpoints::ExecutorResponse for ExecutorResponse {}
 
-    pub trait Handler {}
+    pub struct Handler {}
+
+    impl Handler {
+        pub fn handle(
+            mut req: HttpRequest<endpoints::StateImpl>,
+        ) -> Box<Future<Item = HttpResponse, Error = Error>> {
+            let log = req.extensions()
+                .get::<middleware::log_initializer::Log>()
+                .unwrap()
+                .0
+                .clone();
+
+            let params = match Params::build(&req) {
+                Ok(params) => params,
+                Err(e) => return Box::new(future::err(e)),
+            };
+
+            let message = endpoints::Message {
+                log: log.clone(),
+                params,
+            };
+
+            req.state()
+                .sync_addr
+                .call_fut(message)
+                .chain_err(|| "Error from SyncExecutor")
+                .from_err()
+                .and_then(move |res| {
+                    let response = res?;
+                    let view_model = ViewModel::build(&req, response);
+                    view_model.render(&req)
+                })
+                .responder()
+        }
+    }
 
     impl endpoints::Handler for Handler {
         type ExecutorResponse = ExecutorResponse;
@@ -202,7 +243,9 @@ pub mod directory_podcast_show {
         }
     }
 
-    impl actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
+    impl actix::prelude::Handler<endpoints::Message<<Handler as endpoints::Handler>::Params>>
+        for endpoints::SyncExecutor
+    {
         type Result = actix::prelude::MessageResult<endpoints::Message<Params>>;
 
         fn handle(

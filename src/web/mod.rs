@@ -2,8 +2,6 @@ mod common;
 mod endpoints;
 mod middleware;
 
-use self::endpoints::Params;
-use self::endpoints::ViewModel;
 use errors::*;
 use http_requester::HTTPRequesterLive;
 use mediators::directory_podcast_searcher::DirectoryPodcastSearcher;
@@ -13,11 +11,9 @@ use time_helpers;
 
 use actix;
 use actix_web;
-use actix_web::{AsyncResponder, HttpRequest, HttpResponse, StatusCode};
+use actix_web::{HttpRequest, HttpResponse, StatusCode};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
-use futures::future;
-use futures::future::Future;
 use horrorshow::helper::doctype;
 use horrorshow::prelude::*;
 use hyper::Client;
@@ -69,7 +65,7 @@ impl WebServer {
                 })
                 .resource("/directory-podcasts/{id}", |r| {
                     r.method(actix_web::Method::GET)
-                        .a(handle_show_directory_podcast)
+                        .a(endpoints::directory_podcast_show::Handler::handle)
                 })
                 .resource("/health", |r| {
                     r.method(actix_web::Method::GET)
@@ -137,38 +133,6 @@ struct ShowSearchViewModel {
 //
 // Web handlers
 //
-
-fn handle_show_directory_podcast(
-    mut req: HttpRequest<endpoints::StateImpl>,
-) -> Box<Future<Item = HttpResponse, Error = Error>> {
-    let log = req.extensions()
-        .get::<middleware::log_initializer::Log>()
-        .unwrap()
-        .0
-        .clone();
-
-    let params = match endpoints::directory_podcast_show::Params::build(&req) {
-        Ok(params) => params,
-        Err(e) => return Box::new(future::err(e)),
-    };
-
-    let message = endpoints::Message {
-        log: log.clone(),
-        params,
-    };
-
-    req.state()
-        .sync_addr
-        .call_fut(message)
-        .chain_err(|| "Error from SyncExecutor")
-        .from_err()
-        .and_then(move |res| {
-            let response = res?;
-            let view_model = endpoints::directory_podcast_show::ViewModel::build(&req, response);
-            view_model.render(&req)
-        })
-        .responder()
-}
 
 fn handle_show_search(
     mut req: HttpRequest<endpoints::StateImpl>,
