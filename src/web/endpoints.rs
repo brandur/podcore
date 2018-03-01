@@ -43,7 +43,7 @@ macro_rules! handler {
 
             let log = middleware::log_initializer::log(&mut req);
 
-            let params = match Params::build(&req) {
+            let params = match Params::build(&log, &req) {
                 Ok(params) => params,
                 Err(e) => return Box::new(future::err(e)),
             };
@@ -57,8 +57,8 @@ macro_rules! handler {
                 .from_err()
                 .and_then(move |res| {
                     let response = res?;
-                    let view_model = ViewModel::build(&req, response);
-                    view_model.render(&req)
+                    let view_model = ViewModel::build(&log, &req, response);
+                    view_model.render(&log, &req)
                 })
                 .responder()
         }
@@ -77,7 +77,9 @@ pub trait ExecutorResponse {}
 /// also reused as a message to be received by `SyncExecutor` containing enough information to run
 /// its synchronous database operations.
 pub trait Params: Sized {
-    fn build(req: &HttpRequest<StateImpl>) -> Result<Self>;
+    /// Builds a `Params` implementation by decoding an HTTP request. This may result in an error
+    /// if appropriate parameters were not found or not valid.
+    fn build(log: &Logger, req: &HttpRequest<StateImpl>) -> Result<Self>;
 }
 
 /// A trait to be implemented by the view models that render views. A view model is a model
@@ -88,11 +90,11 @@ pub trait ViewModel {
 
     /// Builds a `ViewModel` implementation from an HTTP request and a response from
     /// `SyncExecutor`.
-    fn build(req: &HttpRequest<StateImpl>, response: Self::ExecutorResponse) -> Self;
+    fn build(log: &Logger, req: &HttpRequest<StateImpl>, response: Self::ExecutorResponse) -> Self;
 
     /// Renders a `ViewModel` implementation to an HTTP response. This could be a standard HTML
     /// page, but could also be any arbitrary response like a redirect.
-    fn render(&self, req: &HttpRequest<StateImpl>) -> Result<HttpResponse>;
+    fn render(&self, log: &Logger, req: &HttpRequest<StateImpl>) -> Result<HttpResponse>;
 }
 
 //
@@ -167,6 +169,7 @@ pub mod directory_podcast_show {
     use futures::future::Future;
     use hyper::Client;
     use hyper_tls::HttpsConnector;
+    use slog::Logger;
     use tokio_core::reactor::Core;
 
     handler!();
@@ -184,7 +187,7 @@ pub mod directory_podcast_show {
     }
 
     impl endpoints::Params for Params {
-        fn build(req: &HttpRequest<endpoints::StateImpl>) -> Result<Self> {
+        fn build(_log: &Logger, req: &HttpRequest<endpoints::StateImpl>) -> Result<Self> {
             Ok(Self {
                 id: req.match_info()
                     .get("id")
@@ -210,6 +213,7 @@ pub mod directory_podcast_show {
         type ExecutorResponse = ExecutorResponse;
 
         fn build(
+            _log: &Logger,
             req: &HttpRequest<endpoints::StateImpl>,
             response: Self::ExecutorResponse,
         ) -> Self {
@@ -222,7 +226,11 @@ pub mod directory_podcast_show {
             }
         }
 
-        fn render(&self, _req: &HttpRequest<endpoints::StateImpl>) -> Result<HttpResponse> {
+        fn render(
+            &self,
+            _log: &Logger,
+            _req: &HttpRequest<endpoints::StateImpl>,
+        ) -> Result<HttpResponse> {
             match self.response {
                 ExecutorResponse::Exception(ref _dir_podcast_ex) => {
                     Err(Error::from("Couldn't expand directory podcast"))
