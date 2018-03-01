@@ -80,6 +80,15 @@ pub struct Message<P: Params> {
     pub params: P,
 }
 
+impl<P: Params> Message<P> {
+    fn new(log: &Logger, params: P) -> Message<P> {
+        Message {
+            log: log.clone(),
+            params,
+        }
+    }
+}
+
 pub struct StateImpl {
     pub assets_version: String,
     pub log:            Logger,
@@ -156,10 +165,7 @@ pub mod directory_podcast_show {
                 Err(e) => return Box::new(future::err(e)),
             };
 
-            let message = endpoints::Message {
-                log: log.clone(),
-                params,
-            };
+            let message = endpoints::Message::new(&log, params);
 
             req.state()
                 .sync_addr
