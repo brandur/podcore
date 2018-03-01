@@ -353,6 +353,7 @@ fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
     let server = WebServer {
         assets_version,
         log: log.clone(),
+        num_sync_executors: options.num_connections as usize,
         pool,
         port: port.to_owned(),
     };

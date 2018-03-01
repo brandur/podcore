@@ -24,10 +24,11 @@ use slog::Logger;
 use tokio_core::reactor::Core;
 
 pub struct WebServer {
-    pub assets_version: String,
-    pub log:            Logger,
-    pub pool:           Pool<ConnectionManager<PgConnection>>,
-    pub port:           String,
+    pub assets_version:     String,
+    pub log:                Logger,
+    pub num_sync_executors: usize,
+    pub pool:               Pool<ConnectionManager<PgConnection>>,
+    pub port:               String,
 }
 
 impl WebServer {
@@ -46,9 +47,10 @@ impl WebServer {
 
         // TODO: Get rid of this once StateImpl no longers takes a pool
         let pool_clone = pool.clone();
-        let sync_addr = actix::SyncArbiter::start(3, move || endpoints::SyncExecutor {
-            pool: pool_clone.clone(),
-        });
+        let sync_addr =
+            actix::SyncArbiter::start(self.num_sync_executors, move || endpoints::SyncExecutor {
+                pool: pool_clone.clone(),
+            });
 
         let server = actix_web::HttpServer::new(move || {
             actix_web::Application::with_state(endpoints::StateImpl {
