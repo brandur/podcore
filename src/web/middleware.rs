@@ -28,6 +28,12 @@ pub mod log_initializer {
             Ok(Response::Done(resp))
         }
     }
+
+    /// Shorthand for getting a usable `Logger` out of a request. It's also possible to access the
+    /// request's extensions directly.
+    pub fn log<S: common::State>(req: &mut HttpRequest<S>) -> Logger {
+        req.extensions().get::<Log>().unwrap().0.clone()
+    }
 }
 
 pub mod request_id {

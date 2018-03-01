@@ -149,11 +149,7 @@ pub mod directory_podcast_show {
         pub fn handle(
             mut req: HttpRequest<endpoints::StateImpl>,
         ) -> Box<Future<Item = HttpResponse, Error = Error>> {
-            let log = req.extensions()
-                .get::<middleware::log_initializer::Log>()
-                .unwrap()
-                .0
-                .clone();
+            let log = middleware::log_initializer::log(&mut req);
 
             let params = match Params::build(&req) {
                 Ok(params) => params,
