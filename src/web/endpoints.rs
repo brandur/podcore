@@ -182,8 +182,8 @@ pub mod directory_podcast_show {
 
     impl endpoints::ExecutorResponse for ExecutorResponse {}
 
-    pub struct Params {
-        pub id: i64,
+    struct Params {
+        id: i64,
     }
 
     impl endpoints::Params for Params {
@@ -204,7 +204,7 @@ pub mod directory_podcast_show {
         type Error = Error;
     }
 
-    pub struct ViewModel {
+    struct ViewModel {
         _common:  endpoints::CommonViewModel,
         response: ExecutorResponse,
     }
