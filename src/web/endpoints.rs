@@ -163,6 +163,24 @@ pub fn handle_404() -> Result<HttpResponse> {
         .body("404!")?)
 }
 
+pub fn handle_500(view_model: &CommonViewModel, error: &str) -> Result<HttpResponse> {
+    let html = render_500(view_model, error)?;
+    Ok(HttpResponse::build(StatusCode::OK)
+        .content_type("text/html; charset=utf-8")
+        .body(html)?)
+}
+
+pub fn render_500(view_model: &CommonViewModel, error: &str) -> Result<String> {
+    render_layout(
+        &view_model,
+        (html! {
+            h1: "Error";
+            p: error;
+        }).into_string()?
+            .as_str(),
+    )
+}
+
 pub fn render_layout(view_model: &CommonViewModel, content: &str) -> Result<String> {
     (html! {
         : doctype::HTML;
@@ -238,9 +256,15 @@ pub mod directory_podcast_show {
         type Error = Error;
     }
 
-    struct ViewModel {
-        _common:  endpoints::CommonViewModel,
-        response: ExecutorResponse,
+    enum ViewModel {
+        Exception {
+            common:    endpoints::CommonViewModel,
+            exception: model::DirectoryPodcastException,
+        },
+        NotFound,
+        Podcast {
+            podcast: model::Podcast,
+        },
     }
 
     impl endpoints::ViewModel for ViewModel {
@@ -251,12 +275,16 @@ pub mod directory_podcast_show {
             req: &HttpRequest<endpoints::StateImpl>,
             res: Self::ExecutorResponse,
         ) -> Self {
-            ViewModel {
-                _common:  endpoints::CommonViewModel {
-                    assets_version: req.state().assets_version.clone(),
-                    title:          "".to_owned(),
+            match res {
+                ExecutorResponse::Exception(ex) => ViewModel::Exception {
+                    common:    endpoints::CommonViewModel {
+                        assets_version: req.state().assets_version.clone(),
+                        title:          "Error".to_owned(),
+                    },
+                    exception: ex,
                 },
-                response: res,
+                ExecutorResponse::NotFound => ViewModel::NotFound,
+                ExecutorResponse::Podcast(podcast) => ViewModel::Podcast { podcast: podcast },
             }
         }
 
@@ -265,12 +293,13 @@ pub mod directory_podcast_show {
             _log: &Logger,
             _req: &HttpRequest<endpoints::StateImpl>,
         ) -> Result<HttpResponse> {
-            match self.response {
-                ExecutorResponse::Exception(ref _dir_podcast_ex) => {
-                    Err(Error::from("Couldn't expand directory podcast"))
-                }
-                ExecutorResponse::NotFound => Ok(endpoints::handle_404()?),
-                ExecutorResponse::Podcast(ref podcast) => {
+            match self {
+                &ViewModel::Exception {
+                    ref common,
+                    exception: ref _exception,
+                } => Ok(endpoints::handle_500(common, "Error ingesting podcast")?),
+                &ViewModel::NotFound => Ok(endpoints::handle_404()?),
+                &ViewModel::Podcast { ref podcast } => {
                     Ok(HttpResponse::build(StatusCode::PERMANENT_REDIRECT)
                         .header("Location", format!("/podcasts/{}", podcast.id).as_str())
                         .finish()?)
