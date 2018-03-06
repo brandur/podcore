@@ -11,12 +11,12 @@ pub mod log_initializer {
 
     pub struct Middleware;
 
-    pub struct Log(pub Logger);
+    pub struct Extension(pub Logger);
 
     impl<S: common::State> actix_web::middleware::Middleware<S> for Middleware {
         fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
             let log = req.state().log().clone();
-            req.extensions().insert(Log(log));
+            req.extensions().insert(Extension(log));
             Ok(Started::Done)
         }
 
@@ -32,7 +32,7 @@ pub mod log_initializer {
     /// Shorthand for getting a usable `Logger` out of a request. It's also possible to access the
     /// request's extensions directly.
     pub fn log<S: common::State>(req: &mut HttpRequest<S>) -> Logger {
-        req.extensions().get::<Log>().unwrap().0.clone()
+        req.extensions().get::<Extension>().unwrap().0.clone()
     }
 }
 
@@ -45,12 +45,15 @@ pub mod request_id {
 
     impl<S: common::State> actix_web::middleware::Middleware<S> for Middleware {
         fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
-            let log = req.extensions().remove::<log_initializer::Log>().unwrap().0;
+            let log = req.extensions()
+                .remove::<log_initializer::Extension>()
+                .unwrap()
+                .0;
 
             let request_id = Uuid::new_v4().simple().to_string();
             debug!(&log, "Generated request ID"; "request_id" => request_id.as_str());
 
-            req.extensions().insert(log_initializer::Log(log.new(
+            req.extensions().insert(log_initializer::Extension(log.new(
                 o!("request_id" => request_id),
             )));
 
@@ -74,11 +77,15 @@ pub mod request_response_logger {
 
     pub struct Middleware;
 
-    struct StartTime(u64);
+    struct Extension {
+        start_time: u64,
+    }
 
     impl<S: common::State> actix_web::middleware::Middleware<S> for Middleware {
         fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
-            req.extensions().insert(StartTime(time::precise_time_ns()));
+            req.extensions().insert(Extension {
+                start_time: time::precise_time_ns(),
+            });
             Ok(Started::Done)
         }
 
@@ -88,11 +95,12 @@ pub mod request_response_logger {
             resp: HttpResponse,
         ) -> actix_web::Result<Response> {
             let log = req.extensions()
-                .get::<log_initializer::Log>()
+                .get::<log_initializer::Extension>()
                 .unwrap()
                 .0
                 .clone();
-            let elapsed = time::precise_time_ns() - req.extensions().get::<StartTime>().unwrap().0;
+            let elapsed =
+                time::precise_time_ns() - req.extensions().get::<Extension>().unwrap().start_time;
             info!(log, "Request finished";
                     "elapsed" => time_helpers::unit_str(elapsed),
                     "method"  => req.method().as_str(),
