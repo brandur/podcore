@@ -1,5 +1,5 @@
 use errors::*;
-use http_requester::HTTPRequesterLive;
+use http_requester::HttpRequesterLive;
 use web::common;
 
 use actix;
@@ -221,12 +221,12 @@ fn build_common(req: &HttpRequest<StateImpl>, title: &str) -> CommonViewModel {
     }
 }
 
-fn build_requester() -> Result<HTTPRequesterLive> {
+fn build_requester() -> Result<HttpRequesterLive> {
     let core = Core::new().unwrap();
     let client = Client::configure()
         .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
         .build(&core.handle());
-    Ok(HTTPRequesterLive { client, core })
+    Ok(HttpRequesterLive { client, core })
 }
 
 pub fn handle_404() -> Result<HttpResponse> {

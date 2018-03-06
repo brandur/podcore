@@ -1,6 +1,6 @@
 use error_helpers;
 use errors::*;
-use http_requester::HTTPRequesterPassThrough;
+use http_requester::HttpRequesterPassThrough;
 use mediators::common;
 use mediators::podcast_updater::PodcastUpdater;
 use time_helpers;
@@ -239,7 +239,7 @@ fn work_inner(log: &Logger, conn: &PgConnection, podcast_tuple: &PodcastTuple) -
         disable_shortcut: true,
 
         feed_url,
-        http_requester: &mut HTTPRequesterPassThrough {
+        http_requester: &mut HttpRequesterPassThrough {
             data: Arc::new(content),
         },
     }.run(log)?;
@@ -251,7 +251,7 @@ fn work_inner(log: &Logger, conn: &PgConnection, podcast_tuple: &PodcastTuple) -
 mod tests {
     extern crate rand;
 
-    use http_requester::HTTPRequesterPassThrough;
+    use http_requester::HttpRequesterPassThrough;
     use mediators::podcast_reingester::*;
     use mediators::podcast_updater::PodcastUpdater;
     use test_helpers;
@@ -331,7 +331,7 @@ mod tests {
             // update it over and over.
             feed_url: format!("https://example.com/feed-{}.xml", rng.gen::<u64>()).to_string(),
 
-            http_requester: &mut HTTPRequesterPassThrough {
+            http_requester: &mut HttpRequesterPassThrough {
                 data: Arc::new(test_helpers::MINIMAL_FEED.to_vec()),
             },
         }.run(log)

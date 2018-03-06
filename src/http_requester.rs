@@ -21,70 +21,70 @@ pub enum Verb {
 }
 
 //
-// HTTPRequesterFactory trait + implementations
+// HttpRequesterFactory trait + implementations
 //
 
-pub trait HTTPRequesterFactory: Send {
+pub trait HttpRequesterFactory: Send {
     // This is here because it's difficult to make a trait cloneable.
-    fn clone_box(&self) -> Box<HTTPRequesterFactory>;
+    fn clone_box(&self) -> Box<HttpRequesterFactory>;
 
-    fn create(&self) -> Box<HTTPRequester>;
+    fn create(&self) -> Box<HttpRequester>;
 }
 
 #[derive(Clone, Debug)]
-pub struct HTTPRequesterFactoryLive {}
+pub struct HttpRequesterFactoryLive {}
 
-impl HTTPRequesterFactory for HTTPRequesterFactoryLive {
-    fn clone_box(&self) -> Box<HTTPRequesterFactory> {
+impl HttpRequesterFactory for HttpRequesterFactoryLive {
+    fn clone_box(&self) -> Box<HttpRequesterFactory> {
         Box::new(Self {})
     }
 
-    fn create(&self) -> Box<HTTPRequester> {
+    fn create(&self) -> Box<HttpRequester> {
         let core = Core::new().unwrap();
         let client = Client::configure()
             .connector(HttpsConnector::new(4, &core.handle()).unwrap())
             .build(&core.handle());
-        Box::new(HTTPRequesterLive { client, core })
+        Box::new(HttpRequesterLive { client, core })
     }
 }
 
 #[derive(Clone, Debug)]
-pub struct HTTPRequesterFactoryPassThrough {
+pub struct HttpRequesterFactoryPassThrough {
     pub data: Arc<Vec<u8>>,
 }
 
-impl HTTPRequesterFactory for HTTPRequesterFactoryPassThrough {
-    fn clone_box(&self) -> Box<HTTPRequesterFactory> {
+impl HttpRequesterFactory for HttpRequesterFactoryPassThrough {
+    fn clone_box(&self) -> Box<HttpRequesterFactory> {
         Box::new(Self {
             data: Arc::clone(&self.data),
         })
     }
 
-    fn create(&self) -> Box<HTTPRequester> {
-        Box::new(HTTPRequesterPassThrough {
+    fn create(&self) -> Box<HttpRequester> {
+        Box::new(HttpRequesterPassThrough {
             data: Arc::clone(&self.data),
         })
     }
 }
 
 //
-// HTTPRequester trait + implementations
+// HttpRequester trait + implementations
 //
 
 // Maximum number of redirects that we'll follow.
 const REDIRECT_LIMIT: i64 = 5;
 
-pub trait HTTPRequester {
+pub trait HttpRequester {
     fn execute(&mut self, log: &Logger, req: Request) -> Result<(StatusCode, Vec<u8>, String)>;
 }
 
 #[derive(Debug)]
-pub struct HTTPRequesterLive {
+pub struct HttpRequesterLive {
     pub client: Client<HttpsConnector<HttpConnector>, Body>,
     pub core:   Core,
 }
 
-impl HTTPRequesterLive {
+impl HttpRequesterLive {
     fn execute_inner(
         &mut self,
         log: &Logger,
@@ -160,18 +160,18 @@ impl HTTPRequesterLive {
     }
 }
 
-impl HTTPRequester for HTTPRequesterLive {
+impl HttpRequester for HttpRequesterLive {
     fn execute(&mut self, log: &Logger, req: Request) -> Result<(StatusCode, Vec<u8>, String)> {
         self.execute_inner(log, req, 0)
     }
 }
 
 #[derive(Clone, Debug)]
-pub struct HTTPRequesterPassThrough {
+pub struct HttpRequesterPassThrough {
     pub data: Arc<Vec<u8>>,
 }
 
-impl HTTPRequester for HTTPRequesterPassThrough {
+impl HttpRequester for HttpRequesterPassThrough {
     fn execute(&mut self, _log: &Logger, req: Request) -> Result<(StatusCode, Vec<u8>, String)> {
         let uri = req.uri().to_string();
         Ok((StatusCode::Ok, (*self.data).clone(), uri))

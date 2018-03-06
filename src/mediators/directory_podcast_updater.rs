@@ -1,6 +1,6 @@
 use error_helpers;
 use errors::*;
-use http_requester::HTTPRequester;
+use http_requester::HttpRequester;
 use mediators::podcast_updater::PodcastUpdater;
 use model;
 use model::insertable;
@@ -17,7 +17,7 @@ use slog::Logger;
 pub struct DirectoryPodcastUpdater<'a> {
     pub conn:           &'a PgConnection,
     pub dir_podcast:    &'a mut model::DirectoryPodcast,
-    pub http_requester: &'a mut HTTPRequester,
+    pub http_requester: &'a mut HttpRequester,
 }
 
 impl<'a> DirectoryPodcastUpdater<'a> {
@@ -129,7 +129,7 @@ pub struct RunResult<'a> {
 
 #[cfg(test)]
 mod tests {
-    use http_requester::HTTPRequesterPassThrough;
+    use http_requester::HttpRequesterPassThrough;
     use mediators::directory_podcast_updater::*;
     use model;
     use model::insertable;
@@ -212,7 +212,7 @@ mod tests {
         conn:           PooledConnection<ConnectionManager<PgConnection>>,
         dir_podcast:    model::DirectoryPodcast,
         log:            Logger,
-        http_requester: HTTPRequesterPassThrough,
+        http_requester: HttpRequesterPassThrough,
     }
 
     impl TestBootstrap {
@@ -238,7 +238,7 @@ mod tests {
                 conn:           conn,
                 dir_podcast:    dir_podcast,
                 log:            test_helpers::log(),
-                http_requester: HTTPRequesterPassThrough {
+                http_requester: HttpRequesterPassThrough {
                     data: Arc::new(data.to_vec()),
                 },
             }

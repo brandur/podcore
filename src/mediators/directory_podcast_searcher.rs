@@ -1,5 +1,5 @@
 use errors::*;
-use http_requester::HTTPRequester;
+use http_requester::HttpRequester;
 use mediators::common;
 use model;
 use model::insertable;
@@ -22,7 +22,7 @@ use url::form_urlencoded;
 pub struct DirectoryPodcastSearcher<'a> {
     pub conn:           &'a PgConnection,
     pub query:          String,
-    pub http_requester: &'a mut HTTPRequester,
+    pub http_requester: &'a mut HttpRequester,
 }
 
 impl<'a> DirectoryPodcastSearcher<'a> {
@@ -342,7 +342,7 @@ struct SearchResultWrapper {
 
 #[cfg(test)]
 mod tests {
-    use http_requester::HTTPRequesterPassThrough;
+    use http_requester::HttpRequesterPassThrough;
     use mediators::directory_podcast_searcher::*;
     use test_helpers;
 
@@ -483,7 +483,7 @@ mod tests {
     struct TestBootstrap {
         conn:           PooledConnection<ConnectionManager<PgConnection>>,
         log:            Logger,
-        http_requester: HTTPRequesterPassThrough,
+        http_requester: HttpRequesterPassThrough,
     }
 
     impl TestBootstrap {
@@ -493,7 +493,7 @@ mod tests {
             TestBootstrap {
                 conn:           conn,
                 log:            test_helpers::log(),
-                http_requester: HTTPRequesterPassThrough {
+                http_requester: HttpRequesterPassThrough {
                     data: Arc::new(data.to_vec()),
                 },
             }

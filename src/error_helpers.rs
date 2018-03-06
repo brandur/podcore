@@ -1,7 +1,7 @@
 use errors::*;
 use mediators::error_reporter::{ErrorReporter, SentryCredentials};
 
-use http_requester::HTTPRequesterLive;
+use http_requester::HttpRequesterLive;
 use hyper::Client;
 use hyper_tls::HttpsConnector;
 use slog::Logger;
@@ -41,7 +41,7 @@ pub fn report_error(log: &Logger, error: &Error) -> Result<()> {
                 .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
                 .build(&core.handle());
             let creds = url.parse::<SentryCredentials>().unwrap();
-            let mut http_requester = HTTPRequesterLive { client, core };
+            let mut http_requester = HttpRequesterLive { client, core };
 
             let _res = ErrorReporter {
                 creds: &creds,

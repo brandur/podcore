@@ -1,6 +1,6 @@
 use errors;
 use errors::*;
-use http_requester::HTTPRequester;
+use http_requester::HttpRequester;
 use mediators::common;
 use time_helpers;
 
@@ -20,7 +20,7 @@ use uuid::Uuid;
 pub struct ErrorReporter<'a> {
     pub creds:          &'a SentryCredentials,
     pub error:          &'a Error,
-    pub http_requester: &'a mut HTTPRequester,
+    pub http_requester: &'a mut HttpRequester,
 }
 
 impl<'a> ErrorReporter<'a> {
@@ -277,7 +277,7 @@ fn build_stack_trace(error: &Error) -> Option<StackTrace> {
     Some(StackTrace { frames })
 }
 
-fn post_error(log: &Logger, http_requester: &mut HTTPRequester, req: Request) -> Result<()> {
+fn post_error(log: &Logger, http_requester: &mut HttpRequester, req: Request) -> Result<()> {
     let (status, body, _final_url) = time_helpers::log_timed(
         &log.new(o!("step" => "post_error")),
         |log| http_requester.execute(log, req),
@@ -297,7 +297,7 @@ fn post_error(log: &Logger, http_requester: &mut HTTPRequester, req: Request) ->
 
 #[cfg(test)]
 mod tests {
-    use http_requester::HTTPRequesterPassThrough;
+    use http_requester::HttpRequesterPassThrough;
     use mediators::error_reporter::*;
     use test_helpers;
 
@@ -325,7 +325,7 @@ mod tests {
         creds:          SentryCredentials,
         error:          Error,
         log:            Logger,
-        http_requester: HTTPRequesterPassThrough,
+        http_requester: HttpRequesterPassThrough,
     }
 
     impl TestBootstrap {
@@ -337,7 +337,7 @@ mod tests {
                     .unwrap(),
                 error:          error,
                 log:            test_helpers::log(),
-                http_requester: HTTPRequesterPassThrough {
+                http_requester: HttpRequesterPassThrough {
                     data: Arc::new("{}".as_bytes().to_vec()),
                 },
             }

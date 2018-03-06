@@ -22,7 +22,7 @@ use podcore::api;
 use podcore::error_helpers;
 use podcore::errors::*;
 use podcore::graphql;
-use podcore::http_requester::{HTTPRequesterFactoryLive, HTTPRequesterLive};
+use podcore::http_requester::{HttpRequesterFactoryLive, HttpRequesterLive};
 use podcore::mediators::cleaner::Cleaner;
 use podcore::mediators::directory_podcast_searcher::DirectoryPodcastSearcher;
 use podcore::mediators::podcast_crawler::PodcastCrawler;
@@ -186,7 +186,7 @@ fn subcommand_add(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) 
     let client = Client::configure()
         .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
         .build(&core.handle());
-    let mut http_requester = HTTPRequesterLive { client, core };
+    let mut http_requester = HttpRequesterLive { client, core };
 
     for url in matches.values_of("URL").unwrap().collect::<Vec<_>>() {
         PodcastUpdater {
@@ -236,7 +236,7 @@ fn subcommand_crawl(log: &Logger, matches: &ArgMatches, options: &GlobalOptions)
         let res = PodcastCrawler {
             num_workers:            options.num_connections - 1,
             pool:                   pool(log, options.num_connections)?.clone(),
-            http_requester_factory: Box::new(HTTPRequesterFactoryLive {}),
+            http_requester_factory: Box::new(HttpRequesterFactoryLive {}),
         }.run(log)?;
 
         num_loops += 1;
@@ -296,7 +296,7 @@ fn subcommand_search(log: &Logger, matches: &ArgMatches, _options: &GlobalOption
     let client = Client::configure()
         .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
         .build(&core.handle());
-    let mut http_requester = HTTPRequesterLive { client, core };
+    let mut http_requester = HttpRequesterLive { client, core };
 
     let query = matches.value_of("QUERY").unwrap();
     DirectoryPodcastSearcher {

@@ -1,6 +1,6 @@
 use error_helpers;
 use errors::*;
-use http_requester::HTTPRequester;
+use http_requester::HttpRequester;
 use mediators::common;
 use model;
 use model::insertable;
@@ -37,7 +37,7 @@ pub struct PodcastUpdater<'a> {
     pub disable_shortcut: bool,
 
     pub feed_url:       String,
-    pub http_requester: &'a mut HTTPRequester,
+    pub http_requester: &'a mut HttpRequester,
 }
 
 impl<'a> PodcastUpdater<'a> {
@@ -909,7 +909,7 @@ fn validate_podcast(raw: &raw::Podcast) -> Result<PodcastOrInvalid> {
 
 #[cfg(test)]
 mod tests {
-    use http_requester::HTTPRequesterPassThrough;
+    use http_requester::HttpRequesterPassThrough;
     use mediators::podcast_updater::*;
     use model;
     use schema;
@@ -1580,7 +1580,7 @@ mod tests {
         conn:           PooledConnection<ConnectionManager<PgConnection>>,
         feed_url:       &'static str,
         log:            Logger,
-        http_requester: HTTPRequesterPassThrough,
+        http_requester: HttpRequesterPassThrough,
     }
 
     impl TestBootstrap {
@@ -1590,7 +1590,7 @@ mod tests {
                 conn:           test_helpers::connection(),
                 feed_url:       "https://example.com/feed.xml",
                 log:            test_helpers::log(),
-                http_requester: HTTPRequesterPassThrough {
+                http_requester: HttpRequesterPassThrough {
                     data: Arc::new(data.to_vec()),
                 },
             }
@@ -1617,7 +1617,7 @@ mod tests {
         conn:           &'a PgConnection,
         feed_url:       &'static str,
         log:            Logger,
-        http_requester: HTTPRequesterPassThrough,
+        http_requester: HttpRequesterPassThrough,
     }
 
     impl<'a> TestBootstrapWithConn<'a> {
@@ -1627,7 +1627,7 @@ mod tests {
                 conn:           conn,
                 feed_url:       "https://example.com/feed.xml",
                 log:            test_helpers::log(),
-                http_requester: HTTPRequesterPassThrough {
+                http_requester: HttpRequesterPassThrough {
                     data: Arc::new(data.to_vec()),
                 },
             }

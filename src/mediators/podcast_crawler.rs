@@ -1,6 +1,6 @@
 use error_helpers;
 use errors::*;
-use http_requester::HTTPRequesterFactory;
+use http_requester::HttpRequesterFactory;
 use mediators::common;
 use mediators::podcast_updater::PodcastUpdater;
 use time_helpers;
@@ -22,7 +22,7 @@ pub struct PodcastCrawler {
     pub num_workers: u32,
 
     pub pool:                   Pool<ConnectionManager<PgConnection>>,
-    pub http_requester_factory: Box<HTTPRequesterFactory>,
+    pub http_requester_factory: Box<HttpRequesterFactory>,
 }
 
 impl PodcastCrawler {
@@ -189,7 +189,7 @@ struct PodcastTuple {
 fn work(
     log: &Logger,
     pool: &Pool<ConnectionManager<PgConnection>>,
-    http_requester_factory: &HTTPRequesterFactory,
+    http_requester_factory: &HttpRequesterFactory,
     work_recv: &Receiver<PodcastTuple>,
 ) {
     let conn = match pool.try_get() {
@@ -243,7 +243,7 @@ fn work(
 mod tests {
     extern crate rand;
 
-    use http_requester::{HTTPRequesterFactoryPassThrough, HTTPRequesterPassThrough};
+    use http_requester::{HttpRequesterFactoryPassThrough, HttpRequesterPassThrough};
     use mediators::podcast_crawler::*;
     use mediators::podcast_updater::PodcastUpdater;
     use schema;
@@ -380,7 +380,7 @@ mod tests {
                     // might be using for setup.
                     num_workers:            test_helpers::NUM_CONNECTIONS - 1 - 1,
                     pool:                   self.pool.clone(),
-                    http_requester_factory: Box::new(HTTPRequesterFactoryPassThrough {
+                    http_requester_factory: Box::new(HttpRequesterFactoryPassThrough {
                         data: Arc::new(test_helpers::MINIMAL_FEED.to_vec()),
                     }),
                 },
@@ -405,7 +405,7 @@ mod tests {
             // update it over and over.
             feed_url: format!("https://example.com/feed-{}.xml", rng.gen::<u64>()).to_string(),
 
-            http_requester: &mut HTTPRequesterPassThrough {
+            http_requester: &mut HttpRequesterPassThrough {
                 data: Arc::new(test_helpers::MINIMAL_FEED.to_vec()),
             },
         }.run(log)

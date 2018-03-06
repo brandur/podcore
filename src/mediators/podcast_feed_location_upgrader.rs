@@ -49,7 +49,7 @@ pub struct RunResult {
 
 #[cfg(test)]
 mod tests {
-    use http_requester::HTTPRequesterPassThrough;
+    use http_requester::HttpRequesterPassThrough;
     use mediators::podcast_feed_location_upgrader::*;
     use mediators::podcast_updater::PodcastUpdater;
     use model;
@@ -253,7 +253,7 @@ mod tests {
             conn:             conn,
             disable_shortcut: false,
             feed_url:         url.to_owned(),
-            http_requester:   &mut HTTPRequesterPassThrough {
+            http_requester:   &mut HttpRequesterPassThrough {
                 data: Arc::new(test_helpers::MINIMAL_FEED.to_vec()),
             },
         }.run(log)
