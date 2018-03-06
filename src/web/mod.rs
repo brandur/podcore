@@ -3,8 +3,6 @@ mod endpoints;
 mod middleware;
 
 use errors::*;
-use http_requester::HTTPRequesterLive;
-use mediators::directory_podcast_searcher::DirectoryPodcastSearcher;
 use model;
 use schema;
 use time_helpers;
@@ -15,12 +13,9 @@ use actix_web::{HttpRequest, HttpResponse, StatusCode};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use horrorshow::prelude::*;
-use hyper::Client;
-use hyper_tls::HttpsConnector;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use slog::Logger;
-use tokio_core::reactor::Core;
 
 pub struct WebServer {
     pub assets_version:     String,
@@ -73,7 +68,8 @@ impl WebServer {
                         .f(|_req| actix_web::httpcodes::HTTPOk)
                 })
                 .resource("/search", |r| {
-                    r.method(actix_web::Method::GET).f(handle_show_search)
+                    r.method(actix_web::Method::GET)
+                        .a(endpoints::search_show::handler)
                 })
                 .resource("/search/new", |r| {
                     r.method(actix_web::Method::GET)
@@ -121,81 +117,9 @@ struct ShowPodcastViewModel {
     podcast:  model::Podcast,
 }
 
-struct ShowSearchViewModel {
-    common: endpoints::CommonViewModel,
-
-    directory_podcasts: Vec<model::DirectoryPodcast>,
-    query:              String,
-}
-
 //
 // Web handlers
 //
-
-fn handle_show_search(
-    mut req: HttpRequest<endpoints::StateImpl>,
-) -> actix_web::Result<HttpResponse> {
-    let log = req.extensions()
-        .get::<middleware::log_initializer::Log>()
-        .unwrap()
-        .0
-        .clone();
-    time_helpers::log_timed(&log.new(o!("step" => "execute")), |log| {
-        handle_show_search_inner(log, &req)
-    })
-}
-
-fn handle_show_search_inner(
-    log: &Logger,
-    req: &HttpRequest<endpoints::StateImpl>,
-) -> actix_web::Result<HttpResponse> {
-    let query = match req.query().get("q") {
-        Some(q) => q,
-        None => {
-            return Ok(HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
-                .header("Location", "/search-home")
-                .finish()?);
-        }
-    };
-    info!(log, "Searching directory podcasts"; "query" => query);
-
-    let core = Core::new().unwrap();
-    let client = Client::configure()
-        .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
-        .build(&core.handle());
-    let mut http_requester = HTTPRequesterLive { client, core };
-
-    let view_model = time_helpers::log_timed(
-        &log.new(o!("step" => "build_view_model")),
-        |log| -> Result<ShowSearchViewModel> {
-            let conn = req.state().pool.get()?;
-
-            let res = DirectoryPodcastSearcher {
-                conn:           &*conn,
-                query:          query.to_owned(),
-                http_requester: &mut http_requester,
-            }.run(log)?;
-
-            Ok(ShowSearchViewModel {
-                common: endpoints::CommonViewModel {
-                    assets_version: req.state().assets_version.clone(),
-                    title:          format!("Search: {}", query),
-                },
-
-                directory_podcasts: res.directory_podcasts,
-                query:              query.to_owned(),
-            })
-        },
-    )?;
-
-    let html = time_helpers::log_timed(&log.new(o!("step" => "render_view")), |_log| {
-        render_show_search(&view_model)
-    })?;
-
-    Ok(HttpResponse::build(StatusCode::OK)
-        .content_type("text/html; charset=utf-8")
-        .body(html)?)
-}
 
 fn handle_show_podcast(
     mut req: HttpRequest<endpoints::StateImpl>,
@@ -283,33 +207,6 @@ fn render_show_podcast(view_model: &ShowPodcastViewModel) -> Result<String> {
             ul {
                 @ for episode in &view_model.episodes {
                     li: episode.title.as_str();
-                }
-            }
-        }).into_string()?
-            .as_str(),
-    )
-}
-
-fn render_show_search(view_model: &ShowSearchViewModel) -> Result<String> {
-    endpoints::render_layout(
-        &view_model.common,
-        (html! {
-            p {
-                : format_args!("Query: {}", view_model.query);
-            }
-            ul {
-                @ for dir_podcast in &view_model.directory_podcasts {
-                    li {
-                        @ if let Some(podcast_id) = dir_podcast.podcast_id {
-                            a(href=format_args!("/podcasts/{}", podcast_id)) {
-                                : dir_podcast.title.as_str()
-                            }
-                        } else {
-                            a(href=format_args!("/directory-podcasts/{}", dir_podcast.id)) {
-                                : dir_podcast.title.as_str()
-                            }
-                        }
-                    }
                 }
             }
         }).into_string()?

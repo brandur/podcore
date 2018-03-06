@@ -318,7 +318,7 @@ pub mod directory_podcast_show {
         ) -> Self::Result {
             let conn = self.pool.get()?;
             let log = message.log.clone();
-            time_helpers::log_timed(&log.new(o!("step" => "render_view_model")), |log| {
+            time_helpers::log_timed(&log.new(o!("step" => "handle_message")), |log| {
                 handle_inner(&log, &*conn, &message.params)
             })
         }
@@ -439,6 +439,188 @@ pub mod search_home_show {
                 form(action="/search", method="get") {
                     input(type="text", name="q");
                     input(type="submit", value="Submit");
+                }
+            }).into_string()?
+                .as_str(),
+        )
+    }
+}
+
+pub mod search_show {
+    use errors::*;
+    use http_requester::HTTPRequesterLive;
+    use mediators::directory_podcast_searcher::DirectoryPodcastSearcher;
+    use model;
+    use time_helpers;
+    use web::endpoints;
+
+    use actix;
+    use actix_web::{HttpRequest, HttpResponse, StatusCode};
+    use diesel::pg::PgConnection;
+    use futures::future::Future;
+    use horrorshow::prelude::*;
+    use hyper::Client;
+    use hyper_tls::HttpsConnector;
+    use slog::Logger;
+    use tokio_core::reactor::Core;
+
+    handler!();
+
+    type MessageResult = actix::prelude::MessageResult<endpoints::Message<Params>>;
+
+    enum ExecutorResponse {
+        NoQuery,
+        SearchResults {
+            directory_podcasts: Vec<model::DirectoryPodcast>,
+            query:              String,
+        },
+    }
+    impl endpoints::ExecutorResponse for ExecutorResponse {}
+
+    struct Params {
+        query: Option<String>,
+    }
+    impl endpoints::Params for Params {
+        fn build(_log: &Logger, req: &HttpRequest<endpoints::StateImpl>) -> Result<Self> {
+            Ok(Self {
+                query: req.query().get("q").map(|q| q.to_owned()),
+            })
+        }
+    }
+
+    // TODO: `ResponseType` will change to `Message`
+    impl actix::prelude::ResponseType for endpoints::Message<Params> {
+        type Item = ExecutorResponse;
+        type Error = Error;
+    }
+
+    enum ViewModel {
+        NoQuery,
+        SearchResults {
+            common:             endpoints::CommonViewModel,
+            directory_podcasts: Vec<model::DirectoryPodcast>,
+            query:              String,
+        },
+    }
+
+    impl endpoints::ViewModel for ViewModel {
+        type ExecutorResponse = ExecutorResponse;
+
+        fn build(
+            _log: &Logger,
+            req: &HttpRequest<endpoints::StateImpl>,
+            res: Self::ExecutorResponse,
+        ) -> Self {
+            match res {
+                ExecutorResponse::NoQuery => ViewModel::NoQuery,
+                ExecutorResponse::SearchResults {
+                    directory_podcasts,
+                    query,
+                } => ViewModel::SearchResults {
+                    common:             endpoints::CommonViewModel {
+                        assets_version: req.state().assets_version.clone(),
+                        title:          format!("Search: {}", query),
+                    },
+                    directory_podcasts: directory_podcasts,
+                    query:              query,
+                },
+            }
+        }
+
+        fn render(
+            &self,
+            _log: &Logger,
+            _req: &HttpRequest<endpoints::StateImpl>,
+        ) -> Result<HttpResponse> {
+            match self {
+                &ViewModel::NoQuery => Ok(HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
+                    .header("Location", "/search-home")
+                    .finish()?),
+                &ViewModel::SearchResults {
+                    ref common,
+                    ref directory_podcasts,
+                    ref query,
+                } => {
+                    let html = render_view(common, directory_podcasts, query.as_str())?;
+                    Ok(HttpResponse::build(StatusCode::OK)
+                        .content_type("text/html; charset=utf-8")
+                        .body(html)?)
+                }
+            }
+        }
+    }
+
+    impl actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
+        type Result = MessageResult;
+
+        fn handle(
+            &mut self,
+            message: endpoints::Message<Params>,
+            _: &mut Self::Context,
+        ) -> Self::Result {
+            let conn = self.pool.get()?;
+            let log = message.log.clone();
+            time_helpers::log_timed(&log.new(o!("step" => "handle_message")), |log| {
+                handle_inner(&log, &*conn, message.params)
+            })
+        }
+    }
+
+    fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> MessageResult {
+        if params.query.is_none() {
+            return Ok(ExecutorResponse::NoQuery);
+        }
+
+        let query = params.query.unwrap();
+        if query.is_empty() {
+            return Ok(ExecutorResponse::NoQuery);
+        }
+
+        info!(log, "Executing query"; "id" => query.as_str());
+
+        let core = Core::new().unwrap();
+        let client = Client::configure()
+            .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
+            .build(&core.handle());
+        let mut http_requester = HTTPRequesterLive { client, core };
+
+        let res = DirectoryPodcastSearcher {
+            conn:           &*conn,
+            query:          query.to_owned(),
+            http_requester: &mut http_requester,
+        }.run(log)?;
+
+        Ok(ExecutorResponse::SearchResults {
+            directory_podcasts: res.directory_podcasts,
+            query:              query,
+        })
+    }
+
+    fn render_view(
+        common: &endpoints::CommonViewModel,
+        directory_podcasts: &Vec<model::DirectoryPodcast>,
+        query: &str,
+    ) -> Result<String> {
+        endpoints::render_layout(
+            &common,
+            (html! {
+                p {
+                    : format_args!("Query: {}", query);
+                }
+                ul {
+                    @ for dir_podcast in directory_podcasts {
+                        li {
+                            @ if let Some(podcast_id) = dir_podcast.podcast_id {
+                                a(href=format_args!("/podcasts/{}", podcast_id)) {
+                                    : dir_podcast.title.as_str()
+                                }
+                            } else {
+                                a(href=format_args!("/directory-podcasts/{}", dir_podcast.id)) {
+                                    : dir_podcast.title.as_str()
+                                }
+                            }
+                        }
+                    }
                 }
             }).into_string()?
                 .as_str(),
