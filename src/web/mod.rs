@@ -14,7 +14,7 @@ use slog::Logger;
 pub struct WebServer {
     pub assets_version:     String,
     pub log:                Logger,
-    pub num_sync_executors: usize,
+    pub num_sync_executors: u32,
     pub pool:               Pool<ConnectionManager<PgConnection>>,
     pub port:               String,
 }
@@ -35,10 +35,11 @@ impl WebServer {
 
         // TODO: Get rid of this once StateImpl no longers takes a pool
         let pool_clone = pool.clone();
-        let sync_addr =
-            actix::SyncArbiter::start(self.num_sync_executors, move || endpoints::SyncExecutor {
+        let sync_addr = actix::SyncArbiter::start(self.num_sync_executors as usize, move || {
+            endpoints::SyncExecutor {
                 pool: pool_clone.clone(),
-            });
+            }
+        });
 
         let server = actix_web::HttpServer::new(move || {
             actix_web::Application::with_state(endpoints::StateImpl {
