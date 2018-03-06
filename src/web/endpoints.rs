@@ -218,7 +218,9 @@ pub mod directory_podcast_show {
 
     handler!();
 
-    type MessageResult = actix::prelude::MessageResult<endpoints::Message<Params>>;
+    //
+    // Params
+    //
 
     struct Params {
         id: i64,
@@ -235,6 +237,12 @@ pub mod directory_podcast_show {
             })
         }
     }
+
+    //
+    // Message handler
+    //
+
+    type MessageResult = actix::prelude::MessageResult<endpoints::Message<Params>>;
 
     impl actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
         type Result = MessageResult;
@@ -257,6 +265,10 @@ pub mod directory_podcast_show {
         type Item = ViewModel;
         type Error = Error;
     }
+
+    //
+    // ViewModel
+    //
 
     pub enum ViewModel {
         Exception(model::DirectoryPodcastException),
@@ -284,6 +296,10 @@ pub mod directory_podcast_show {
             }
         }
     }
+
+    //
+    // Private functions
+    //
 
     fn handle_inner(log: &Logger, conn: &PgConnection, params: &Params) -> MessageResult {
         info!(log, "Expanding directory podcast"; "id" => params.id);
@@ -330,7 +346,9 @@ pub mod search_home_show {
 
     handler!();
 
-    type MessageResult = actix::prelude::MessageResult<endpoints::Message<Params>>;
+    //
+    // Params
+    //
 
     struct Params {}
     impl endpoints::Params for Params {
@@ -338,6 +356,12 @@ pub mod search_home_show {
             Ok(Self {})
         }
     }
+
+    //
+    // Message handler
+    //
+
+    type MessageResult = actix::prelude::MessageResult<endpoints::Message<Params>>;
 
     impl actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
         type Result = MessageResult;
@@ -357,6 +381,10 @@ pub mod search_home_show {
         type Error = Error;
     }
 
+    //
+    // ViewModel
+    //
+
     enum ViewModel {
         Found,
     }
@@ -374,6 +402,10 @@ pub mod search_home_show {
                 .body(html)?)
         }
     }
+
+    //
+    // Private functions
+    //
 
     fn render_view(common: &endpoints::CommonViewModel, _view_model: &ViewModel) -> Result<String> {
         endpoints::render_layout(
@@ -409,7 +441,9 @@ pub mod search_show {
 
     handler!();
 
-    type MessageResult = actix::prelude::MessageResult<endpoints::Message<Params>>;
+    //
+    // Params
+    //
 
     struct Params {
         query: Option<String>,
@@ -421,6 +455,12 @@ pub mod search_show {
             })
         }
     }
+
+    //
+    // Message handler
+    //
+
+    type MessageResult = actix::prelude::MessageResult<endpoints::Message<Params>>;
 
     impl actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
         type Result = MessageResult;
@@ -443,6 +483,10 @@ pub mod search_show {
         type Item = ViewModel;
         type Error = Error;
     }
+
+    //
+    // ViewModel
+    //
 
     enum ViewModel {
         NoQuery,
@@ -481,6 +525,10 @@ pub mod search_show {
             }
         }
     }
+
+    //
+    // Private functions
+    //
 
     fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> MessageResult {
         if params.query.is_none() {
