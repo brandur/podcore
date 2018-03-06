@@ -62,12 +62,7 @@ macro_rules! handler {
                 .chain_err(|| "Error from SyncExecutor")
                 .from_err()
                 .and_then(move |res| {
-                    let response = res?;
-                    let view_model = time_helpers::log_timed(
-                        &log.new(o!("step" => "build_view_model")), |log| {
-                            ViewModel::build(log, &req, response)
-                        }
-                    );
+                    let view_model = res?;
                     time_helpers::log_timed(&log.new(o!("step" => "render_view_model")), |log| {
                         view_model.render(log, &req)
                     })
@@ -81,10 +76,6 @@ macro_rules! handler {
 // Traits
 //
 
-/// A trait to be implemented for the typed responses that come back from `SyncExecutor`. This
-/// usually contains information loaded from a database.
-pub trait ExecutorResponse {}
-
 /// A trait to be implemented for parameters that are decoded from an incoming HTTP request. It's
 /// also reused as a message to be received by `SyncExecutor` containing enough information to run
 /// its synchronous database operations.
@@ -94,16 +85,10 @@ pub trait Params: Sized {
     fn build(log: &Logger, req: &HttpRequest<StateImpl>) -> Result<Self>;
 }
 
-/// A trait to be implemented by the view models that render views. A view model is a model
-/// containing all the information needed to build a view. In our case it wraps a response that
-/// comes from from `SyncExecutor`.
+/// A trait to be implemented by the view models that render views, which is also the same trait
+/// for the typed responses that come from `SyncExecutor`. A view model is a model containing all
+/// the information needed to build a view.
 pub trait ViewModel {
-    type ExecutorResponse: ExecutorResponse;
-
-    /// Builds a `ViewModel` implementation from an HTTP request and a response from
-    /// `SyncExecutor`.
-    fn build(log: &Logger, req: &HttpRequest<StateImpl>, response: Self::ExecutorResponse) -> Self;
-
     /// Renders a `ViewModel` implementation to an HTTP response. This could be a standard HTML
     /// page, but could also be any arbitrary response like a redirect.
     fn render(&self, log: &Logger, req: &HttpRequest<StateImpl>) -> Result<HttpResponse>;
@@ -156,6 +141,15 @@ impl actix::Actor for SyncExecutor {
 //
 // Functions
 //
+
+/// Builds a `CommonViewModel` from request information and takes in any other
+/// required parameters to do so.
+fn build_common(req: &HttpRequest<StateImpl>, title: &str) -> CommonViewModel {
+    CommonViewModel {
+        assets_version: req.state().assets_version.clone(),
+        title:          title.to_owned(),
+    }
+}
 
 pub fn handle_404() -> Result<HttpResponse> {
     Ok(HttpResponse::build(StatusCode::NOT_FOUND)
@@ -226,14 +220,6 @@ pub mod directory_podcast_show {
 
     type MessageResult = actix::prelude::MessageResult<endpoints::Message<Params>>;
 
-    pub enum ExecutorResponse {
-        Exception(model::DirectoryPodcastException),
-        NotFound,
-        Podcast(model::Podcast),
-    }
-
-    impl endpoints::ExecutorResponse for ExecutorResponse {}
-
     struct Params {
         id: i64,
     }
@@ -252,54 +238,29 @@ pub mod directory_podcast_show {
 
     // TODO: `ResponseType` will change to `Message`
     impl actix::prelude::ResponseType for endpoints::Message<Params> {
-        type Item = ExecutorResponse;
+        type Item = ViewModel;
         type Error = Error;
     }
 
-    enum ViewModel {
-        Exception {
-            common:    endpoints::CommonViewModel,
-            exception: model::DirectoryPodcastException,
-        },
+    pub enum ViewModel {
+        Exception(model::DirectoryPodcastException),
         NotFound,
-        Podcast {
-            podcast: model::Podcast,
-        },
+        Podcast(model::Podcast),
     }
 
     impl endpoints::ViewModel for ViewModel {
-        type ExecutorResponse = ExecutorResponse;
-
-        fn build(
-            _log: &Logger,
-            req: &HttpRequest<endpoints::StateImpl>,
-            res: Self::ExecutorResponse,
-        ) -> Self {
-            match res {
-                ExecutorResponse::Exception(ex) => ViewModel::Exception {
-                    common:    endpoints::CommonViewModel {
-                        assets_version: req.state().assets_version.clone(),
-                        title:          "Error".to_owned(),
-                    },
-                    exception: ex,
-                },
-                ExecutorResponse::NotFound => ViewModel::NotFound,
-                ExecutorResponse::Podcast(podcast) => ViewModel::Podcast { podcast: podcast },
-            }
-        }
-
         fn render(
             &self,
             _log: &Logger,
-            _req: &HttpRequest<endpoints::StateImpl>,
+            req: &HttpRequest<endpoints::StateImpl>,
         ) -> Result<HttpResponse> {
             match self {
-                &ViewModel::Exception {
-                    ref common,
-                    exception: ref _exception,
-                } => Ok(endpoints::handle_500(common, "Error ingesting podcast")?),
+                &ViewModel::Exception(ref _exception) => Ok(endpoints::handle_500(
+                    &endpoints::build_common(req, "Error"),
+                    "Error ingesting podcast",
+                )?),
                 &ViewModel::NotFound => Ok(endpoints::handle_404()?),
-                &ViewModel::Podcast { ref podcast } => {
+                &ViewModel::Podcast(ref podcast) => {
                     Ok(HttpResponse::build(StatusCode::PERMANENT_REDIRECT)
                         .header("Location", format!("/podcasts/{}", podcast.id).as_str())
                         .finish()?)
@@ -347,12 +308,12 @@ pub mod directory_podcast_show {
                 let res = mediator.run(log)?;
 
                 if let Some(dir_podcast_ex) = res.dir_podcast_ex {
-                    return Ok(ExecutorResponse::Exception(dir_podcast_ex));
+                    return Ok(ViewModel::Exception(dir_podcast_ex));
                 }
 
-                Ok(ExecutorResponse::Podcast(res.podcast.unwrap()))
+                Ok(ViewModel::Podcast(res.podcast.unwrap()))
             }
-            None => Ok(ExecutorResponse::NotFound),
+            None => Ok(ViewModel::NotFound),
         }
     }
 }
@@ -371,9 +332,6 @@ pub mod search_home_show {
 
     type MessageResult = actix::prelude::MessageResult<endpoints::Message<Params>>;
 
-    pub struct ExecutorResponse {}
-    impl endpoints::ExecutorResponse for ExecutorResponse {}
-
     struct Params {}
     impl endpoints::Params for Params {
         fn build(_log: &Logger, _req: &HttpRequest<endpoints::StateImpl>) -> Result<Self> {
@@ -383,36 +341,22 @@ pub mod search_home_show {
 
     // TODO: `ResponseType` will change to `Message`
     impl actix::prelude::ResponseType for endpoints::Message<Params> {
-        type Item = ExecutorResponse;
+        type Item = ViewModel;
         type Error = Error;
     }
 
-    struct ViewModel {
-        common: endpoints::CommonViewModel,
+    enum ViewModel {
+        Ok,
     }
 
     impl endpoints::ViewModel for ViewModel {
-        type ExecutorResponse = ExecutorResponse;
-
-        fn build(
-            _log: &Logger,
-            req: &HttpRequest<endpoints::StateImpl>,
-            _res: Self::ExecutorResponse,
-        ) -> Self {
-            ViewModel {
-                common: endpoints::CommonViewModel {
-                    assets_version: req.state().assets_version.clone(),
-                    title:          "Search".to_owned(),
-                },
-            }
-        }
-
         fn render(
             &self,
             _log: &Logger,
-            _req: &HttpRequest<endpoints::StateImpl>,
+            req: &HttpRequest<endpoints::StateImpl>,
         ) -> Result<HttpResponse> {
-            let html = render_view(&self)?;
+            let common = endpoints::build_common(req, "Search");
+            let html = render_view(&common, &self)?;
             Ok(HttpResponse::build(StatusCode::OK)
                 .content_type("text/html; charset=utf-8")
                 .body(html)?)
@@ -427,13 +371,13 @@ pub mod search_home_show {
             _message: endpoints::Message<Params>,
             _: &mut Self::Context,
         ) -> Self::Result {
-            Ok(ExecutorResponse {})
+            Ok(ViewModel::Ok)
         }
     }
 
-    fn render_view(view_model: &ViewModel) -> Result<String> {
+    fn render_view(common: &endpoints::CommonViewModel, _view_model: &ViewModel) -> Result<String> {
         endpoints::render_layout(
-            &view_model.common,
+            &common,
             (html! {
                 h1: "Search";
                 form(action="/search", method="get") {
@@ -450,7 +394,6 @@ pub mod search_show {
     use errors::*;
     use http_requester::HTTPRequesterLive;
     use mediators::directory_podcast_searcher::DirectoryPodcastSearcher;
-    use model;
     use time_helpers;
     use web::endpoints;
 
@@ -468,15 +411,6 @@ pub mod search_show {
 
     type MessageResult = actix::prelude::MessageResult<endpoints::Message<Params>>;
 
-    enum ExecutorResponse {
-        NoQuery,
-        SearchResults {
-            directory_podcasts: Vec<model::DirectoryPodcast>,
-            query:              String,
-        },
-    }
-    impl endpoints::ExecutorResponse for ExecutorResponse {}
-
     struct Params {
         query: Option<String>,
     }
@@ -490,58 +424,40 @@ pub mod search_show {
 
     // TODO: `ResponseType` will change to `Message`
     impl actix::prelude::ResponseType for endpoints::Message<Params> {
-        type Item = ExecutorResponse;
+        type Item = ViewModel;
         type Error = Error;
     }
 
     enum ViewModel {
         NoQuery,
-        SearchResults {
-            common:             endpoints::CommonViewModel,
-            directory_podcasts: Vec<model::DirectoryPodcast>,
-            query:              String,
-        },
+        SearchResults(view_model::SearchResults),
+    }
+
+    mod view_model {
+        use model;
+
+        pub struct SearchResults {
+            pub directory_podcasts: Vec<model::DirectoryPodcast>,
+            pub query:              String,
+        }
     }
 
     impl endpoints::ViewModel for ViewModel {
-        type ExecutorResponse = ExecutorResponse;
-
-        fn build(
-            _log: &Logger,
-            req: &HttpRequest<endpoints::StateImpl>,
-            res: Self::ExecutorResponse,
-        ) -> Self {
-            match res {
-                ExecutorResponse::NoQuery => ViewModel::NoQuery,
-                ExecutorResponse::SearchResults {
-                    directory_podcasts,
-                    query,
-                } => ViewModel::SearchResults {
-                    common:             endpoints::CommonViewModel {
-                        assets_version: req.state().assets_version.clone(),
-                        title:          format!("Search: {}", query),
-                    },
-                    directory_podcasts: directory_podcasts,
-                    query:              query,
-                },
-            }
-        }
-
         fn render(
             &self,
             _log: &Logger,
-            _req: &HttpRequest<endpoints::StateImpl>,
+            req: &HttpRequest<endpoints::StateImpl>,
         ) -> Result<HttpResponse> {
             match self {
                 &ViewModel::NoQuery => Ok(HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
                     .header("Location", "/search-home")
                     .finish()?),
-                &ViewModel::SearchResults {
-                    ref common,
-                    ref directory_podcasts,
-                    ref query,
-                } => {
-                    let html = render_view(common, directory_podcasts, query.as_str())?;
+                &ViewModel::SearchResults(ref view_model) => {
+                    let common = endpoints::build_common(
+                        req,
+                        &format!("Search: {}", view_model.query.as_str()),
+                    );
+                    let html = render_view(&common, view_model)?;
                     Ok(HttpResponse::build(StatusCode::OK)
                         .content_type("text/html; charset=utf-8")
                         .body(html)?)
@@ -568,12 +484,12 @@ pub mod search_show {
 
     fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> MessageResult {
         if params.query.is_none() {
-            return Ok(ExecutorResponse::NoQuery);
+            return Ok(ViewModel::NoQuery);
         }
 
         let query = params.query.unwrap();
         if query.is_empty() {
-            return Ok(ExecutorResponse::NoQuery);
+            return Ok(ViewModel::NoQuery);
         }
 
         info!(log, "Executing query"; "id" => query.as_str());
@@ -590,25 +506,24 @@ pub mod search_show {
             http_requester: &mut http_requester,
         }.run(log)?;
 
-        Ok(ExecutorResponse::SearchResults {
+        Ok(ViewModel::SearchResults(view_model::SearchResults {
             directory_podcasts: res.directory_podcasts,
             query:              query,
-        })
+        }))
     }
 
     fn render_view(
         common: &endpoints::CommonViewModel,
-        directory_podcasts: &Vec<model::DirectoryPodcast>,
-        query: &str,
+        view_model: &view_model::SearchResults,
     ) -> Result<String> {
         endpoints::render_layout(
             &common,
             (html! {
                 p {
-                    : format_args!("Query: {}", query);
+                    : format_args!("Query: {}", view_model.query);
                 }
                 ul {
-                    @ for dir_podcast in directory_podcasts {
+                    @ for dir_podcast in &view_model.directory_podcasts {
                         li {
                             @ if let Some(podcast_id) = dir_podcast.podcast_id {
                                 a(href=format_args!("/podcasts/{}", podcast_id)) {
