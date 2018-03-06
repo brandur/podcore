@@ -73,6 +73,61 @@ macro_rules! handler {
     )
 }
 
+macro_rules! message_handler {
+    () => {
+        type MessageResult = ::actix::prelude::MessageResult<endpoints::Message<Params>>;
+
+        impl ::actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
+            type Result = MessageResult;
+
+            fn handle(
+                &mut self,
+                message: endpoints::Message<Params>,
+                _: &mut Self::Context,
+            ) -> Self::Result {
+                let conn = self.pool.get()?;
+                let log = message.log.clone();
+                time_helpers::log_timed(&log.new(o!("step" => "handle_message")), |log| {
+                    handle_inner(log, &*conn, &message.params)
+                })
+            }
+        }
+
+        // TODO: `ResponseType` will change to `Message`
+        impl ::actix::prelude::ResponseType for endpoints::Message<Params> {
+            type Item = ViewModel;
+            type Error = Error;
+        }
+    }
+}
+
+macro_rules! message_handler_noop {
+    ($noop_response:path) => {
+        type MessageResult = ::actix::prelude::MessageResult<endpoints::Message<Params>>;
+
+        impl ::actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
+            type Result = MessageResult;
+
+            fn handle(
+                &mut self,
+                message: endpoints::Message<Params>,
+                _: &mut Self::Context,
+            ) -> Self::Result {
+                let log = message.log.clone();
+                time_helpers::log_timed(&log.new(o!("step" => "handle_message")), |_log| {
+                    Ok($noop_response)
+                })
+            }
+        }
+
+        // TODO: `ResponseType` will change to `Message`
+        impl ::actix::prelude::ResponseType for endpoints::Message<Params> {
+            type Item = ViewModel;
+            type Error = Error;
+        }
+    }
+}
+
 //
 // Traits
 //
@@ -214,7 +269,6 @@ pub mod directory_podcast_show {
     use time_helpers;
     use web::endpoints;
 
-    use actix;
     use actix_web::{HttpRequest, HttpResponse, StatusCode};
     use diesel::prelude::*;
     use futures::future::Future;
@@ -224,6 +278,7 @@ pub mod directory_podcast_show {
     use tokio_core::reactor::Core;
 
     handler!();
+    message_handler!();
 
     //
     // Params
@@ -243,34 +298,6 @@ pub mod directory_podcast_show {
                     .chain_err(|| "Error parsing ID")?,
             })
         }
-    }
-
-    //
-    // Message handler
-    //
-
-    type MessageResult = actix::prelude::MessageResult<endpoints::Message<Params>>;
-
-    impl actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
-        type Result = MessageResult;
-
-        fn handle(
-            &mut self,
-            message: endpoints::Message<Params>,
-            _: &mut Self::Context,
-        ) -> Self::Result {
-            let conn = self.pool.get()?;
-            let log = message.log.clone();
-            time_helpers::log_timed(&log.new(o!("step" => "handle_message")), |log| {
-                handle_inner(log, &*conn, &message.params)
-            })
-        }
-    }
-
-    // TODO: `ResponseType` will change to `Message`
-    impl actix::prelude::ResponseType for endpoints::Message<Params> {
-        type Item = ViewModel;
-        type Error = Error;
     }
 
     //
@@ -348,7 +375,6 @@ pub mod podcast_show {
     use time_helpers;
     use web::endpoints;
 
-    use actix;
     use actix_web::{HttpRequest, HttpResponse, StatusCode};
     use diesel::prelude::*;
     use futures::future::Future;
@@ -356,6 +382,7 @@ pub mod podcast_show {
     use slog::Logger;
 
     handler!();
+    message_handler!();
 
     //
     // Params
@@ -375,34 +402,6 @@ pub mod podcast_show {
                     .chain_err(|| "Error parsing ID")?,
             })
         }
-    }
-
-    //
-    // Message handler
-    //
-
-    type MessageResult = actix::prelude::MessageResult<endpoints::Message<Params>>;
-
-    impl actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
-        type Result = MessageResult;
-
-        fn handle(
-            &mut self,
-            message: endpoints::Message<Params>,
-            _: &mut Self::Context,
-        ) -> Self::Result {
-            let conn = self.pool.get()?;
-            let log = message.log.clone();
-            time_helpers::log_timed(&log.new(o!("step" => "handle_message")), |log| {
-                handle_inner(log, &*conn, &message.params)
-            })
-        }
-    }
-
-    // TODO: `ResponseType` will change to `Message`
-    impl actix::prelude::ResponseType for endpoints::Message<Params> {
-        type Item = ViewModel;
-        type Error = Error;
     }
 
     //
@@ -492,15 +491,16 @@ pub mod podcast_show {
 
 pub mod search_home_show {
     use errors::*;
+    use time_helpers;
     use web::endpoints;
 
-    use actix;
     use actix_web::{HttpRequest, HttpResponse, StatusCode};
     use futures::future::Future;
     use horrorshow::prelude::*;
     use slog::Logger;
 
     handler!();
+    message_handler_noop!(ViewModel::Found);
 
     //
     // Params
@@ -511,30 +511,6 @@ pub mod search_home_show {
         fn build(_log: &Logger, _req: &HttpRequest<endpoints::StateImpl>) -> Result<Self> {
             Ok(Self {})
         }
-    }
-
-    //
-    // Message handler
-    //
-
-    type MessageResult = actix::prelude::MessageResult<endpoints::Message<Params>>;
-
-    impl actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
-        type Result = MessageResult;
-
-        fn handle(
-            &mut self,
-            _message: endpoints::Message<Params>,
-            _: &mut Self::Context,
-        ) -> Self::Result {
-            Ok(ViewModel::Found)
-        }
-    }
-
-    // TODO: `ResponseType` will change to `Message`
-    impl actix::prelude::ResponseType for endpoints::Message<Params> {
-        type Item = ViewModel;
-        type Error = Error;
     }
 
     //
@@ -585,7 +561,6 @@ pub mod search_show {
     use time_helpers;
     use web::endpoints;
 
-    use actix;
     use actix_web::{HttpRequest, HttpResponse, StatusCode};
     use diesel::pg::PgConnection;
     use futures::future::Future;
@@ -596,6 +571,7 @@ pub mod search_show {
     use tokio_core::reactor::Core;
 
     handler!();
+    message_handler!();
 
     //
     // Params
@@ -610,34 +586,6 @@ pub mod search_show {
                 query: req.query().get("q").map(|q| q.to_owned()),
             })
         }
-    }
-
-    //
-    // Message handler
-    //
-
-    type MessageResult = actix::prelude::MessageResult<endpoints::Message<Params>>;
-
-    impl actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
-        type Result = MessageResult;
-
-        fn handle(
-            &mut self,
-            message: endpoints::Message<Params>,
-            _: &mut Self::Context,
-        ) -> Self::Result {
-            let conn = self.pool.get()?;
-            let log = message.log.clone();
-            time_helpers::log_timed(&log.new(o!("step" => "handle_message")), |log| {
-                handle_inner(log, &*conn, message.params)
-            })
-        }
-    }
-
-    // TODO: `ResponseType` will change to `Message`
-    impl actix::prelude::ResponseType for endpoints::Message<Params> {
-        type Item = ViewModel;
-        type Error = Error;
     }
 
     //
@@ -686,12 +634,12 @@ pub mod search_show {
     // Private functions
     //
 
-    fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> MessageResult {
+    fn handle_inner(log: &Logger, conn: &PgConnection, params: &Params) -> MessageResult {
         if params.query.is_none() {
             return Ok(ViewModel::NoQuery);
         }
 
-        let query = params.query.unwrap();
+        let query = params.query.clone().unwrap();
         if query.is_empty() {
             return Ok(ViewModel::NoQuery);
         }
