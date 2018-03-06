@@ -1,13 +1,12 @@
 use errors::*;
 use http_requester::HttpRequesterLive;
 use web::common;
+use web::views;
 
 use actix;
 use actix_web;
 use actix_web::{HttpRequest, HttpResponse, StatusCode};
 use diesel::pg::PgConnection;
-use horrorshow::helper::doctype;
-use horrorshow::prelude::*;
 use hyper::Client;
 use hyper_tls::HttpsConnector;
 use r2d2::Pool;
@@ -236,40 +235,10 @@ pub fn handle_404() -> Result<HttpResponse> {
 }
 
 pub fn handle_500(view_model: &CommonViewModel, error: &str) -> Result<HttpResponse> {
-    let html = render_500(view_model, error)?;
+    let html = views::render_500(view_model, error)?;
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("text/html; charset=utf-8")
         .body(html)?)
-}
-
-pub fn render_500(view_model: &CommonViewModel, error: &str) -> Result<String> {
-    render_layout(
-        view_model,
-        (html! {
-            h1: "Error";
-            p: error;
-        }).into_string()?
-            .as_str(),
-    )
-}
-
-pub fn render_layout(view_model: &CommonViewModel, content: &str) -> Result<String> {
-    (html! {
-        : doctype::HTML;
-        html {
-            head {
-                title: view_model.title.as_str();
-
-                meta(content="text/html; charset=utf-8", http-equiv="Content-Type");
-
-                link(href=format_args!("/assets/{}/app.css", view_model.assets_version), media="screen", rel="stylesheet", type="text/css");
-            }
-            body {
-                : Raw(content)
-            }
-        }
-    }).into_string()
-        .map_err(Error::from)
 }
 
 //
@@ -380,11 +349,11 @@ pub mod podcast_show {
     use schema;
     use time_helpers;
     use web::endpoints;
+    use web::views;
 
     use actix_web::{HttpRequest, HttpResponse, StatusCode};
     use diesel::prelude::*;
     use futures::future::Future;
-    use horrorshow::Template;
     use slog::Logger;
 
     handler!();
@@ -419,7 +388,7 @@ pub mod podcast_show {
         NotFound,
     }
 
-    mod view_model {
+    pub mod view_model {
         use model;
 
         pub struct Found {
@@ -440,7 +409,7 @@ pub mod podcast_show {
                         req,
                         &format!("Podcast: {}", view_model.podcast.title.as_str()),
                     );
-                    let html = render_view(&common, view_model)?;
+                    let html = views::podcast_show::render(&common, view_model)?;
                     Ok(HttpResponse::build(StatusCode::OK)
                         .content_type("text/html; charset=utf-8")
                         .body(html)?)
@@ -472,37 +441,16 @@ pub mod podcast_show {
             None => Ok(ViewModel::NotFound),
         }
     }
-
-    fn render_view(
-        common: &endpoints::CommonViewModel,
-        view_model: &view_model::Found,
-    ) -> Result<String> {
-        endpoints::render_layout(
-            common,
-            (html! {
-                h1: view_model.podcast.title.as_str();
-                p {
-                    : "Hello! This is <html />"
-                }
-                ul {
-                    @ for episode in &view_model.episodes {
-                        li: episode.title.as_str();
-                    }
-                }
-            }).into_string()?
-                .as_str(),
-        )
-    }
 }
 
 pub mod search_home_show {
     use errors::*;
     use time_helpers;
     use web::endpoints;
+    use web::views;
 
     use actix_web::{HttpRequest, HttpResponse, StatusCode};
     use futures::future::Future;
-    use horrorshow::prelude::*;
     use slog::Logger;
 
     handler!();
@@ -523,7 +471,7 @@ pub mod search_home_show {
     // ViewModel
     //
 
-    enum ViewModel {
+    pub enum ViewModel {
         Found,
     }
 
@@ -534,29 +482,11 @@ pub mod search_home_show {
             req: &HttpRequest<endpoints::StateImpl>,
         ) -> Result<HttpResponse> {
             let common = endpoints::build_common(req, "Search");
-            let html = render_view(&common, self)?;
+            let html = views::search_home_show::render(&common, self)?;
             Ok(HttpResponse::build(StatusCode::OK)
                 .content_type("text/html; charset=utf-8")
                 .body(html)?)
         }
-    }
-
-    //
-    // Private functions
-    //
-
-    fn render_view(common: &endpoints::CommonViewModel, _view_model: &ViewModel) -> Result<String> {
-        endpoints::render_layout(
-            common,
-            (html! {
-                h1: "Search";
-                form(action="/search", method="get") {
-                    input(type="text", name="q");
-                    input(type="submit", value="Submit");
-                }
-            }).into_string()?
-                .as_str(),
-        )
     }
 }
 
@@ -565,11 +495,11 @@ pub mod search_show {
     use mediators::directory_podcast_searcher::DirectoryPodcastSearcher;
     use time_helpers;
     use web::endpoints;
+    use web::views;
 
     use actix_web::{HttpRequest, HttpResponse, StatusCode};
     use diesel::pg::PgConnection;
     use futures::future::Future;
-    use horrorshow::prelude::*;
     use slog::Logger;
 
     handler!();
@@ -599,7 +529,7 @@ pub mod search_show {
         SearchResults(view_model::SearchResults),
     }
 
-    mod view_model {
+    pub mod view_model {
         use model;
 
         pub struct SearchResults {
@@ -623,7 +553,7 @@ pub mod search_show {
                         req,
                         &format!("Search: {}", view_model.query.as_str()),
                     );
-                    let html = render_view(&common, view_model)?;
+                    let html = views::search_show::render(&common, view_model)?;
                     Ok(HttpResponse::build(StatusCode::OK)
                         .content_type("text/html; charset=utf-8")
                         .body(html)?)
@@ -658,35 +588,5 @@ pub mod search_show {
             directory_podcasts: res.directory_podcasts,
             query,
         }))
-    }
-
-    fn render_view(
-        common: &endpoints::CommonViewModel,
-        view_model: &view_model::SearchResults,
-    ) -> Result<String> {
-        endpoints::render_layout(
-            common,
-            (html! {
-                p {
-                    : format_args!("Query: {}", view_model.query);
-                }
-                ul {
-                    @ for dir_podcast in &view_model.directory_podcasts {
-                        li {
-                            @ if let Some(podcast_id) = dir_podcast.podcast_id {
-                                a(href=format_args!("/podcasts/{}", podcast_id)) {
-                                    : dir_podcast.title.as_str()
-                                }
-                            } else {
-                                a(href=format_args!("/directory-podcasts/{}", dir_podcast.id)) {
-                                    : dir_podcast.title.as_str()
-                                }
-                            }
-                        }
-                    }
-                }
-            }).into_string()?
-                .as_str(),
-        )
     }
 }

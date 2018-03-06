@@ -1,6 +1,7 @@
 mod common;
 mod endpoints;
 mod middleware;
+mod views;
 
 use errors::*;
 
