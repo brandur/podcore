@@ -6,6 +6,7 @@ use errors::*;
 
 use actix;
 use actix_web;
+use actix_web::Method;
 use diesel::pg::PgConnection;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
@@ -50,28 +51,24 @@ impl WebServer {
                 .middleware(middleware::request_id::Middleware)
                 .middleware(middleware::request_response_logger::Middleware)
                 .resource("/", |r| {
-                    r.method(actix_web::Method::GET)
-                        .f(|_req| actix_web::httpcodes::HTTPOk)
+                    r.method(Method::GET).f(|_req| actix_web::httpcodes::HTTPOk)
                 })
                 .resource("/directory-podcasts/{id}", |r| {
-                    r.method(actix_web::Method::GET)
+                    r.method(Method::GET)
                         .a(endpoints::directory_podcast_show::handler)
                 })
                 .resource("/health", |r| {
-                    r.method(actix_web::Method::GET)
-                        .f(|_req| actix_web::httpcodes::HTTPOk)
+                    r.method(Method::GET).f(|_req| actix_web::httpcodes::HTTPOk)
                 })
                 .resource("/search", |r| {
-                    r.method(actix_web::Method::GET)
-                        .a(endpoints::search_show::handler)
+                    r.method(Method::GET).a(endpoints::search_show::handler)
                 })
                 .resource("/search/new", |r| {
-                    r.method(actix_web::Method::GET)
+                    r.method(Method::GET)
                         .a(endpoints::search_home_show::handler)
                 })
                 .resource("/podcasts/{id}", |r| {
-                    r.method(actix_web::Method::GET)
-                        .a(endpoints::podcast_show::handler)
+                    r.method(Method::GET).a(endpoints::podcast_show::handler)
                 })
                 .handler(
                     format!("/assets/{}/", assets_version.as_str()).as_str(),
