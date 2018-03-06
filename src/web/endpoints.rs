@@ -236,6 +236,22 @@ pub mod directory_podcast_show {
         }
     }
 
+    impl actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
+        type Result = MessageResult;
+
+        fn handle(
+            &mut self,
+            message: endpoints::Message<Params>,
+            _: &mut Self::Context,
+        ) -> Self::Result {
+            let conn = self.pool.get()?;
+            let log = message.log.clone();
+            time_helpers::log_timed(&log.new(o!("step" => "handle_message")), |log| {
+                handle_inner(&log, &*conn, &message.params)
+            })
+        }
+    }
+
     // TODO: `ResponseType` will change to `Message`
     impl actix::prelude::ResponseType for endpoints::Message<Params> {
         type Item = ViewModel;
@@ -266,22 +282,6 @@ pub mod directory_podcast_show {
                 }
                 &ViewModel::NotFound => Ok(endpoints::handle_404()?),
             }
-        }
-    }
-
-    impl actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
-        type Result = MessageResult;
-
-        fn handle(
-            &mut self,
-            message: endpoints::Message<Params>,
-            _: &mut Self::Context,
-        ) -> Self::Result {
-            let conn = self.pool.get()?;
-            let log = message.log.clone();
-            time_helpers::log_timed(&log.new(o!("step" => "handle_message")), |log| {
-                handle_inner(&log, &*conn, &message.params)
-            })
         }
     }
 
@@ -339,6 +339,18 @@ pub mod search_home_show {
         }
     }
 
+    impl actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
+        type Result = MessageResult;
+
+        fn handle(
+            &mut self,
+            _message: endpoints::Message<Params>,
+            _: &mut Self::Context,
+        ) -> Self::Result {
+            Ok(ViewModel::Found)
+        }
+    }
+
     // TODO: `ResponseType` will change to `Message`
     impl actix::prelude::ResponseType for endpoints::Message<Params> {
         type Item = ViewModel;
@@ -360,18 +372,6 @@ pub mod search_home_show {
             Ok(HttpResponse::build(StatusCode::OK)
                 .content_type("text/html; charset=utf-8")
                 .body(html)?)
-        }
-    }
-
-    impl actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
-        type Result = MessageResult;
-
-        fn handle(
-            &mut self,
-            _message: endpoints::Message<Params>,
-            _: &mut Self::Context,
-        ) -> Self::Result {
-            Ok(ViewModel::Found)
         }
     }
 
@@ -422,6 +422,22 @@ pub mod search_show {
         }
     }
 
+    impl actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
+        type Result = MessageResult;
+
+        fn handle(
+            &mut self,
+            message: endpoints::Message<Params>,
+            _: &mut Self::Context,
+        ) -> Self::Result {
+            let conn = self.pool.get()?;
+            let log = message.log.clone();
+            time_helpers::log_timed(&log.new(o!("step" => "handle_message")), |log| {
+                handle_inner(&log, &*conn, message.params)
+            })
+        }
+    }
+
     // TODO: `ResponseType` will change to `Message`
     impl actix::prelude::ResponseType for endpoints::Message<Params> {
         type Item = ViewModel;
@@ -463,22 +479,6 @@ pub mod search_show {
                         .body(html)?)
                 }
             }
-        }
-    }
-
-    impl actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
-        type Result = MessageResult;
-
-        fn handle(
-            &mut self,
-            message: endpoints::Message<Params>,
-            _: &mut Self::Context,
-        ) -> Self::Result {
-            let conn = self.pool.get()?;
-            let log = message.log.clone();
-            time_helpers::log_timed(&log.new(o!("step" => "handle_message")), |log| {
-                handle_inner(&log, &*conn, message.params)
-            })
         }
     }
 
