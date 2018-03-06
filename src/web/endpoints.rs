@@ -2,6 +2,7 @@ use errors::*;
 use web::common;
 
 use actix;
+use actix_web;
 use actix_web::{HttpRequest, HttpResponse, StatusCode};
 use diesel::pg::PgConnection;
 use horrorshow::helper::doctype;
@@ -141,6 +142,12 @@ impl actix::Actor for SyncExecutor {
 //
 // Functions
 //
+
+impl From<Error> for actix_web::error::Error {
+    fn from(error: Error) -> Self {
+        actix_web::error::ErrorInternalServerError(error.to_string()).into()
+    }
+}
 
 /// Builds a `CommonViewModel` from request information and takes in any other
 /// required parameters to do so.
@@ -287,9 +294,9 @@ pub mod directory_podcast_show {
                     &endpoints::build_common(req, "Error"),
                     "Error ingesting podcast",
                 )?),
-                ViewModel::Found(ref podcast) => {
+                ViewModel::Found(ref view_model) => {
                     Ok(HttpResponse::build(StatusCode::PERMANENT_REDIRECT)
-                        .header("Location", format!("/podcasts/{}", podcast.id).as_str())
+                        .header("Location", format!("/podcasts/{}", view_model.id).as_str())
                         .finish()?)
                 }
                 ViewModel::NotFound => Ok(endpoints::handle_404()?),
@@ -331,6 +338,155 @@ pub mod directory_podcast_show {
             }
             None => Ok(ViewModel::NotFound),
         }
+    }
+}
+
+pub mod podcast_show {
+    use errors::*;
+    use model;
+    use schema;
+    use time_helpers;
+    use web::endpoints;
+
+    use actix;
+    use actix_web::{HttpRequest, HttpResponse, StatusCode};
+    use diesel::prelude::*;
+    use futures::future::Future;
+    use horrorshow::Template;
+    use slog::Logger;
+
+    handler!();
+
+    //
+    // Params
+    //
+
+    struct Params {
+        id: i64,
+    }
+
+    impl endpoints::Params for Params {
+        fn build(_log: &Logger, req: &HttpRequest<endpoints::StateImpl>) -> Result<Self> {
+            Ok(Self {
+                id: req.match_info()
+                    .get("id")
+                    .unwrap()
+                    .parse::<i64>()
+                    .chain_err(|| "Error parsing ID")?,
+            })
+        }
+    }
+
+    //
+    // Message handler
+    //
+
+    type MessageResult = actix::prelude::MessageResult<endpoints::Message<Params>>;
+
+    impl actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
+        type Result = MessageResult;
+
+        fn handle(
+            &mut self,
+            message: endpoints::Message<Params>,
+            _: &mut Self::Context,
+        ) -> Self::Result {
+            let conn = self.pool.get()?;
+            let log = message.log.clone();
+            time_helpers::log_timed(&log.new(o!("step" => "handle_message")), |log| {
+                handle_inner(log, &*conn, &message.params)
+            })
+        }
+    }
+
+    // TODO: `ResponseType` will change to `Message`
+    impl actix::prelude::ResponseType for endpoints::Message<Params> {
+        type Item = ViewModel;
+        type Error = Error;
+    }
+
+    //
+    // ViewModel
+    //
+
+    pub enum ViewModel {
+        Found(view_model::Found),
+        NotFound,
+    }
+
+    mod view_model {
+        use model;
+
+        pub struct Found {
+            pub episodes: Vec<model::Episode>,
+            pub podcast:  model::Podcast,
+        }
+    }
+
+    impl endpoints::ViewModel for ViewModel {
+        fn render(
+            &self,
+            _log: &Logger,
+            req: &HttpRequest<endpoints::StateImpl>,
+        ) -> Result<HttpResponse> {
+            match *self {
+                ViewModel::Found(ref view_model) => {
+                    let common = endpoints::build_common(
+                        req,
+                        &format!("Podcast: {}", view_model.podcast.title.as_str()),
+                    );
+                    let html = render_view(&common, view_model)?;
+                    Ok(HttpResponse::build(StatusCode::OK)
+                        .content_type("text/html; charset=utf-8")
+                        .body(html)?)
+                }
+                ViewModel::NotFound => Ok(endpoints::handle_404()?),
+            }
+        }
+    }
+
+    //
+    // Private functions
+    //
+
+    fn handle_inner(log: &Logger, conn: &PgConnection, params: &Params) -> MessageResult {
+        info!(log, "Looking up podcast"; "id" => params.id);
+        let podcast: Option<model::Podcast> = schema::podcast::table
+            .filter(schema::podcast::id.eq(params.id))
+            .first(&*conn)
+            .optional()?;
+        match podcast {
+            Some(podcast) => {
+                let episodes: Vec<model::Episode> = schema::episode::table
+                    .filter(schema::episode::podcast_id.eq(podcast.id))
+                    .order(schema::episode::published_at.desc())
+                    .limit(50)
+                    .load(&*conn)?;
+                Ok(ViewModel::Found(view_model::Found { episodes, podcast }))
+            }
+            None => Ok(ViewModel::NotFound),
+        }
+    }
+
+    fn render_view(
+        common: &endpoints::CommonViewModel,
+        view_model: &view_model::Found,
+    ) -> Result<String> {
+        endpoints::render_layout(
+            common,
+            (html! {
+                h1: view_model.podcast.title.as_str();
+                p {
+                    : "Hello! This is <html />"
+                }
+                ul {
+                    @ for episode in &view_model.episodes {
+                        li: episode.title.as_str();
+                    }
+                }
+            }).into_string()?
+                .as_str(),
+        )
     }
 }
 
