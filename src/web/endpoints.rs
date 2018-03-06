@@ -244,8 +244,8 @@ pub mod directory_podcast_show {
 
     pub enum ViewModel {
         Exception(model::DirectoryPodcastException),
+        Found(model::Podcast),
         NotFound,
-        Podcast(model::Podcast),
     }
 
     impl endpoints::ViewModel for ViewModel {
@@ -259,12 +259,12 @@ pub mod directory_podcast_show {
                     &endpoints::build_common(req, "Error"),
                     "Error ingesting podcast",
                 )?),
-                &ViewModel::NotFound => Ok(endpoints::handle_404()?),
-                &ViewModel::Podcast(ref podcast) => {
+                &ViewModel::Found(ref podcast) => {
                     Ok(HttpResponse::build(StatusCode::PERMANENT_REDIRECT)
                         .header("Location", format!("/podcasts/{}", podcast.id).as_str())
                         .finish()?)
                 }
+                &ViewModel::NotFound => Ok(endpoints::handle_404()?),
             }
         }
     }
@@ -311,7 +311,7 @@ pub mod directory_podcast_show {
                     return Ok(ViewModel::Exception(dir_podcast_ex));
                 }
 
-                Ok(ViewModel::Podcast(res.podcast.unwrap()))
+                Ok(ViewModel::Found(res.podcast.unwrap()))
             }
             None => Ok(ViewModel::NotFound),
         }
@@ -346,7 +346,7 @@ pub mod search_home_show {
     }
 
     enum ViewModel {
-        Ok,
+        Found,
     }
 
     impl endpoints::ViewModel for ViewModel {
@@ -371,7 +371,7 @@ pub mod search_home_show {
             _message: endpoints::Message<Params>,
             _: &mut Self::Context,
         ) -> Self::Result {
-            Ok(ViewModel::Ok)
+            Ok(ViewModel::Found)
         }
     }
 
