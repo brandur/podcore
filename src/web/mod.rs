@@ -44,7 +44,6 @@ impl WebServer {
             actix_web::Application::with_state(endpoints::StateImpl {
                 assets_version: assets_version.clone(),
                 log:            log.clone(),
-                pool:           pool.clone(),
                 sync_addr:      sync_addr.clone(),
             }).middleware(middleware::log_initializer::Middleware)
                 .middleware(middleware::request_id::Middleware)

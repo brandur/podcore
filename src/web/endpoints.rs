@@ -1,4 +1,5 @@
 use errors::*;
+use http_requester::HTTPRequesterLive;
 use web::common;
 
 use actix;
@@ -7,9 +8,12 @@ use actix_web::{HttpRequest, HttpResponse, StatusCode};
 use diesel::pg::PgConnection;
 use horrorshow::helper::doctype;
 use horrorshow::prelude::*;
+use hyper::Client;
+use hyper_tls::HttpsConnector;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use slog::Logger;
+use tokio_core::reactor::Core;
 
 //
 // Macros
@@ -73,6 +77,9 @@ macro_rules! handler {
     )
 }
 
+/// Macro that easily creates the scaffolding necessary for a `SyncExecutor` message handler from
+/// within an endpoint. It puts the necessary type definitions in place and creates a wrapper
+/// function with access to a connection and log.
 macro_rules! message_handler {
     () => {
         type MessageResult = ::actix::prelude::MessageResult<endpoints::Message<Params>>;
@@ -101,6 +108,8 @@ macro_rules! message_handler {
     }
 }
 
+/// Identical to `message_handler!` except useful in cases where the `SyncExecutor` doesn't need to
+/// do any work. Skips getting a connection from the pool to minimize its contention.
 macro_rules! message_handler_noop {
     ($noop_response:path) => {
         type MessageResult = ::actix::prelude::MessageResult<endpoints::Message<Params>>;
@@ -176,7 +185,6 @@ impl<P: Params> Message<P> {
 pub struct StateImpl {
     pub assets_version: String,
     pub log:            Logger,
-    pub pool:           Pool<ConnectionManager<PgConnection>>,
     pub sync_addr:      actix::prelude::SyncAddress<SyncExecutor>,
 }
 
@@ -211,6 +219,14 @@ fn build_common(req: &HttpRequest<StateImpl>, title: &str) -> CommonViewModel {
         assets_version: req.state().assets_version.clone(),
         title:          title.to_owned(),
     }
+}
+
+fn build_requester() -> Result<HTTPRequesterLive> {
+    let core = Core::new().unwrap();
+    let client = Client::configure()
+        .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
+        .build(&core.handle());
+    Ok(HTTPRequesterLive { client, core })
 }
 
 pub fn handle_404() -> Result<HttpResponse> {
@@ -262,7 +278,6 @@ pub fn render_layout(view_model: &CommonViewModel, content: &str) -> Result<Stri
 
 pub mod directory_podcast_show {
     use errors::*;
-    use http_requester::HTTPRequesterLive;
     use mediators::directory_podcast_updater::DirectoryPodcastUpdater;
     use model;
     use schema;
@@ -272,10 +287,7 @@ pub mod directory_podcast_show {
     use actix_web::{HttpRequest, HttpResponse, StatusCode};
     use diesel::prelude::*;
     use futures::future::Future;
-    use hyper::Client;
-    use hyper_tls::HttpsConnector;
     use slog::Logger;
-    use tokio_core::reactor::Core;
 
     handler!();
     message_handler!();
@@ -338,12 +350,6 @@ pub mod directory_podcast_show {
     fn handle_inner(log: &Logger, conn: &PgConnection, params: &Params) -> MessageResult {
         info!(log, "Expanding directory podcast"; "id" => params.id);
 
-        let core = Core::new().unwrap();
-        let client = Client::configure()
-            .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
-            .build(&core.handle());
-        let mut http_requester = HTTPRequesterLive { client, core };
-
         let dir_podcast: Option<model::DirectoryPodcast> = schema::directory_podcast::table
             .filter(schema::directory_podcast::id.eq(params.id))
             .first(conn)
@@ -353,7 +359,7 @@ pub mod directory_podcast_show {
                 let mut mediator = DirectoryPodcastUpdater {
                     conn,
                     dir_podcast: &mut dir_podcast,
-                    http_requester: &mut http_requester,
+                    http_requester: &mut endpoints::build_requester()?,
                 };
                 let res = mediator.run(log)?;
 
@@ -556,7 +562,6 @@ pub mod search_home_show {
 
 pub mod search_show {
     use errors::*;
-    use http_requester::HTTPRequesterLive;
     use mediators::directory_podcast_searcher::DirectoryPodcastSearcher;
     use time_helpers;
     use web::endpoints;
@@ -565,10 +570,7 @@ pub mod search_show {
     use diesel::pg::PgConnection;
     use futures::future::Future;
     use horrorshow::prelude::*;
-    use hyper::Client;
-    use hyper_tls::HttpsConnector;
     use slog::Logger;
-    use tokio_core::reactor::Core;
 
     handler!();
     message_handler!();
@@ -646,16 +648,10 @@ pub mod search_show {
 
         info!(log, "Executing query"; "id" => query.as_str());
 
-        let core = Core::new().unwrap();
-        let client = Client::configure()
-            .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
-            .build(&core.handle());
-        let mut http_requester = HTTPRequesterLive { client, core };
-
         let res = DirectoryPodcastSearcher {
             conn:           &*conn,
             query:          query.to_owned(),
-            http_requester: &mut http_requester,
+            http_requester: &mut endpoints::build_requester()?,
         }.run(log)?;
 
         Ok(ViewModel::SearchResults(view_model::SearchResults {
