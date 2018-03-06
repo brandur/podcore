@@ -1,13 +1,10 @@
-use time_helpers;
-use web::common;
-
-use actix_web;
-use actix_web::{HttpRequest, HttpResponse};
-use actix_web::middleware::{Response, Started};
-use slog::Logger;
-
 pub mod log_initializer {
-    use web::middleware::*;
+    use web::common;
+
+    use actix_web;
+    use actix_web::{HttpRequest, HttpResponse};
+    use actix_web::middleware::{Response, Started};
+    use slog::Logger;
 
     pub struct Middleware;
 
@@ -37,7 +34,12 @@ pub mod log_initializer {
 }
 
 pub mod request_id {
-    use web::middleware::*;
+    use web::common;
+    use web::middleware::log_initializer;
+
+    use actix_web;
+    use actix_web::{HttpRequest, HttpResponse};
+    use actix_web::middleware::{Response, Started};
 
     use uuid::Uuid;
 
@@ -71,7 +73,13 @@ pub mod request_id {
 }
 
 pub mod request_response_logger {
-    use web::middleware::*;
+    use time_helpers;
+    use web::common;
+    use web::middleware::log_initializer;
+
+    use actix_web;
+    use actix_web::{HttpRequest, HttpResponse};
+    use actix_web::middleware::{Response, Started};
 
     use time;
 
