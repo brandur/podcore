@@ -166,7 +166,7 @@ pub fn handle_500(view_model: &CommonViewModel, error: &str) -> Result<HttpRespo
 
 pub fn render_500(view_model: &CommonViewModel, error: &str) -> Result<String> {
     render_layout(
-        &view_model,
+        view_model,
         (html! {
             h1: "Error";
             p: error;
@@ -255,7 +255,7 @@ pub mod directory_podcast_show {
             let conn = self.pool.get()?;
             let log = message.log.clone();
             time_helpers::log_timed(&log.new(o!("step" => "handle_message")), |log| {
-                handle_inner(&log, &*conn, &message.params)
+                handle_inner(log, &*conn, &message.params)
             })
         }
     }
@@ -282,17 +282,17 @@ pub mod directory_podcast_show {
             _log: &Logger,
             req: &HttpRequest<endpoints::StateImpl>,
         ) -> Result<HttpResponse> {
-            match self {
-                &ViewModel::Exception(ref _exception) => Ok(endpoints::handle_500(
+            match *self {
+                ViewModel::Exception(ref _exception) => Ok(endpoints::handle_500(
                     &endpoints::build_common(req, "Error"),
                     "Error ingesting podcast",
                 )?),
-                &ViewModel::Found(ref podcast) => {
+                ViewModel::Found(ref podcast) => {
                     Ok(HttpResponse::build(StatusCode::PERMANENT_REDIRECT)
                         .header("Location", format!("/podcasts/{}", podcast.id).as_str())
                         .finish()?)
                 }
-                &ViewModel::NotFound => Ok(endpoints::handle_404()?),
+                ViewModel::NotFound => Ok(endpoints::handle_404()?),
             }
         }
     }
@@ -317,8 +317,8 @@ pub mod directory_podcast_show {
         match dir_podcast {
             Some(mut dir_podcast) => {
                 let mut mediator = DirectoryPodcastUpdater {
-                    conn:           conn,
-                    dir_podcast:    &mut dir_podcast,
+                    conn,
+                    dir_podcast: &mut dir_podcast,
                     http_requester: &mut http_requester,
                 };
                 let res = mediator.run(log)?;
@@ -396,7 +396,7 @@ pub mod search_home_show {
             req: &HttpRequest<endpoints::StateImpl>,
         ) -> Result<HttpResponse> {
             let common = endpoints::build_common(req, "Search");
-            let html = render_view(&common, &self)?;
+            let html = render_view(&common, self)?;
             Ok(HttpResponse::build(StatusCode::OK)
                 .content_type("text/html; charset=utf-8")
                 .body(html)?)
@@ -409,7 +409,7 @@ pub mod search_home_show {
 
     fn render_view(common: &endpoints::CommonViewModel, _view_model: &ViewModel) -> Result<String> {
         endpoints::render_layout(
-            &common,
+            common,
             (html! {
                 h1: "Search";
                 form(action="/search", method="get") {
@@ -473,7 +473,7 @@ pub mod search_show {
             let conn = self.pool.get()?;
             let log = message.log.clone();
             time_helpers::log_timed(&log.new(o!("step" => "handle_message")), |log| {
-                handle_inner(&log, &*conn, message.params)
+                handle_inner(log, &*conn, message.params)
             })
         }
     }
@@ -508,11 +508,11 @@ pub mod search_show {
             _log: &Logger,
             req: &HttpRequest<endpoints::StateImpl>,
         ) -> Result<HttpResponse> {
-            match self {
-                &ViewModel::NoQuery => Ok(HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
+            match *self {
+                ViewModel::NoQuery => Ok(HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
                     .header("Location", "/search-home")
                     .finish()?),
-                &ViewModel::SearchResults(ref view_model) => {
+                ViewModel::SearchResults(ref view_model) => {
                     let common = endpoints::build_common(
                         req,
                         &format!("Search: {}", view_model.query.as_str()),
@@ -556,7 +556,7 @@ pub mod search_show {
 
         Ok(ViewModel::SearchResults(view_model::SearchResults {
             directory_podcasts: res.directory_podcasts,
-            query:              query,
+            query,
         }))
     }
 
@@ -565,7 +565,7 @@ pub mod search_show {
         view_model: &view_model::SearchResults,
     ) -> Result<String> {
         endpoints::render_layout(
-            &common,
+            common,
             (html! {
                 p {
                     : format_args!("Query: {}", view_model.query);
