@@ -28,7 +28,7 @@ use std::io::prelude::*;
 use std::str;
 use std::str::FromStr;
 
-pub struct PodcastUpdater<'a> {
+pub struct Mediator<'a> {
     pub conn: &'a PgConnection,
 
     /// The mediator may skip some parts of processing if it detects that this exact feed has
@@ -40,7 +40,7 @@ pub struct PodcastUpdater<'a> {
     pub http_requester: &'a mut HttpRequester,
 }
 
-impl<'a> PodcastUpdater<'a> {
+impl<'a> Mediator<'a> {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
         time_helpers::log_timed(&log.new(o!("step" => file!())), |log| {
             match self.conn.transaction::<_, Error, _>(|| self.run_inner(log)) {
@@ -1596,9 +1596,9 @@ mod tests {
             }
         }
 
-        fn mediator(&mut self) -> (PodcastUpdater, Logger) {
+        fn mediator(&mut self) -> (Mediator, Logger) {
             (
-                PodcastUpdater {
+                Mediator {
                     conn:             &*self.conn,
                     disable_shortcut: false,
                     feed_url:         self.feed_url.to_owned(),
@@ -1633,9 +1633,9 @@ mod tests {
             }
         }
 
-        fn mediator(&mut self) -> (PodcastUpdater, Logger) {
+        fn mediator(&mut self) -> (Mediator, Logger) {
             (
-                PodcastUpdater {
+                Mediator {
                     conn:             self.conn,
                     disable_shortcut: false,
                     feed_url:         self.feed_url.to_owned(),

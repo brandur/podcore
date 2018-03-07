@@ -23,12 +23,12 @@ use podcore::error_helpers;
 use podcore::errors::*;
 use podcore::graphql;
 use podcore::http_requester::{HttpRequesterFactoryLive, HttpRequesterLive};
-use podcore::mediators::cleaner::Cleaner;
-use podcore::mediators::directory_podcast_searcher::DirectoryPodcastSearcher;
-use podcore::mediators::podcast_crawler::PodcastCrawler;
-use podcore::mediators::podcast_feed_location_upgrader::PodcastFeedLocationUpgrader;
-use podcore::mediators::podcast_reingester::PodcastReingester;
-use podcore::mediators::podcast_updater::PodcastUpdater;
+use podcore::mediators::cleaner;
+use podcore::mediators::directory_podcast_searcher;
+use podcore::mediators::podcast_crawler;
+use podcore::mediators::podcast_feed_location_upgrader;
+use podcore::mediators::podcast_reingester;
+use podcore::mediators::podcast_updater;
 use podcore::web::WebServer;
 
 use clap::{App, ArgMatches, SubCommand};
@@ -189,7 +189,7 @@ fn subcommand_add(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) 
     let mut http_requester = HttpRequesterLive { client, core };
 
     for url in matches.values_of("URL").unwrap().collect::<Vec<_>>() {
-        PodcastUpdater {
+        podcast_updater::Mediator {
             conn:             &*connection(log)?,
             disable_shortcut: force,
             feed_url:         url.to_owned().to_owned(),
@@ -205,7 +205,7 @@ fn subcommand_clean(log: &Logger, matches: &ArgMatches, options: &GlobalOptions)
     let run_once = matches.is_present("run-once");
 
     loop {
-        let res = Cleaner {
+        let res = cleaner::Mediator {
             pool: pool(log, options.num_connections)?.clone(),
         }.run(log)?;
 
@@ -233,7 +233,7 @@ fn subcommand_crawl(log: &Logger, matches: &ArgMatches, options: &GlobalOptions)
     let run_once = matches.is_present("run-once");
 
     loop {
-        let res = PodcastCrawler {
+        let res = podcast_crawler::Mediator {
             num_workers:            options.num_connections - 1,
             pool:                   pool(log, options.num_connections)?.clone(),
             http_requester_factory: Box::new(HttpRequesterFactoryLive {}),
@@ -282,7 +282,7 @@ fn subcommand_migrate(log: &Logger, matches: &ArgMatches, options: &GlobalOption
 fn subcommand_reingest(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let _matches = matches.subcommand_matches("reingest").unwrap();
 
-    PodcastReingester {
+    podcast_reingester::Mediator {
         num_workers: options.num_connections - 1,
         pool:        pool(log, options.num_connections)?.clone(),
     }.run(log)?;
@@ -299,7 +299,7 @@ fn subcommand_search(log: &Logger, matches: &ArgMatches, _options: &GlobalOption
     let mut http_requester = HttpRequesterLive { client, core };
 
     let query = matches.value_of("QUERY").unwrap();
-    DirectoryPodcastSearcher {
+    directory_podcast_searcher::Mediator {
         conn:           &*connection(log)?,
         query:          query.to_owned(),
         http_requester: &mut http_requester,
@@ -330,7 +330,7 @@ fn subcommand_upgrade_https(
 ) -> Result<()> {
     let _matches = matches.subcommand_matches("upgrade-https").unwrap();
 
-    let res = PodcastFeedLocationUpgrader {
+    let res = podcast_feed_location_upgrader::Mediator {
         conn: &*connection(log)?,
     }.run(log)?;
 

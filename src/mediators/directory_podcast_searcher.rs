@@ -19,13 +19,13 @@ use std::str::FromStr;
 use time::Duration;
 use url::form_urlencoded;
 
-pub struct DirectoryPodcastSearcher<'a> {
+pub struct Mediator<'a> {
     pub conn:           &'a PgConnection,
     pub query:          String,
     pub http_requester: &'a mut HttpRequester,
 }
 
-impl<'a> DirectoryPodcastSearcher<'a> {
+impl<'a> Mediator<'a> {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
         time_helpers::log_timed(&log.new(o!("step" => file!())), |log| {
             self.conn
@@ -499,9 +499,9 @@ mod tests {
             }
         }
 
-        fn mediator(&mut self) -> (DirectoryPodcastSearcher, Logger) {
+        fn mediator(&mut self) -> (Mediator, Logger) {
             (
-                DirectoryPodcastSearcher {
+                Mediator {
                     conn:           &*self.conn,
                     query:          DIRECTORY_SEARCH_QUERY.to_owned(),
                     http_requester: &mut self.http_requester,

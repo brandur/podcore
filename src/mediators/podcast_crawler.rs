@@ -2,7 +2,7 @@ use error_helpers;
 use errors::*;
 use http_requester::HttpRequesterFactory;
 use mediators::common;
-use mediators::podcast_updater::PodcastUpdater;
+use mediators::podcast_updater;
 use time_helpers;
 
 use chan;
@@ -16,7 +16,7 @@ use r2d2_diesel::ConnectionManager;
 use slog::Logger;
 use std::thread;
 
-pub struct PodcastCrawler {
+pub struct Mediator {
     // Number of workers to use. Should generally be the size of the thread pool minus one for the
     // control process.
     pub num_workers: u32,
@@ -25,7 +25,7 @@ pub struct PodcastCrawler {
     pub http_requester_factory: Box<HttpRequesterFactory>,
 }
 
-impl PodcastCrawler {
+impl Mediator {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
         time_helpers::log_timed(&log.new(o!("step" => file!())), |log| self.run_inner(log))
     }
@@ -218,7 +218,7 @@ fn work(
 
                 let feed_url = podcast.feed_url.to_string();
 
-                let res = PodcastUpdater {
+                let res = podcast_updater::Mediator {
                     conn: &*conn,
                     // Allow the updater to short circuit if it turns out the podcast doesn't need
                     // to be updated
@@ -245,7 +245,7 @@ mod tests {
 
     use http_requester::{HttpRequesterFactoryPassThrough, HttpRequesterPassThrough};
     use mediators::podcast_crawler::*;
-    use mediators::podcast_updater::PodcastUpdater;
+    use mediators::podcast_updater;
     use schema;
     use test_helpers;
 
@@ -372,9 +372,9 @@ mod tests {
             }
         }
 
-        fn mediator(&mut self) -> (PodcastCrawler, Logger) {
+        fn mediator(&mut self) -> (Mediator, Logger) {
             (
-                PodcastCrawler {
+                Mediator {
                     // Number of connections minus one for the reingester's control thread and
                     // minus another one for a connection that a test case
                     // might be using for setup.
@@ -397,7 +397,7 @@ mod tests {
 
     fn insert_podcast(log: &Logger, conn: &PgConnection) {
         let mut rng = rand::thread_rng();
-        PodcastUpdater {
+        podcast_updater::Mediator {
             conn:             conn,
             disable_shortcut: false,
 

@@ -1,5 +1,5 @@
 use errors::*;
-use mediators::error_reporter::{ErrorReporter, SentryCredentials};
+use mediators::error_reporter::{Mediator, SentryCredentials};
 
 use http_requester::HttpRequesterLive;
 use hyper::Client;
@@ -43,7 +43,7 @@ pub fn report_error(log: &Logger, error: &Error) -> Result<()> {
             let creds = url.parse::<SentryCredentials>().unwrap();
             let mut http_requester = HttpRequesterLive { client, core };
 
-            let _res = ErrorReporter {
+            let _res = Mediator {
                 creds: &creds,
                 error,
                 http_requester: &mut http_requester,

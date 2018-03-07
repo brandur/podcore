@@ -6,11 +6,11 @@ use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use slog::Logger;
 
-pub struct PodcastFeedLocationUpgrader<'a> {
+pub struct Mediator<'a> {
     pub conn: &'a PgConnection,
 }
 
-impl<'a> PodcastFeedLocationUpgrader<'a> {
+impl<'a> Mediator<'a> {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
         time_helpers::log_timed(&log.new(o!("step" => file!())), |log| {
             self.conn.transaction::<_, Error, _>(|| self.run_inner(log))
@@ -51,7 +51,7 @@ pub struct RunResult {
 mod tests {
     use http_requester::HttpRequesterPassThrough;
     use mediators::podcast_feed_location_upgrader::*;
-    use mediators::podcast_updater::PodcastUpdater;
+    use mediators::podcast_updater;
     use model;
     use model::insertable;
     use schema;
@@ -240,16 +240,13 @@ mod tests {
             }
         }
 
-        fn mediator(&mut self) -> (PodcastFeedLocationUpgrader, Logger) {
-            (
-                PodcastFeedLocationUpgrader { conn: self.conn },
-                self.log.clone(),
-            )
+        fn mediator(&mut self) -> (Mediator, Logger) {
+            (Mediator { conn: self.conn }, self.log.clone())
         }
     }
 
     fn insert_podcast(log: &Logger, conn: &PgConnection, url: &str) -> model::Podcast {
-        PodcastUpdater {
+        podcast_updater::Mediator {
             conn:             conn,
             disable_shortcut: false,
             feed_url:         url.to_owned(),

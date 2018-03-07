@@ -247,7 +247,7 @@ pub fn handle_500(view_model: &CommonViewModel, error: &str) -> Result<HttpRespo
 
 pub mod directory_podcast_show {
     use errors::*;
-    use mediators::directory_podcast_updater::DirectoryPodcastUpdater;
+    use mediators::directory_podcast_updater;
     use model;
     use schema;
     use time_helpers;
@@ -325,7 +325,7 @@ pub mod directory_podcast_show {
             .optional()?;
         match dir_podcast {
             Some(mut dir_podcast) => {
-                let mut mediator = DirectoryPodcastUpdater {
+                let mut mediator = directory_podcast_updater::Mediator {
                     conn,
                     dir_podcast: &mut dir_podcast,
                     http_requester: &mut endpoints::build_requester()?,
@@ -492,7 +492,7 @@ pub mod search_home_show {
 
 pub mod search_show {
     use errors::*;
-    use mediators::directory_podcast_searcher::DirectoryPodcastSearcher;
+    use mediators::directory_podcast_searcher;
     use time_helpers;
     use web::endpoints;
     use web::views;
@@ -578,7 +578,7 @@ pub mod search_show {
 
         info!(log, "Executing query"; "id" => query.as_str());
 
-        let res = DirectoryPodcastSearcher {
+        let res = directory_podcast_searcher::Mediator {
             conn:           &*conn,
             query:          query.to_owned(),
             http_requester: &mut endpoints::build_requester()?,

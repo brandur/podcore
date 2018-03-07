@@ -1,7 +1,7 @@
 use error_helpers;
 use errors::*;
 use http_requester::HttpRequester;
-use mediators::podcast_updater::PodcastUpdater;
+use mediators::podcast_updater;
 use model;
 use model::insertable;
 use schema;
@@ -14,13 +14,13 @@ use diesel::pg::upsert::excluded;
 use diesel::prelude::*;
 use slog::Logger;
 
-pub struct DirectoryPodcastUpdater<'a> {
+pub struct Mediator<'a> {
     pub conn:           &'a PgConnection,
     pub dir_podcast:    &'a mut model::DirectoryPodcast,
     pub http_requester: &'a mut HttpRequester,
 }
 
-impl<'a> DirectoryPodcastUpdater<'a> {
+impl<'a> Mediator<'a> {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
         time_helpers::log_timed(&log.new(o!("step" => file!())), |log| {
             self.conn
@@ -30,7 +30,7 @@ impl<'a> DirectoryPodcastUpdater<'a> {
     }
 
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
-        let res = PodcastUpdater {
+        let res = podcast_updater::Mediator {
             conn:             self.conn,
             disable_shortcut: false,
             feed_url:         self.dir_podcast.feed_url.clone(),
@@ -244,9 +244,9 @@ mod tests {
             }
         }
 
-        fn mediator(&mut self) -> (DirectoryPodcastUpdater, Logger) {
+        fn mediator(&mut self) -> (Mediator, Logger) {
             (
-                DirectoryPodcastUpdater {
+                Mediator {
                     conn:           &*self.conn,
                     dir_podcast:    &mut self.dir_podcast,
                     http_requester: &mut self.http_requester,

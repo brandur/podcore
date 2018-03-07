@@ -2,7 +2,7 @@ use error_helpers;
 use errors::*;
 use http_requester::HttpRequesterPassThrough;
 use mediators::common;
-use mediators::podcast_updater::PodcastUpdater;
+use mediators::podcast_updater;
 use time_helpers;
 
 use chan;
@@ -19,7 +19,7 @@ use std::io::prelude::*;
 use std::sync::Arc;
 use std::thread;
 
-pub struct PodcastReingester {
+pub struct Mediator {
     // Number of workers to use. Should generally be the size of the thread pool minus one for the
     // control process.
     pub num_workers: u32,
@@ -27,7 +27,7 @@ pub struct PodcastReingester {
     pub pool: Pool<ConnectionManager<PgConnection>>,
 }
 
-impl PodcastReingester {
+impl Mediator {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
         time_helpers::log_timed(&log.new(o!("step" => file!())), |log| self.run_inner(log))
     }
@@ -231,7 +231,7 @@ fn work_inner(log: &Logger, conn: &PgConnection, podcast_tuple: &PodcastTuple) -
 
     let feed_url = podcast_tuple.feed_url.to_string();
 
-    PodcastUpdater {
+    podcast_updater::Mediator {
         conn,
 
         // The whole purpose of this mediator is to redo past work, so we need to make
@@ -253,7 +253,7 @@ mod tests {
 
     use http_requester::HttpRequesterPassThrough;
     use mediators::podcast_reingester::*;
-    use mediators::podcast_updater::PodcastUpdater;
+    use mediators::podcast_updater;
     use test_helpers;
 
     use r2d2::{Pool, PooledConnection};
@@ -301,9 +301,9 @@ mod tests {
             }
         }
 
-        fn mediator(&mut self) -> (PodcastReingester, Logger) {
+        fn mediator(&mut self) -> (Mediator, Logger) {
             (
-                PodcastReingester {
+                Mediator {
                     // Number of connections minus one for the reingester's control thread and
                     // minus another one for a connection that a test case
                     // might be using for setup.
@@ -323,7 +323,7 @@ mod tests {
 
     fn insert_podcast(log: &Logger, conn: &PgConnection) {
         let mut rng = rand::thread_rng();
-        PodcastUpdater {
+        podcast_updater::Mediator {
             conn:             conn,
             disable_shortcut: false,
 

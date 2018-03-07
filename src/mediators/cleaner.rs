@@ -10,11 +10,11 @@ use r2d2_diesel::ConnectionManager;
 use slog::Logger;
 use std::thread;
 
-pub struct Cleaner {
+pub struct Mediator {
     pub pool: Pool<ConnectionManager<PgConnection>>,
 }
 
-impl Cleaner {
+impl Mediator {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
         time_helpers::log_timed(&log.new(o!("step" => file!())), |log| self.run_inner(log))
     }
@@ -201,7 +201,7 @@ mod tests {
 
     use http_requester::HttpRequesterPassThrough;
     use mediators::cleaner::*;
-    use mediators::podcast_updater::PodcastUpdater;
+    use mediators::podcast_updater;
     use model;
     use model::insertable;
     use schema;
@@ -379,9 +379,9 @@ mod tests {
             }
         }
 
-        fn mediator(&mut self) -> (Cleaner, Logger) {
+        fn mediator(&mut self) -> (Mediator, Logger) {
             (
-                Cleaner {
+                Mediator {
                     pool: self.pool.clone(),
                 },
                 self.log.clone(),
@@ -472,7 +472,7 @@ mod tests {
 
     fn insert_podcast(log: &Logger, conn: &PgConnection) -> model::Podcast {
         let mut rng = rand::thread_rng();
-        PodcastUpdater {
+        podcast_updater::Mediator {
             conn:             conn,
             disable_shortcut: false,
 

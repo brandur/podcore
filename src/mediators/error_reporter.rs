@@ -17,13 +17,13 @@ use std::env;
 use url;
 use uuid::Uuid;
 
-pub struct ErrorReporter<'a> {
+pub struct Mediator<'a> {
     pub creds:          &'a SentryCredentials,
     pub error:          &'a Error,
     pub http_requester: &'a mut HttpRequester,
 }
 
-impl<'a> ErrorReporter<'a> {
+impl<'a> Mediator<'a> {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
         time_helpers::log_timed(&log.new(o!("step" => file!())), |log| self.run_inner(log))
     }
@@ -343,9 +343,9 @@ mod tests {
             }
         }
 
-        fn mediator(&mut self) -> (ErrorReporter, Logger) {
+        fn mediator(&mut self) -> (Mediator, Logger) {
             (
-                ErrorReporter {
+                Mediator {
                     creds:          &self.creds,
                     error:          &self.error,
                     http_requester: &mut self.http_requester,

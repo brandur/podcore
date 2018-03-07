@@ -61,8 +61,9 @@ where
 // have to collect it to a Vec first before reversing it.
 //
 // I've located this function here instead of error_helpers because it's needed
-// by ErrorReporter. It's a bit of a breakage in modularity though, so it might
-// be better just to duplicate the function in two places instead.
+// by `error_reporter::Mediator`. It's a bit of a breakage in modularity
+// though, so it might be better just to duplicate the function in two places
+// instead.
 pub fn error_strings(error: &Error) -> Vec<String> {
     error
         .iter()
