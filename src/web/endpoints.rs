@@ -545,7 +545,7 @@ pub mod podcast_show {
     }
 }
 
-pub mod search_home_show {
+pub mod search_new_show {
     use errors::*;
     use web::endpoints;
     use web::views;
@@ -571,7 +571,7 @@ pub mod search_home_show {
             req: &HttpRequest<endpoints::StateImpl>,
         ) -> Result<HttpResponse> {
             let common = endpoints::build_common(req, "Search");
-            let html = views::search_home_show::render(&common, self)?;
+            let html = views::search_new_show::render(&common, self)?;
             Ok(HttpResponse::build(StatusCode::OK)
                 .content_type("text/html; charset=utf-8")
                 .body(html)?)

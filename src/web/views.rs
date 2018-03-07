@@ -100,10 +100,10 @@ pub mod podcast_show {
     }
 }
 
-pub mod search_home_show {
+pub mod search_new_show {
     use errors::*;
     use web::endpoints::CommonViewModel;
-    use web::endpoints::search_home_show::ViewModel;
+    use web::endpoints::search_new_show::ViewModel;
     use web::views;
 
     use horrorshow::Template;

@@ -65,8 +65,7 @@ impl WebServer {
                     r.method(Method::GET).a(endpoints::search_show::handler)
                 })
                 .resource("/search/new", |r| {
-                    r.method(Method::GET)
-                        .a(endpoints::search_home_show::handler)
+                    r.method(Method::GET).a(endpoints::search_new_show::handler)
                 })
                 .resource("/podcasts/{id}", |r| {
                     r.method(Method::GET).a(endpoints::podcast_show::handler)
