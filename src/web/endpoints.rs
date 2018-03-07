@@ -76,6 +76,39 @@ macro_rules! handler {
     )
 }
 
+/// Identical to `message_handler!` except useful in cases where the `SyncExecutor` doesn't need to
+/// do any work. Skips getting a connection from the pool to minimize its contention.
+macro_rules! handler_noop {
+    ($noop_response:path) => {
+        pub fn handler(
+            mut req: HttpRequest<endpoints::StateImpl>,
+        ) -> Box<Future<Item = HttpResponse, Error = Error>> {
+            use time_helpers;
+            // Imported so that we can use the traits, but assigned a different name to avoid
+            // clashing with the module's implementations.
+            use web::endpoints::ViewModel as VM;
+            use web::middleware;
+
+            use futures::future;
+
+            let log = middleware::log_initializer::log(&mut req);
+
+            let view_model = $noop_response;
+            let response_res = time_helpers::log_timed(
+                &log.new(o!("step" => "render_view_model")),
+                |log| {
+                    view_model.render(log, &req)
+                }
+            );
+            let response = match response_res {
+                Ok(response) => response,
+                Err(e) => return Box::new(future::err(e)),
+            };
+
+            Box::new(future::ok(response))
+        }
+    }
+}
 /// Macro that easily creates the scaffolding necessary for a `SyncExecutor` message handler from
 /// within an endpoint. It puts the necessary type definitions in place and creates a wrapper
 /// function with access to a connection and log.
@@ -95,35 +128,6 @@ macro_rules! message_handler {
                 let log = message.log.clone();
                 time_helpers::log_timed(&log.new(o!("step" => "handle_message")), |log| {
                     handle_inner(log, &*conn, &message.params)
-                })
-            }
-        }
-
-        // TODO: `ResponseType` will change to `Message`
-        impl ::actix::prelude::ResponseType for endpoints::Message<Params> {
-            type Item = ViewModel;
-            type Error = Error;
-        }
-    }
-}
-
-/// Identical to `message_handler!` except useful in cases where the `SyncExecutor` doesn't need to
-/// do any work. Skips getting a connection from the pool to minimize its contention.
-macro_rules! message_handler_noop {
-    ($noop_response:path) => {
-        type MessageResult = ::actix::prelude::MessageResult<endpoints::Message<Params>>;
-
-        impl ::actix::prelude::Handler<endpoints::Message<Params>> for endpoints::SyncExecutor {
-            type Result = MessageResult;
-
-            fn handle(
-                &mut self,
-                message: endpoints::Message<Params>,
-                _: &mut Self::Context,
-            ) -> Self::Result {
-                let log = message.log.clone();
-                time_helpers::log_timed(&log.new(o!("step" => "handle_message")), |_log| {
-                    Ok($noop_response)
                 })
             }
         }
@@ -543,7 +547,6 @@ pub mod podcast_show {
 
 pub mod search_home_show {
     use errors::*;
-    use time_helpers;
     use web::endpoints;
     use web::views;
 
@@ -551,19 +554,7 @@ pub mod search_home_show {
     use futures::future::Future;
     use slog::Logger;
 
-    handler!();
-    message_handler_noop!(ViewModel::Found);
-
-    //
-    // Params
-    //
-
-    struct Params {}
-    impl endpoints::Params for Params {
-        fn build(_log: &Logger, _req: &HttpRequest<endpoints::StateImpl>) -> Result<Self> {
-            Ok(Self {})
-        }
-    }
+    handler_noop!(ViewModel::Found);
 
     //
     // ViewModel
