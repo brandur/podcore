@@ -245,6 +245,104 @@ pub fn handle_500(view_model: &CommonViewModel, error: &str) -> Result<HttpRespo
 // Endpoints
 //
 
+pub mod episode_show {
+    use errors::*;
+    use model;
+    use schema;
+    use time_helpers;
+    use web::endpoints;
+    use web::views;
+
+    use actix_web::{HttpRequest, HttpResponse, StatusCode};
+    use diesel::prelude::*;
+    use futures::future::Future;
+    use slog::Logger;
+
+    handler!();
+    message_handler!();
+
+    //
+    // Params
+    //
+
+    struct Params {
+        id:         i64,
+        podcast_id: i64,
+    }
+
+    impl endpoints::Params for Params {
+        fn build(_log: &Logger, req: &HttpRequest<endpoints::StateImpl>) -> Result<Self> {
+            Ok(Self {
+                id:         req.match_info()
+                    .get("id")
+                    .unwrap()
+                    .parse::<i64>()
+                    .chain_err(|| "Error parsing episode ID")?,
+                podcast_id: req.match_info()
+                    .get("podcast_id")
+                    .unwrap()
+                    .parse::<i64>()
+                    .chain_err(|| "Error parsing podcast ID")?,
+            })
+        }
+    }
+
+    //
+    // ViewModel
+    //
+
+    pub enum ViewModel {
+        Found(view_model::Found),
+        NotFound,
+    }
+
+    pub mod view_model {
+        use model;
+
+        pub struct Found {
+            pub episode: model::Episode,
+        }
+    }
+
+    impl endpoints::ViewModel for ViewModel {
+        fn render(
+            &self,
+            _log: &Logger,
+            req: &HttpRequest<endpoints::StateImpl>,
+        ) -> Result<HttpResponse> {
+            match *self {
+                ViewModel::Found(ref view_model) => {
+                    let common = endpoints::build_common(
+                        req,
+                        &format!("Episode: {}", view_model.episode.title.as_str()),
+                    );
+                    let html = views::episode_show::render(&common, view_model)?;
+                    Ok(HttpResponse::build(StatusCode::OK)
+                        .content_type("text/html; charset=utf-8")
+                        .body(html)?)
+                }
+                ViewModel::NotFound => Ok(endpoints::handle_404()?),
+            }
+        }
+    }
+
+    //
+    // Private functions
+    //
+
+    fn handle_inner(_log: &Logger, conn: &PgConnection, params: &Params) -> MessageResult {
+        let episode: Option<model::Episode> = schema::episode::table
+            .filter(schema::episode::id.eq(params.id))
+            .filter(schema::episode::podcast_id.eq(params.podcast_id))
+            .first(conn)
+            .optional()?;
+        match episode {
+            Some(episode) => Ok(ViewModel::Found(view_model::Found { episode })),
+            None => Ok(ViewModel::NotFound),
+        }
+    }
+}
+
 pub mod directory_podcast_show {
     use errors::*;
     use mediators::directory_podcast_updater;

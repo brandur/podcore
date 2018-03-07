@@ -71,6 +71,9 @@ impl WebServer {
                 .resource("/podcasts/{id}", |r| {
                     r.method(Method::GET).a(endpoints::podcast_show::handler)
                 })
+                .resource("/podcasts/{podcast_id}/episodes/{id}", |r| {
+                    r.method(Method::GET).a(endpoints::episode_show::handler)
+                })
                 .handler(
                     format!("/assets/{}/", assets_version.as_str()).as_str(),
                     actix_web::fs::StaticFiles::new("./assets/", false),

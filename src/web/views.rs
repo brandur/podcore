@@ -46,6 +46,29 @@ pub fn render_500(common: &endpoints::CommonViewModel, error: &str) -> Result<St
 // Views
 //
 
+pub mod episode_show {
+    use errors::*;
+    use web::endpoints::CommonViewModel;
+    use web::endpoints::episode_show::view_model;
+    use web::views;
+
+    use horrorshow::Template;
+
+    pub fn render(common: &CommonViewModel, view_model: &view_model::Found) -> Result<String> {
+        views::render_layout(
+            common,
+            (html! {
+                h1: view_model.episode.title.as_str();
+                p: view_model.episode.media_url.as_str();
+                @ if let Some(ref description) = view_model.episode.description {
+                    p: description.as_str();
+                }
+            }).into_string()?
+                .as_str(),
+        )
+    }
+}
+
 pub mod podcast_show {
     use errors::*;
     use web::endpoints::CommonViewModel;
@@ -64,7 +87,11 @@ pub mod podcast_show {
                 }
                 ul {
                     @ for episode in &view_model.episodes {
-                        li: episode.title.as_str();
+                        li {
+                            a(href=format_args!("/podcasts/{}/episodes/{}", episode.podcast_id, episode.id)) {
+                                : episode.title.as_str()
+                            }
+                        }
                     }
                 }
             }).into_string()?
