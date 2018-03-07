@@ -76,8 +76,9 @@ macro_rules! handler {
     )
 }
 
-/// Identical to `message_handler!` except useful in cases where the `SyncExecutor` doesn't need to
-/// do any work. Skips getting a connection from the pool to minimize its contention.
+/// Identical to `handler!` except useful in cases where the `SyncExecutor` doesn't need to
+/// do any work. Skips sending a blocking message to `SyncExecutor` and getting a Postgres
+/// connection from the pool to increase performance and avoid contention.
 macro_rules! handler_noop {
     ($noop_response:path) => {
         pub fn handler(
