@@ -246,6 +246,13 @@ pub fn handle_500(view_model: &CommonViewModel, error: &str) -> Result<HttpRespo
         .body(html)?)
 }
 
+/// Shortcut for a basic 200 response with standard HTML body content.
+pub fn respond_200(body: String) -> Result<HttpResponse> {
+    Ok(HttpResponse::build(StatusCode::OK)
+        .content_type("text/html; charset=utf-8")
+        .body(body)?)
+}
+
 //
 // Endpoints
 //
@@ -258,7 +265,7 @@ pub mod episode_show {
     use web::endpoints;
     use web::views;
 
-    use actix_web::{HttpRequest, HttpResponse, StatusCode};
+    use actix_web::{HttpRequest, HttpResponse};
     use diesel::prelude::*;
     use futures::future::Future;
     use slog::Logger;
@@ -321,10 +328,7 @@ pub mod episode_show {
                         req,
                         &format!("Episode: {}", view_model.episode.title.as_str()),
                     );
-                    let html = views::episode_show::render(&common, view_model)?;
-                    Ok(HttpResponse::build(StatusCode::OK)
-                        .content_type("text/html; charset=utf-8")
-                        .body(html)?)
+                    endpoints::respond_200(views::episode_show::render(&common, view_model)?)
                 }
                 ViewModel::NotFound => Ok(endpoints::handle_404()?),
             }
@@ -454,7 +458,7 @@ pub mod podcast_show {
     use web::endpoints;
     use web::views;
 
-    use actix_web::{HttpRequest, HttpResponse, StatusCode};
+    use actix_web::{HttpRequest, HttpResponse};
     use diesel::prelude::*;
     use futures::future::Future;
     use slog::Logger;
@@ -512,10 +516,7 @@ pub mod podcast_show {
                         req,
                         &format!("Podcast: {}", view_model.podcast.title.as_str()),
                     );
-                    let html = views::podcast_show::render(&common, view_model)?;
-                    Ok(HttpResponse::build(StatusCode::OK)
-                        .content_type("text/html; charset=utf-8")
-                        .body(html)?)
+                    endpoints::respond_200(views::podcast_show::render(&common, view_model)?)
                 }
                 ViewModel::NotFound => Ok(endpoints::handle_404()?),
             }
@@ -551,7 +552,7 @@ pub mod search_new_show {
     use web::endpoints;
     use web::views;
 
-    use actix_web::{HttpRequest, HttpResponse, StatusCode};
+    use actix_web::{HttpRequest, HttpResponse};
     use futures::future::Future;
     use slog::Logger;
 
@@ -572,10 +573,7 @@ pub mod search_new_show {
             req: &HttpRequest<endpoints::StateImpl>,
         ) -> Result<HttpResponse> {
             let common = endpoints::build_common(req, "Search");
-            let html = views::search_new_show::render(&common, self)?;
-            Ok(HttpResponse::build(StatusCode::OK)
-                .content_type("text/html; charset=utf-8")
-                .body(html)?)
+            endpoints::respond_200(views::search_new_show::render(&common, self)?)
         }
     }
 }
@@ -643,10 +641,7 @@ pub mod search_show {
                         req,
                         &format!("Search: {}", view_model.query.as_str()),
                     );
-                    let html = views::search_show::render(&common, view_model)?;
-                    Ok(HttpResponse::build(StatusCode::OK)
-                        .content_type("text/html; charset=utf-8")
-                        .body(html)?)
+                    endpoints::respond_200(views::search_show::render(&common, view_model)?)
                 }
             }
         }
