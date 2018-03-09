@@ -74,7 +74,7 @@ Migrations can be run with:
 
 ```
 kubectl get pods
-kubectl exec podcore-crawl-1413166641-rqb9p -c podcore -- /podcore migration
+kubectl exec podcore-crawl-1413166641-rqb9p -c podcore -- /podcore migrate
 ```
 
 <!--

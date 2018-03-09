@@ -94,7 +94,7 @@ fn main() {
             SubCommand::with_name("error")
                 .about("Triggers an error (for testing error output and Sentry)"),
         )
-        .subcommand(SubCommand::with_name("migration").about("Migrates the database"))
+        .subcommand(SubCommand::with_name("migrate").about("Migrates the database"))
         .subcommand(
             SubCommand::with_name("reingest")
                 .about("Reingests podcasts by reusing their stored raw feeds"),
@@ -129,7 +129,7 @@ fn main() {
         Some("clean") => subcommand_clean(&log, &matches, &options),
         Some("crawl") => subcommand_crawl(&log, &matches, &options),
         Some("error") => subcommand_error(&log, &matches, &options),
-        Some("migration") => subcommand_migrate(&log, &matches, &options),
+        Some("migrate") => subcommand_migrate(&log, &matches, &options),
         Some("reingest") => subcommand_reingest(&log, &matches, &options),
         Some("search") => subcommand_search(&log, &matches, &options),
         Some("sleep") => subcommand_sleep(&log, &matches, &options),
@@ -264,7 +264,7 @@ fn subcommand_error(_log: &Logger, matches: &ArgMatches, _options: &GlobalOption
 }
 
 fn subcommand_migrate(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
-    let _matches = matches.subcommand_matches("migration").unwrap();
+    let _matches = matches.subcommand_matches("migrate").unwrap();
     let conn = connection(log)?;
 
     info!(log, "Running migrations");
