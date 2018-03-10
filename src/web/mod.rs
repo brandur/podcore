@@ -1,9 +1,8 @@
-mod common;
 mod endpoints;
-mod middleware;
 mod views;
 
 use errors::*;
+use middleware;
 
 use actix;
 use actix_web;

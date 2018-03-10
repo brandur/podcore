@@ -1,5 +1,5 @@
 pub mod log_initializer {
-    use web::common;
+    use state;
 
     use actix_web;
     use actix_web::{HttpRequest, HttpResponse};
@@ -10,7 +10,7 @@ pub mod log_initializer {
 
     pub struct Extension(pub Logger);
 
-    impl<S: common::State> actix_web::middleware::Middleware<S> for Middleware {
+    impl<S: state::State> actix_web::middleware::Middleware<S> for Middleware {
         fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
             let log = req.state().log().clone();
             req.extensions().insert(Extension(log));
@@ -28,14 +28,14 @@ pub mod log_initializer {
 
     /// Shorthand for getting a usable `Logger` out of a request. It's also possible to access the
     /// request's extensions directly.
-    pub fn log<S: common::State>(req: &mut HttpRequest<S>) -> Logger {
+    pub fn log<S: state::State>(req: &mut HttpRequest<S>) -> Logger {
         req.extensions().get::<Extension>().unwrap().0.clone()
     }
 }
 
 pub mod request_id {
-    use web::common;
-    use web::middleware::log_initializer;
+    use middleware::log_initializer;
+    use state;
 
     use actix_web;
     use actix_web::{HttpRequest, HttpResponse};
@@ -45,7 +45,7 @@ pub mod request_id {
 
     pub struct Middleware;
 
-    impl<S: common::State> actix_web::middleware::Middleware<S> for Middleware {
+    impl<S: state::State> actix_web::middleware::Middleware<S> for Middleware {
         fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
             let log = req.extensions()
                 .remove::<log_initializer::Extension>()
@@ -73,9 +73,9 @@ pub mod request_id {
 }
 
 pub mod request_response_logger {
+    use middleware::log_initializer;
+    use state;
     use time_helpers;
-    use web::common;
-    use web::middleware::log_initializer;
 
     use actix_web;
     use actix_web::{HttpRequest, HttpResponse};
@@ -89,7 +89,7 @@ pub mod request_response_logger {
         start_time: u64,
     }
 
-    impl<S: common::State> actix_web::middleware::Middleware<S> for Middleware {
+    impl<S: state::State> actix_web::middleware::Middleware<S> for Middleware {
         fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
             req.extensions().insert(Extension {
                 start_time: time::precise_time_ns(),

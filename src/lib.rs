@@ -58,12 +58,15 @@ pub mod graphql;
 mod macros;
 
 pub mod mediators;
+mod middleware;
 mod model;
 pub mod http_requester;
 
 // Generated file: skip rustfmt
 #[cfg_attr(rustfmt, rustfmt_skip)]
 mod schema;
+
+mod state;
 
 #[cfg(test)]
 mod test_helpers;

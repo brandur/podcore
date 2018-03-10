@@ -1,6 +1,6 @@
 use errors::*;
 use http_requester::HttpRequesterLive;
-use web::common;
+use state;
 use web::views;
 
 use actix;
@@ -192,7 +192,7 @@ pub struct StateImpl {
     pub sync_addr:      actix::prelude::SyncAddress<SyncExecutor>,
 }
 
-impl common::State for StateImpl {
+impl state::State for StateImpl {
     fn log(&self) -> &Logger {
         &self.log
     }
