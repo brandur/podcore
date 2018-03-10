@@ -3,6 +3,7 @@ mod views;
 
 use errors::*;
 use middleware;
+use state;
 
 use actix;
 use actix_web;
@@ -35,11 +36,11 @@ impl WebServer {
         let system = actix::System::new("podcore-web");
 
         let sync_addr = actix::SyncArbiter::start(self.num_sync_executors as usize, move || {
-            endpoints::SyncExecutor { pool: pool.clone() }
+            state::SyncExecutor { pool: pool.clone() }
         });
 
         let server = actix_web::HttpServer::new(move || {
-            actix_web::Application::with_state(endpoints::StateImpl {
+            actix_web::Application::with_state(state::StateImpl {
                 assets_version: assets_version.clone(),
                 log:            log.clone(),
                 sync_addr:      sync_addr.clone(),
