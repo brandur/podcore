@@ -66,7 +66,7 @@ pub mod http_requester;
 #[cfg_attr(rustfmt, rustfmt_skip)]
 mod schema;
 
-mod state;
+mod server;
 
 #[cfg(test)]
 mod test_helpers;

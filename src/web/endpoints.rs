@@ -1,6 +1,6 @@
 use errors::*;
 use http_requester::HttpRequesterLive;
-use state;
+use server;
 use web::views;
 
 use actix_web;
@@ -18,7 +18,7 @@ use tokio_core::reactor::Core;
 /// endpoint module.
 ///
 /// The key point to understand here is that because we have a convention so that all
-/// `state::Params` and `ViewModel`s are given the same name in every module, this can be pulled in
+/// `server::Params` and `ViewModel`s are given the same name in every module, this can be pulled in
 /// and expanded while still properly resolving symbols.
 ///
 /// Honestly, I would've preferred not to have to sink into a macro to get this working, but I
@@ -31,12 +31,12 @@ use tokio_core::reactor::Core;
 macro_rules! handler {
     () => (
         pub fn handler(
-            mut req: HttpRequest<state::StateImpl>,
+            mut req: HttpRequest<server::StateImpl>,
         ) -> Box<Future<Item = HttpResponse, Error = Error>> {
             use time_helpers;
             // Imported so that we can use the traits, but assigned a different name to avoid
             // clashing with the module's implementations.
-            use state::Params as P;
+            use server::Params as P;
             use web::endpoints::ViewModel as VM;
             use web::middleware;
 
@@ -53,7 +53,7 @@ macro_rules! handler {
                 Err(e) => return Box::new(future::err(e)),
             };
 
-            let message = state::Message::new(&log, params);
+            let message = server::Message::new(&log, params);
 
             req.state()
                 .sync_addr
@@ -71,13 +71,13 @@ macro_rules! handler {
     )
 }
 
-/// Identical to `handler!` except useful in cases where the `state::SyncExecutor` doesn't need to
-/// do any work. Skips sending a blocking message to `state::SyncExecutor` and getting a Postgres
+/// Identical to `handler!` except useful in cases where the `server::SyncExecutor` doesn't need to
+/// do any work. Skips sending a blocking message to `server::SyncExecutor` and getting a Postgres
 /// connection from the pool to increase performance and avoid contention.
 macro_rules! handler_noop {
     ($noop_response:path) => {
         pub fn handler(
-            mut req: HttpRequest<state::StateImpl>,
+            mut req: HttpRequest<server::StateImpl>,
         ) -> Box<Future<Item = HttpResponse, Error = Error>> {
             use time_helpers;
             // Imported so that we can use the traits, but assigned a different name to avoid
@@ -105,19 +105,19 @@ macro_rules! handler_noop {
         }
     }
 }
-/// Macro that easily creates the scaffolding necessary for a `state::SyncExecutor` message handler
+/// Macro that easily creates the scaffolding necessary for a `server::SyncExecutor` message handler
 /// from within an endpoint. It puts the necessary type definitions in place and creates a wrapper
 /// function with access to a connection and log.
 macro_rules! message_handler {
     () => {
-        type MessageResult = ::actix::prelude::MessageResult<state::Message<Params>>;
+        type MessageResult = ::actix::prelude::MessageResult<server::Message<Params>>;
 
-        impl ::actix::prelude::Handler<state::Message<Params>> for state::SyncExecutor {
+        impl ::actix::prelude::Handler<server::Message<Params>> for server::SyncExecutor {
             type Result = MessageResult;
 
             fn handle(
                 &mut self,
-                message: state::Message<Params>,
+                message: server::Message<Params>,
                 _: &mut Self::Context,
             ) -> Self::Result {
                 let conn = self.pool.get()?;
@@ -129,7 +129,7 @@ macro_rules! message_handler {
         }
 
         // TODO: `ResponseType` will change to `Message`
-        impl ::actix::prelude::ResponseType for state::Message<Params> {
+        impl ::actix::prelude::ResponseType for server::Message<Params> {
             type Item = ViewModel;
             type Error = Error;
         }
@@ -141,12 +141,12 @@ macro_rules! message_handler {
 //
 
 /// A trait to be implemented by the view models that render views, which is also the same trait
-/// for the typed responses that come from `state::SyncExecutor`. A view model is a model
+/// for the typed responses that come from `server::SyncExecutor`. A view model is a model
 /// containing all the information needed to build a view.
 pub trait ViewModel {
     /// Renders a `ViewModel` implementation to an HTTP response. This could be a standard HTML
     /// page, but could also be any arbitrary response like a redirect.
-    fn render(&self, log: &Logger, req: &HttpRequest<state::StateImpl>) -> Result<HttpResponse>;
+    fn render(&self, log: &Logger, req: &HttpRequest<server::StateImpl>) -> Result<HttpResponse>;
 }
 
 //
@@ -170,7 +170,7 @@ impl From<Error> for actix_web::error::Error {
 
 /// Builds a `CommonViewModel` from request information and takes in any other
 /// required parameters to do so.
-fn build_common(req: &HttpRequest<state::StateImpl>, title: &str) -> CommonViewModel {
+fn build_common(req: &HttpRequest<server::StateImpl>, title: &str) -> CommonViewModel {
     CommonViewModel {
         assets_version: req.state().assets_version.clone(),
         title:          title.to_owned(),
@@ -213,7 +213,7 @@ pub mod episode_show {
     use errors::*;
     use model;
     use schema;
-    use state;
+    use server;
     use time_helpers;
     use web::endpoints;
     use web::views;
@@ -235,8 +235,8 @@ pub mod episode_show {
         podcast_id: i64,
     }
 
-    impl state::Params for Params {
-        fn build(_log: &Logger, req: &HttpRequest<state::StateImpl>) -> Result<Self> {
+    impl server::Params for Params {
+        fn build(_log: &Logger, req: &HttpRequest<server::StateImpl>) -> Result<Self> {
             Ok(Self {
                 id:         req.match_info()
                     .get("id")
@@ -273,7 +273,7 @@ pub mod episode_show {
         fn render(
             &self,
             _log: &Logger,
-            req: &HttpRequest<state::StateImpl>,
+            req: &HttpRequest<server::StateImpl>,
         ) -> Result<HttpResponse> {
             match *self {
                 ViewModel::Found(ref view_model) => {
@@ -310,7 +310,7 @@ pub mod directory_podcast_show {
     use mediators::directory_podcast_updater;
     use model;
     use schema;
-    use state;
+    use server;
     use time_helpers;
     use web::endpoints;
 
@@ -330,8 +330,8 @@ pub mod directory_podcast_show {
         id: i64,
     }
 
-    impl state::Params for Params {
-        fn build(_log: &Logger, req: &HttpRequest<state::StateImpl>) -> Result<Self> {
+    impl server::Params for Params {
+        fn build(_log: &Logger, req: &HttpRequest<server::StateImpl>) -> Result<Self> {
             Ok(Self {
                 id: req.match_info()
                     .get("id")
@@ -356,7 +356,7 @@ pub mod directory_podcast_show {
         fn render(
             &self,
             _log: &Logger,
-            req: &HttpRequest<state::StateImpl>,
+            req: &HttpRequest<server::StateImpl>,
         ) -> Result<HttpResponse> {
             match *self {
                 ViewModel::Exception(ref _exception) => Ok(endpoints::handle_500(
@@ -408,7 +408,7 @@ pub mod podcast_show {
     use errors::*;
     use model;
     use schema;
-    use state;
+    use server;
     use time_helpers;
     use web::endpoints;
     use web::views;
@@ -429,8 +429,8 @@ pub mod podcast_show {
         id: i64,
     }
 
-    impl state::Params for Params {
-        fn build(_log: &Logger, req: &HttpRequest<state::StateImpl>) -> Result<Self> {
+    impl server::Params for Params {
+        fn build(_log: &Logger, req: &HttpRequest<server::StateImpl>) -> Result<Self> {
             Ok(Self {
                 id: req.match_info()
                     .get("id")
@@ -463,7 +463,7 @@ pub mod podcast_show {
         fn render(
             &self,
             _log: &Logger,
-            req: &HttpRequest<state::StateImpl>,
+            req: &HttpRequest<server::StateImpl>,
         ) -> Result<HttpResponse> {
             match *self {
                 ViewModel::Found(ref view_model) => {
@@ -504,7 +504,7 @@ pub mod podcast_show {
 
 pub mod search_new_show {
     use errors::*;
-    use state;
+    use server;
     use web::endpoints;
     use web::views;
 
@@ -526,7 +526,7 @@ pub mod search_new_show {
         fn render(
             &self,
             _log: &Logger,
-            req: &HttpRequest<state::StateImpl>,
+            req: &HttpRequest<server::StateImpl>,
         ) -> Result<HttpResponse> {
             let common = endpoints::build_common(req, "Search");
             endpoints::respond_200(views::search_new_show::render(&common, self)?)
@@ -537,7 +537,7 @@ pub mod search_new_show {
 pub mod search_show {
     use errors::*;
     use mediators::directory_podcast_searcher;
-    use state;
+    use server;
     use time_helpers;
     use web::endpoints;
     use web::views;
@@ -557,8 +557,8 @@ pub mod search_show {
     struct Params {
         query: Option<String>,
     }
-    impl state::Params for Params {
-        fn build(_log: &Logger, req: &HttpRequest<state::StateImpl>) -> Result<Self> {
+    impl server::Params for Params {
+        fn build(_log: &Logger, req: &HttpRequest<server::StateImpl>) -> Result<Self> {
             Ok(Self {
                 query: req.query().get("q").map(|q| q.to_owned()),
             })
@@ -587,7 +587,7 @@ pub mod search_show {
         fn render(
             &self,
             _log: &Logger,
-            req: &HttpRequest<state::StateImpl>,
+            req: &HttpRequest<server::StateImpl>,
         ) -> Result<HttpResponse> {
             match *self {
                 ViewModel::NoQuery => Ok(HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)

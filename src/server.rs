@@ -11,7 +11,7 @@ use slog::Logger;
 //
 
 /// A trait to be implemented for parameters that are decoded from an incoming HTTP request. It's
-/// also reused as a message to be received by `state::SyncExecutor` containing enough information
+/// also reused as a message to be received by `SyncExecutor` containing enough information
 /// to run its synchronous database operations.
 pub trait Params: Sized {
     /// Builds a `Params` implementation by decoding an HTTP request. This may result in an error
