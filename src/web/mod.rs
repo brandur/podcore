@@ -34,12 +34,8 @@ impl WebServer {
         // or the server will crash on `start()`.
         let system = actix::System::new("podcore-web");
 
-        // TODO: Get rid of this once StateImpl no longers takes a pool
-        let pool_clone = pool.clone();
         let sync_addr = actix::SyncArbiter::start(self.num_sync_executors as usize, move || {
-            endpoints::SyncExecutor {
-                pool: pool_clone.clone(),
-            }
+            endpoints::SyncExecutor { pool: pool.clone() }
         });
 
         let server = actix_web::HttpServer::new(move || {
