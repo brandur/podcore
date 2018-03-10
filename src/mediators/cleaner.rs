@@ -104,7 +104,7 @@ const DELETE_LIMIT: i64 = 1000;
 static DIRECTORY_SEARCH_DELETE_HORIZON: &'static str = "1 week";
 
 // The maximum number of content rows to keep around for any given podcast.
-pub const PODCAST_FEED_CONTENT_LIMIT: i64 = 10;
+pub const PODCAST_FEED_CONTENT_LIMIT: i64 = 5;
 
 //
 // Private types
