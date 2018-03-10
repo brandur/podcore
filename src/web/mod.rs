@@ -13,7 +13,7 @@ use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use slog::Logger;
 
-pub struct WebServer {
+pub struct Server {
     pub assets_version:     String,
     pub log:                Logger,
     pub num_sync_executors: u32,
@@ -21,7 +21,7 @@ pub struct WebServer {
     pub port:               String,
 }
 
-impl WebServer {
+impl Server {
     pub fn run(&self) -> Result<()> {
         let assets_version = self.assets_version.clone();
         let log = self.log.clone();

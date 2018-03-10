@@ -21,7 +21,6 @@ extern crate tokio_core;
 use podcore::api;
 use podcore::error_helpers;
 use podcore::errors::*;
-use podcore::graphql;
 use podcore::http_requester::{HttpRequesterFactoryLive, HttpRequesterLive};
 use podcore::mediators::cleaner;
 use podcore::mediators::directory_podcast_searcher;
@@ -29,16 +28,13 @@ use podcore::mediators::podcast_crawler;
 use podcore::mediators::podcast_feed_location_upgrader;
 use podcore::mediators::podcast_reingester;
 use podcore::mediators::podcast_updater;
-use podcore::web::WebServer;
+use podcore::web;
 
 use clap::{App, ArgMatches, SubCommand};
 use diesel::pg::PgConnection;
 use hyper::Client;
 use hyper_tls::HttpsConnector;
-use iron::prelude::*;
 use isatty::stdout_isatty;
-use juniper_iron::{GraphQLHandler, GraphiQLHandler};
-use mount::Mount;
 use r2d2::{Pool, PooledConnection};
 use r2d2_diesel::ConnectionManager;
 use slog::{Drain, Logger};
@@ -153,14 +149,23 @@ fn main() {
 fn subcommand_api(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("api").unwrap();
 
+    // TODO: Extract to a helper
     let port = env::var("PORT").unwrap_or_else(|_| "8080".to_owned());
     let port = matches.value_of("PORT").unwrap_or_else(|| port.as_str());
-    let host = format!("0.0.0.0:{}", port);
+
     let num_connections = options.num_connections;
     let pool = pool(log, num_connections)?;
 
-    let mut mount = Mount::new();
+    let server = api::Server {
+        log: log.clone(),
+        num_sync_executors: options.num_connections,
+        pool,
+        port: port.to_owned(),
+    };
+    server.run()?;
+    Ok(())
 
+    /*
     let graphiql_endpoint = GraphiQLHandler::new("/graphql");
     mount.mount("/", graphiql_endpoint);
 
@@ -170,12 +175,7 @@ fn subcommand_api(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
         graphql::Mutation::default(),
     );
     mount.mount("/graphql", graphql_endpoint);
-
-    info!(log, "API starting"; "host" => host.as_str());
-    Iron::new(api::chain(log, mount))
-        .http(host.as_str())
-        .chain_err(|| "Error binding API")?;
-    Ok(())
+*/
 }
 
 fn subcommand_add(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
@@ -350,7 +350,7 @@ fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
     let num_connections = options.num_connections;
     let pool = pool(log, num_connections)?;
 
-    let server = WebServer {
+    let server = web::Server {
         assets_version,
         log: log.clone(),
         num_sync_executors: options.num_connections,

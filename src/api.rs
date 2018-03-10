@@ -1,43 +1,59 @@
-use iron::{typemap, AfterMiddleware, BeforeMiddleware};
-use iron::prelude::*;
-use mount::Mount;
+use errors::*;
+use middleware;
+use server;
+
+use actix;
+use actix_web;
+use actix_web::Method;
+use diesel::pg::PgConnection;
+use r2d2::Pool;
+use r2d2_diesel::ConnectionManager;
 use slog::Logger;
-use time::precise_time_ns;
 
-pub fn chain(log: &Logger, mount: Mount) -> Chain {
-    let mut chain = Chain::new(mount);
-
-    // Tried to pass in `log` as a reference here, but ran into serious trouble
-    // giving a middleware a lifetime like 'a because all the Iron traits
-    // require a static lifetime. I don't really understand why.
-    chain.link_before(ResponseTime { log: log.clone() });
-    chain.link_after(ResponseTime { log: log.clone() });
-
-    chain
+pub struct Server {
+    pub log:                Logger,
+    pub num_sync_executors: u32,
+    pub pool:               Pool<ConnectionManager<PgConnection>>,
+    pub port:               String,
 }
 
-// HTTP abstractions
-//
+impl Server {
+    pub fn run(&self) -> Result<()> {
+        let log = self.log.clone();
+        let pool = self.pool.clone();
 
-struct ResponseTime {
-    log: Logger,
-}
+        // Must appear up here because we're going to move `log` into server closure.
+        let host = format!("0.0.0.0:{}", self.port.as_str());
+        info!(log, "API server starting"; "host" => host.as_str());
 
-impl typemap::Key for ResponseTime {
-    type Value = u64;
-}
+        // Although not referenced in the server definition, a `System` must be defined
+        // or the server will crash on `start()`.
+        let system = actix::System::new("podcore-api");
 
-impl BeforeMiddleware for ResponseTime {
-    fn before(&self, req: &mut Request) -> IronResult<()> {
-        req.extensions.insert::<ResponseTime>(precise_time_ns());
+        let sync_addr = actix::SyncArbiter::start(self.num_sync_executors as usize, move || {
+            server::SyncExecutor { pool: pool.clone() }
+        });
+
+        let server = actix_web::HttpServer::new(move || {
+            actix_web::Application::with_state(server::StateImpl {
+                assets_version: "".to_owned(),
+                log:            log.clone(),
+                sync_addr:      sync_addr.clone(),
+            }).middleware(middleware::log_initializer::Middleware)
+                .middleware(middleware::request_id::Middleware)
+                .middleware(middleware::request_response_logger::Middleware)
+                .resource("/", |r| {
+                    r.method(Method::GET).f(|_req| actix_web::httpcodes::HTTPOk)
+                })
+                .resource("/health", |r| {
+                    r.method(Method::GET).f(|_req| actix_web::httpcodes::HTTPOk)
+                })
+                .default_resource(|r| r.h(actix_web::NormalizePath::default()))
+        });
+
+        let _addr = server.bind(host)?.start();
+        let _ = system.run();
+
         Ok(())
-    }
-}
-
-impl AfterMiddleware for ResponseTime {
-    fn after(&self, req: &mut Request, res: Response) -> IronResult<Response> {
-        let delta = precise_time_ns() - *req.extensions.get::<ResponseTime>().unwrap();
-        info!(self.log, "Request finished"; "time_ms" => (delta as f64) / 1000000.0);
-        Ok(res)
     }
 }

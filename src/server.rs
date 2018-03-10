@@ -42,9 +42,14 @@ impl<P: Params> Message<P> {
 }
 
 pub struct StateImpl {
+    // Assets are versioned so that they can be expired immediately without worrying about any kind
+    // of client-side caching. This is a version represented as a string.
+    //
+    // Note that this is only used by `web::Server`.
     pub assets_version: String,
-    pub log:            Logger,
-    pub sync_addr:      actix::prelude::SyncAddress<SyncExecutor>,
+
+    pub log:       Logger,
+    pub sync_addr: actix::prelude::SyncAddress<SyncExecutor>,
 }
 
 impl State for StateImpl {
