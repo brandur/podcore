@@ -441,9 +441,8 @@ fn pool(_log: &Logger, num_connections: u32) -> Result<Pool<ConnectionManager<Pg
 /// Gets a port from the program's argument or falls back to a value in `PORT` or falls back to
 /// 8080.
 fn server_port(matches: &ArgMatches) -> String {
-    let port = env::var("PORT").unwrap_or_else(|_| SERVER_PORT.to_owned());
     matches
         .value_of("PORT")
-        .unwrap_or_else(|| port.as_str())
-        .to_owned()
+        .map(|p| p.to_owned())
+        .unwrap_or_else(|| env::var("PORT").unwrap_or_else(|_| SERVER_PORT.to_owned()))
 }
