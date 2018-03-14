@@ -1,4 +1,5 @@
 /.envrc
+/TODO.md
 /target/
 **/*.rs.bk
 *.pem
