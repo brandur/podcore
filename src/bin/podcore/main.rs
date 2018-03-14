@@ -149,10 +149,6 @@ fn main() {
 fn subcommand_api(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("api").unwrap();
 
-    // TODO: Extract to a helper
-    let port = env::var("PORT").unwrap_or_else(|_| "8080".to_owned());
-    let port = matches.value_of("PORT").unwrap_or_else(|| port.as_str());
-
     let num_connections = options.num_connections;
     let pool = pool(log, num_connections)?;
 
@@ -160,7 +156,7 @@ fn subcommand_api(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
         log: log.clone(),
         num_sync_executors: options.num_connections,
         pool,
-        port: port.to_owned(),
+        port: server_port(matches),
     };
     server.run()?;
     Ok(())
@@ -343,10 +339,6 @@ fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
 
     let assets_version = env::var("ASSETS_VERSION").unwrap_or_else(|_| "1".to_owned());
 
-    // TODO: Extract to a helper
-    let port = env::var("PORT").unwrap_or_else(|_| "8080".to_owned());
-    let port = matches.value_of("PORT").unwrap_or_else(|| port.as_str());
-
     let num_connections = options.num_connections;
     let pool = pool(log, num_connections)?;
 
@@ -355,7 +347,7 @@ fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
         log: log.clone(),
         num_sync_executors: options.num_connections,
         pool,
-        port: port.to_owned(),
+        port: server_port(matches),
     };
     server.run()?;
     Ok(())
@@ -366,6 +358,9 @@ fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
 //
 
 const NUM_CONNECTIONS: u32 = 50;
+
+// Default port to start servers on.
+const SERVER_PORT: &str = "8080";
 
 // For commands that loop, the number of seconds to sleep between iterations
 // where no records were processed.
@@ -441,4 +436,14 @@ fn pool(_log: &Logger, num_connections: u32) -> Result<Pool<ConnectionManager<Pg
         .max_size(num_connections)
         .build(manager)
         .map_err(Error::from)
+}
+
+/// Gets a port from the program's argument or falls back to a value in `PORT` or falls back to
+/// 8080.
+fn server_port(matches: &ArgMatches) -> String {
+    let port = env::var("PORT").unwrap_or_else(|_| SERVER_PORT.to_owned());
+    matches
+        .value_of("PORT")
+        .unwrap_or_else(|| port.as_str())
+        .to_owned()
 }
