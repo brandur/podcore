@@ -1,13 +1,24 @@
 use errors::*;
+use graphql;
 use middleware;
 use server;
+use server::Params as P;
+use time_helpers;
 
 use actix;
 use actix_web;
+use actix_web::{HttpRequest, HttpResponse, StatusCode};
+use actix_web::AsyncResponder;
 use actix_web::Method;
+use actix_web::ResponseError;
 use diesel::pg::PgConnection;
+use futures::future;
+use futures::future::Future;
+use juniper::{InputValue, RootNode};
+use juniper::http::GraphQLRequest;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
+use serde_json;
 use slog::Logger;
 
 pub struct Server {
@@ -45,6 +56,7 @@ impl Server {
                 .resource("/", |r| {
                     r.method(Method::GET).f(|_req| actix_web::httpcodes::HTTPOk)
                 })
+                .resource("/graphql", |r| r.method(Method::GET).a(get_handler))
                 .resource("/health", |r| {
                     r.method(Method::GET).f(|_req| actix_web::httpcodes::HTTPOk)
                 })
@@ -56,4 +68,113 @@ impl Server {
 
         Ok(())
     }
+}
+
+struct Params {
+    graphql_req: GraphQLRequest,
+}
+
+impl server::Params for Params {
+    fn build(_log: &Logger, req: &HttpRequest<server::StateImpl>) -> Result<Self> {
+        let input_query = match req.query().get("query") {
+            Some(q) => q.to_owned(),
+            None => {
+                return Err(Error::from("No query provided"));
+            }
+        };
+
+        let operation_name = req.query().get("operationName").map(|n| n.to_owned());
+
+        let variables: Option<InputValue> = match req.query().get("variables") {
+            Some(v) => match serde_json::from_str::<InputValue>(v.as_ref()) {
+                Ok(v) => Some(v),
+                Err(e) => {
+                    return Err(Error::from(format!(
+                        "Malformed variables JSON. Error: {}",
+                        e
+                    )));
+                }
+            },
+            None => None,
+        };
+
+        Ok(Self {
+            graphql_req: GraphQLRequest::new(input_query, operation_name, variables),
+        })
+    }
+}
+
+pub fn get_handler(
+    mut req: HttpRequest<server::StateImpl>,
+) -> Box<Future<Item = HttpResponse, Error = Error>> {
+    let log = middleware::log_initializer::log(&mut req);
+
+    let params_res = time_helpers::log_timed(&log.new(o!("step" => "build_params")), |log| {
+        Params::build(log, &req)
+    });
+    let params = match params_res {
+        Ok(params) => params,
+        Err(e) => {
+            return Box::new(future::ok(
+                actix_web::error::ErrorBadRequest(e.description().to_owned()).error_response(),
+            ));
+        }
+    };
+
+    let message = server::Message::new(&log, params);
+
+    req.state()
+        .sync_addr
+        .call_fut(message)
+        .chain_err(|| "Error from SyncExecutor")
+        .from_err()
+        .and_then(move |res| {
+            let response = res?;
+            time_helpers::log_timed(&log.new(o!("step" => "render_response")), |_log| {
+                let code = if response.ok {
+                    StatusCode::OK
+                } else {
+                    StatusCode::BAD_REQUEST
+                };
+                Ok(HttpResponse::build(code)
+                    .content_type("application/json; charset=utf-8")
+                    .body(response.json)
+                    .unwrap())
+            })
+        })
+        .responder()
+}
+
+type MessageResult = ::actix::prelude::MessageResult<server::Message<Params>>;
+
+impl ::actix::prelude::Handler<server::Message<Params>> for server::SyncExecutor {
+    type Result = MessageResult;
+
+    fn handle(&mut self, message: server::Message<Params>, _: &mut Self::Context) -> Self::Result {
+        let conn = self.pool.get()?;
+        let log = message.log.clone();
+        let root_node = RootNode::new(graphql::Query::default(), graphql::Mutation::default());
+        time_helpers::log_timed(&log.new(o!("step" => "handle_message")), move |log| {
+            let context = graphql::Context {
+                log:  log.clone(),
+                conn: conn,
+            };
+            let graphql_response = message.params.graphql_req.execute(&root_node, &context);
+            Ok(ExecutionResponse {
+                json: serde_json::to_string_pretty(&graphql_response)?,
+                ok:   graphql_response.is_ok(),
+            })
+        })
+    }
+}
+
+struct ExecutionResponse {
+    json: String,
+    ok:   bool,
+}
+
+// TODO: `ResponseType` will change to `Message`
+impl ::actix::prelude::ResponseType for server::Message<Params> {
+    type Item = ExecutionResponse;
+    type Error = Error;
 }

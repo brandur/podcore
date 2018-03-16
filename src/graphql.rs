@@ -7,25 +7,17 @@ use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use juniper;
 use juniper::FieldResult;
-use r2d2::{Pool, PooledConnection};
+use r2d2::PooledConnection;
 use r2d2_diesel::ConnectionManager;
+use slog::Logger;
 use std::str::FromStr;
 
-type DieselConnection = PooledConnection<ConnectionManager<PgConnection>>;
-type DieselPool = Pool<ConnectionManager<PgConnection>>;
+//type DieselConnection = PooledConnection<ConnectionManager<PgConnection>>;
+//type DieselPool = Pool<ConnectionManager<PgConnection>>;
 
 pub struct Context {
-    pool: DieselPool,
-}
-
-impl Context {
-    pub fn new(pool: DieselPool) -> Self {
-        Context { pool }
-    }
-
-    fn get_conn(&self) -> Result<DieselConnection> {
-        self.pool.get().map_err(Error::from)
-    }
+    pub log:  Logger,
+    pub conn: PooledConnection<ConnectionManager<PgConnection>>,
 }
 
 impl juniper::Context for Context {}
@@ -144,7 +136,7 @@ graphql_object!(Query: Context |&self| {
             .filter(schema::episode::podcast_id.eq(id))
             .order(schema::episode::published_at.desc())
             .limit(50)
-            .load::<model::Episode>(&*context.get_conn()?)
+            .load::<model::Episode>(&*context.conn)
             .chain_err(|| "Error loading episodes from the database")?
             .iter()
             .map(EpisodeObject::from)
@@ -157,7 +149,7 @@ graphql_object!(Query: Context |&self| {
         let results = schema::podcast::table
             .order(schema::podcast::title.asc())
             .limit(5)
-            .load::<model::Podcast>(&*context.get_conn()?)
+            .load::<model::Podcast>(&*context.conn)
             .chain_err(|| "Error loading podcasts from the database")?
             .iter()
             .map(PodcastObject::from)

@@ -3,7 +3,6 @@ use http_requester::HttpRequesterLive;
 use server;
 use web::views;
 
-use actix_web;
 use actix_web::{HttpRequest, HttpResponse, StatusCode};
 use hyper::Client;
 use hyper_tls::HttpsConnector;
@@ -161,12 +160,6 @@ pub struct CommonViewModel {
 //
 // Functions
 //
-
-impl From<Error> for actix_web::error::Error {
-    fn from(error: Error) -> Self {
-        actix_web::error::ErrorInternalServerError(error.to_string()).into()
-    }
-}
 
 /// Builds a `CommonViewModel` from request information and takes in any other
 /// required parameters to do so.

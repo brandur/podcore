@@ -24,6 +24,16 @@ pub trait State {
 }
 
 //
+// Trait implementations
+//
+
+impl From<Error> for ::actix_web::error::Error {
+    fn from(error: Error) -> Self {
+        ::actix_web::error::ErrorInternalServerError(error.to_string()).into()
+    }
+}
+
+//
 // Structs
 //
 
