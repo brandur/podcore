@@ -160,18 +160,6 @@ fn subcommand_api(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
     };
     server.run()?;
     Ok(())
-
-    /*
-    let graphiql_endpoint = GraphiQLHandler::new("/graphql");
-    mount.mount("/", graphiql_endpoint);
-
-    let graphql_endpoint = GraphQLHandler::new(
-        move |_: &mut Request| -> graphql::Context { graphql::Context::new(pool.clone()) },
-        graphql::Query::default(),
-        graphql::Mutation::default(),
-    );
-    mount.mount("/graphql", graphql_endpoint);
-*/
 }
 
 fn subcommand_add(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
