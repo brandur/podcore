@@ -44,6 +44,7 @@ extern crate url;
 extern crate uuid;
 
 pub mod api;
+pub mod database_helpers;
 pub mod error_helpers;
 pub mod errors;
 

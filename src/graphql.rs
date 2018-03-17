@@ -12,9 +12,6 @@ use r2d2_diesel::ConnectionManager;
 use slog::Logger;
 use std::str::FromStr;
 
-//type DieselConnection = PooledConnection<ConnectionManager<PgConnection>>;
-//type DieselPool = Pool<ConnectionManager<PgConnection>>;
-
 pub struct Context {
     pub conn: PooledConnection<ConnectionManager<PgConnection>>,
     pub log:  Logger,
