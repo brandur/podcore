@@ -20,6 +20,7 @@ error_chain!{
         NativeTls(::native_tls::Error);
         HyperUri(::hyper::error::UriError);
         Json(::serde_json::Error);
+        //RequestPayload(::actix_web::error::PayloadError);
         Template(::horrorshow::Error);
         UrlParse(::url::ParseError);
         Xml(::quick_xml::errors::Error);

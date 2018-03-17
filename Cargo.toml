@@ -18,6 +18,7 @@ path = "src/bin/podcore/main.rs"
 actix = "0.4"
 actix-web = "0.3"
 
+bytes = "*"
 chan = "*"
 chrono = "0.4"
 clap = "*"

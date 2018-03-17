@@ -11,6 +11,7 @@ use actix_web::{HttpRequest, HttpResponse, StatusCode};
 use actix_web::AsyncResponder;
 use actix_web::Method;
 use actix_web::ResponseError;
+use bytes::Bytes;
 use diesel::pg::PgConnection;
 use futures::future;
 use futures::future::Future;
@@ -74,7 +75,17 @@ struct Params {
     graphql_req: GraphQLRequest,
 }
 
+impl Params {
+    fn build_from_post(_log: &Logger, data: &[u8]) -> Result<Self> {
+        match serde_json::from_slice::<GraphQLRequest>(data) {
+            Ok(graphql_req) => Ok(Params { graphql_req }),
+            Err(e) => Err(Error::from("Error deserializing request body")),
+        }
+    }
+}
+
 impl server::Params for Params {
+    // TODO: convert this to build_from_get
     fn build(_log: &Logger, req: &HttpRequest<server::StateImpl>) -> Result<Self> {
         let input_query = match req.query().get("query") {
             Some(q) => q.to_owned(),
@@ -104,6 +115,22 @@ impl server::Params for Params {
     }
 }
 
+/*
+pub fn post_handler(
+    mut req: HttpRequest<server::StateImpl>,
+) -> Box<Future<Item = HttpResponse, Error = Error>> {
+    let log = middleware::log_initializer::log(&mut req);
+    req.body()
+        .from_err()
+        .and_then(|bytes: Bytes| {
+            // TODO: Timing
+            Params::build_from_post(&log, bytes.as_ref())
+        })
+        .from_err()
+        .and_then(|params: Params| execute(&log, &req, params))
+}
+*/
+
 pub fn get_handler(
     mut req: HttpRequest<server::StateImpl>,
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
@@ -121,12 +148,28 @@ pub fn get_handler(
         }
     };
 
-    let message = server::Message::new(&log, params);
+    execute(&log, future::ok(params), &req)
+}
 
-    req.state()
-        .sync_addr
-        .call_fut(message)
-        .chain_err(|| "Error from SyncExecutor")
+fn execute<F>(
+    log: &Logger,
+    fut: F,
+    req: &HttpRequest<server::StateImpl>,
+) -> Box<Future<Item = HttpResponse, Error = Error>>
+where
+    F: Future<Item = Params, Error = Error> + 'static,
+{
+    fut.and_then(|_params| {
+        Ok(HttpResponse::build(StatusCode::OK)
+            .content_type("application/json; charset=utf-8")
+            .body("hello".to_owned())
+            .unwrap())
+    }).responder()
+    /*
+    fut.and_then(|params| {
+        let message = server::Message::new(&log, params);
+        req.state().sync_addr.call_fut(message)
+    }).chain_err(|| "Error from SyncExecutor")
         .from_err()
         .and_then(move |res| {
             let response = res?;
@@ -143,6 +186,7 @@ pub fn get_handler(
             })
         })
         .responder()
+    */
 }
 
 type MessageResult = ::actix::prelude::MessageResult<server::Message<Params>>;
