@@ -56,7 +56,10 @@ impl Server {
                 .resource("/", |r| {
                     r.method(Method::GET).f(|_req| actix_web::httpcodes::HTTPOk)
                 })
-                .resource("/graphql", |r| r.method(Method::GET).a(get_handler))
+                .resource("/graphql", |r| {
+                    r.method(Method::GET).a(get_handler);
+                    r.method(Method::POST).a(post_handler);
+                })
                 .resource("/health", |r| {
                     r.method(Method::GET).f(|_req| actix_web::httpcodes::HTTPOk)
                 })
@@ -129,6 +132,8 @@ pub fn post_handler(
     let log_clone = log.clone();
 
     let fut = req.body()
+        // `map_err` is used here instead of `chain_err` because `PayloadError` doesn't implement
+        // the `Error` trait and I was unable to put it in the error chain.
         .map_err(|_e| Error::from("Error reading request body"))
         .and_then(move |bytes: Bytes| {
             time_helpers::log_timed(&log_clone.new(o!("step" => "build_params")), |log| {
