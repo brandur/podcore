@@ -115,21 +115,26 @@ impl server::Params for Params {
     }
 }
 
-/*
 pub fn post_handler(
     mut req: HttpRequest<server::StateImpl>,
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
     let log = middleware::log_initializer::log(&mut req);
-    req.body()
-        .from_err()
-        .and_then(|bytes: Bytes| {
+    let log_clone = log.clone();
+
+    let fut = req.body()
+        .map_err(|_e| Error::from("Error reading request body"))
+        .and_then(move |bytes: Bytes| {
             // TODO: Timing
-            Params::build_from_post(&log, bytes.as_ref())
+            Params::build_from_post(&log_clone, bytes.as_ref())
         })
-        .from_err()
-        .and_then(|params: Params| execute(&log, &req, params))
+        .from_err();
+
+    execute(
+        Box::new(log),
+        Box::new(fut),
+        Box::new(req.state().sync_addr.clone()),
+    )
 }
-*/
 
 pub fn get_handler(
     mut req: HttpRequest<server::StateImpl>,
