@@ -19,13 +19,10 @@ extern crate http;
 #[macro_use]
 extern crate hyper;
 extern crate hyper_tls;
-extern crate iron;
 #[macro_use]
 extern crate juniper;
-extern crate juniper_iron;
 #[macro_use]
 extern crate lazy_static;
-extern crate mount;
 extern crate native_tls;
 extern crate quick_xml;
 extern crate r2d2;

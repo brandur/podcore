@@ -31,15 +31,8 @@ horrorshow = "*"
 http = "*"
 hyper = "0.11"
 hyper-tls = "*"
-
-# Locking iron/mount to particular versions because the HTTP-related packages
-# don't seem to play nicely together.
-iron = "0.5.1"
 isatty = "*"
-mount = "^0.3.0"
-
 juniper = "*"
-juniper_iron = "*"
 lazy_static = "1.0"
 native-tls = "*"
 openssl-probe = "*"
