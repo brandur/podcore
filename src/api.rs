@@ -159,12 +159,28 @@ fn execute<F>(
 where
     F: Future<Item = Params, Error = Error> + 'static,
 {
+    /*
     fut.and_then(|_params| {
         Ok(HttpResponse::build(StatusCode::OK)
             .content_type("application/json; charset=utf-8")
             .body("hello".to_owned())
             .unwrap())
     }).responder()
+    */
+    fut.and_then(|params| {
+        let message = server::Message::new(&log, params);
+        req.state()
+            .sync_addr
+            .call_fut(message)
+            .map_err(|_e| Error::from("Future canceled"))
+    }).from_err()
+        .and_then(move |res| {
+            Ok(HttpResponse::build(StatusCode::OK)
+                .content_type("application/json; charset=utf-8")
+                .body("hello".to_owned())
+                .unwrap())
+        })
+        .responder()
     /*
     fut.and_then(|params| {
         let message = server::Message::new(&log, params);
