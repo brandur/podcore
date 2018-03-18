@@ -13,8 +13,9 @@ use actix_web::ResponseError;
 use bytes::Bytes;
 use diesel::pg::PgConnection;
 use futures::future;
-use futures::future::Future;
+use futures::future::{Future, FutureResult};
 use juniper::{InputValue, RootNode};
+use juniper::graphiql;
 use juniper::http::GraphQLRequest;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
@@ -55,6 +56,9 @@ impl Server {
                 .middleware(middleware::request_response_logger::Middleware)
                 .resource("/", |r| {
                     r.method(Method::GET).f(|_req| actix_web::httpcodes::HTTPOk)
+                })
+                .resource("/graphiql", |r| {
+                    r.method(Method::GET).a(graphiql_get_handler);
                 })
                 .resource("/graphql", |r| {
                     r.method(Method::GET).a(get_handler);
@@ -166,6 +170,15 @@ pub fn get_handler(
         log,
         Box::new(future::ok(params)),
         req.state().sync_addr.clone(),
+    )
+}
+
+fn graphiql_get_handler(_req: HttpRequest<server::StateImpl>) -> FutureResult<HttpResponse, Error> {
+    future::ok(
+        HttpResponse::build(StatusCode::OK)
+            .content_type("text/html; charset=utf-8")
+            .body(graphiql::graphiql_source("/graphql"))
+            .unwrap(),
     )
 }
 
