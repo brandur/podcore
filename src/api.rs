@@ -79,7 +79,7 @@ impl Params {
     fn build_from_post(_log: &Logger, data: &[u8]) -> Result<Self> {
         match serde_json::from_slice::<GraphQLRequest>(data) {
             Ok(graphql_req) => Ok(Params { graphql_req }),
-            Err(e) => Err(Error::from("Error deserializing request body")),
+            Err(_e) => Err(Error::from("Error deserializing request body")),
         }
     }
 }
@@ -148,13 +148,13 @@ pub fn get_handler(
         }
     };
 
-    execute(&log, future::ok(params), &req)
+    execute(Box::new(log), Box::new(future::ok(params)), Box::new(req))
 }
 
 fn execute<F>(
-    log: &Logger,
-    fut: F,
-    req: &HttpRequest<server::StateImpl>,
+    log: Box<Logger>,
+    fut: Box<F>,
+    req: Box<HttpRequest<server::StateImpl>>,
 ) -> Box<Future<Item = HttpResponse, Error = Error>>
 where
     F: Future<Item = Params, Error = Error> + 'static,
@@ -167,14 +167,14 @@ where
             .unwrap())
     }).responder()
     */
-    fut.and_then(|params| {
-        let message = server::Message::new(&log, params);
+    fut.and_then(move |params| {
+        let message = server::Message::new(&*log, params);
         req.state()
             .sync_addr
             .call_fut(message)
             .map_err(|_e| Error::from("Future canceled"))
     }).from_err()
-        .and_then(move |res| {
+        .and_then(move |_res| {
             Ok(HttpResponse::build(StatusCode::OK)
                 .content_type("application/json; charset=utf-8")
                 .body("hello".to_owned())
