@@ -283,24 +283,38 @@ mod tests {
 
     #[test]
     fn test_handler_graphiql_get() {
-        let pool = test_helpers::pool();
-        let _system = actix::System::new("podcore-api-test");
-
-        let sync_addr =
-            actix::SyncArbiter::start(1, move || server::SyncExecutor { pool: pool.clone() });
-
-        let state = server::StateImpl {
-            assets_version: "".to_owned(),
-            log:            test_helpers::log(),
-            sync_addr:      sync_addr,
-        };
-
-        //
-        // Test
-        //
-        let resp = TestRequest::with_state(state)
+        let bootstrap = TestBootstrap::new();
+        let resp = TestRequest::with_state(bootstrap.state)
             .run_async(|r| handler_graphiql_get(r).map_err(|e| e.into()))
             .unwrap();
         assert_eq!(resp.status(), StatusCode::OK);
+    }
+
+    //
+    // Private types/functions
+    //
+
+    struct TestBootstrap {
+        _common: test_helpers::CommonTestBootstrap,
+        _system: actix::SystemRunner,
+        state:   server::StateImpl,
+    }
+
+    impl TestBootstrap {
+        fn new() -> TestBootstrap {
+            let pool = test_helpers::pool();
+            let pool_clone = pool.clone();
+            TestBootstrap {
+                _common: test_helpers::CommonTestBootstrap::new(),
+                _system: actix::System::new("podcore-api-test"),
+                state:   server::StateImpl {
+                    assets_version: "".to_owned(),
+                    log:            test_helpers::log(),
+                    sync_addr:      actix::SyncArbiter::start(1, move || server::SyncExecutor {
+                        pool: pool_clone.clone(),
+                    }),
+                },
+            }
+        }
     }
 }
