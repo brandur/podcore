@@ -124,8 +124,9 @@ pub fn post_handler(
     let fut = req.body()
         .map_err(|_e| Error::from("Error reading request body"))
         .and_then(move |bytes: Bytes| {
-            // TODO: Timing
-            Params::build_from_post(&log_clone, bytes.as_ref())
+            time_helpers::log_timed(&log_clone.new(o!("step" => "build_params")), |log| {
+                Params::build_from_post(&log, bytes.as_ref())
+            })
         })
         .from_err();
 
