@@ -75,6 +75,7 @@ struct Params {
 }
 
 impl Params {
+    /// Builds `Params` from a `GET` request.
     fn build_from_get(_log: &Logger, req: &HttpRequest<server::StateImpl>) -> Result<Self> {
         let input_query = match req.query().get("query") {
             Some(q) => q.to_owned(),
@@ -103,6 +104,7 @@ impl Params {
         })
     }
 
+    /// Builds `Params` from a `POST` request.
     fn build_from_post(_log: &Logger, data: &[u8]) -> Result<Self> {
         match serde_json::from_slice::<GraphQLRequest>(data) {
             Ok(graphql_req) => Ok(Params { graphql_req }),
