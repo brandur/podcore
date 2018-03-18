@@ -148,13 +148,17 @@ pub fn get_handler(
         }
     };
 
-    execute(Box::new(log), Box::new(future::ok(params)), Box::new(req))
+    execute(
+        Box::new(log),
+        Box::new(future::ok(params)),
+        Box::new(req.state().sync_addr.clone()),
+    )
 }
 
 fn execute<F>(
     log: Box<Logger>,
     fut: Box<F>,
-    req: Box<HttpRequest<server::StateImpl>>,
+    sync_addr: Box<actix::prelude::SyncAddress<server::SyncExecutor>>,
 ) -> Box<Future<Item = HttpResponse, Error = Error>>
 where
     F: Future<Item = Params, Error = Error> + 'static,
@@ -164,8 +168,7 @@ where
 
     fut.and_then(move |params| {
         let message = server::Message::new(&log_clone, params);
-        req.state()
-            .sync_addr
+        sync_addr
             .call_fut(message)
             .map_err(|_e| Error::from("Future canceled"))
     }).from_err()
