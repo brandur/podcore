@@ -280,14 +280,17 @@ mod tests {
 
     use actix;
     use actix_web::test::TestRequest;
-    use percent_encoding::{percent_encode, USERINFO_ENCODE_SET};
+    use percent_encoding::{percent_encode, DEFAULT_ENCODE_SET};
 
     #[test]
     fn test_handler_graphql_get() {
+        let url = percent_encode(b"/graphql?query={podcast{id}}", DEFAULT_ENCODE_SET).to_string();
+        info!(test_helpers::log_sync(), "URL: {}", url);
+
         let bootstrap = TestBootstrap::new();
         let resp = TestRequest::with_state(bootstrap.state)
             .uri(
-                percent_encode(b"/graphql?query={podcast{id}}", USERINFO_ENCODE_SET)
+                percent_encode(b"/graphql?query={podcast{id}}", DEFAULT_ENCODE_SET)
                     .to_string()
                     .as_str(),
             )
