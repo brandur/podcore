@@ -186,6 +186,7 @@ fn handler_get(
     )
 }
 
+#[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 fn handler_graphiql_get(_req: HttpRequest<server::StateImpl>) -> FutureResult<HttpResponse, Error> {
     future::ok(
         HttpResponse::build(StatusCode::OK)
