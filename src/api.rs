@@ -61,8 +61,8 @@ impl Server {
                     r.method(Method::GET).a(handler_graphiql_get);
                 })
                 .resource("/graphql", |r| {
-                    r.method(Method::GET).a(handler_get);
-                    r.method(Method::POST).a(handler_post);
+                    r.method(Method::GET).a(handler_graphql_get);
+                    r.method(Method::POST).a(handler_graphql_post);
                 })
                 .resource("/health", |r| {
                     r.method(Method::GET).f(|_req| actix_web::httpcodes::HTTPOk)
@@ -142,7 +142,7 @@ impl server::Params for Params {
 // Web handlers
 //
 
-fn handler_post(
+fn handler_graphql_post(
     mut req: HttpRequest<server::StateImpl>,
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
     let log = middleware::log_initializer::log(&mut req);
@@ -162,7 +162,7 @@ fn handler_post(
     execute(log, Box::new(fut), req.state().sync_addr.clone())
 }
 
-fn handler_get(
+fn handler_graphql_get(
     mut req: HttpRequest<server::StateImpl>,
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
     let log = middleware::log_initializer::log(&mut req);
