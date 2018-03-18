@@ -24,6 +24,7 @@ extern crate juniper;
 #[macro_use]
 extern crate lazy_static;
 extern crate native_tls;
+extern crate percent_encoding;
 extern crate quick_xml;
 extern crate r2d2;
 extern crate r2d2_diesel;

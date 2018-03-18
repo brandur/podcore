@@ -280,6 +280,21 @@ mod tests {
 
     use actix;
     use actix_web::test::TestRequest;
+    use percent_encoding::{percent_encode, USERINFO_ENCODE_SET};
+
+    #[test]
+    fn test_handler_graphql_get() {
+        let bootstrap = TestBootstrap::new();
+        let resp = TestRequest::with_state(bootstrap.state)
+            .uri(
+                percent_encode(b"/graphql?query={podcast{id}}", USERINFO_ENCODE_SET)
+                    .to_string()
+                    .as_str(),
+            )
+            .run_async(|r| handler_graphiql_get(r).map_err(|e| e.into()))
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+    }
 
     #[test]
     fn test_handler_graphiql_get() {
