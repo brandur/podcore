@@ -77,6 +77,15 @@ impl Server {
     }
 }
 
+//
+// Private structs
+//
+
+struct ExecutionResponse {
+    json: String,
+    ok:   bool,
+}
+
 struct Params {
     graphql_req: GraphQLRequest,
 }
@@ -129,7 +138,11 @@ impl server::Params for Params {
     }
 }
 
-pub fn post_handler(
+//
+// Web handlers
+//
+
+fn post_handler(
     mut req: HttpRequest<server::StateImpl>,
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
     let log = middleware::log_initializer::log(&mut req);
@@ -149,7 +162,7 @@ pub fn post_handler(
     execute(log, Box::new(fut), req.state().sync_addr.clone())
 }
 
-pub fn get_handler(
+fn get_handler(
     mut req: HttpRequest<server::StateImpl>,
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
     let log = middleware::log_initializer::log(&mut req);
@@ -182,6 +195,43 @@ fn graphiql_get_handler(_req: HttpRequest<server::StateImpl>) -> FutureResult<Ht
     )
 }
 
+//
+// Message handlers
+//
+
+// TODO: `ResponseType` will change to `Message`
+impl ::actix::prelude::ResponseType for server::Message<Params> {
+    type Item = ExecutionResponse;
+    type Error = Error;
+}
+
+impl ::actix::prelude::Handler<server::Message<Params>> for server::SyncExecutor {
+    type Result = ::actix::prelude::MessageResult<server::Message<Params>>;
+
+    fn handle(&mut self, message: server::Message<Params>, _: &mut Self::Context) -> Self::Result {
+        let conn = self.pool.get()?;
+        let root_node = RootNode::new(graphql::Query::default(), graphql::Mutation::default());
+        time_helpers::log_timed(
+            &message.log.new(o!("step" => "handle_message")),
+            move |log| {
+                let context = graphql::Context {
+                    conn,
+                    log: log.clone(),
+                };
+                let graphql_response = message.params.graphql_req.execute(&root_node, &context);
+                Ok(ExecutionResponse {
+                    json: serde_json::to_string_pretty(&graphql_response)?,
+                    ok:   graphql_response.is_ok(),
+                })
+            },
+        )
+    }
+}
+
+//
+// Private functions
+//
+
 fn execute<F>(
     log: Logger,
     fut: Box<F>,
@@ -190,7 +240,8 @@ fn execute<F>(
 where
     F: Future<Item = Params, Error = Error> + 'static,
 {
-    // We need one `log` clone because we have two `move` closures below.
+    // We need one `log` clone because we have two `move` closures below (and only
+    // one can take the log).
     let log_clone = log.clone();
 
     fut.and_then(move |params| {
@@ -214,40 +265,4 @@ where
             })
         })
         .responder()
-}
-
-type MessageResult = ::actix::prelude::MessageResult<server::Message<Params>>;
-
-impl ::actix::prelude::Handler<server::Message<Params>> for server::SyncExecutor {
-    type Result = MessageResult;
-
-    fn handle(&mut self, message: server::Message<Params>, _: &mut Self::Context) -> Self::Result {
-        let conn = self.pool.get()?;
-        let root_node = RootNode::new(graphql::Query::default(), graphql::Mutation::default());
-        time_helpers::log_timed(
-            &message.log.new(o!("step" => "handle_message")),
-            move |log| {
-                let context = graphql::Context {
-                    conn,
-                    log: log.clone(),
-                };
-                let graphql_response = message.params.graphql_req.execute(&root_node, &context);
-                Ok(ExecutionResponse {
-                    json: serde_json::to_string_pretty(&graphql_response)?,
-                    ok:   graphql_response.is_ok(),
-                })
-            },
-        )
-    }
-}
-
-struct ExecutionResponse {
-    json: String,
-    ok:   bool,
-}
-
-// TODO: `ResponseType` will change to `Message`
-impl ::actix::prelude::ResponseType for server::Message<Params> {
-    type Item = ExecutionResponse;
-    type Error = Error;
 }

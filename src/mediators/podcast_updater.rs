@@ -540,7 +540,7 @@ macro_rules! require_podcast_field {
 }
 
 //
-// Private types
+// Private structs
 //
 
 /// Represents a regex find and replac rule that we use to coerce datetime formats that are not
