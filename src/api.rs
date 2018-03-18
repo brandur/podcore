@@ -142,7 +142,7 @@ pub fn post_handler(
         })
         .from_err();
 
-    execute(Box::new(log), Box::new(fut), req.state().sync_addr.clone())
+    execute(log, Box::new(fut), req.state().sync_addr.clone())
 }
 
 pub fn get_handler(
@@ -163,14 +163,14 @@ pub fn get_handler(
     };
 
     execute(
-        Box::new(log),
+        log,
         Box::new(future::ok(params)),
         req.state().sync_addr.clone(),
     )
 }
 
 fn execute<F>(
-    log: Box<Logger>,
+    log: Logger,
     fut: Box<F>,
     sync_addr: actix::prelude::SyncAddress<server::SyncExecutor>,
 ) -> Box<Future<Item = HttpResponse, Error = Error>>
