@@ -58,11 +58,11 @@ impl Server {
                     r.method(Method::GET).f(|_req| actix_web::httpcodes::HTTPOk)
                 })
                 .resource("/graphiql", |r| {
-                    r.method(Method::GET).a(graphiql_get_handler);
+                    r.method(Method::GET).a(handler_graphiql_get);
                 })
                 .resource("/graphql", |r| {
-                    r.method(Method::GET).a(get_handler);
-                    r.method(Method::POST).a(post_handler);
+                    r.method(Method::GET).a(handler_get);
+                    r.method(Method::POST).a(handler_post);
                 })
                 .resource("/health", |r| {
                     r.method(Method::GET).f(|_req| actix_web::httpcodes::HTTPOk)
@@ -142,7 +142,7 @@ impl server::Params for Params {
 // Web handlers
 //
 
-fn post_handler(
+fn handler_post(
     mut req: HttpRequest<server::StateImpl>,
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
     let log = middleware::log_initializer::log(&mut req);
@@ -162,7 +162,7 @@ fn post_handler(
     execute(log, Box::new(fut), req.state().sync_addr.clone())
 }
 
-fn get_handler(
+fn handler_get(
     mut req: HttpRequest<server::StateImpl>,
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
     let log = middleware::log_initializer::log(&mut req);
@@ -186,7 +186,7 @@ fn get_handler(
     )
 }
 
-fn graphiql_get_handler(_req: HttpRequest<server::StateImpl>) -> FutureResult<HttpResponse, Error> {
+fn handler_graphiql_get(_req: HttpRequest<server::StateImpl>) -> FutureResult<HttpResponse, Error> {
     future::ok(
         HttpResponse::build(StatusCode::OK)
             .content_type("text/html; charset=utf-8")
@@ -265,4 +265,41 @@ where
             })
         })
         .responder()
+}
+
+//
+// Tests
+//
+
+#[cfg(test)]
+mod tests {
+    use api::*;
+    use server;
+    use test_helpers;
+
+    use actix;
+    use actix_web::test::TestRequest;
+
+    #[test]
+    fn test_handler_graphiql_get() {
+        let pool = test_helpers::pool();
+        let _system = actix::System::new("podcore-api-test");
+
+        let sync_addr =
+            actix::SyncArbiter::start(1, move || server::SyncExecutor { pool: pool.clone() });
+
+        let state = server::StateImpl {
+            assets_version: "".to_owned(),
+            log:            test_helpers::log(),
+            sync_addr:      sync_addr,
+        };
+
+        //
+        // Test
+        //
+        let resp = TestRequest::with_state(state)
+            .run_async(|r| handler_graphiql_get(r).map_err(|e| e.into()))
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+    }
 }
