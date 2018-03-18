@@ -2,7 +2,6 @@ use errors::*;
 use graphql;
 use middleware;
 use server;
-use server::Params as P;
 use time_helpers;
 
 use actix;
@@ -76,17 +75,7 @@ struct Params {
 }
 
 impl Params {
-    fn build_from_post(_log: &Logger, data: &[u8]) -> Result<Self> {
-        match serde_json::from_slice::<GraphQLRequest>(data) {
-            Ok(graphql_req) => Ok(Params { graphql_req }),
-            Err(_e) => Err(Error::from("Error deserializing request body")),
-        }
-    }
-}
-
-impl server::Params for Params {
-    // TODO: convert this to build_from_get
-    fn build(_log: &Logger, req: &HttpRequest<server::StateImpl>) -> Result<Self> {
+    fn build_from_get(_log: &Logger, req: &HttpRequest<server::StateImpl>) -> Result<Self> {
         let input_query = match req.query().get("query") {
             Some(q) => q.to_owned(),
             None => {
@@ -112,6 +101,22 @@ impl server::Params for Params {
         Ok(Self {
             graphql_req: GraphQLRequest::new(input_query, operation_name, variables),
         })
+    }
+
+    fn build_from_post(_log: &Logger, data: &[u8]) -> Result<Self> {
+        match serde_json::from_slice::<GraphQLRequest>(data) {
+            Ok(graphql_req) => Ok(Params { graphql_req }),
+            Err(_e) => Err(Error::from("Error deserializing request body")),
+        }
+    }
+}
+
+impl server::Params for Params {
+    // Only exists as a symbolic target to let us implement `Params` because this
+    // parameter type can be implemented in multiple ways. See `build_from_get`
+    // and `build_from_post` instead.
+    fn build(_log: &Logger, _req: &HttpRequest<server::StateImpl>) -> Result<Self> {
+        unimplemented!()
     }
 }
 
@@ -143,7 +148,7 @@ pub fn get_handler(
     let log = middleware::log_initializer::log(&mut req);
 
     let params_res = time_helpers::log_timed(&log.new(o!("step" => "build_params")), |log| {
-        Params::build(log, &req)
+        Params::build_from_get(log, &req)
     });
     let params = match params_res {
         Ok(params) => params,
