@@ -44,6 +44,7 @@ openssl-probe = "*"
 # emk/rust-musl-builder.
 openssl-sys = "0.9"
 
+percent-encoding = "*"
 quick-xml = "0.10.1"
 r2d2 = { version = "*" }
 r2d2-diesel = { version = "1.0.0-rc1" }
