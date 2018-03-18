@@ -137,16 +137,12 @@ pub fn post_handler(
         .map_err(|_e| Error::from("Error reading request body"))
         .and_then(move |bytes: Bytes| {
             time_helpers::log_timed(&log_clone.new(o!("step" => "build_params")), |log| {
-                Params::build_from_post(&log, bytes.as_ref())
+                Params::build_from_post(log, bytes.as_ref())
             })
         })
         .from_err();
 
-    execute(
-        Box::new(log),
-        Box::new(fut),
-        Box::new(req.state().sync_addr.clone()),
-    )
+    execute(Box::new(log), Box::new(fut), req.state().sync_addr.clone())
 }
 
 pub fn get_handler(
@@ -169,14 +165,14 @@ pub fn get_handler(
     execute(
         Box::new(log),
         Box::new(future::ok(params)),
-        Box::new(req.state().sync_addr.clone()),
+        req.state().sync_addr.clone(),
     )
 }
 
 fn execute<F>(
     log: Box<Logger>,
     fut: Box<F>,
-    sync_addr: Box<actix::prelude::SyncAddress<server::SyncExecutor>>,
+    sync_addr: actix::prelude::SyncAddress<server::SyncExecutor>,
 ) -> Box<Future<Item = HttpResponse, Error = Error>>
 where
     F: Future<Item = Params, Error = Error> + 'static,
