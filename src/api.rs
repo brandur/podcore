@@ -159,34 +159,16 @@ fn execute<F>(
 where
     F: Future<Item = Params, Error = Error> + 'static,
 {
-    /*
-    fut.and_then(|_params| {
-        Ok(HttpResponse::build(StatusCode::OK)
-            .content_type("application/json; charset=utf-8")
-            .body("hello".to_owned())
-            .unwrap())
-    }).responder()
-    */
+    // We need one `log` clone because we have two `move` closures below.
+    let log_clone = log.clone();
+
     fut.and_then(move |params| {
-        let message = server::Message::new(&*log, params);
+        let message = server::Message::new(&log_clone, params);
         req.state()
             .sync_addr
             .call_fut(message)
             .map_err(|_e| Error::from("Future canceled"))
     }).from_err()
-        .and_then(move |_res| {
-            Ok(HttpResponse::build(StatusCode::OK)
-                .content_type("application/json; charset=utf-8")
-                .body("hello".to_owned())
-                .unwrap())
-        })
-        .responder()
-    /*
-    fut.and_then(|params| {
-        let message = server::Message::new(&log, params);
-        req.state().sync_addr.call_fut(message)
-    }).chain_err(|| "Error from SyncExecutor")
-        .from_err()
         .and_then(move |res| {
             let response = res?;
             time_helpers::log_timed(&log.new(o!("step" => "render_response")), |_log| {
@@ -202,7 +184,6 @@ where
             })
         })
         .responder()
-    */
 }
 
 type MessageResult = ::actix::prelude::MessageResult<server::Message<Params>>;
