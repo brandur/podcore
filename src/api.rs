@@ -92,10 +92,11 @@ struct Params {
 
 impl Params {
     /// Builds `Params` from a `GET` request.
-    fn build_from_get(_log: &Logger, req: &HttpRequest<server::StateImpl>) -> Result<Self> {
+    fn build_from_get(log: &Logger, req: &HttpRequest<server::StateImpl>) -> Result<Self> {
         let input_query = match req.query().get("query") {
             Some(q) => q.to_owned(),
             None => {
+                info!(log, "No query provided");
                 return Err(Error::from("No query provided"));
             }
         };
@@ -106,6 +107,7 @@ impl Params {
             Some(v) => match serde_json::from_str::<InputValue>(v) {
                 Ok(v) => Some(v),
                 Err(e) => {
+                    info!(log, "Variables JSON malformed");
                     return Err(Error::from(format!(
                         "Malformed variables JSON. Error: {}",
                         e
@@ -281,23 +283,56 @@ mod tests {
     use actix;
     use actix_web::test::TestRequest;
     use percent_encoding::{percent_encode, DEFAULT_ENCODE_SET};
+    use serde_json;
 
     #[test]
     fn test_handler_graphql_get() {
-        let url = percent_encode(b"/graphql?query={podcast{id}}", DEFAULT_ENCODE_SET).to_string();
-        info!(test_helpers::log_sync(), "URL: {}", url);
-
         let bootstrap = TestBootstrap::new();
-        let resp = TestRequest::with_state(bootstrap.state)
-            .uri(
-                percent_encode(b"/graphql?query={podcast{id}}", DEFAULT_ENCODE_SET)
-                    .to_string()
-                    .as_str(),
-            )
-            .run_async(|r| handler_graphiql_get(r).map_err(|e| e.into()))
-            .unwrap();
+        let log_clone = bootstrap.state.log.clone();
+
+        let req = TestRequest::with_state(bootstrap.state).uri(
+            format!(
+                "/graphql?query={}",
+                percent_encode(b"{podcast{id}}", DEFAULT_ENCODE_SET)
+            ).as_str(),
+        );
+
+        let resp = req.run_async(move |mut r| {
+            r.extensions()
+                .insert(middleware::log_initializer::Extension(log_clone.clone()));
+
+            handler_graphql_get(r).map_err(|e| e.into())
+        }).unwrap();
+
+        //let b = response_bytes(&resp.body());
+        let b = response_string(&resp.body());
+        info!(
+            test_helpers::log_sync(),
+            "bytes: {:?}",
+            b //String::from_utf8_lossy(b)
+        );
+
         assert_eq!(resp.status(), StatusCode::OK);
+        let _v: serde_json::Value = serde_json::from_str(&b).unwrap();
     }
+
+    fn response_string(body: &actix_web::Body) -> String {
+        format!("{:?}", body)
+    }
+
+    /*
+    fn response_bytes(body: &actix_web::Body) -> &[u8] {
+        let bin = match body {
+            &actix_web::Body::Binary(ref bin) => bin,
+            _ => unimplemented!(),
+        };
+        let bytes = match bin {
+            &actix_web::Binary::Bytes(ref bytes) => bytes,
+            _ => unimplemented!(),
+        };
+        bytes.as_ref()
+    }
+*/
 
     #[test]
     fn test_handler_graphiql_get() {
