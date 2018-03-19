@@ -123,7 +123,7 @@ graphql_object!(Query: Context |&self| {
         "1.0"
     }
 
-    field episodes(&executor, podcast_id: String as "The podcast's ID.") ->
+    field episode(&executor, podcast_id: String as "The podcast's ID.") ->
             FieldResult<Vec<EpisodeObject>> as "A collection episodes for a podcast." {
         let id = i64::from_str(podcast_id.as_str()).
             chain_err(|| "Error parsing podcast ID")?;
@@ -141,7 +141,7 @@ graphql_object!(Query: Context |&self| {
         Ok(results)
     }
 
-    field podcasts(&executor) -> FieldResult<Vec<PodcastObject>> as "A collection of podcasts." {
+    field podcast(&executor) -> FieldResult<Vec<PodcastObject>> as "A collection of podcasts." {
         let context = executor.context();
         let results = schema::podcast::table
             .order(schema::podcast::title.asc())
