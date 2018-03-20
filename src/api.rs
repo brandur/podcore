@@ -282,13 +282,17 @@ mod tests {
     use test_helpers;
 
     use actix;
-    use actix_web::Method;
+    use actix_web::{HttpMessage, Method};
     use actix_web::test::{TestRequest, TestServer};
     use percent_encoding::{percent_encode, DEFAULT_ENCODE_SET};
     use serde_json;
 
     #[test]
     fn test_handler_graphql_get() {
+        /*
+        let bootstrap = TestBootstrap::new();
+        */
+
         let mut srv = TestServer::with_state(
             || {
                 let pool = test_helpers::pool();
@@ -316,50 +320,14 @@ mod tests {
             ).as_str(),
         ).finish()
             .unwrap();
-        let _resp = srv.execute(req.send()).unwrap();
-
-        /*
-
-        let bootstrap = TestBootstrap::new();
-        let log_clone = bootstrap.state.log.clone();
-
-        let resp = req.run_async(move |mut r| {
-            r.extensions()
-                .insert(middleware::log_initializer::Extension(log_clone.clone()));
-
-            handler_graphql_get(r).map_err(|e| e.into())
-        }).unwrap();
-
-        //let b = response_bytes(&resp.body());
-        let b = response_string(&resp.body());
-        info!(
-            test_helpers::log_sync(),
-            "bytes: {:?}",
-            b //String::from_utf8_lossy(b)
-        );
+        let resp = srv.execute(req.send()).unwrap();
 
         assert_eq!(resp.status(), StatusCode::OK);
-        let _v: serde_json::Value = serde_json::from_str(&b).unwrap();
-        */
-    }
 
-    fn response_string(body: &actix_web::Body) -> String {
-        format!("{:?}", body)
+        let bytes: Bytes = resp.body().wait().unwrap();
+        let v: serde_json::Value = serde_json::from_slice(bytes.as_ref()).unwrap();
+        info!(test_helpers::log_sync(), "Value: {:?}", v);
     }
-
-    /*
-    fn response_bytes(body: &actix_web::Body) -> &[u8] {
-        let bin = match body {
-            &actix_web::Body::Binary(ref bin) => bin,
-            _ => unimplemented!(),
-        };
-        let bytes = match bin {
-            &actix_web::Binary::Bytes(ref bytes) => bytes,
-            _ => unimplemented!(),
-        };
-        bytes.as_ref()
-    }
-*/
 
     #[test]
     fn test_handler_graphiql_get() {
