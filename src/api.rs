@@ -302,7 +302,10 @@ mod tests {
                     }),
                 }
             },
-            |app| app.handler(handler_graphql_get),
+            |app| {
+                app.middleware(middleware::log_initializer::Middleware)
+                    .handler(handler_graphql_get)
+            },
         );
 
         let req = srv.client(
@@ -313,12 +316,9 @@ mod tests {
             ).as_str(),
         ).finish()
             .unwrap();
-        srv.execute(req.send()).unwrap();
+        let _resp = srv.execute(req.send()).unwrap();
 
         /*
-
-        let req = TestRequest::with_state(bootstrap.state).uri(
-        );
 
         let bootstrap = TestBootstrap::new();
         let log_clone = bootstrap.state.log.clone();
