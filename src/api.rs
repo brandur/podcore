@@ -311,6 +311,24 @@ mod tests {
     }
 
     #[test]
+    fn test_handler_graphql_post() {
+        let bootstrap = TestBootstrap::new();
+        let mut server = bootstrap.server_builder.start(|app| {
+            app.middleware(middleware::log_initializer::Middleware)
+                .handler(handler_graphql_post)
+        });
+
+        let graphql_req = GraphQLRequest::new("{podcast{id}}".to_owned(), None, None);
+        let body = serde_json::to_string(&graphql_req).unwrap();
+        let req = server.post().body(body).unwrap();
+        let resp = server.execute(req.send()).unwrap();
+
+        assert_eq!(resp.status(), StatusCode::OK);
+        let value = test_helpers::read_body_json(resp);
+        assert_eq!(json!({"data": {"podcast": []}}), value);
+    }
+
+    #[test]
     fn test_handler_graphiql_get() {
         let bootstrap = TestBootstrap::new();
         let mut server = bootstrap
