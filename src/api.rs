@@ -305,15 +305,13 @@ mod tests {
             |app| app.handler(handler_graphql_get),
         );
 
-        let req = srv.get()
-            .method(Method::GET)
-            .uri(
-                format!(
-                    "/graphql?query={}",
-                    percent_encode(b"{podcast{id}}", DEFAULT_ENCODE_SET)
-                ).as_str(),
-            )
-            .finish()
+        let req = srv.client(
+            Method::GET,
+            format!(
+                "/graphql?query={}",
+                percent_encode(b"{podcast{id}}", DEFAULT_ENCODE_SET)
+            ).as_str(),
+        ).finish()
             .unwrap();
         srv.execute(req.send()).unwrap();
 
