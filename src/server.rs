@@ -59,7 +59,7 @@ pub struct StateImpl {
     pub assets_version: String,
 
     pub log:       Logger,
-    pub sync_addr: actix::prelude::SyncAddress<SyncExecutor>,
+    pub sync_addr: actix::prelude::Addr<actix::prelude::Syn, SyncExecutor>,
 }
 
 impl State for StateImpl {

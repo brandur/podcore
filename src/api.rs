@@ -145,9 +145,12 @@ impl server::Params for Params {
 fn handler_post(
     mut req: HttpRequest<server::StateImpl>,
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
+    use actix_web::HttpMessage;
+
     let log = middleware::log_initializer::log(&mut req);
     let log_clone = log.clone();
 
+    let sync_addr = req.state().sync_addr.clone();
     let fut = req.body()
         // `map_err` is used here instead of `chain_err` because `PayloadError` doesn't implement
         // the `Error` trait and I was unable to put it in the error chain.
@@ -159,7 +162,7 @@ fn handler_post(
         })
         .from_err();
 
-    execute(log, Box::new(fut), req.state().sync_addr.clone())
+    execute(log, Box::new(fut), sync_addr)
 }
 
 fn handler_get(
@@ -200,14 +203,8 @@ fn handler_graphiql_get(_req: HttpRequest<server::StateImpl>) -> FutureResult<Ht
 // Message handlers
 //
 
-// TODO: `ResponseType` will change to `Message`
-impl ::actix::prelude::ResponseType for server::Message<Params> {
-    type Item = ExecutionResponse;
-    type Error = Error;
-}
-
 impl ::actix::prelude::Handler<server::Message<Params>> for server::SyncExecutor {
-    type Result = ::actix::prelude::MessageResult<server::Message<Params>>;
+    type Result = Result<ExecutionResponse>;
 
     fn handle(&mut self, message: server::Message<Params>, _: &mut Self::Context) -> Self::Result {
         let conn = self.pool.get()?;
@@ -229,6 +226,10 @@ impl ::actix::prelude::Handler<server::Message<Params>> for server::SyncExecutor
     }
 }
 
+impl ::actix::prelude::Message for server::Message<Params> {
+    type Result = Result<ExecutionResponse>;
+}
+
 //
 // Private functions
 //
@@ -236,7 +237,7 @@ impl ::actix::prelude::Handler<server::Message<Params>> for server::SyncExecutor
 fn execute<F>(
     log: Logger,
     fut: Box<F>,
-    sync_addr: actix::prelude::SyncAddress<server::SyncExecutor>,
+    sync_addr: actix::prelude::Addr<actix::prelude::Syn, server::SyncExecutor>,
 ) -> Box<Future<Item = HttpResponse, Error = Error>>
 where
     F: Future<Item = Params, Error = Error> + 'static,
@@ -248,7 +249,7 @@ where
     fut.and_then(move |params| {
         let message = server::Message::new(&log_clone, params);
         sync_addr
-            .call_fut(message)
+            .send(message)
             .map_err(|_e| Error::from("Future canceled"))
     }).from_err()
         .and_then(move |res| {

@@ -56,8 +56,8 @@ macro_rules! handler {
 
             req.state()
                 .sync_addr
-                .call_fut(message)
-                .chain_err(|| "Error from SyncExecutor")
+                .send(message)
+                .map_err(|_e| Error::from("Error from SyncExecutor"))
                 .from_err()
                 .and_then(move |res| {
                     let view_model = res?;
@@ -109,7 +109,7 @@ macro_rules! handler_noop {
 /// function with access to a connection and log.
 macro_rules! message_handler {
     () => {
-        type MessageResult = ::actix::prelude::MessageResult<server::Message<Params>>;
+        type MessageResult = Result<ViewModel>;
 
         impl ::actix::prelude::Handler<server::Message<Params>> for server::SyncExecutor {
             type Result = MessageResult;
@@ -127,10 +127,8 @@ macro_rules! message_handler {
             }
         }
 
-        // TODO: `ResponseType` will change to `Message`
-        impl ::actix::prelude::ResponseType for server::Message<Params> {
-            type Item = ViewModel;
-            type Error = Error;
+        impl ::actix::prelude::Message for server::Message<Params> {
+            type Result = Result<ViewModel>;
         }
     }
 }
