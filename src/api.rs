@@ -12,7 +12,7 @@ use actix_web::Method;
 use bytes::Bytes;
 use diesel::pg::PgConnection;
 use futures::future;
-use futures::future::{Future, FutureResult};
+use futures::future::Future;
 use juniper::{InputValue, RootNode};
 use juniper::graphiql;
 use juniper::http::GraphQLRequest;
@@ -57,7 +57,7 @@ impl Server {
                     r.method(Method::GET).f(|_req| actix_web::httpcodes::HTTPOk)
                 })
                 .resource("/graphiql", |r| {
-                    r.method(Method::GET).a(handler_graphiql_get);
+                    r.method(Method::GET).f(handler_graphiql_get);
                 })
                 .resource("/graphql", |r| {
                     r.method(Method::GET).a(handler_graphql_get);
@@ -193,13 +193,11 @@ fn handler_graphql_get(
 }
 
 #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
-fn handler_graphiql_get(_req: HttpRequest<server::StateImpl>) -> FutureResult<HttpResponse, Error> {
-    future::ok(
-        HttpResponse::build(StatusCode::OK)
-            .content_type("text/html; charset=utf-8")
-            .body(graphiql::graphiql_source("/graphql"))
-            .unwrap(),
-    )
+fn handler_graphiql_get(_req: HttpRequest<server::StateImpl>) -> HttpResponse {
+    HttpResponse::build(StatusCode::OK)
+        .content_type("text/html; charset=utf-8")
+        .body(graphiql::graphiql_source("/graphql"))
+        .unwrap()
 }
 
 //
@@ -312,16 +310,17 @@ mod tests {
         assert_eq!(json!({"data": {"podcast": []}}), value);
     }
 
-    /*
     #[test]
     fn test_handler_graphiql_get() {
         let bootstrap = TestBootstrap::new();
-        let resp = TestRequest::with_state(bootstrap.state)
-            .run_async(|r| handler_graphiql_get(r).map_err(|e| e.into()))
-            .unwrap();
+        let mut server = bootstrap
+            .server_builder
+            .start(|app| app.handler(handler_graphiql_get));
+
+        let req = server.get().finish().unwrap();
+        let resp = server.execute(req.send()).unwrap();
         assert_eq!(resp.status(), StatusCode::OK);
     }
-    */
 
     //
     // Private types/functions
