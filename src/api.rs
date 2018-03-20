@@ -282,21 +282,48 @@ mod tests {
     use test_helpers;
 
     use actix;
-    use actix_web::test::TestRequest;
+    use actix_web::Method;
+    use actix_web::test::{TestRequest, TestServer};
     use percent_encoding::{percent_encode, DEFAULT_ENCODE_SET};
     use serde_json;
 
     #[test]
     fn test_handler_graphql_get() {
-        let bootstrap = TestBootstrap::new();
-        let log_clone = bootstrap.state.log.clone();
+        let mut srv = TestServer::with_state(
+            || {
+                let pool = test_helpers::pool();
+                let pool_clone = pool.clone();
+
+                server::StateImpl {
+                    assets_version: "".to_owned(),
+                    log:            test_helpers::log(),
+                    sync_addr:      actix::SyncArbiter::start(1, move || server::SyncExecutor {
+                        pool: pool_clone.clone(),
+                    }),
+                }
+            },
+            |app| app.handler(handler_graphql_get),
+        );
+
+        let req = srv.get()
+            .method(Method::GET)
+            .uri(
+                format!(
+                    "/graphql?query={}",
+                    percent_encode(b"{podcast{id}}", DEFAULT_ENCODE_SET)
+                ).as_str(),
+            )
+            .finish()
+            .unwrap();
+        srv.execute(req.send()).unwrap();
+
+        /*
 
         let req = TestRequest::with_state(bootstrap.state).uri(
-            format!(
-                "/graphql?query={}",
-                percent_encode(b"{podcast{id}}", DEFAULT_ENCODE_SET)
-            ).as_str(),
         );
+
+        let bootstrap = TestBootstrap::new();
+        let log_clone = bootstrap.state.log.clone();
 
         let resp = req.run_async(move |mut r| {
             r.extensions()
@@ -315,6 +342,7 @@ mod tests {
 
         assert_eq!(resp.status(), StatusCode::OK);
         let _v: serde_json::Value = serde_json::from_str(&b).unwrap();
+        */
     }
 
     fn response_string(body: &actix_web::Body) -> String {
