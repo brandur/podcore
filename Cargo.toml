@@ -16,7 +16,11 @@ path = "src/bin/podcore/main.rs"
 # each other, because a second `actix` as a transitive dependency through
 # `actix-web` can cause some serious grief.
 actix = "0.5.5"
-actix-web = "0.4.9"
+
+# This is safe to relock to a released version for 0.4.10 and greater. I'm just
+# relying on one prerelease feature right now.
+#actix-web = "0.4.9"
+actix-web = { git = 'https://github.com/actix/actix-web' }
 
 bytes = "*"
 chan = "*"

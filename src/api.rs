@@ -9,7 +9,6 @@ use actix_web;
 use actix_web::{HttpRequest, HttpResponse, StatusCode};
 use actix_web::AsyncResponder;
 use actix_web::Method;
-use actix_web::ResponseError;
 use bytes::Bytes;
 use diesel::pg::PgConnection;
 use futures::future;
@@ -179,7 +178,9 @@ fn handler_graphql_get(
         Ok(params) => params,
         Err(e) => {
             return Box::new(future::ok(
-                actix_web::error::ErrorBadRequest(e.description().to_owned()).error_response(),
+                actix_web::error::ErrorBadRequest(e.description().to_owned())
+                    .cause()
+                    .error_response(),
             ));
         }
     };
@@ -288,13 +289,13 @@ mod tests {
 
     #[test]
     fn test_handler_graphql_get() {
-        let mut bootstrap = TestBootstrap::new(|app| {
+        let bootstrap = TestBootstrap::new();
+        let mut server = bootstrap.server_builder.start(|app| {
             app.middleware(middleware::log_initializer::Middleware)
                 .handler(handler_graphql_get)
         });
 
-        let req = bootstrap
-            .server
+        let req = server
             .client(
                 Method::GET,
                 format!(
@@ -304,7 +305,7 @@ mod tests {
             )
             .finish()
             .unwrap();
-        let resp = bootstrap.server.execute(req.send()).unwrap();
+        let resp = server.execute(req.send()).unwrap();
 
         assert_eq!(resp.status(), StatusCode::OK);
 
@@ -330,36 +331,27 @@ mod tests {
     //
 
     struct TestBootstrap {
-        _common: test_helpers::CommonTestBootstrap,
-        server:  actix_web::test::TestServer,
+        _common:        test_helpers::CommonTestBootstrap,
+        server_builder: actix_web::test::TestServerBuilder<server::StateImpl>,
     }
 
     impl TestBootstrap {
-        fn new<S, F>(config: F) -> TestBootstrap
-        where
-            S: 'static,
-            F: Sync + Send + Fn(&mut actix_web::test::TestApp<S>),
-        {
+        fn new() -> TestBootstrap {
             let pool = test_helpers::pool();
             let pool_clone = pool.clone();
 
-            let server = actix_web::test::TestServer::with_state(
-                || {
-                    let pool = test_helpers::pool();
-                    let pool_clone = pool.clone();
+            let server_builder = actix_web::test::TestServer::build_with_state(|| {
+                let pool = test_helpers::pool();
+                let pool_clone = pool.clone();
 
-                    server::StateImpl {
-                        assets_version: "".to_owned(),
-                        log:            test_helpers::log(),
-                        sync_addr:      actix::SyncArbiter::start(1, move || {
-                            server::SyncExecutor {
-                                pool: pool_clone.clone(),
-                            }
-                        }),
-                    }
-                },
-                config,
-            );
+                server::StateImpl {
+                    assets_version: "".to_owned(),
+                    log:            test_helpers::log(),
+                    sync_addr:      actix::SyncArbiter::start(1, move || server::SyncExecutor {
+                        pool: pool_clone.clone(),
+                    }),
+                }
+            });
 
             /*
                 |app| {
@@ -370,8 +362,8 @@ mod tests {
                 */
 
             TestBootstrap {
-                _common: test_helpers::CommonTestBootstrap::new(),
-                server:  server,
+                _common:        test_helpers::CommonTestBootstrap::new(),
+                server_builder: server_builder,
             }
         }
     }
