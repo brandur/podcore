@@ -283,8 +283,11 @@ mod tests {
     use test_helpers;
 
     use actix;
-    use actix_web::{HttpMessage, Method};
-    use serde_json;
+    use actix_web;
+    use actix_web::Method;
+    use diesel::pg::PgConnection;
+    use r2d2::Pool;
+    use r2d2_diesel::ConnectionManager;
 
     #[test]
     fn test_handler_graphql_get() {
@@ -301,13 +304,11 @@ mod tests {
             )
             .finish()
             .unwrap();
+
         let resp = server.execute(req.send()).unwrap();
 
         assert_eq!(resp.status(), StatusCode::OK);
-
-        let bytes: Bytes = resp.body().wait().unwrap();
-        let value: serde_json::Value = serde_json::from_slice(bytes.as_ref()).unwrap();
-
+        let value = test_helpers::read_body_json(resp);
         assert_eq!(json!({"data": {"podcast": []}}), value);
     }
 
@@ -328,6 +329,7 @@ mod tests {
 
     struct TestBootstrap {
         _common:        test_helpers::CommonTestBootstrap,
+        _pool:          Pool<ConnectionManager<PgConnection>>,
         server_builder: actix_web::test::TestServerBuilder<server::StateImpl>,
     }
 
@@ -336,9 +338,9 @@ mod tests {
             let pool = test_helpers::pool();
             let pool_clone = pool.clone();
 
-            let server_builder = actix_web::test::TestServer::build_with_state(|| {
-                let pool = test_helpers::pool();
-                let pool_clone = pool.clone();
+            let server_builder = actix_web::test::TestServer::build_with_state(move || {
+                // This is fucking disgusting. Ladies and gentlemen, I give you Rust.
+                let pool_clone = pool_clone.clone();
 
                 server::StateImpl {
                     assets_version: "".to_owned(),
@@ -349,16 +351,9 @@ mod tests {
                 }
             });
 
-            /*
-                |app| {
-                    app.middleware(middleware::log_initializer::Middleware)
-                        .handler(handler)
-                },
-            );
-                */
-
             TestBootstrap {
                 _common:        test_helpers::CommonTestBootstrap::new(),
+                _pool:          pool,
                 server_builder: server_builder,
             }
         }

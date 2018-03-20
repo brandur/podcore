@@ -2,11 +2,14 @@ use error_helpers;
 use errors::*;
 use schema;
 
+use actix_web;
+use bytes::Bytes;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use percent_encoding::{percent_encode, PercentEncode, DEFAULT_ENCODE_SET};
 use r2d2::{HandleError, Pool, PooledConnection};
 use r2d2_diesel::ConnectionManager;
+use serde_json;
 use slog;
 use slog::{Drain, Logger};
 use slog_async;
@@ -141,6 +144,14 @@ pub fn pool() -> Pool<ConnectionManager<PgConnection>> {
             panic!("{}", e);
         }
     }
+}
+
+pub fn read_body_json(resp: actix_web::client::ClientResponse) -> serde_json::Value {
+    use actix_web::HttpMessage;
+    use futures::Future;
+
+    let bytes: Bytes = resp.body().wait().unwrap();
+    serde_json::from_slice(bytes.as_ref()).unwrap()
 }
 
 pub fn url_encode(bytes: &[u8]) -> PercentEncode<DEFAULT_ENCODE_SET> {
