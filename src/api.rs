@@ -284,7 +284,6 @@ mod tests {
 
     use actix;
     use actix_web::{HttpMessage, Method};
-    use percent_encoding::{percent_encode, DEFAULT_ENCODE_SET};
     use serde_json;
 
     #[test]
@@ -298,10 +297,7 @@ mod tests {
         let req = server
             .client(
                 Method::GET,
-                format!(
-                    "/?query={}",
-                    percent_encode(b"{podcast{id}}", DEFAULT_ENCODE_SET)
-                ).as_str(),
+                format!("/?query={}", test_helpers::url_encode(b"{podcast{id}}")).as_str(),
             )
             .finish()
             .unwrap();

@@ -4,6 +4,7 @@ use schema;
 
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
+use percent_encoding::{percent_encode, PercentEncode, DEFAULT_ENCODE_SET};
 use r2d2::{HandleError, Pool, PooledConnection};
 use r2d2_diesel::ConnectionManager;
 use slog;
@@ -140,6 +141,10 @@ pub fn pool() -> Pool<ConnectionManager<PgConnection>> {
             panic!("{}", e);
         }
     }
+}
+
+pub fn url_encode(bytes: &[u8]) -> PercentEncode<DEFAULT_ENCODE_SET> {
+    percent_encode(bytes, DEFAULT_ENCODE_SET)
 }
 
 //
