@@ -109,10 +109,8 @@ macro_rules! handler_noop {
 /// function with access to a connection and log.
 macro_rules! message_handler {
     () => {
-        type MessageResult = Result<ViewModel>;
-
         impl ::actix::prelude::Handler<server::Message<Params>> for server::SyncExecutor {
-            type Result = MessageResult;
+            type Result = Result<ViewModel>;
 
             fn handle(
                 &mut self,
@@ -283,7 +281,7 @@ pub mod episode_show {
     // Private functions
     //
 
-    fn handle_inner(_log: &Logger, conn: &PgConnection, params: &Params) -> MessageResult {
+    fn handle_inner(_log: &Logger, conn: &PgConnection, params: &Params) -> Result<ViewModel> {
         let episode: Option<model::Episode> = schema::episode::table
             .filter(schema::episode::id.eq(params.id))
             .filter(schema::episode::podcast_id.eq(params.podcast_id))
@@ -368,7 +366,7 @@ pub mod directory_podcast_show {
     // Private functions
     //
 
-    fn handle_inner(log: &Logger, conn: &PgConnection, params: &Params) -> MessageResult {
+    fn handle_inner(log: &Logger, conn: &PgConnection, params: &Params) -> Result<ViewModel> {
         info!(log, "Expanding directory podcast"; "id" => params.id);
 
         let dir_podcast: Option<model::DirectoryPodcast> = schema::directory_podcast::table
@@ -473,7 +471,7 @@ pub mod podcast_show {
     // Private functions
     //
 
-    fn handle_inner(log: &Logger, conn: &PgConnection, params: &Params) -> MessageResult {
+    fn handle_inner(log: &Logger, conn: &PgConnection, params: &Params) -> Result<ViewModel> {
         info!(log, "Looking up podcast"; "id" => params.id);
         let podcast: Option<model::Podcast> = schema::podcast::table
             .filter(schema::podcast::id.eq(params.id))
@@ -599,7 +597,7 @@ pub mod search_show {
     // Private functions
     //
 
-    fn handle_inner(log: &Logger, conn: &PgConnection, params: &Params) -> MessageResult {
+    fn handle_inner(log: &Logger, conn: &PgConnection, params: &Params) -> Result<ViewModel> {
         if params.query.is_none() {
             return Ok(ViewModel::NoQuery);
         }
