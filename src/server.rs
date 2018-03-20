@@ -59,7 +59,11 @@ pub struct StateImpl {
     pub assets_version: String,
 
     pub log:       Logger,
-    pub sync_addr: actix::prelude::SyncAddress<SyncExecutor>,
+    pub sync_addr: Option<actix::prelude::SyncAddress<SyncExecutor>>,
+
+    // A `SyncExecutor` unwrapped from a `SyncArbiter`. This is used for testing purposes so that
+    // we don't need to instantiate a full `actix::System`.
+    pub sync_executor: Option<SyncExecutor>,
 }
 
 impl State for StateImpl {

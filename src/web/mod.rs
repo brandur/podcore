@@ -43,7 +43,8 @@ impl Server {
             actix_web::Application::with_state(server::StateImpl {
                 assets_version: assets_version.clone(),
                 log:            log.clone(),
-                sync_addr:      sync_addr.clone(),
+                sync_addr:      Some(sync_addr.clone()),
+                sync_executor:  None,
             }).middleware(middleware::log_initializer::Middleware)
                 .middleware(middleware::request_id::Middleware)
                 .middleware(middleware::request_response_logger::Middleware)

@@ -54,8 +54,9 @@ macro_rules! handler {
 
             let message = server::Message::new(&log, params);
 
-            req.state()
-                .sync_addr
+            let sync_addr = req.state().sync_addr.as_ref().unwrap();
+
+            sync_addr
                 .call_fut(message)
                 .chain_err(|| "Error from SyncExecutor")
                 .from_err()
