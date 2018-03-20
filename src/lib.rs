@@ -32,7 +32,12 @@ extern crate rand;
 extern crate regex;
 #[macro_use]
 extern crate serde_derive;
+
+// `unused_imports` is on because the `json!` macro is only used in tests.
+#[allow(unused_imports)]
+#[macro_use]
 extern crate serde_json;
+
 #[macro_use]
 extern crate slog;
 extern crate slog_async;

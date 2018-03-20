@@ -315,7 +315,7 @@ mod tests {
         let req = srv.client(
             Method::GET,
             format!(
-                "/graphql?query={}",
+                "/?query={}",
                 percent_encode(b"{podcast{id}}", DEFAULT_ENCODE_SET)
             ).as_str(),
         ).finish()
@@ -325,8 +325,9 @@ mod tests {
         assert_eq!(resp.status(), StatusCode::OK);
 
         let bytes: Bytes = resp.body().wait().unwrap();
-        let v: serde_json::Value = serde_json::from_slice(bytes.as_ref()).unwrap();
-        info!(test_helpers::log_sync(), "Value: {:?}", v);
+        let value: serde_json::Value = serde_json::from_slice(bytes.as_ref()).unwrap();
+
+        assert_eq!(json!({"data": {"podcast": []}}), value);
     }
 
     #[test]
