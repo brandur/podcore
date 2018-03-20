@@ -34,6 +34,12 @@ extern crate regex;
 extern crate serde_derive;
 
 // `unused_imports` is on because the `json!` macro is only used in tests.
+//
+// The extra `cfg_attr` is because Clippy improperly complains about Lint
+// attributes on `extern crate:
+//
+//     https://github.com/rust-lang-nursery/rust-clippy/issues/1938
+#[cfg_attr(feature = "cargo-clippy", allow(useless_attribute))]
 #[allow(unused_imports)]
 #[macro_use]
 extern crate serde_json;

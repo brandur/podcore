@@ -29,7 +29,7 @@ pub trait State {
 
 impl From<Error> for ::actix_web::error::Error {
     fn from(error: Error) -> Self {
-        ::actix_web::error::ErrorInternalServerError(error.to_string()).into()
+        ::actix_web::error::ErrorInternalServerError(error.to_string())
     }
 }
 
