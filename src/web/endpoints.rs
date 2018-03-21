@@ -58,8 +58,8 @@ macro_rules! handler {
                 .sync_addr
                 .send(message)
                 .map_err(|_e| Error::from("Error from SyncExecutor"))
-                .and_then(move |res| {
-                    let view_model = res?;
+                .flatten()
+                .and_then(move |view_model| {
                     time_helpers::log_timed(&log.new(o!("step" => "render_view_model")), |log| {
                         view_model.render(log, &req)
                     })
