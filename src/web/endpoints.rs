@@ -58,7 +58,6 @@ macro_rules! handler {
                 .sync_addr
                 .send(message)
                 .map_err(|_e| Error::from("Error from SyncExecutor"))
-                .from_err()
                 .and_then(move |res| {
                     let view_model = res?;
                     time_helpers::log_timed(&log.new(o!("step" => "render_view_model")), |log| {
