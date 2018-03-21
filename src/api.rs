@@ -191,7 +191,10 @@ fn handler_graphql_get(
     let params = match params_res {
         Ok(params) => params,
         Err(e) => {
-            return Box::new(future::result(handle_400(e.description().to_owned())));
+            return Box::new(future::result(handle_error(
+                StatusCode::BAD_REQUEST,
+                e.description().to_owned(),
+            )));
         }
     };
 
@@ -281,9 +284,9 @@ where
         })
         .then(|res| {
             match res {
-                Err(e @ Error(ErrorKind::UserError(_), _)) => {
+                Err(e @ Error(ErrorKind::BadRequest(_), _)) => {
                     // `format!` activates the `Display` traits and shows our `display` definition
-                    handle_400(format!("{}", e))
+                    handle_error(StatusCode::BAD_REQUEST, format!("{}", e))
                 }
                 r => r,
             }
@@ -291,11 +294,11 @@ where
         .responder()
 }
 
-pub fn handle_400(message: String) -> Result<HttpResponse> {
+pub fn handle_error(code: StatusCode, message: String) -> Result<HttpResponse> {
     let body = serde_json::to_string_pretty(&GraphQLErrors {
         errors: vec![GraphQLError { message }],
     })?;
-    Ok(HttpResponse::build(StatusCode::BAD_REQUEST)
+    Ok(HttpResponse::build(code)
         .content_type("application/json; charset=utf-8")
         .body(body)?)
 }

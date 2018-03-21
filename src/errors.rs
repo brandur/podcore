@@ -30,13 +30,15 @@ error_chain!{
             description("Invalid Sentry DSN syntax. Expected the form `(http|https)://{public key}:{private key}@{host}:{port}/{project id}`")
         }
 
-        // Errors returned to the user through the web and API. It might be a good idea to break
-        // these out at some point into individual types of error (i.e., bad request, not found,
-        // etc.).
-        UserError(v: String) {
-            // TODO: change these
-            description("unknown toolchain version"),
-            display("unknown toolchain version: '{}'", v),
+        //
+        // User errors
+        //
+        // Don't reuse types that are not appropriate. Add a new one if necessary.
+        //
+
+        BadRequest(message: String) {
+            description("Bad request"),
+            display("Bad request: {}", message),
         }
     }
 }
