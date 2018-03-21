@@ -172,7 +172,7 @@ fn handler_graphql_post(
         .map_err(|_e| Error::from("Error reading request body"))
         .and_then(move |bytes: Bytes| {
             time_helpers::log_timed(&log_clone.new(o!("step" => "build_params")), |log| {
-                Params::build_from_post(log, bytes.as_ref())
+                Params::build_from_post(log, bytes.as_ref()).map_err(|e| ErrorKind::BadRequest(e.to_string()).into())
             })
         })
         .from_err();
@@ -390,7 +390,10 @@ mod tests {
 
         assert_eq!(StatusCode::BAD_REQUEST, resp.status());
         let value = test_helpers::read_body_json(resp);
-        assert_eq!(json!({"data": {"podcast": []}}), value);
+        assert_eq!(
+            json!({"errors": [{"message": "Bad request: Error deserializing request body"}]}),
+            value
+        );
     }
 
     #[test]
