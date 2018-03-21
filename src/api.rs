@@ -139,7 +139,7 @@ impl Params {
     fn build_from_post(_log: &Logger, data: &[u8]) -> Result<Self> {
         match serde_json::from_slice::<GraphQLRequest>(data) {
             Ok(graphql_req) => Ok(Params { graphql_req }),
-            Err(_e) => Err(Error::from("Error deserializing request body")),
+            Err(e) => bail!("Error deserializing request body: {}", e),
         }
     }
 }
@@ -391,7 +391,8 @@ mod tests {
         assert_eq!(StatusCode::BAD_REQUEST, resp.status());
         let value = test_helpers::read_body_json(resp);
         assert_eq!(
-            json!({"errors": [{"message": "Bad request: Error deserializing request body"}]}),
+            json!({"errors": [{"message": concat!("Bad request: Error deserializing request body: ",
+                "EOF while parsing a value at line 1 column 0")}]}),
             value
         );
     }
