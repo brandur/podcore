@@ -249,11 +249,8 @@ where
         sync_addr
             .send(message)
             .map_err(|_e| Error::from("Future canceled"))
-    })
-        // TODO: Why is this res?! -- I guess we're returning Result, see if we can pass along okay
-        // instead
-        .and_then(move |res| {
-            let response = res?;
+    }).flatten()
+        .and_then(move |response| {
             time_helpers::log_timed(&log.new(o!("step" => "render_response")), |_log| {
                 let code = if response.ok {
                     StatusCode::OK
