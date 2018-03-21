@@ -177,21 +177,12 @@ fn handler_graphql_get(
     let log = middleware::log_initializer::log(&mut req);
 
     let params_res = time_helpers::log_timed(&log.new(o!("step" => "build_params")), |log| {
-        Params::build_from_get(log, &req)
+        Params::build_from_get(log, &req).map_err(|e| ErrorKind::BadRequest(e.to_string()).into())
     });
-    let params = match params_res {
-        Ok(params) => params,
-        Err(e) => {
-            return Box::new(future::result(handle_error(
-                StatusCode::BAD_REQUEST,
-                e.description().to_owned(),
-            )));
-        }
-    };
 
     execute(
         log,
-        Box::new(future::ok(params)),
+        Box::new(future::result(params_res)),
         req.state().sync_addr.clone(),
     )
 }
@@ -347,7 +338,10 @@ mod tests {
 
         assert_eq!(StatusCode::BAD_REQUEST, resp.status());
         let value = test_helpers::read_body_json(resp);
-        assert_eq!(json!({"errors": [{"message": "No query provided"}]}), value);
+        assert_eq!(
+            json!({"errors": [{"message": "Bad request: No query provided"}]}),
+            value
+        );
     }
 
     #[test]
