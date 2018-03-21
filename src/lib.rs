@@ -39,9 +39,7 @@ extern crate serde_derive;
 // attributes on `extern crate:
 //
 //     https://github.com/rust-lang-nursery/rust-clippy/issues/1938
-#[cfg_attr(feature = "cargo-clippy", allow(useless_attribute))]
-#[allow(unused_imports)]
-#[macro_use]
+#[cfg_attr(test, macro_use)]
 extern crate serde_json;
 
 #[macro_use]
