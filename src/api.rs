@@ -85,14 +85,14 @@ struct ExecutionResponse {
     ok:   bool,
 }
 
-/// A struct to serialize a set of GraphQL errors back to a client (errors are always sent back as
-/// an array).
+/// A struct to serialize a set of `GraphQL` errors back to a client (errors are always sent back
+/// as an array).
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct GraphQLErrors {
     errors: Vec<GraphQLError>,
 }
 
-/// A struct to serialize a GraphQL error back to the client. Should be nested within
+/// A struct to serialize a `GraphQL` error back to the client. Should be nested within
 /// `GraphQLErrors`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct GraphQLError {
@@ -163,7 +163,9 @@ fn handler_graphql_post(
         .map_err(|_e| Error::from("Error reading request body"))
         .and_then(move |bytes: Bytes| {
             time_helpers::log_timed(&log_clone.new(o!("step" => "build_params")), |log| {
-                Params::build_from_post(log, bytes.as_ref()).map_err(|e| ErrorKind::BadRequest(e.to_string()).into())
+                Params::build_from_post(log, bytes.as_ref()).map_err(|e|
+                    ErrorKind::BadRequest(e.to_string()).into()
+                )
             })
         })
         .from_err();
