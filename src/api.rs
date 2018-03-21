@@ -263,19 +263,11 @@ where
                     .unwrap())
             })
         })
-        .then(|res| {
-            match res {
-                Err(e @ Error(ErrorKind::BadRequest(_), _)) => {
-                    // `format!` activates the `Display` traits and shows our `display` definition
-                    handle_error(StatusCode::BAD_REQUEST, format!("{}", e))
-                }
-                r => r,
-            }
-        })
+        .then(|res| server::transform_user_error(res, render_user_error))
         .responder()
 }
 
-pub fn handle_error(code: StatusCode, message: String) -> Result<HttpResponse> {
+fn render_user_error(code: StatusCode, message: String) -> Result<HttpResponse> {
     let body = serde_json::to_string_pretty(&GraphQLErrors {
         errors: vec![GraphQLError { message }],
     })?;

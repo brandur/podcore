@@ -1,5 +1,5 @@
 use actix;
-use actix_web::HttpRequest;
+use actix_web::{HttpRequest, HttpResponse, StatusCode};
 use diesel::pg::PgConnection;
 use errors::*;
 use r2d2::Pool;
@@ -74,4 +74,23 @@ pub struct SyncExecutor {
 
 impl actix::Actor for SyncExecutor {
     type Context = actix::SyncContext<Self>;
+}
+
+//
+// Functions
+//
+
+/// Handles a `Result` and renders an error that was intended for the user. Otherwise (on either a
+/// successful result or non-user error), passes through the normal result.
+pub fn transform_user_error<F>(res: Result<HttpResponse>, render: F) -> Result<HttpResponse>
+where
+    F: FnOnce(StatusCode, String) -> Result<HttpResponse>,
+{
+    match res {
+        Err(e @ Error(ErrorKind::BadRequest(_), _)) => {
+            // `format!` activates the `Display` traits and shows our `display` definition
+            render(StatusCode::BAD_REQUEST, format!("{}", e))
+        }
+        r => r,
+    }
 }
