@@ -357,8 +357,9 @@ struct GlobalOptions {
     quiet:           bool,
 }
 
-/// Acquires a single connection from a connection pool. This is suitable for use a shortcut by
-/// subcommands that only need to run one single-threaded task.
+/// Acquires a single connection from a connection pool. This is suitable for
+/// use a shortcut by subcommands that only need to run one single-threaded
+/// task.
 fn connection(log: &Logger) -> Result<PooledConnection<ConnectionManager<PgConnection>>> {
     pool(log, 1)?.get().map_err(Error::from)
 }
@@ -423,8 +424,8 @@ fn pool(_log: &Logger, num_connections: u32) -> Result<Pool<ConnectionManager<Pg
         .map_err(Error::from)
 }
 
-/// Gets a port from the program's argument or falls back to a value in `PORT` or falls back to
-/// 8080.
+/// Gets a port from the program's argument or falls back to a value in `PORT`
+/// or falls back to 8080.
 fn server_port(matches: &ArgMatches) -> String {
     matches
         .value_of("port")

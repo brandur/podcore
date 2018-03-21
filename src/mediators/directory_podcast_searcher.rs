@@ -178,12 +178,10 @@ impl<'a> Mediator<'a> {
         &mut self,
         log: &Logger,
         search: &model::DirectorySearch,
-    ) -> Result<
-        (
-            Vec<model::DirectoryPodcast>,
-            Vec<model::DirectoryPodcastDirectorySearch>,
-        ),
-    > {
+    ) -> Result<(
+        Vec<model::DirectoryPodcast>,
+        Vec<model::DirectoryPodcastDirectorySearch>,
+    )> {
         let joins = time_helpers::log_timed(&log.new(o!("step" => "select_joins")), |_log| {
             schema::directory_podcast_directory_search::table
                 .filter(

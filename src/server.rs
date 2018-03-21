@@ -10,12 +10,14 @@ use slog::Logger;
 // Traits
 //
 
-/// A trait to be implemented for parameters that are decoded from an incoming HTTP request. It's
-/// also reused as a message to be received by `SyncExecutor` containing enough information
-/// to run its synchronous database operations.
+/// A trait to be implemented for parameters that are decoded from an incoming
+/// HTTP request. It's also reused as a message to be received by
+/// `SyncExecutor` containing enough information to run its synchronous
+/// database operations.
 pub trait Params: Sized {
-    /// Builds a `Params` implementation by decoding an HTTP request. This may result in an error
-    /// if appropriate parameters were not found or not valid.
+    /// Builds a `Params` implementation by decoding an HTTP request. This may
+    /// result in an error if appropriate parameters were not found or not
+    /// valid.
     fn build(log: &Logger, req: &HttpRequest<StateImpl>) -> Result<Self>;
 }
 
@@ -80,8 +82,9 @@ impl actix::Actor for SyncExecutor {
 // Functions
 //
 
-/// Handles a `Result` and renders an error that was intended for the user. Otherwise (on either a
-/// successful result or non-user error), passes through the normal result.
+/// Handles a `Result` and renders an error that was intended for the user.
+/// Otherwise (on either a successful result or non-user error), passes through
+/// the normal result.
 pub fn transform_user_error<F>(res: Result<HttpResponse>, render: F) -> Result<HttpResponse>
 where
     F: FnOnce(StatusCode, String) -> Result<HttpResponse>,

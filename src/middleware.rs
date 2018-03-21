@@ -26,8 +26,8 @@ pub mod log_initializer {
         }
     }
 
-    /// Shorthand for getting a usable `Logger` out of a request. It's also possible to access the
-    /// request's extensions directly.
+    /// Shorthand for getting a usable `Logger` out of a request. It's also
+    /// possible to access the request's extensions directly.
     pub fn log<S: server::State>(req: &mut HttpRequest<S>) -> Logger {
         req.extensions().get::<Extension>().unwrap().0.clone()
     }

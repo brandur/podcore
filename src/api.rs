@@ -85,15 +85,15 @@ struct ExecutionResponse {
     ok:   bool,
 }
 
-/// A struct to serialize a set of `GraphQL` errors back to a client (errors are always sent back
-/// as an array).
+/// A struct to serialize a set of `GraphQL` errors back to a client (errors
+/// are always sent back as an array).
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct GraphQLErrors {
     errors: Vec<GraphQLError>,
 }
 
-/// A struct to serialize a `GraphQL` error back to the client. Should be nested within
-/// `GraphQLErrors`.
+/// A struct to serialize a `GraphQL` error back to the client. Should be
+/// nested within `GraphQLErrors`.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct GraphQLError {
     message: String,

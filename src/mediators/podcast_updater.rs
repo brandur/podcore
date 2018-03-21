@@ -31,9 +31,9 @@ use std::str::FromStr;
 pub struct Mediator<'a> {
     pub conn: &'a PgConnection,
 
-    /// The mediator may skip some parts of processing if it detects that this exact feed has
-    /// already been processed. Setting this value to `true` will skip this check and force all
-    /// processing.
+    /// The mediator may skip some parts of processing if it detects that this
+    /// exact feed has already been processed. Setting this value to `true`
+    /// will skip this check and force all processing.
     pub disable_shortcut: bool,
 
     pub feed_url:       String,
@@ -490,8 +490,8 @@ impl<'a> Mediator<'a> {
 pub struct RunResult {
     /// Episodes that were inserted or updated by the mediator.
     ///
-    /// This value is optional because if the mediator has detected that the feed has already been
-    /// processed, it may skip processing episodes.
+    /// This value is optional because if the mediator has detected that the
+    /// feed has already been processed, it may skip processing episodes.
     pub episodes: Option<Vec<model::Episode>>,
 
     pub location: model::PodcastFeedLocation,
@@ -508,57 +508,60 @@ pub struct RunResult {
 // operation like this, but I'll unwind them if this gets any more complicated.
 macro_rules! require_episode_field {
     // Variation for a check without including an episode GUID.
-    ($raw_field:expr, $message:expr) => (
+    ($raw_field: expr, $message: expr) => {
         if $raw_field.is_none() {
             return Ok(EpisodeOrInvalid::Invalid {
                 message: concat!("Missing ", $message, " from episode"),
                 guid:    None,
             });
         }
-    );
+    };
 
     // Variation for a check that does include an episode GUID. Use this wherever possible.
-    ($raw_field:expr, $message:expr, $guid:expr) => (
+    ($raw_field: expr, $message: expr, $guid: expr) => {
         if $raw_field.is_none() {
             return Ok(EpisodeOrInvalid::Invalid {
                 message: concat!("Missing ", $message, " from episode"),
                 guid:    $guid,
             });
         }
-    )
+    };
 }
 
 // See comment on require_episode_field! above.
 macro_rules! require_podcast_field {
-    ($raw_field:expr, $message:expr) => (
+    ($raw_field: expr, $message: expr) => {
         if $raw_field.is_none() {
             return Ok(PodcastOrInvalid::Invalid {
                 message: concat!("Missing ", $message, " from podcast"),
             });
         }
-    );
+    };
 }
 
 //
 // Private structs
 //
 
-/// Represents a regex find and replac rule that we use to coerce datetime formats that are not
-/// technically valid RFC 2822 into ones that are and which we can parse.
+/// Represents a regex find and replac rule that we use to coerce datetime
+/// formats that are not technically valid RFC 2822 into ones that are and
+/// which we can parse.
 struct DateTimeReplaceRule {
     find:    Regex,
     replace: &'static str,
 }
 
-/// Represents the result of an attempt to turn a raw episode (`raw::episode`) parsed from a third
-/// party data source into a valid one that we can insert into our database. An insertable episode
-/// is returned if the minimum set of required fields was found, otherwise a value indicating an
-/// invalid episode is returned along with an error message.
+/// Represents the result of an attempt to turn a raw episode (`raw::episode`)
+/// parsed from a third party data source into a valid one that we can insert
+/// into our database. An insertable episode is returned if the minimum set of
+/// required fields was found, otherwise a value indicating an invalid episode
+/// is returned along with an error message.
 ///
-/// Note that we use this instead of the `Result` type because running into an invalid episode in a
-/// feed is something that we should expect with some frequency in the real world and shouldn't
-/// produce an error. Instead, we should note it and proceed to parse the episodes from the same
-/// field that were valid.
+/// Note that we use this instead of the `Result` type because running into an
+/// invalid episode in a feed is something that we should expect with some
+/// frequency in the real world and shouldn't produce an error. Instead, we
+/// should note it and proceed to parse the episodes from the same field that
+/// were valid.
 enum EpisodeOrInvalid {
     Valid(insertable::Episode),
     Invalid {
@@ -573,10 +576,11 @@ enum PodcastOrInvalid {
     Invalid { message: &'static str },
 }
 
-/// Contains database record equivalents that have been parsed from third party sources and which
-/// are not necessarily valid and therefore have more lax constraints on some field compared to
-/// their model:: counterparts. Another set of functions attempts to coerce these data types into
-/// insertable rows and indicate that the data source is invalid if it's not possible.
+/// Contains database record equivalents that have been parsed from third party
+/// sources and which are not necessarily valid and therefore have more lax
+/// constraints on some field compared to their model:: counterparts. Another
+/// set of functions attempts to coerce these data types into insertable rows
+/// and indicate that the data source is invalid if it's not possible.
 mod raw {
     #[derive(Debug)]
     pub struct Episode {

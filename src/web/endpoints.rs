@@ -13,28 +13,31 @@ use tokio_core::reactor::Core;
 // Macros
 //
 
-/// Creates an asynchronous HTTP handler function suitable for use with Actix for the current
-/// endpoint module.
+/// Creates an asynchronous HTTP handler function suitable for use with Actix
+/// for the current endpoint module.
 ///
-/// The key point to understand here is that because we have a convention so that all
-/// `server::Params` and `ViewModel`s are given the same name in every module, this can be pulled in
-/// and expanded while still properly resolving symbols.
+/// The key point to understand here is that because we have a convention so
+/// that all `server::Params` and `ViewModel`s are given the same name in every
+/// module, this can be pulled in and expanded while still properly resolving
+/// symbols.
 ///
-/// Honestly, I would've preferred not to have to sink into a macro to get this working, but I
-/// started running into some serious typing problems when trying to make this a generic function.
-/// Be it with generics or associated types I'd always get a complaint from the compiler that there
-/// was no implementation for the generic version when sending a message to Actix (and in a few
-/// other places). After trying many different approaches and failing on all of them, I eventually
-/// just resorted to this. To keep things clean, offload as much work as possible to functions
-/// outside of the macro. Try to change this as little as possible.
+/// Honestly, I would've preferred not to have to sink into a macro to get this
+/// working, but I started running into some serious typing problems when
+/// trying to make this a generic function. Be it with generics or associated
+/// types I'd always get a complaint from the compiler that there
+/// was no implementation for the generic version when sending a message to
+/// Actix (and in a few other places). After trying many different approaches
+/// and failing on all of them, I eventually just resorted to this. To keep
+/// things clean, offload as much work as possible to functions outside of the
+/// macro. Try to change this as little as possible.
 macro_rules! handler {
-    () => (
+    () => {
         pub fn handler(
             mut req: HttpRequest<server::StateImpl>,
         ) -> Box<Future<Item = HttpResponse, Error = Error>> {
             use time_helpers;
-            // Imported so that we can use the traits, but assigned a different name to avoid
-            // clashing with the module's implementations.
+            // Imported so that we can use the traits, but assigned a different name to
+            // avoid clashing with the module's implementations.
             use server::Params as P;
             use web::endpoints::ViewModel as VM;
             use web::middleware;
@@ -44,9 +47,10 @@ macro_rules! handler {
 
             let log = middleware::log_initializer::log(&mut req);
 
-            let params_res = time_helpers::log_timed(&log.new(o!("step" => "build_params")), |log| {
-                Params::build(log, &req)
-            });
+            let params_res = time_helpers::log_timed(
+                &log.new(o!("step" => "build_params")),
+                |log| Params::build(log, &req),
+            );
             let params = match params_res {
                 Ok(params) => params,
                 Err(e) => return Box::new(future::err(e)),
@@ -66,20 +70,21 @@ macro_rules! handler {
                 })
                 .responder()
         }
-    )
+    };
 }
 
-/// Identical to `handler!` except useful in cases where the `server::SyncExecutor` doesn't need to
-/// do any work. Skips sending a blocking message to `server::SyncExecutor` and getting a Postgres
-/// connection from the pool to increase performance and avoid contention.
+/// Identical to `handler!` except useful in cases where the
+/// `server::SyncExecutor` doesn't need to do any work. Skips sending a
+/// blocking message to `server::SyncExecutor` and getting a Postgres connection
+/// from the pool to increase performance and avoid contention.
 macro_rules! handler_noop {
-    ($noop_response:path) => {
+    ($noop_response: path) => {
         pub fn handler(
             mut req: HttpRequest<server::StateImpl>,
         ) -> Box<Future<Item = HttpResponse, Error = Error>> {
             use time_helpers;
-            // Imported so that we can use the traits, but assigned a different name to avoid
-            // clashing with the module's implementations.
+            // Imported so that we can use the traits, but assigned a different name to
+            // avoid clashing with the module's implementations.
             use web::endpoints::ViewModel as VM;
             use web::middleware;
 
@@ -90,9 +95,7 @@ macro_rules! handler_noop {
             let view_model = $noop_response;
             let response_res = time_helpers::log_timed(
                 &log.new(o!("step" => "render_view_model")),
-                |log| {
-                    view_model.render(log, &req)
-                }
+                |log| view_model.render(log, &req),
             );
             let response = match response_res {
                 Ok(response) => response,
@@ -101,11 +104,12 @@ macro_rules! handler_noop {
 
             Box::new(future::ok(response))
         }
-    }
+    };
 }
-/// Macro that easily creates the scaffolding necessary for a `server::SyncExecutor` message handler
-/// from within an endpoint. It puts the necessary type definitions in place and creates a wrapper
-/// function with access to a connection and log.
+/// Macro that easily creates the scaffolding necessary for a
+/// `server::SyncExecutor` message handler from within an endpoint. It puts the
+/// necessary type definitions in place and creates a wrapper function with
+/// access to a connection and log.
 macro_rules! message_handler {
     () => {
         impl ::actix::prelude::Handler<server::Message<Params>> for server::SyncExecutor {
@@ -127,19 +131,21 @@ macro_rules! message_handler {
         impl ::actix::prelude::Message for server::Message<Params> {
             type Result = Result<ViewModel>;
         }
-    }
+    };
 }
 
 //
 // Traits
 //
 
-/// A trait to be implemented by the view models that render views, which is also the same trait
-/// for the typed responses that come from `server::SyncExecutor`. A view model is a model
-/// containing all the information needed to build a view.
+/// A trait to be implemented by the view models that render views, which is
+/// also the same trait for the typed responses that come from
+/// `server::SyncExecutor`. A view model is a model containing all the
+/// information needed to build a view.
 pub trait ViewModel {
-    /// Renders a `ViewModel` implementation to an HTTP response. This could be a standard HTML
-    /// page, but could also be any arbitrary response like a redirect.
+    /// Renders a `ViewModel` implementation to an HTTP response. This could be
+    /// a standard HTML page, but could also be any arbitrary response like
+    /// a redirect.
     fn render(&self, log: &Logger, req: &HttpRequest<server::StateImpl>) -> Result<HttpResponse>;
 }
 

@@ -92,8 +92,9 @@ impl CommonTestBootstrap {
 // Public functions
 //
 
-/// Acquires a single connection from a connection pool and starts a test transaction on it. This
-/// is suitable for use a shortcut by subcommands that only need to run one single-threaded task.
+/// Acquires a single connection from a connection pool and starts a test
+/// transaction on it. This is suitable for use a shortcut by subcommands that
+/// only need to run one single-threaded task.
 pub fn connection() -> PooledConnection<ConnectionManager<PgConnection>> {
     let conn = pool().get().map_err(Error::from).unwrap();
     conn.begin_test_transaction().unwrap();
@@ -123,8 +124,8 @@ pub fn log() -> Logger {
     }
 }
 
-/// Gets a synchronous Logger. This is more suitable in some situations like where threading is
-/// involved.
+/// Gets a synchronous Logger. This is more suitable in some situations like
+/// where threading is involved.
 pub fn log_sync() -> Logger {
     if nocapture() {
         log_sync_no_capture()
@@ -133,8 +134,8 @@ pub fn log_sync() -> Logger {
     }
 }
 
-/// Same as `log_sync`, but never discards output. This is useful for printing errors from the
-/// test suite (that might otherwise get swallowed).
+/// Same as `log_sync`, but never discards output. This is useful for printing
+/// errors from the test suite (that might otherwise get swallowed).
 pub fn log_sync_no_capture() -> Logger {
     let decorator = slog_term::PlainSyncDecorator::new(std::io::stdout());
     let drain = slog_term::FullFormat::new(decorator).build().fuse();
