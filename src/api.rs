@@ -263,6 +263,8 @@ where
             .send(message)
             .map_err(|_e| Error::from("Future canceled"))
     }).from_err()
+        // TODO: Why is this res?! -- I guess we're returning Result, see if we can pass along okay
+        // instead
         .and_then(move |res| {
             let response = res?;
             time_helpers::log_timed(&log.new(o!("step" => "render_response")), |_log| {
@@ -276,6 +278,15 @@ where
                     .body(response.json)
                     .unwrap())
             })
+        })
+        .then(|res| {
+            match res {
+                Err(e @ Error(ErrorKind::UserError(_), _)) => {
+                    // `format!` activates the `Display` traits and shows our `display` definition
+                    handle_400(format!("{}", e))
+                }
+                r => r,
+            }
         })
         .responder()
 }
@@ -359,6 +370,22 @@ mod tests {
         let resp = server.execute(req.send()).unwrap();
 
         assert_eq!(StatusCode::OK, resp.status());
+        let value = test_helpers::read_body_json(resp);
+        assert_eq!(json!({"data": {"podcast": []}}), value);
+    }
+
+    #[test]
+    fn test_handler_graphql_post_no_query() {
+        let bootstrap = TestBootstrap::new();
+        let mut server = bootstrap.server_builder.start(|app| {
+            app.middleware(middleware::log_initializer::Middleware)
+                .handler(handler_graphql_post)
+        });
+
+        let req = server.post().finish().unwrap();
+        let resp = server.execute(req.send()).unwrap();
+
+        assert_eq!(StatusCode::BAD_REQUEST, resp.status());
         let value = test_helpers::read_body_json(resp);
         assert_eq!(json!({"data": {"podcast": []}}), value);
     }
