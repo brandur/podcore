@@ -105,13 +105,10 @@ struct Params {
 
 impl Params {
     /// Builds `Params` from a `GET` request.
-    fn build_from_get(log: &Logger, req: &HttpRequest<server::StateImpl>) -> Result<Self> {
+    fn build_from_get(_log: &Logger, req: &HttpRequest<server::StateImpl>) -> Result<Self> {
         let input_query = match req.query().get("query") {
             Some(q) => q.to_owned(),
-            None => {
-                info!(log, "No query provided");
-                return Err(Error::from("No query provided"));
-            }
+            None => bail!("No query provided"),
         };
 
         let operation_name = req.query().get("operationName").map(|n| n.to_owned());
@@ -119,13 +116,7 @@ impl Params {
         let variables: Option<InputValue> = match req.query().get("variables") {
             Some(v) => match serde_json::from_str::<InputValue>(v) {
                 Ok(v) => Some(v),
-                Err(e) => {
-                    info!(log, "Variables JSON malformed");
-                    return Err(Error::from(format!(
-                        "Malformed variables JSON. Error: {}",
-                        e
-                    )));
-                }
+                Err(e) => bail!("Malformed variables JSON: {}", e),
             },
             None => None,
         };
