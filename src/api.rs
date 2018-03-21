@@ -249,7 +249,7 @@ where
         sync_addr
             .send(message)
             .map_err(|_e| Error::from("Future canceled"))
-    }).from_err()
+    })
         // TODO: Why is this res?! -- I guess we're returning Result, see if we can pass along okay
         // instead
         .and_then(move |res| {
