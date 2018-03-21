@@ -33,7 +33,8 @@ error_chain!{
         //
         // User errors
         //
-        // Don't reuse types that are not appropriate. Add a new one if necessary.
+        // These are public-facing errors for the API and web. Don't reuse types that are not
+        // appropriate. Add a new one if necessary.
         //
 
         BadRequest(message: String) {
