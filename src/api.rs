@@ -85,6 +85,20 @@ struct ExecutionResponse {
     ok:   bool,
 }
 
+/// A struct to serialize a set of GraphQL errors back to a client (errors are always sent back as
+/// an array).
+#[derive(Debug, Clone, Deserialize, Serialize)]
+struct GraphQLErrors {
+    errors: Vec<GraphQLError>,
+}
+
+/// A struct to serialize a GraphQL error back to the client. Should be nested within
+/// `GraphQLErrors`.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+struct GraphQLError {
+    message: String,
+}
+
 struct Params {
     graphql_req: GraphQLRequest,
 }
@@ -177,11 +191,7 @@ fn handler_graphql_get(
     let params = match params_res {
         Ok(params) => params,
         Err(e) => {
-            return Box::new(future::ok(
-                actix_web::error::ErrorBadRequest(e.description().to_owned())
-                    .cause()
-                    .error_response(),
-            ));
+            return Box::new(future::result(handle_400(e.description().to_owned())));
         }
     };
 
@@ -270,6 +280,15 @@ where
         .responder()
 }
 
+pub fn handle_400(message: String) -> Result<HttpResponse> {
+    let body = serde_json::to_string_pretty(&GraphQLErrors {
+        errors: vec![GraphQLError { message }],
+    })?;
+    Ok(HttpResponse::build(StatusCode::BAD_REQUEST)
+        .content_type("application/json; charset=utf-8")
+        .body(body)?)
+}
+
 //
 // Tests
 //
@@ -305,9 +324,25 @@ mod tests {
 
         let resp = server.execute(req.send()).unwrap();
 
-        assert_eq!(resp.status(), StatusCode::OK);
+        assert_eq!(StatusCode::OK, resp.status());
         let value = test_helpers::read_body_json(resp);
         assert_eq!(json!({"data": {"podcast": []}}), value);
+    }
+
+    #[test]
+    fn test_handler_graphql_get_no_query() {
+        let bootstrap = TestBootstrap::new();
+        let mut server = bootstrap.server_builder.start(|app| {
+            app.middleware(middleware::log_initializer::Middleware)
+                .handler(handler_graphql_get)
+        });
+
+        let req = server.get().finish().unwrap();
+        let resp = server.execute(req.send()).unwrap();
+
+        assert_eq!(StatusCode::BAD_REQUEST, resp.status());
+        let value = test_helpers::read_body_json(resp);
+        assert_eq!(json!({"errors": [{"message": "No query provided"}]}), value);
     }
 
     #[test]
@@ -323,7 +358,7 @@ mod tests {
         let req = server.post().body(body).unwrap();
         let resp = server.execute(req.send()).unwrap();
 
-        assert_eq!(resp.status(), StatusCode::OK);
+        assert_eq!(StatusCode::OK, resp.status());
         let value = test_helpers::read_body_json(resp);
         assert_eq!(json!({"data": {"podcast": []}}), value);
     }
@@ -337,7 +372,7 @@ mod tests {
 
         let req = server.get().finish().unwrap();
         let resp = server.execute(req.send()).unwrap();
-        assert_eq!(resp.status(), StatusCode::OK);
+        assert_eq!(StatusCode::OK, resp.status());
     }
 
     //
