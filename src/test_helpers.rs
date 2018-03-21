@@ -127,12 +127,18 @@ pub fn log() -> Logger {
 /// involved.
 pub fn log_sync() -> Logger {
     if nocapture() {
-        let decorator = slog_term::PlainSyncDecorator::new(std::io::stdout());
-        let drain = slog_term::FullFormat::new(decorator).build().fuse();
-        slog::Logger::root(drain, o!("env" => "test"))
+        log_sync_no_capture()
     } else {
         slog::Logger::root(slog::Discard, o!())
     }
+}
+
+/// Same as `log_sync`, but never discards output. This is useful for printing errors from the
+/// test suite (that might otherwise get swallowed).
+pub fn log_sync_no_capture() -> Logger {
+    let decorator = slog_term::PlainSyncDecorator::new(std::io::stdout());
+    let drain = slog_term::FullFormat::new(decorator).build().fuse();
+    slog::Logger::root(drain, o!("env" => "test"))
 }
 
 /// Initializes and returns a connection pool suitable for use across threads.
@@ -140,7 +146,7 @@ pub fn pool() -> Pool<ConnectionManager<PgConnection>> {
     match pool_inner() {
         Ok(pool) => pool,
         Err(e) => {
-            error_helpers::print_error(&log_sync(), &e);
+            error_helpers::print_error(&log_sync_no_capture(), &e);
             panic!("{}", e);
         }
     }
@@ -171,7 +177,7 @@ where
     E: std::error::Error,
 {
     fn handle_error(&self, error: E) {
-        error!(log_sync(), "{}", error);
+        error!(log_sync_no_capture(), "{}", error);
     }
 }
 
