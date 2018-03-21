@@ -59,9 +59,9 @@ fn main() {
     let mut app = App::new("podcore")
         .version("0.1")
         .about("A general utility command for the podcore project")
-        .arg_from_usage("   --log-async 'Log asynchronously (good for logging on servers)'")
-        .arg_from_usage("-c --num-connections [NUM_CONNECTIONS] 'Number of Postgres connections'")
-        .arg_from_usage("-q --quiet 'Quiets all output'")
+        .arg_from_usage("    --log-async 'Log asynchronously (good for logging on servers)'")
+        .arg_from_usage("-c, --num-connections=[NUM_CONNECTIONS] 'Number of Postgres connections'")
+        .arg_from_usage("-q, --quiet 'Quiets all output'")
         .subcommand(
             SubCommand::with_name("add")
                 .about("Fetches a podcast and adds it to the database")
@@ -71,7 +71,7 @@ fn main() {
         .subcommand(
             SubCommand::with_name("api")
                 .about("Starts the API server")
-                .arg_from_usage("-p, --port [PORT] 'Port to bind server to'"),
+                .arg_from_usage("-p, --port=[PORT] 'Port to bind server to'"),
         )
         .subcommand(
             SubCommand::with_name("clean")
@@ -109,7 +109,7 @@ fn main() {
         .subcommand(
             SubCommand::with_name("web")
                 .about("Starts the web server")
-                .arg_from_usage("-p, --port [PORT] 'Port to bind server to'"),
+                .arg_from_usage("-p, --port=[PORT] 'Port to bind server to'"),
         );
 
     let matches = app.clone().get_matches();
@@ -403,7 +403,7 @@ fn parse_global_options(matches: &ArgMatches) -> GlobalOptions {
             .map(|s| s.parse::<u32>().unwrap())
             .unwrap_or_else(|_| {
                 matches
-                    .value_of("NUM_CONNECTIONS")
+                    .value_of("num_connections")
                     .map(|s| s.parse::<u32>().unwrap())
                     .unwrap_or(NUM_CONNECTIONS)
             }),
@@ -427,7 +427,7 @@ fn pool(_log: &Logger, num_connections: u32) -> Result<Pool<ConnectionManager<Pg
 /// 8080.
 fn server_port(matches: &ArgMatches) -> String {
     matches
-        .value_of("PORT")
+        .value_of("port")
         .map(|p| p.to_owned())
         .unwrap_or_else(|| env::var("PORT").unwrap_or_else(|_| SERVER_PORT.to_owned()))
 }
