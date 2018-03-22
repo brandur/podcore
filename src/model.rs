@@ -18,6 +18,35 @@ use diesel::prelude::*;
 
 #[allow(dead_code)]
 #[derive(Queryable)]
+pub struct Account {
+    pub id:           i64,
+    pub created_at:   DateTime<Utc>,
+    pub last_ip:      String,
+    pub last_seen_at: DateTime<Utc>,
+}
+
+#[allow(dead_code)]
+#[derive(Queryable)]
+pub struct AccountPodcast {
+    pub id:              i64,
+    pub account_id:      i64,
+    pub podcast_id:      i64,
+    pub subscribed_at:   DateTime<Utc>,
+    pub unsubscribed_at: Option<DateTime<Utc>>,
+}
+
+#[allow(dead_code)]
+#[derive(Queryable)]
+pub struct AccountPodcastEpisode {
+    pub id:                 i64,
+    pub account_podcast_id: i64,
+    pub episode_id:         i64,
+    pub listened_second:    i64,
+    pub played:             bool,
+}
+
+#[allow(dead_code)]
+#[derive(Queryable)]
 pub struct Directory {
     pub id:   i64,
     pub name: String,
@@ -128,11 +157,37 @@ pub struct PodcastFeedLocation {
 }
 
 pub mod insertable {
-    use schema::{directory_podcast, directory_podcast_directory_search,
-                 directory_podcast_exception, directory_search, episode, podcast,
-                 podcast_exception, podcast_feed_content, podcast_feed_location};
+    use schema::{account, account_podcast, account_podcast_episode, directory_podcast,
+                 directory_podcast_directory_search, directory_podcast_exception,
+                 directory_search, episode, podcast, podcast_exception, podcast_feed_content,
+                 podcast_feed_location};
 
     use chrono::{DateTime, Utc};
+
+    //#[allow(dead_code)]
+    #[derive(Insertable)]
+    #[table_name = "account"]
+    pub struct Account {
+        pub last_ip: String,
+    }
+
+    //#[allow(dead_code)]
+    #[derive(Insertable)]
+    #[table_name = "account_podcast"]
+    pub struct AccountPodcast {
+        pub account_id:      i64,
+        pub podcast_id:      i64,
+        pub subscribed_at:   DateTime<Utc>,
+        pub unsubscribed_at: Option<DateTime<Utc>>,
+    }
+
+    //#[allow(dead_code)]
+    #[derive(Insertable)]
+    #[table_name = "account_podcast_episode"]
+    pub struct AccountPodcastEpisode {
+        pub account_podcast_id: i64,
+        pub episode_id:         i64,
+    }
 
     #[derive(Insertable)]
     #[table_name = "directory_podcast"]

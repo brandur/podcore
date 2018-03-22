@@ -1,4 +1,33 @@
 table! {
+    account (id) {
+        id -> Int8,
+        created_at -> Timestamptz,
+        last_ip -> Text,
+        last_seen_at -> Timestamptz,
+    }
+}
+
+table! {
+    account_podcast (id) {
+        id -> Int8,
+        account_id -> Int8,
+        podcast_id -> Int8,
+        subscribed_at -> Timestamptz,
+        unsubscribed_at -> Nullable<Timestamptz>,
+    }
+}
+
+table! {
+    account_podcast_episode (id) {
+        id -> Int8,
+        account_podcast_id -> Int8,
+        episode_id -> Int8,
+        listened_second -> Nullable<Int8>,
+        played -> Nullable<Bool>,
+    }
+}
+
+table! {
     directory (id) {
         id -> Int8,
         name -> Text,
@@ -98,6 +127,10 @@ table! {
     }
 }
 
+joinable!(account_podcast -> account (account_id));
+joinable!(account_podcast -> podcast (podcast_id));
+joinable!(account_podcast_episode -> account_podcast (account_podcast_id));
+joinable!(account_podcast_episode -> episode (episode_id));
 joinable!(directory_podcast -> directory (directory_id));
 joinable!(directory_podcast -> podcast (podcast_id));
 joinable!(directory_podcast_directory_search -> directory_podcast (directory_podcast_id));
@@ -110,6 +143,9 @@ joinable!(podcast_feed_content -> podcast (podcast_id));
 joinable!(podcast_feed_location -> podcast (podcast_id));
 
 allow_tables_to_appear_in_same_query!(
+    account,
+    account_podcast,
+    account_podcast_episode,
     directory,
     directory_podcast,
     directory_podcast_directory_search,

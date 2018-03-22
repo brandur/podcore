@@ -91,7 +91,8 @@ where
 {
     match res {
         Err(e @ Error(ErrorKind::BadRequest(_), _)) => {
-            // `format!` activates the `Display` traits and shows our `display` definition
+            // `format!` activates the `Display` traits and shows our error's `display`
+            // definition
             render(StatusCode::BAD_REQUEST, format!("{}", e))
         }
         r => r,
