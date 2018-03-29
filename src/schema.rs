@@ -24,8 +24,8 @@ table! {
         id -> Int8,
         account_podcast_id -> Int8,
         episode_id -> Int8,
-        listened_second -> Nullable<Int8>,
-        played -> Nullable<Bool>,
+        listened_seconds -> Nullable<Int8>,
+        played -> Bool,
     }
 }
 

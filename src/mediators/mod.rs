@@ -1,5 +1,6 @@
 mod common;
 pub mod account_creator;
+pub mod account_podcast_episode_upserter;
 pub mod account_podcast_subscriber;
 pub mod account_podcast_unsubscriber;
 pub mod cleaner;

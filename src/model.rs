@@ -43,7 +43,7 @@ pub struct AccountPodcastEpisode {
     pub id:                 i64,
     pub account_podcast_id: i64,
     pub episode_id:         i64,
-    pub listened_second:    i64,
+    pub listened_seconds:   Option<i64>,
     pub played:             bool,
 }
 
@@ -191,6 +191,8 @@ pub mod insertable {
     pub struct AccountPodcastEpisode {
         pub account_podcast_id: i64,
         pub episode_id:         i64,
+        pub listened_seconds:   Option<i64>,
+        pub played:             bool,
     }
 
     #[derive(Insertable)]
