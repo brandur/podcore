@@ -271,9 +271,11 @@ fn render_user_error(code: StatusCode, message: String) -> Result<HttpResponse> 
     let body = serde_json::to_string_pretty(&GraphQLErrors {
         errors: vec![GraphQLError { message }],
     })?;
-    Ok(HttpResponse::build(code)
-        .content_type("application/json; charset=utf-8")
-        .body(body)?)
+    Ok(server::flatten_http(
+        HttpResponse::build(code)
+            .content_type("application/json; charset=utf-8")
+            .body(body),
+    ))
 }
 
 //
