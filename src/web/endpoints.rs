@@ -78,7 +78,7 @@ macro_rules! handler {
 /// blocking message to `server::SyncExecutor` and getting a Postgres connection
 /// from the pool to increase performance and avoid contention.
 macro_rules! handler_noop {
-    ($noop_response: path) => {
+    ($noop_response:path) => {
         pub fn handler(
             mut req: HttpRequest<server::StateImpl>,
         ) -> Box<Future<Item = HttpResponse, Error = Error>> {

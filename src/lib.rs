@@ -66,10 +66,10 @@ pub mod graphql;
 #[macro_use]
 mod macros;
 
+pub mod http_requester;
 pub mod mediators;
 mod middleware;
 mod model;
-pub mod http_requester;
 
 // Generated file: skip rustfmt
 #[cfg_attr(rustfmt, rustfmt_skip)]

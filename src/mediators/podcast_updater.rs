@@ -17,8 +17,8 @@ use diesel::prelude::*;
 use flate2::Compression;
 use flate2::write::GzEncoder;
 use hyper::{Method, Request, StatusCode, Uri};
-use quick_xml::events::{BytesText, Event};
 use quick_xml::events::attributes::Attribute;
+use quick_xml::events::{BytesText, Event};
 use quick_xml::reader::Reader;
 use regex::Regex;
 use slog::Logger;
@@ -508,7 +508,7 @@ pub struct RunResult {
 // operation like this, but I'll unwind them if this gets any more complicated.
 macro_rules! require_episode_field {
     // Variation for a check without including an episode GUID.
-    ($raw_field: expr, $message: expr) => {
+    ($raw_field:expr, $message:expr) => {
         if $raw_field.is_none() {
             return Ok(EpisodeOrInvalid::Invalid {
                 message: concat!("Missing ", $message, " from episode"),
@@ -518,7 +518,7 @@ macro_rules! require_episode_field {
     };
 
     // Variation for a check that does include an episode GUID. Use this wherever possible.
-    ($raw_field: expr, $message: expr, $guid: expr) => {
+    ($raw_field:expr, $message:expr, $guid:expr) => {
         if $raw_field.is_none() {
             return Ok(EpisodeOrInvalid::Invalid {
                 message: concat!("Missing ", $message, " from episode"),
@@ -530,7 +530,7 @@ macro_rules! require_episode_field {
 
 // See comment on require_episode_field! above.
 macro_rules! require_podcast_field {
-    ($raw_field: expr, $message: expr) => {
+    ($raw_field:expr, $message:expr) => {
         if $raw_field.is_none() {
             return Ok(PodcastOrInvalid::Invalid {
                 message: concat!("Missing ", $message, " from podcast"),

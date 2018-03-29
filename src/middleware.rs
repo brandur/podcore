@@ -2,8 +2,8 @@ pub mod log_initializer {
     use server;
 
     use actix_web;
-    use actix_web::{HttpRequest, HttpResponse};
     use actix_web::middleware::{Response, Started};
+    use actix_web::{HttpRequest, HttpResponse};
     use slog::Logger;
 
     pub struct Middleware;
@@ -38,8 +38,8 @@ pub mod request_id {
     use server;
 
     use actix_web;
-    use actix_web::{HttpRequest, HttpResponse};
     use actix_web::middleware::{Response, Started};
+    use actix_web::{HttpRequest, HttpResponse};
 
     use uuid::Uuid;
 
@@ -78,8 +78,8 @@ pub mod request_response_logger {
     use time_helpers;
 
     use actix_web;
-    use actix_web::{HttpRequest, HttpResponse};
     use actix_web::middleware::{Response, Started};
+    use actix_web::{HttpRequest, HttpResponse};
 
     use time;
 

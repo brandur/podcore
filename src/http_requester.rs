@@ -2,9 +2,9 @@ use errors::*;
 
 use flate2::read::GzDecoder;
 use futures::Stream;
-use hyper::{Body, Client, Request, StatusCode, Uri};
 use hyper::client::HttpConnector;
 use hyper::header::{qitem, AcceptEncoding, ContentEncoding, Encoding, Location, UserAgent};
+use hyper::{Body, Client, Request, StatusCode, Uri};
 use hyper_tls::HttpsConnector;
 use slog::Logger;
 use std::io::prelude::*;

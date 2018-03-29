@@ -6,16 +6,16 @@ use time_helpers;
 
 use actix;
 use actix_web;
-use actix_web::{HttpRequest, HttpResponse, StatusCode};
 use actix_web::AsyncResponder;
 use actix_web::Method;
+use actix_web::{HttpRequest, HttpResponse, StatusCode};
 use bytes::Bytes;
 use diesel::pg::PgConnection;
 use futures::future;
 use futures::future::Future;
-use juniper::{InputValue, RootNode};
 use juniper::graphiql;
 use juniper::http::GraphQLRequest;
+use juniper::{InputValue, RootNode};
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use serde_json;

@@ -6,8 +6,8 @@ use time_helpers;
 
 use chrono::Utc;
 use hyper;
-use hyper::{Body, Method, Request, StatusCode, Uri};
 use hyper::header::{ContentLength, ContentType};
+use hyper::{Body, Method, Request, StatusCode, Uri};
 use serde_json;
 use slog::Logger;
 use std;
