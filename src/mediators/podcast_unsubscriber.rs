@@ -29,7 +29,7 @@ impl<'a> Mediator<'a> {
     //
 
     fn update_account_podcast(&mut self, log: &Logger) -> Result<model::AccountPodcast> {
-        time_helpers::log_timed(&log.new(o!("step" => "upsert_account_podcast")), |_log| {
+        time_helpers::log_timed(&log.new(o!("step" => "update_account_podcast")), |_log| {
             diesel::update(schema::account_podcast::table)
                 .filter(schema::account_podcast::id.eq(self.account_podcast.id))
                 .set(schema::account_podcast::unsubscribed_at.eq(Some(Utc::now())))
