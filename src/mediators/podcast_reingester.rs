@@ -251,14 +251,12 @@ fn work_inner(log: &Logger, conn: &PgConnection, podcast_tuple: &PodcastTuple) -
 mod tests {
     extern crate rand;
 
-    use http_requester::HttpRequesterPassThrough;
     use mediators::podcast_reingester::*;
-    use mediators::podcast_updater;
+    use test_data;
     use test_helpers;
 
     use r2d2::{Pool, PooledConnection};
     use r2d2_diesel::ConnectionManager;
-    use rand::Rng;
 
     #[test]
     #[ignore]
@@ -268,7 +266,7 @@ mod tests {
         // Insert lots of data to be reingested
         let num_podcasts = (test_helpers::NUM_CONNECTIONS as i64) * 10;
         for _i in 0..num_podcasts {
-            insert_podcast(&bootstrap.log, &*bootstrap.conn);
+            test_data::podcast::insert(&bootstrap.log, &*bootstrap.conn);
         }
 
         debug!(&bootstrap.log, "Finished setup (starting the real test)");
@@ -319,22 +317,5 @@ mod tests {
         fn drop(&mut self) {
             test_helpers::clean_database(&self.log, &*self.conn);
         }
-    }
-
-    fn insert_podcast(log: &Logger, conn: &PgConnection) {
-        let mut rng = rand::thread_rng();
-        podcast_updater::Mediator {
-            conn:             conn,
-            disable_shortcut: false,
-
-            // Add a little randomness to feed URLs so that w don't just insert one podcast and
-            // update it over and over.
-            feed_url: format!("https://example.com/feed-{}.xml", rng.gen::<u64>()).to_string(),
-
-            http_requester: &mut HttpRequesterPassThrough {
-                data: Arc::new(test_helpers::MINIMAL_FEED.to_vec()),
-            },
-        }.run(log)
-            .unwrap();
     }
 }
