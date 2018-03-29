@@ -78,6 +78,9 @@ mod schema;
 mod server;
 
 #[cfg(test)]
+mod test_data;
+
+#[cfg(test)]
 mod test_helpers;
 
 mod time_helpers;

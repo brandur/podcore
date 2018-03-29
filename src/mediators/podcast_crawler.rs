@@ -241,18 +241,15 @@ fn work(
 
 #[cfg(test)]
 mod tests {
-    extern crate rand;
-
-    use http_requester::{HttpRequesterFactoryPassThrough, HttpRequesterPassThrough};
+    use http_requester::HttpRequesterFactoryPassThrough;
     use mediators::podcast_crawler::*;
-    use mediators::podcast_updater;
     use schema;
+    use test_data;
     use test_helpers;
 
     use chrono::Utc;
     use r2d2::{Pool, PooledConnection};
     use r2d2_diesel::ConnectionManager;
-    use rand::Rng;
     use std::sync::Arc;
     use time::Duration;
 
@@ -264,7 +261,7 @@ mod tests {
         // Insert lots of data to be crawled
         let num_podcasts = (test_helpers::NUM_CONNECTIONS as i64) * 10;
         for _i in 0..num_podcasts {
-            insert_podcast(&bootstrap.log, &*bootstrap.conn);
+            test_data::insert_podcast(&bootstrap.log, &*bootstrap.conn);
         }
 
         // Mark all podcasts as stale so that the crawler will find them
@@ -288,7 +285,7 @@ mod tests {
         // Just add one podcast given no data will be crawled anyway: any inserted
         // podcasts are marked as last_retrieved_at too recently, so the
         // crawler will ignore them
-        insert_podcast(&bootstrap.log, &*bootstrap.conn);
+        test_data::insert_podcast(&bootstrap.log, &*bootstrap.conn);
 
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
@@ -300,7 +297,7 @@ mod tests {
     fn test_crawler_long_interval_update() {
         let mut bootstrap = TestBootstrap::new();
 
-        insert_podcast(&bootstrap.log, &*bootstrap.conn);
+        test_data::insert_podcast(&bootstrap.log, &*bootstrap.conn);
 
         diesel::update(schema::podcast_feed_content::table)
             .set(schema::podcast_feed_content::retrieved_at.eq(Utc::now() - Duration::weeks(52)))
@@ -326,7 +323,7 @@ mod tests {
     fn test_crawler_long_interval_no_update() {
         let mut bootstrap = TestBootstrap::new();
 
-        insert_podcast(&bootstrap.log, &*bootstrap.conn);
+        test_data::insert_podcast(&bootstrap.log, &*bootstrap.conn);
 
         diesel::update(schema::podcast_feed_content::table)
             .set(schema::podcast_feed_content::retrieved_at.eq(Utc::now() - Duration::weeks(52)))
@@ -393,22 +390,5 @@ mod tests {
         fn drop(&mut self) {
             test_helpers::clean_database(&self.log, &*self.conn);
         }
-    }
-
-    fn insert_podcast(log: &Logger, conn: &PgConnection) {
-        let mut rng = rand::thread_rng();
-        podcast_updater::Mediator {
-            conn:             conn,
-            disable_shortcut: false,
-
-            // Add a little randomness to feed URLs so that w don't just insert one podcast and
-            // update it over and over.
-            feed_url: format!("https://example.com/feed-{}.xml", rng.gen::<u64>()).to_string(),
-
-            http_requester: &mut HttpRequesterPassThrough {
-                data: Arc::new(test_helpers::MINIMAL_FEED.to_vec()),
-            },
-        }.run(log)
-            .unwrap();
     }
 }
