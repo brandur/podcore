@@ -52,7 +52,7 @@ CREATE TABLE account_podcast_episode (
         REFERENCES episode (id) ON DELETE RESTRICT,
 
     -- Play progress, or the second in playtime to which the user has listened.
-    listened_seconds BIGINT DEFAULT 0,
+    listened_seconds BIGINT,
 
     played BOOLEAN NOT NULL DEFAULT false,
 

@@ -113,6 +113,21 @@ mod tests {
         assert_ne!(0, res.account_podcast_episode.id);
     }
 
+    #[test]
+    fn test_account_podcast_episode_upsert_invalid() {
+        let mut bootstrap = TestBootstrap::new(Args {
+            account_podcast:  None,
+            episode:          None,
+            listened_seconds: Some(10),
+            played:           true,
+        });
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log);
+        assert!(res.is_err());
+        let e = res.err().unwrap();
+        assert_eq!("Error upserting account podcast episode", e.description());
+    }
+
     //
     // Private types/functions
     //
