@@ -49,16 +49,14 @@ pub struct RunResult {
 
 #[cfg(test)]
 mod tests {
-    use http_requester::HttpRequesterPassThrough;
     use mediators::podcast_feed_location_upgrader::*;
-    use mediators::podcast_updater;
     use model;
     use model::insertable;
     use schema;
+    use test_data;
     use test_helpers;
 
     use chrono::Utc;
-    use std::sync::Arc;
 
     #[test]
     fn test_upgrades_unsecured_location() {
@@ -71,18 +69,22 @@ mod tests {
         // Insert one feed with HTTPS. This will allow our query to discover that
         // example.com supports encrypted connections, and upgraded any other
         // non-HTTPS URLs that it discovers at that domain.
-        let _ = insert_podcast(
+        let _ = test_data::podcast::insert_args(
             &bootstrap.log,
             &*bootstrap.conn,
-            "https://example.com/secured.xml",
+            test_data::podcast::Args {
+                feed_url: Some("https://example.com/secured.xml".to_owned()),
+            },
         );
 
         // And insert another podcast that's not secured, but at the same domain as our
         // archetype.
-        let podcast = insert_podcast(
+        let podcast = test_data::podcast::insert_args(
             &bootstrap.log,
             &*bootstrap.conn,
-            "http://example.com/feed.xml",
+            test_data::podcast::Args {
+                feed_url: Some("http://example.com/feed.xml".to_owned()),
+            },
         );
 
         assert_eq!(
@@ -119,10 +121,12 @@ mod tests {
 
         // And insert another podcast that's not secured, but at the same domain as our
         // archetype.
-        let podcast = insert_podcast(
+        let podcast = test_data::podcast::insert_args(
             &bootstrap.log,
             &*bootstrap.conn,
-            "http://example.libsyn.com/feed.xml",
+            test_data::podcast::Args {
+                feed_url: Some("http://example.libsyn.com/feed.xml".to_owned()),
+            },
         );
 
         assert_eq!(
@@ -150,19 +154,23 @@ mod tests {
         let conn = test_helpers::connection();
         let mut bootstrap = TestBootstrapWithConn::new(&*conn);
 
-        let _ = insert_podcast(
+        let _ = test_data::podcast::insert_args(
             &bootstrap.log,
             &*bootstrap.conn,
-            "https://example.com/secured.xml",
+            test_data::podcast::Args {
+                feed_url: Some("https://example.com/secured.xml".to_owned()),
+            },
         );
 
         // Insert an unsecured podcast, but at a different host (even a subdomain is a
         // different host). This should be ignored by the mediator's run
         // because we don't know whether or not it supports HTTPS.
-        let podcast = insert_podcast(
+        let podcast = test_data::podcast::insert_args(
             &bootstrap.log,
             &*bootstrap.conn,
-            "http://subdomain.example.com/feed.xml",
+            test_data::podcast::Args {
+                feed_url: Some("http://subdomain.example.com/feed.xml".to_owned()),
+            },
         );
 
         {
@@ -182,16 +190,20 @@ mod tests {
         let conn = test_helpers::connection();
         let mut bootstrap = TestBootstrapWithConn::new(&*conn);
 
-        let _ = insert_podcast(
+        let _ = test_data::podcast::insert_args(
             &bootstrap.log,
             &*bootstrap.conn,
-            "https://example.com/secured.xml",
+            test_data::podcast::Args {
+                feed_url: Some("https://example.com/secured.xml".to_owned()),
+            },
         );
 
-        let podcast = insert_podcast(
+        let podcast = test_data::podcast::insert_args(
             &bootstrap.log,
             &*bootstrap.conn,
-            "http://example.com/feed.xml",
+            test_data::podcast::Args {
+                feed_url: Some("http://example.com/feed.xml".to_owned()),
+            },
         );
 
         // Unlike our previous example, here we insert an additional record for the
@@ -243,19 +255,6 @@ mod tests {
         fn mediator(&mut self) -> (Mediator, Logger) {
             (Mediator { conn: self.conn }, self.log.clone())
         }
-    }
-
-    fn insert_podcast(log: &Logger, conn: &PgConnection, url: &str) -> model::Podcast {
-        podcast_updater::Mediator {
-            conn:             conn,
-            disable_shortcut: false,
-            feed_url:         url.to_owned(),
-            http_requester:   &mut HttpRequesterPassThrough {
-                data: Arc::new(test_helpers::MINIMAL_FEED.to_vec()),
-            },
-        }.run(log)
-            .unwrap()
-            .podcast
     }
 
     fn select_feed_urls(conn: &PgConnection, podcast: &model::Podcast) -> Vec<String> {

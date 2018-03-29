@@ -16,7 +16,7 @@ pub mod podcast {
 
     #[derive(Default)]
     pub struct Args {
-        feed_url: Option<String>,
+        pub feed_url: Option<String>,
     }
 
     pub fn insert(log: &Logger, conn: &PgConnection) -> model::Podcast {
