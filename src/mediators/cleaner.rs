@@ -261,7 +261,7 @@ mod tests {
     fn test_clean_directory_podcast() {
         let mut bootstrap = TestBootstrap::new();
 
-        let _dir_podcast = insert_directory_podcast(&bootstrap.log, &*bootstrap.conn, None);
+        let _dir_podcast = test_data::directory_podcast::insert(&bootstrap.log, &*bootstrap.conn);
 
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
@@ -279,14 +279,20 @@ mod tests {
         // deleted.
         {
             let podcast = test_data::podcast::insert(&bootstrap.log, &*bootstrap.conn);
-            let _dir_podcast =
-                insert_directory_podcast(&bootstrap.log, &*bootstrap.conn, Some(&podcast));
+            let _dir_podcast = test_data::directory_podcast::insert_args(
+                &bootstrap.log,
+                &*bootstrap.conn,
+                test_data::directory_podcast::Args {
+                    podcast: Some(&podcast),
+                },
+            );
         }
 
         // This directory podcast is attached to a fresh search, so it shouldn't be
         // deleted.
         {
-            let dir_podcast = insert_directory_podcast(&bootstrap.log, &*bootstrap.conn, None);
+            let dir_podcast =
+                test_data::directory_podcast::insert(&bootstrap.log, &*bootstrap.conn);
             let search = insert_directory_search(&bootstrap.log, &*bootstrap.conn);
             insert_directory_podcast_directory_search(
                 &bootstrap.log,
@@ -299,7 +305,8 @@ mod tests {
         // This directory podcast is attached to an exception, and so shouldn't be
         // deleted.
         {
-            let dir_podcast = insert_directory_podcast(&bootstrap.log, &*bootstrap.conn, None);
+            let dir_podcast =
+                test_data::directory_podcast::insert(&bootstrap.log, &*bootstrap.conn);
             insert_directory_podcast_exception(&bootstrap.log, &*bootstrap.conn, &dir_podcast);
         }
 
@@ -315,7 +322,7 @@ mod tests {
     fn test_clean_directory_search() {
         let mut bootstrap = TestBootstrap::new();
 
-        let dir_podcast = insert_directory_podcast(&bootstrap.log, &*bootstrap.conn, None);
+        let dir_podcast = test_data::directory_podcast::insert(&bootstrap.log, &*bootstrap.conn);
         let search = insert_directory_search(&bootstrap.log, &*bootstrap.conn);
         insert_directory_podcast_directory_search(
             &bootstrap.log,
@@ -391,29 +398,6 @@ mod tests {
         fn drop(&mut self) {
             test_helpers::clean_database(&self.log, &*self.conn);
         }
-    }
-
-    fn insert_directory_podcast(
-        _log: &Logger,
-        conn: &PgConnection,
-        podcast: Option<&model::Podcast>,
-    ) -> model::DirectoryPodcast {
-        let mut rng = rand::thread_rng();
-
-        let directory = model::Directory::itunes(&conn).unwrap();
-
-        let dir_podcast_ins = insertable::DirectoryPodcast {
-            directory_id: directory.id,
-            feed_url:     "https://example.com/feed.xml".to_owned(),
-            podcast_id:   podcast.map(|p| p.id),
-            title:        "Example Podcast".to_owned(),
-            vendor_id:    rng.gen_ascii_chars().take(50).collect(),
-        };
-
-        diesel::insert_into(schema::directory_podcast::table)
-            .values(&dir_podcast_ins)
-            .get_result(conn)
-            .unwrap()
     }
 
     fn insert_directory_podcast_directory_search(

@@ -2,8 +2,11 @@ extern crate rand;
 
 use http_requester::HttpRequesterPassThrough;
 use model;
+use model::insertable;
+use schema;
 use test_helpers;
 
+use diesel;
 use diesel::pg::PgConnection;
 use slog::Logger;
 use std::sync::Arc;
@@ -48,6 +51,41 @@ pub mod account_podcast {
         }.run(log)
             .unwrap()
             .account_podcast
+    }
+}
+
+pub mod directory_podcast {
+    use test_data::*;
+
+    use diesel::prelude::*;
+    use rand::Rng;
+
+    #[derive(Default)]
+    pub struct Args<'a> {
+        pub podcast: Option<&'a model::Podcast>,
+    }
+
+    pub fn insert(log: &Logger, conn: &PgConnection) -> model::DirectoryPodcast {
+        insert_args(log, conn, Args::default())
+    }
+
+    pub fn insert_args(_log: &Logger, conn: &PgConnection, args: Args) -> model::DirectoryPodcast {
+        let mut rng = rand::thread_rng();
+
+        let directory = model::Directory::itunes(&conn).unwrap();
+
+        let dir_podcast_ins = insertable::DirectoryPodcast {
+            directory_id: directory.id,
+            feed_url:     "https://example.com/feed.xml".to_owned(),
+            podcast_id:   args.podcast.map(|p| p.id),
+            title:        "Example Podcast".to_owned(),
+            vendor_id:    rng.gen_ascii_chars().take(50).collect(),
+        };
+
+        diesel::insert_into(schema::directory_podcast::table)
+            .values(&dir_podcast_ins)
+            .get_result(conn)
+            .unwrap()
     }
 }
 
