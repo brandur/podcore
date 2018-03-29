@@ -199,12 +199,11 @@ fn work(
 mod tests {
     extern crate rand;
 
-    use http_requester::HttpRequesterPassThrough;
     use mediators::cleaner::*;
-    use mediators::podcast_updater;
     use model;
     use model::insertable;
     use schema;
+    use test_data;
     use test_helpers;
 
     use chrono::Utc;
@@ -213,7 +212,6 @@ mod tests {
     use r2d2::PooledConnection;
     use rand::Rng;
     use std::io::prelude::*;
-    use std::sync::Arc;
     use time::Duration;
 
     #[test]
@@ -222,14 +220,14 @@ mod tests {
         let mut bootstrap = TestBootstrap::new();
 
         let num_contents = 25;
-        let podcast = insert_podcast(&bootstrap.log, &*bootstrap.conn);
+        let podcast = test_data::insert_podcast(&bootstrap.log, &*bootstrap.conn);
         for _i in 0..num_contents {
             insert_podcast_feed_content(&bootstrap.log, &*bootstrap.conn, &podcast);
         }
 
         // This is here to ensure that a different podcast's records (one that only has
         // one content row) aren't affected by the run
-        let _ = insert_podcast(&bootstrap.log, &*bootstrap.conn);
+        let _ = test_data::insert_podcast(&bootstrap.log, &*bootstrap.conn);
 
         assert_eq!(
             // +2: one inserted with the original podcast and one more for the other podcast
@@ -280,7 +278,7 @@ mod tests {
         // This directory podcast is attached to a hydrated podcast, so it shouldn't be
         // deleted.
         {
-            let podcast = insert_podcast(&bootstrap.log, &*bootstrap.conn);
+            let podcast = test_data::insert_podcast(&bootstrap.log, &*bootstrap.conn);
             let _dir_podcast =
                 insert_directory_podcast(&bootstrap.log, &*bootstrap.conn, Some(&podcast));
         }
@@ -468,24 +466,6 @@ mod tests {
             .values(&search_ins)
             .get_result(conn)
             .unwrap()
-    }
-
-    fn insert_podcast(log: &Logger, conn: &PgConnection) -> model::Podcast {
-        let mut rng = rand::thread_rng();
-        podcast_updater::Mediator {
-            conn:             conn,
-            disable_shortcut: false,
-
-            // Add a little randomness to feed URLs so that w don't just insert one podcast and
-            // update it over and over.
-            feed_url: format!("https://example.com/feed-{}.xml", rng.gen::<u64>()).to_string(),
-
-            http_requester: &mut HttpRequesterPassThrough {
-                data: Arc::new(test_helpers::MINIMAL_FEED.to_vec()),
-            },
-        }.run(log)
-            .unwrap()
-            .podcast
     }
 
     fn insert_podcast_feed_content(_log: &Logger, conn: &PgConnection, podcast: &model::Podcast) {
