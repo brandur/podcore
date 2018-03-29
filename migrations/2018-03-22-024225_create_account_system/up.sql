@@ -38,6 +38,7 @@ CREATE TABLE account_podcast (
 
 CREATE UNIQUE INDEX account_podcast_account_id_podcast_id
     ON account_podcast (account_id, podcast_id);
+
 --
 -- account_podcast_episode
 --
