@@ -77,12 +77,33 @@ mod tests {
     use r2d2_diesel::ConnectionManager;
 
     #[test]
-    fn test_account_podcast_create() {
+    fn test_podcast_subscribe() {
         let mut bootstrap = TestBootstrap::new();
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
 
         assert_ne!(0, res.account_podcast.id);
+    }
+
+    #[test]
+    fn test_podcast_subscribe_again() {
+        let mut bootstrap = TestBootstrap::new();
+
+        let id = {
+            let (mut mediator, log) = bootstrap.mediator();
+            let res = mediator.run(&log).unwrap();
+            assert_ne!(0, res.account_podcast.id);
+            res.account_podcast.id
+        };
+
+        let next_id = {
+            let (mut mediator, log) = bootstrap.mediator();
+            let res = mediator.run(&log).unwrap();
+            assert_ne!(0, res.account_podcast.id);
+            res.account_podcast.id
+        };
+
+        assert_eq!(id, next_id);
     }
 
     //
