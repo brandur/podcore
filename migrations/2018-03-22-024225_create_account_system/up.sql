@@ -13,7 +13,11 @@ CREATE TABLE account (
         CHECK (char_length(last_ip) <= 100),
     last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), 
 
-    CHECK (ephemeral OR email IS NOT NULL)
+    CHECK (
+        (ephemeral AND email IS NULL)
+        OR
+        (NOT ephemeral AND email IS NOT NULL)
+    )
 );
 
 --

@@ -84,6 +84,32 @@ mod tests {
         assert_ne!(0, res.account.id);
     }
 
+    #[test]
+    fn test_account_create_invalid_ephemeral_with_email() {
+        let mut bootstrap = TestBootstrap::new(Args {
+            email:     Some("foo@example.com".to_owned()),
+            ephemeral: true,
+        });
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log);
+        assert!(res.is_err());
+        let e = res.err().unwrap();
+        assert_eq!("Error inserting account", e.description());
+    }
+
+    #[test]
+    fn test_account_create_invalid_permanent_without_email() {
+        let mut bootstrap = TestBootstrap::new(Args {
+            email:     None,
+            ephemeral: false,
+        });
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log);
+        assert!(res.is_err());
+        let e = res.err().unwrap();
+        assert_eq!("Error inserting account", e.description());
+    }
+
     //
     // Private types/functions
     //
