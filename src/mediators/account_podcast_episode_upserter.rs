@@ -88,8 +88,6 @@ mod tests {
     #[test]
     fn test_account_podcast_episode_upsert_partially_played() {
         let mut bootstrap = TestBootstrap::new(Args {
-            account_podcast:  None,
-            episode:          None,
             listened_seconds: Some(10),
             played:           false,
         });
@@ -102,8 +100,6 @@ mod tests {
     #[test]
     fn test_account_podcast_episode_upsert_played() {
         let mut bootstrap = TestBootstrap::new(Args {
-            account_podcast:  None,
-            episode:          None,
             listened_seconds: None,
             played:           true,
         });
@@ -116,8 +112,6 @@ mod tests {
     #[test]
     fn test_account_podcast_episode_upsert_invalid() {
         let mut bootstrap = TestBootstrap::new(Args {
-            account_podcast:  None,
-            episode:          None,
             listened_seconds: Some(10),
             played:           true,
         });
@@ -133,40 +127,37 @@ mod tests {
     //
 
     struct Args {
-        account_podcast:  Option<model::AccountPodcast>,
-        episode:          Option<model::Episode>,
         listened_seconds: Option<i64>,
         played:           bool,
     }
 
     struct TestBootstrap {
-        _common: test_helpers::CommonTestBootstrap,
-        args:    Args,
-        conn:    PooledConnection<ConnectionManager<PgConnection>>,
-        log:     Logger,
+        _common:         test_helpers::CommonTestBootstrap,
+        account_podcast: model::AccountPodcast,
+        args:            Args,
+        episode:         model::Episode,
+        conn:            PooledConnection<ConnectionManager<PgConnection>>,
+        log:             Logger,
     }
 
     impl TestBootstrap {
-        fn new(mut args: Args) -> TestBootstrap {
+        fn new(args: Args) -> TestBootstrap {
             let conn = test_helpers::connection();
             let log = test_helpers::log();
 
-            if args.account_podcast.is_none() {
-                let account_podcast = test_data::account_podcast::insert(&log, &*conn);
-                let episode: model::Episode = schema::episode::table
-                    .filter(schema::episode::podcast_id.eq(account_podcast.podcast_id))
-                    .limit(1)
-                    .get_result(&*conn)
-                    .unwrap();
-
-                args.account_podcast = Some(account_podcast);
-                args.episode = Some(episode);
-            }
+            let account_podcast = test_data::account_podcast::insert(&log, &*conn);
+            let episode: model::Episode = schema::episode::table
+                .filter(schema::episode::podcast_id.eq(account_podcast.podcast_id))
+                .limit(1)
+                .get_result(&*conn)
+                .unwrap();
 
             TestBootstrap {
                 _common: test_helpers::CommonTestBootstrap::new(),
-                args: args,
+                account_podcast,
+                args,
                 conn,
+                episode,
                 log,
             }
         }
@@ -174,9 +165,9 @@ mod tests {
         fn mediator(&mut self) -> (Mediator, Logger) {
             (
                 Mediator {
-                    account_podcast:  self.args.account_podcast.as_ref().clone().unwrap(),
+                    account_podcast:  &self.account_podcast,
                     conn:             &*self.conn,
-                    episode:          self.args.episode.as_ref().clone().unwrap(),
+                    episode:          &self.episode,
                     listened_seconds: self.args.listened_seconds.clone(),
                     played:           self.args.played,
                 },
