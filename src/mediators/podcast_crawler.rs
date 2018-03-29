@@ -261,7 +261,7 @@ mod tests {
         // Insert lots of data to be crawled
         let num_podcasts = (test_helpers::NUM_CONNECTIONS as i64) * 10;
         for _i in 0..num_podcasts {
-            test_data::insert_podcast(&bootstrap.log, &*bootstrap.conn);
+            test_data::podcast::insert(&bootstrap.log, &*bootstrap.conn);
         }
 
         // Mark all podcasts as stale so that the crawler will find them
@@ -285,7 +285,7 @@ mod tests {
         // Just add one podcast given no data will be crawled anyway: any inserted
         // podcasts are marked as last_retrieved_at too recently, so the
         // crawler will ignore them
-        test_data::insert_podcast(&bootstrap.log, &*bootstrap.conn);
+        test_data::podcast::insert(&bootstrap.log, &*bootstrap.conn);
 
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
@@ -297,7 +297,7 @@ mod tests {
     fn test_crawler_long_interval_update() {
         let mut bootstrap = TestBootstrap::new();
 
-        test_data::insert_podcast(&bootstrap.log, &*bootstrap.conn);
+        test_data::podcast::insert(&bootstrap.log, &*bootstrap.conn);
 
         diesel::update(schema::podcast_feed_content::table)
             .set(schema::podcast_feed_content::retrieved_at.eq(Utc::now() - Duration::weeks(52)))
@@ -323,7 +323,7 @@ mod tests {
     fn test_crawler_long_interval_no_update() {
         let mut bootstrap = TestBootstrap::new();
 
-        test_data::insert_podcast(&bootstrap.log, &*bootstrap.conn);
+        test_data::podcast::insert(&bootstrap.log, &*bootstrap.conn);
 
         diesel::update(schema::podcast_feed_content::table)
             .set(schema::podcast_feed_content::retrieved_at.eq(Utc::now() - Duration::weeks(52)))

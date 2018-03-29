@@ -220,14 +220,14 @@ mod tests {
         let mut bootstrap = TestBootstrap::new();
 
         let num_contents = 25;
-        let podcast = test_data::insert_podcast(&bootstrap.log, &*bootstrap.conn);
+        let podcast = test_data::podcast::insert(&bootstrap.log, &*bootstrap.conn);
         for _i in 0..num_contents {
             insert_podcast_feed_content(&bootstrap.log, &*bootstrap.conn, &podcast);
         }
 
         // This is here to ensure that a different podcast's records (one that only has
         // one content row) aren't affected by the run
-        let _ = test_data::insert_podcast(&bootstrap.log, &*bootstrap.conn);
+        let _ = test_data::podcast::insert(&bootstrap.log, &*bootstrap.conn);
 
         assert_eq!(
             // +2: one inserted with the original podcast and one more for the other podcast
@@ -278,7 +278,7 @@ mod tests {
         // This directory podcast is attached to a hydrated podcast, so it shouldn't be
         // deleted.
         {
-            let podcast = test_data::insert_podcast(&bootstrap.log, &*bootstrap.conn);
+            let podcast = test_data::podcast::insert(&bootstrap.log, &*bootstrap.conn);
             let _dir_podcast =
                 insert_directory_podcast(&bootstrap.log, &*bootstrap.conn, Some(&podcast));
         }
