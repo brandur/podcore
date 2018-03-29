@@ -44,7 +44,7 @@ pub mod account {
 }
 
 pub mod account_podcast {
-    use mediators::podcast_subscriber;
+    use mediators::account_podcast_subscriber;
     use test_data::*;
 
     #[derive(Default)]
@@ -55,7 +55,7 @@ pub mod account_podcast {
     }
 
     fn insert_args(log: &Logger, conn: &PgConnection, _args: Args) -> model::AccountPodcast {
-        podcast_subscriber::Mediator {
+        account_podcast_subscriber::Mediator {
             account: &super::account::insert(log, conn),
             conn,
             podcast: &super::podcast::insert(log, conn),

@@ -49,7 +49,7 @@ pub struct RunResult {
 
 #[cfg(test)]
 mod tests {
-    use mediators::podcast_unsubscriber::*;
+    use mediators::account_podcast_unsubscriber::*;
     use model;
     use test_data;
     use test_helpers;
