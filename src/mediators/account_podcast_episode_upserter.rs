@@ -41,7 +41,7 @@ impl<'a> Mediator<'a> {
         let ins_episode = insertable::AccountPodcastEpisode {
             account_podcast_id: self.account_podcast.id,
             episode_id:         self.episode.id,
-            listened_seconds:   self.listened_seconds.clone(),
+            listened_seconds:   self.listened_seconds,
             played:             self.played,
         };
 
@@ -76,37 +76,41 @@ pub struct RunResult {
 // Tests
 //
 
-/*
 #[cfg(test)]
 mod tests {
-    use mediators::account_creator::*;
+    use mediators::account_podcast_episode_upserter::*;
+    use test_data;
     use test_helpers;
 
     use r2d2::PooledConnection;
     use r2d2_diesel::ConnectionManager;
 
     #[test]
-    fn test_account_create_ephemeral() {
+    fn test_account_podcast_episode_upsert_partially_played() {
         let mut bootstrap = TestBootstrap::new(Args {
-            email:     None,
-            ephemeral: true,
+            account_podcast:  None,
+            episode:          None,
+            listened_seconds: Some(10),
+            played:           false,
         });
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
 
-        assert_ne!(0, res.account.id);
+        assert_ne!(0, res.account_podcast_episode.id);
     }
 
     #[test]
-    fn test_account_create_permanent() {
+    fn test_account_podcast_episode_upsert_played() {
         let mut bootstrap = TestBootstrap::new(Args {
-            email:     Some("foo@example.com".to_owned()),
-            ephemeral: false,
+            account_podcast:  None,
+            episode:          None,
+            listened_seconds: None,
+            played:           true,
         });
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
 
-        assert_ne!(0, res.account.id);
+        assert_ne!(0, res.account_podcast_episode.id);
     }
 
     //
@@ -114,8 +118,10 @@ mod tests {
     //
 
     struct Args {
-        email:     Option<String>,
-        ephemeral: bool,
+        account_podcast:  Option<model::AccountPodcast>,
+        episode:          Option<model::Episode>,
+        listened_seconds: Option<i64>,
+        played:           bool,
     }
 
     struct TestBootstrap {
@@ -126,26 +132,41 @@ mod tests {
     }
 
     impl TestBootstrap {
-        fn new(args: Args) -> TestBootstrap {
+        fn new(mut args: Args) -> TestBootstrap {
+            let conn = test_helpers::connection();
+            let log = test_helpers::log();
+
+            if args.account_podcast.is_none() {
+                let account_podcast = test_data::account_podcast::insert(&log, &*conn);
+                let episode: model::Episode = schema::episode::table
+                    .filter(schema::episode::podcast_id.eq(account_podcast.podcast_id))
+                    .limit(1)
+                    .get_result(&*conn)
+                    .unwrap();
+
+                args.account_podcast = Some(account_podcast);
+                args.episode = Some(episode);
+            }
+
             TestBootstrap {
                 _common: test_helpers::CommonTestBootstrap::new(),
-                args:    args,
-                conn:    test_helpers::connection(),
-                log:     test_helpers::log(),
+                args: args,
+                conn,
+                log,
             }
         }
 
         fn mediator(&mut self) -> (Mediator, Logger) {
             (
                 Mediator {
-                    conn:      &*self.conn,
-                    email:     self.args.email.clone(),
-                    ephemeral: self.args.ephemeral,
-                    last_ip:   "1.2.3.4".to_owned(),
+                    account_podcast:  self.args.account_podcast.as_ref().clone().unwrap(),
+                    conn:             &*self.conn,
+                    episode:          self.args.episode.as_ref().clone().unwrap(),
+                    listened_seconds: self.args.listened_seconds.clone(),
+                    played:           self.args.played,
                 },
                 self.log.clone(),
             )
         }
     }
 }
-*/

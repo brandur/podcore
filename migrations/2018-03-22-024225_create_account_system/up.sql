@@ -58,7 +58,11 @@ CREATE TABLE account_podcast_episode (
 
     -- An episode is either played fully with a `NULL` `listened_seconds`, or it
     -- has a `listened_seconds` value and is not `played`.
-    CHECK (played OR listened_seconds IS NULL)
+    CHECK (
+        (played AND listened_seconds IS NULL)
+        OR
+        (NOT played AND listened_seconds IS NOT NULL)
+    )
 );
 
 CREATE UNIQUE INDEX account_podcast_episode_account_podcast_id_episode_id
