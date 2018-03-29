@@ -2,6 +2,8 @@ table! {
     account (id) {
         id -> Int8,
         created_at -> Timestamptz,
+        email -> Nullable<Text>,
+        ephemeral -> Bool,
         last_ip -> Text,
         last_seen_at -> Timestamptz,
     }

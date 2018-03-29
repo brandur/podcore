@@ -15,16 +15,27 @@ pub mod account {
     use mediators::account_creator;
     use test_data::*;
 
-    #[derive(Default)]
-    pub struct Args {}
-
-    pub fn insert(log: &Logger, conn: &PgConnection) -> model::Account {
-        insert_args(log, conn, Args::default())
+    pub struct Args {
+        email:     Option<String>,
+        ephemeral: bool,
     }
 
-    fn insert_args(log: &Logger, conn: &PgConnection, _args: Args) -> model::Account {
+    pub fn insert(log: &Logger, conn: &PgConnection) -> model::Account {
+        insert_args(
+            log,
+            conn,
+            Args {
+                email:     None,
+                ephemeral: true,
+            },
+        )
+    }
+
+    fn insert_args(log: &Logger, conn: &PgConnection, args: Args) -> model::Account {
         account_creator::Mediator {
             conn,
+            email: args.email,
+            ephemeral: args.ephemeral,
             last_ip: "1.2.3.4".to_owned(),
         }.run(log)
             .unwrap()

@@ -21,6 +21,8 @@ use diesel::prelude::*;
 pub struct Account {
     pub id:           i64,
     pub created_at:   DateTime<Utc>,
+    pub email:        Option<String>,
+    pub ephemeral:    bool,
     pub last_ip:      String,
     pub last_seen_at: DateTime<Utc>,
 }
@@ -168,7 +170,9 @@ pub mod insertable {
     #[derive(Insertable)]
     #[table_name = "account"]
     pub struct Account {
-        pub last_ip: String,
+        pub email:     Option<String>,
+        pub ephemeral: bool,
+        pub last_ip:   String,
     }
 
     //#[allow(dead_code)]

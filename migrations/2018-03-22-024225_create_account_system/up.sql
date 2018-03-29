@@ -6,10 +6,14 @@ CREATE TABLE account (
     id BIGSERIAL PRIMARY KEY,
 
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    email TEXT,
+    ephemeral BOOLEAN NOT NULL,
 
     last_ip TEXT NOT NULL
         CHECK (char_length(last_ip) <= 100),
-    last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), 
+
+    CHECK (ephemeral OR email IS NOT NULL)
 );
 
 --
