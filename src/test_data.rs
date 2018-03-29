@@ -21,11 +21,33 @@ pub mod account {
 
     fn insert_args(log: &Logger, conn: &PgConnection, _args: Args) -> model::Account {
         account_creator::Mediator {
-            conn:    conn,
+            conn,
             last_ip: "1.2.3.4".to_owned(),
         }.run(log)
             .unwrap()
             .account
+    }
+}
+
+pub mod account_podcast {
+    use mediators::podcast_subscriber;
+    use test_data::*;
+
+    #[derive(Default)]
+    pub struct Args {}
+
+    pub fn insert(log: &Logger, conn: &PgConnection) -> model::AccountPodcast {
+        insert_args(log, conn, Args::default())
+    }
+
+    fn insert_args(log: &Logger, conn: &PgConnection, _args: Args) -> model::AccountPodcast {
+        podcast_subscriber::Mediator {
+            account: &super::account::insert(log, conn),
+            conn,
+            podcast: &super::podcast::insert(log, conn),
+        }.run(log)
+            .unwrap()
+            .account_podcast
     }
 }
 
@@ -56,10 +78,10 @@ pub mod podcast {
         };
 
         podcast_updater::Mediator {
-            conn:             conn,
+            conn,
             disable_shortcut: false,
-            feed_url:         feed_url,
-            http_requester:   &mut HttpRequesterPassThrough {
+            feed_url,
+            http_requester: &mut HttpRequesterPassThrough {
                 data: Arc::new(test_helpers::MINIMAL_FEED.to_vec()),
             },
         }.run(log)

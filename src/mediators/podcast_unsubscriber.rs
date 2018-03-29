@@ -47,10 +47,10 @@ pub struct RunResult {
 // Tests
 //
 
-/*
 #[cfg(test)]
 mod tests {
-    use mediators::podcast_subscriber::*;
+    use mediators::podcast_unsubscriber::*;
+    use model;
     use test_data;
     use test_helpers;
 
@@ -58,61 +58,12 @@ mod tests {
     use r2d2_diesel::ConnectionManager;
 
     #[test]
-    fn test_podcast_subscribe() {
+    fn test_podcast_unsubscribe() {
         let mut bootstrap = TestBootstrap::new();
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
 
-        assert_ne!(0, res.account_podcast.id);
-    }
-
-    #[test]
-    fn test_podcast_subscribe_again() {
-        let mut bootstrap = TestBootstrap::new();
-
-        let id = {
-            let (mut mediator, log) = bootstrap.mediator();
-            let res = mediator.run(&log).unwrap();
-            assert_ne!(0, res.account_podcast.id);
-            res.account_podcast.id
-        };
-
-        let next_id = {
-            let (mut mediator, log) = bootstrap.mediator();
-            let res = mediator.run(&log).unwrap();
-            assert_ne!(0, res.account_podcast.id);
-            res.account_podcast.id
-        };
-
-        assert_eq!(id, next_id);
-    }
-
-    #[test]
-    fn test_podcast_subscribe_again_after_unsubscribe() {
-        let mut bootstrap = TestBootstrap::new();
-
-        let id = {
-            let (mut mediator, log) = bootstrap.mediator();
-            let res = mediator.run(&log).unwrap();
-            assert_ne!(0, res.account_podcast.id);
-            res.account_podcast.id
-        };
-
-        // Unsubscribe
-        diesel::update(schema::account_podcast::table)
-            .filter(schema::account_podcast::id.eq(id))
-            .set(schema::account_podcast::unsubscribed_at.eq(Some(Utc::now())))
-            .execute(&*bootstrap.conn)
-            .unwrap();
-
-        let next_id = {
-            let (mut mediator, log) = bootstrap.mediator();
-            let res = mediator.run(&log).unwrap();
-            assert_ne!(0, res.account_podcast.id);
-            res.account_podcast.id
-        };
-
-        assert_eq!(id, next_id);
+        assert_ne!(None, res.account_podcast.unsubscribed_at);
     }
 
     //
@@ -120,11 +71,10 @@ mod tests {
     //
 
     struct TestBootstrap {
-        _common: test_helpers::CommonTestBootstrap,
-        account: model::Account,
-        conn:    PooledConnection<ConnectionManager<PgConnection>>,
-        log:     Logger,
-        podcast: model::Podcast,
+        _common:         test_helpers::CommonTestBootstrap,
+        account_podcast: model::AccountPodcast,
+        conn:            PooledConnection<ConnectionManager<PgConnection>>,
+        log:             Logger,
     }
 
     impl TestBootstrap {
@@ -133,9 +83,8 @@ mod tests {
             let log = test_helpers::log();
 
             TestBootstrap {
-                _common: test_helpers::CommonTestBootstrap::new(),
-                account: test_data::account::insert(&log, &conn),
-                podcast: test_data::podcast::insert(&log, &conn),
+                _common:         test_helpers::CommonTestBootstrap::new(),
+                account_podcast: test_data::account_podcast::insert(&log, &conn),
 
                 // Only move these after filling the above
                 conn: conn,
@@ -146,13 +95,11 @@ mod tests {
         fn mediator(&mut self) -> (Mediator, Logger) {
             (
                 Mediator {
-                    account: &self.account,
-                    conn:    &*self.conn,
-                    podcast: &self.podcast,
+                    account_podcast: &self.account_podcast,
+                    conn:            &*self.conn,
                 },
                 self.log.clone(),
             )
         }
     }
 }
-*/
