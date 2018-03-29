@@ -68,4 +68,60 @@ pub struct RunResult {
 //
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+    use mediators::podcast_subscriber::*;
+    use test_data;
+    use test_helpers;
+
+    use r2d2::PooledConnection;
+    use r2d2_diesel::ConnectionManager;
+
+    #[test]
+    fn test_account_podcast_create() {
+        let mut bootstrap = TestBootstrap::new();
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
+
+        assert_ne!(0, res.account_podcast.id);
+    }
+
+    //
+    // Private types/functions
+    //
+
+    struct TestBootstrap {
+        _common: test_helpers::CommonTestBootstrap,
+        account: model::Account,
+        conn:    PooledConnection<ConnectionManager<PgConnection>>,
+        log:     Logger,
+        podcast: model::Podcast,
+    }
+
+    impl TestBootstrap {
+        fn new() -> TestBootstrap {
+            let conn = test_helpers::connection();
+            let log = test_helpers::log();
+
+            TestBootstrap {
+                _common: test_helpers::CommonTestBootstrap::new(),
+                account: test_data::account::insert(&log, &conn),
+                podcast: test_data::podcast::insert(&log, &conn),
+
+                // Only move these after filling the above
+                conn: conn,
+                log:  log,
+            }
+        }
+
+        fn mediator(&mut self) -> (Mediator, Logger) {
+            (
+                Mediator {
+                    account: &self.account,
+                    conn:    &*self.conn,
+                    podcast: &self.podcast,
+                },
+                self.log.clone(),
+            )
+        }
+    }
+}

@@ -1,7 +1,6 @@
 extern crate rand;
 
 use http_requester::HttpRequesterPassThrough;
-use mediators::podcast_updater;
 use model;
 use test_helpers;
 
@@ -9,7 +8,29 @@ use diesel::pg::PgConnection;
 use slog::Logger;
 use std::sync::Arc;
 
+pub mod account {
+    use mediators::account_creator;
+    use test_data::*;
+
+    #[derive(Default)]
+    pub struct Args {}
+
+    pub fn insert(log: &Logger, conn: &PgConnection) -> model::Account {
+        insert_args(log, conn, Args::default())
+    }
+
+    fn insert_args(log: &Logger, conn: &PgConnection, _args: Args) -> model::Account {
+        account_creator::Mediator {
+            conn:    conn,
+            last_ip: "1.2.3.4".to_owned(),
+        }.run(log)
+            .unwrap()
+            .account
+    }
+}
+
 pub mod podcast {
+    use mediators::podcast_updater;
     use test_data::*;
 
     use rand::Rng;
