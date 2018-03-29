@@ -110,7 +110,7 @@ mod tests {
     }
 
     #[test]
-    fn test_account_podcast_episode_upsert_invalid_both() {
+    fn test_account_podcast_episode_upsert_invalid_played_with_seconds() {
         let mut bootstrap = TestBootstrap::new(Args {
             listened_seconds: Some(10),
             played:           true,
@@ -123,7 +123,7 @@ mod tests {
     }
 
     #[test]
-    fn test_account_podcast_episode_upsert_invalid_neither() {
+    fn test_account_podcast_episode_upsert_invalid_unplayed_without_seconds() {
         let mut bootstrap = TestBootstrap::new(Args {
             listened_seconds: None,
             played:           false,
