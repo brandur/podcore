@@ -24,7 +24,7 @@ impl<'a> Mediator<'a> {
             return Ok(RunResult { account: None });
         }
 
-        let account = self.select_account(log, key.unwrap())?;
+        let account = self.select_account(log, &key.unwrap())?;
         Ok(RunResult {
             account: Some(account),
         })
@@ -34,7 +34,7 @@ impl<'a> Mediator<'a> {
     // Steps
     //
 
-    fn select_account(&mut self, log: &Logger, key: model::Key) -> Result<model::Account> {
+    fn select_account(&mut self, log: &Logger, key: &model::Key) -> Result<model::Account> {
         time_helpers::log_timed(&log.new(o!("step" => "select_account")), |_log| {
             schema::account::table
                 .filter(schema::account::id.eq(key.account_id))
