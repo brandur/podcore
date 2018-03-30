@@ -402,11 +402,11 @@ fn parse_global_options(matches: &ArgMatches) -> GlobalOptions {
             !stdout_isatty()
         },
 
-        num_connections: env::var("NUM_CONNECTIONS")
+        num_connections: matches
+            .value_of("num_connections")
             .map(|s| s.parse::<u32>().unwrap())
-            .unwrap_or_else(|_| {
-                matches
-                    .value_of("num_connections")
+            .unwrap_or_else(|| {
+                env::var("NUM_CONNECTIONS")
                     .map(|s| s.parse::<u32>().unwrap())
                     .unwrap_or(NUM_CONNECTIONS)
             }),
@@ -416,11 +416,12 @@ fn parse_global_options(matches: &ArgMatches) -> GlobalOptions {
 }
 
 /// Initializes and returns a connection pool suitable for use across threads.
-fn pool(_log: &Logger, num_connections: u32) -> Result<Pool<ConnectionManager<PgConnection>>> {
+fn pool(log: &Logger, num_connections: u32) -> Result<Pool<ConnectionManager<PgConnection>>> {
+    debug!(log, "Initializing connection pool"; "num_connections" => num_connections);
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let manager = ConnectionManager::<PgConnection>::new(database_url);
     Pool::builder()
-        .idle_timeout(Some(Duration::from_secs(5)))
+        .idle_timeout(Some(Duration::from_secs(10)))
         .max_size(num_connections)
         .build(manager)
         .map_err(Error::from)
