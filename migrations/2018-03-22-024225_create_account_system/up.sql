@@ -11,7 +11,7 @@ CREATE TABLE account (
 
     last_ip TEXT NOT NULL
         CHECK (char_length(last_ip) <= 100),
-    last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), 
+    last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CHECK (
         (ephemeral AND email IS NULL)
