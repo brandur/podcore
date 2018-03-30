@@ -392,6 +392,7 @@ fn log(options: &GlobalOptions) -> Logger {
 }
 
 fn parse_global_options(matches: &ArgMatches) -> GlobalOptions {
+    println!("matches = {:?}", matches);
     GlobalOptions {
         // Go async if we've been explicitly told to do so. Otherwise, detect whether we should go
         // async based on whether stdout is a terminal. Sync is okay for terminals, but quite bad
@@ -403,7 +404,7 @@ fn parse_global_options(matches: &ArgMatches) -> GlobalOptions {
         },
 
         num_connections: matches
-            .value_of("num_connections")
+            .value_of("num-connections")
             .map(|s| s.parse::<u32>().unwrap())
             .unwrap_or_else(|| {
                 env::var("NUM_CONNECTIONS")

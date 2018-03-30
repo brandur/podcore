@@ -233,12 +233,8 @@ fn work(
     pool: &Pool<ConnectionManager<PgConnection>>,
     batch_delete_func: &Fn(&Logger, &PgConnection) -> Result<DeleteResults>,
 ) -> Result<i64> {
-    let conn = match pool.try_get() {
-        Some(conn) => conn,
-        None => {
-            bail!("Error acquiring connection from connection pool (too few max connections?)");
-        }
-    };
+    debug!(log, "Thread waiting for a connection");
+    let conn = pool.get()?;
     debug!(log, "Thread acquired a connection");
 
     let mut num_cleaned = 0;
