@@ -66,7 +66,7 @@ impl<'a> Mediator<'a> {
                 .filter(
                     schema::key::expire_at
                         .is_null()
-                        .or(schema::key::expire_at.le(Utc::now())),
+                        .or(schema::key::expire_at.ge(Utc::now())),
                 )
                 .first(self.conn)
                 .optional()
@@ -89,12 +89,26 @@ mod tests {
     use test_data;
     use test_helpers;
 
+    use chrono::{DateTime, Utc};
     use r2d2::PooledConnection;
     use r2d2_diesel::ConnectionManager;
+    use time::Duration;
 
     #[test]
-    fn test_account_authenticate() {
-        let mut bootstrap = TestBootstrap::new();
+    fn test_account_authenticate_no_expiry() {
+        let mut bootstrap = TestBootstrap::new(Args {
+            key_expire_at: None,
+        });
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
+        assert!(res.account.is_some());
+    }
+
+    #[test]
+    fn test_account_authenticate_with_expiry() {
+        let mut bootstrap = TestBootstrap::new(Args {
+            key_expire_at: Some(Utc::now() + Duration::days(1)),
+        });
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
         assert!(res.account.is_some());
@@ -104,6 +118,10 @@ mod tests {
     // Private types/functions
     //
 
+    struct Args {
+        key_expire_at: Option<DateTime<Utc>>,
+    }
+
     struct TestBootstrap {
         _common: test_helpers::CommonTestBootstrap,
         conn:    PooledConnection<ConnectionManager<PgConnection>>,
@@ -112,17 +130,25 @@ mod tests {
     }
 
     impl TestBootstrap {
-        fn new() -> TestBootstrap {
+        fn new(args: Args) -> TestBootstrap {
             let conn = test_helpers::connection();
             let log = test_helpers::log();
 
+            let key = test_data::key::insert_args(
+                &log,
+                &conn,
+                test_data::key::Args {
+                    expire_at: args.key_expire_at,
+                },
+            );
+
             TestBootstrap {
                 _common: test_helpers::CommonTestBootstrap::new(),
-                key:     test_data::key::insert(&log, &conn),
+                key,
 
                 // Only move these after filling the above
                 conn: conn,
-                log:  log,
+                log: log,
             }
         }
 

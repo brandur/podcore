@@ -115,11 +115,12 @@ pub mod key {
         pub expire_at: Option<DateTime<Utc>>,
     }
 
+    #[allow(dead_code)]
     pub fn insert(log: &Logger, conn: &PgConnection) -> model::Key {
         insert_args(log, conn, Args::default())
     }
 
-    fn insert_args(log: &Logger, conn: &PgConnection, args: Args) -> model::Key {
+    pub fn insert_args(log: &Logger, conn: &PgConnection, args: Args) -> model::Key {
         key_creator::Mediator {
             account: &super::account::insert(log, conn),
             conn,
