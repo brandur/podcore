@@ -4,6 +4,7 @@ use schema;
 use time_helpers;
 
 use chrono::Utc;
+use diesel;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use slog::Logger;
@@ -24,7 +25,7 @@ impl<'a> Mediator<'a> {
             return Ok(RunResult { account: None });
         }
 
-        let account = self.select_account(log, &key.unwrap())?;
+        let account = self.touch_and_select_account(log, &key.unwrap())?;
         Ok(RunResult {
             account: Some(account),
         })
@@ -34,12 +35,17 @@ impl<'a> Mediator<'a> {
     // Steps
     //
 
-    fn select_account(&mut self, log: &Logger, key: &model::Key) -> Result<model::Account> {
-        time_helpers::log_timed(&log.new(o!("step" => "select_account")), |_log| {
-            schema::account::table
+    fn touch_and_select_account(
+        &mut self,
+        log: &Logger,
+        key: &model::Key,
+    ) -> Result<model::Account> {
+        time_helpers::log_timed(&log.new(o!("step" => "touch_and_select_account")), |_log| {
+            diesel::update(schema::account::table)
                 .filter(schema::account::id.eq(key.account_id))
-                .first(self.conn)
-                .chain_err(|| "Error selecting account")
+                .set(schema::account::last_seen_at.eq(Utc::now()))
+                .get_result(self.conn)
+                .chain_err(|| "Error touching account")
         })
     }
 
