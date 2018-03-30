@@ -4,6 +4,7 @@ use model::insertable;
 use schema;
 use time_helpers;
 
+use chrono::{DateTime, Utc};
 use diesel;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -13,8 +14,9 @@ use slog::Logger;
 use std::iter;
 
 pub struct Mediator<'a> {
-    pub account: &'a model::Account,
-    pub conn:    &'a PgConnection,
+    pub account:   &'a model::Account,
+    pub conn:      &'a PgConnection,
+    pub expire_at: Option<DateTime<Utc>>,
 }
 
 impl<'a> Mediator<'a> {
@@ -51,7 +53,7 @@ impl<'a> Mediator<'a> {
             diesel::insert_into(schema::key::table)
                 .values(&insertable::Key {
                     account_id: self.account.id,
-                    expire_at: None,
+                    expire_at: self.expire_at,
                     secret,
                 })
                 .get_result(self.conn)
@@ -123,8 +125,9 @@ mod tests {
         fn mediator(&mut self) -> (Mediator, Logger) {
             (
                 Mediator {
-                    account: &self.account,
-                    conn:    &*self.conn,
+                    account:   &self.account,
+                    conn:      &*self.conn,
+                    expire_at: None,
                 },
                 self.log.clone(),
             )
