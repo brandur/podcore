@@ -362,6 +362,7 @@ mod tests {
             &bootstrap.log,
             &*bootstrap.conn,
             test_data::key::Args {
+                account:   None,
                 expire_at: Some(Utc::now() - Duration::weeks(1)),
             },
         );
@@ -386,6 +387,7 @@ mod tests {
             &bootstrap.log,
             &*bootstrap.conn,
             test_data::key::Args {
+                account:   None,
                 expire_at: Some(Utc::now() + Duration::weeks(4)),
             },
         );

@@ -119,7 +119,8 @@ pub mod key {
     use test_data::*;
 
     #[derive(Default)]
-    pub struct Args {
+    pub struct Args<'a> {
+        pub account:   Option<&'a model::Account>,
         pub expire_at: Option<DateTime<Utc>>,
     }
 
@@ -129,8 +130,14 @@ pub mod key {
     }
 
     pub fn insert_args(log: &Logger, conn: &PgConnection, args: Args) -> model::Key {
+        let account = if args.account.is_none() {
+            Some(super::account::insert(log, conn))
+        } else {
+            None
+        };
+
         key_creator::Mediator {
-            account: &super::account::insert(log, conn),
+            account: args.account.unwrap_or_else(|| account.as_ref().unwrap()),
             conn,
             expire_at: args.expire_at,
         }.run(log)
