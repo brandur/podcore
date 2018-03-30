@@ -46,6 +46,7 @@ pub struct AccountPodcastEpisode {
     pub episode_id:         i64,
     pub listened_seconds:   Option<i64>,
     pub played:             bool,
+    pub updated_at:         DateTime<Utc>,
 }
 
 #[derive(Queryable)]
@@ -227,6 +228,7 @@ pub mod insertable {
         pub episode_id:         i64,
         pub listened_seconds:   Option<i64>,
         pub played:             bool,
+        pub updated_at:         DateTime<Utc>,
     }
 
     #[derive(Insertable)]

@@ -26,6 +26,7 @@ table! {
         episode_id -> Int8,
         listened_seconds -> Nullable<Int8>,
         played -> Bool,
+        updated_at -> Timestamptz,
     }
 }
 

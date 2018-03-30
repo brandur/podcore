@@ -67,6 +67,7 @@ CREATE TABLE account_podcast_episode (
     listened_seconds BIGINT,
 
     played BOOLEAN NOT NULL DEFAULT false,
+    updated_at TIMESTAMPTZ NOT NULL,
 
     -- An episode is either played fully with a `NULL` `listened_seconds`, or it
     -- has a `listened_seconds` value and is not `played`.

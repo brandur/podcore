@@ -4,6 +4,7 @@ use model::insertable;
 use schema;
 use time_helpers;
 
+use chrono::Utc;
 use diesel;
 use diesel::pg::PgConnection;
 use diesel::pg::upsert::excluded;
@@ -43,6 +44,7 @@ impl<'a> Mediator<'a> {
             episode_id:         self.episode.id,
             listened_seconds:   self.listened_seconds,
             played:             self.played,
+            updated_at:         Utc::now(),
         };
 
         time_helpers::log_timed(
@@ -60,6 +62,8 @@ impl<'a> Mediator<'a> {
                             .eq(excluded(schema::account_podcast_episode::listened_seconds)),
                         schema::account_podcast_episode::played
                             .eq(excluded(schema::account_podcast_episode::played)),
+                        schema::account_podcast_episode::updated_at
+                            .eq(excluded(schema::account_podcast_episode::updated_at)),
                     ))
                     .get_result(self.conn)
                     .chain_err(|| "Error upserting account podcast episode")
