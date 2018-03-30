@@ -8,7 +8,9 @@ use test_helpers;
 
 use diesel;
 use diesel::pg::PgConnection;
+use rand::distributions::Alphanumeric;
 use slog::Logger;
+use std::iter;
 use std::sync::Arc;
 
 pub mod account {
@@ -90,7 +92,10 @@ pub mod directory_podcast {
             feed_url:     "https://example.com/feed.xml".to_owned(),
             podcast_id:   args.podcast.map(|p| p.id),
             title:        "Example Podcast".to_owned(),
-            vendor_id:    rng.gen_ascii_chars().take(50).collect(),
+            vendor_id:    iter::repeat(())
+                .map(|()| rng.sample(Alphanumeric))
+                .take(50)
+                .collect(),
         };
 
         diesel::insert_into(schema::directory_podcast::table)

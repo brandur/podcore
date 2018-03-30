@@ -75,102 +75,59 @@ const KEY_LENGTH: usize = 60;
 // Tests
 //
 
-/*
 #[cfg(test)]
 mod tests {
-    use mediators::account_creator::*;
+    use mediators::key_creator::*;
+    use test_data;
     use test_helpers;
 
     use r2d2::PooledConnection;
     use r2d2_diesel::ConnectionManager;
 
     #[test]
-    fn test_account_create_ephemeral() {
-        let mut bootstrap = TestBootstrap::new(Args {
-            email:     None,
-            ephemeral: true,
-        });
+    fn test_key_create() {
+        let mut bootstrap = TestBootstrap::new();
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
 
-        assert_ne!(0, res.account.id);
-    }
-
-    #[test]
-    fn test_account_create_permanent() {
-        let mut bootstrap = TestBootstrap::new(Args {
-            email:     Some("foo@example.com".to_owned()),
-            ephemeral: false,
-        });
-        let (mut mediator, log) = bootstrap.mediator();
-        let res = mediator.run(&log).unwrap();
-
-        assert_ne!(0, res.account.id);
-    }
-
-    #[test]
-    fn test_account_create_invalid_ephemeral_with_email() {
-        let mut bootstrap = TestBootstrap::new(Args {
-            email:     Some("foo@example.com".to_owned()),
-            ephemeral: true,
-        });
-        let (mut mediator, log) = bootstrap.mediator();
-        let res = mediator.run(&log);
-        assert!(res.is_err());
-        let e = res.err().unwrap();
-        assert_eq!("Error inserting account", e.description());
-    }
-
-    #[test]
-    fn test_account_create_invalid_permanent_without_email() {
-        let mut bootstrap = TestBootstrap::new(Args {
-            email:     None,
-            ephemeral: false,
-        });
-        let (mut mediator, log) = bootstrap.mediator();
-        let res = mediator.run(&log);
-        assert!(res.is_err());
-        let e = res.err().unwrap();
-        assert_eq!("Error inserting account", e.description());
+        assert_ne!(0, res.key.id);
+        assert_eq!(KEY_LENGTH, res.key.secret.len());
     }
 
     //
     // Private types/functions
     //
 
-    struct Args {
-        email:     Option<String>,
-        ephemeral: bool,
-    }
-
     struct TestBootstrap {
         _common: test_helpers::CommonTestBootstrap,
-        args:    Args,
+        account: model::Account,
         conn:    PooledConnection<ConnectionManager<PgConnection>>,
         log:     Logger,
     }
 
     impl TestBootstrap {
-        fn new(args: Args) -> TestBootstrap {
+        fn new() -> TestBootstrap {
+            let conn = test_helpers::connection();
+            let log = test_helpers::log();
+
             TestBootstrap {
                 _common: test_helpers::CommonTestBootstrap::new(),
-                args:    args,
-                conn:    test_helpers::connection(),
-                log:     test_helpers::log(),
+                account: test_data::account::insert(&log, &conn),
+
+                // Only move these after filling the above
+                conn: conn,
+                log:  log,
             }
         }
 
         fn mediator(&mut self) -> (Mediator, Logger) {
             (
                 Mediator {
-                    conn:      &*self.conn,
-                    email:     self.args.email.clone(),
-                    ephemeral: self.args.ephemeral,
-                    last_ip:   "1.2.3.4".to_owned(),
+                    account: &self.account,
+                    conn:    &*self.conn,
                 },
                 self.log.clone(),
             )
         }
     }
 }
-*/

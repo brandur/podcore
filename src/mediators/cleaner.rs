@@ -211,7 +211,9 @@ mod tests {
     use flate2::write::GzEncoder;
     use r2d2::PooledConnection;
     use rand::Rng;
+    use rand::distributions::Alphanumeric;
     use std::io::prelude::*;
+    use std::iter;
     use time::Duration;
 
     #[test]
@@ -442,7 +444,10 @@ mod tests {
 
         let search_ins = insertable::DirectorySearch {
             directory_id: directory.id,
-            query:        rng.gen_ascii_chars().take(50).collect(),
+            query:        iter::repeat(())
+                .map(|()| rng.sample(Alphanumeric))
+                .take(50)
+                .collect(),
             retrieved_at: Utc::now(),
         };
 
@@ -466,7 +471,10 @@ mod tests {
 
             // There's a length check on this field in Postgres, so generate a string that's
             // exactly 64 characters long.
-            sha256_hash: rng.gen_ascii_chars().take(64).collect(),
+            sha256_hash: iter::repeat(())
+                .map(|()| rng.sample(Alphanumeric))
+                .take(64)
+                .collect(),
         };
 
         diesel::insert_into(schema::podcast_feed_content::table)
