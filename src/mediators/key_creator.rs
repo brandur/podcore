@@ -26,6 +26,13 @@ impl<'a> Mediator<'a> {
 
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
         let secret = self.generate_secret(log);
+
+        // We don't want secrets in logs, so we rely on this statement being compiled
+        // out in a release build because it's `debug!`
+        debug!(log, "Generated secret";
+            "expire_at" => format!("{:?}", self.expire_at),
+            "secret" => secret.as_str());
+
         let key = self.insert_key(log, secret)?;
         Ok(RunResult { key })
     }
