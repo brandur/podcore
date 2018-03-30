@@ -89,5 +89,8 @@ CREATE TABLE key (
 
 CREATE INDEX key_account_id
     ON key (account_id);
+CREATE INDEX key_expire_at
+    ON key (expire_at)
+    WHERE expire_at IS NOT NULL;
 CREATE INDEX key_secret
     ON key (secret);

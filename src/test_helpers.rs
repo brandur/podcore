@@ -110,6 +110,14 @@ pub fn connection() -> PooledConnection<ConnectionManager<PgConnection>> {
 // back to zero.
 pub fn clean_database(log: &Logger, conn: &PgConnection) {
     debug!(log, "Cleaning database on bootstrap drop");
+
+    // Try to identify the "leaf" relations and drop them. All other relations
+    // should cascade from them. This list might need to be added to
+    // occasionally.
+    //
+    // I've left out `directory` even thought it's a leaf because there's no point
+    // in deleting it over and over when it can be reused unchanged.
+    conn.execute("TRUNCATE TABLE account CASCADE").unwrap();
     conn.execute("TRUNCATE TABLE podcast CASCADE").unwrap();
 }
 

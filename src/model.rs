@@ -3,7 +3,9 @@ use schema;
 use schema::directory_podcast;
 
 use chrono::{DateTime, Utc};
+use diesel;
 use diesel::pg::PgConnection;
+use diesel::pg::upsert::excluded;
 use diesel::prelude::*;
 
 // Database models for the application.
@@ -52,14 +54,37 @@ pub struct Directory {
 
 impl Directory {
     pub fn itunes(conn: &PgConnection) -> Result<Self> {
-        Self::load_dir(conn, "Apple iTunes")
+        Self::load_dir(
+            conn,
+            &insertable::Directory {
+                name: "Apple iTunes".to_owned(),
+            },
+        )
     }
 
-    fn load_dir(conn: &PgConnection, name: &str) -> Result<Self> {
-        schema::directory::table
-            .filter(schema::directory::name.eq(name))
+    fn load_dir(conn: &PgConnection, ins_dir: &insertable::Directory) -> Result<Self> {
+        // We `SELECT` first because it's probably faster that way and we can pretty
+        // much always expect the directory to exist, but if we want to take
+        // all race conditions to zero, we could change this whole function to
+        // only upsert.
+        let dir = schema::directory::table
+            .filter(schema::directory::name.eq(ins_dir.name.as_str()))
             .first::<Directory>(conn)
-            .chain_err(|| format!("Error loading {} directory record", name))
+            .optional()
+            .chain_err(|| format!("Error loading {} directory record", ins_dir.name.as_str()))?;
+
+        if dir.is_some() {
+            return Ok(dir.unwrap());
+        }
+
+        // If the directory was missing, upsert it.
+        diesel::insert_into(schema::directory::table)
+            .values(ins_dir)
+            .on_conflict(schema::directory::name)
+            .do_update()
+            .set((schema::directory::name.eq(excluded(schema::directory::name)),))
+            .get_result(conn)
+            .chain_err(|| "Error upserting directory")
     }
 }
 
@@ -162,7 +187,7 @@ pub struct PodcastFeedLocation {
 }
 
 pub mod insertable {
-    use schema::{account, account_podcast, account_podcast_episode, directory_podcast,
+    use schema::{account, account_podcast, account_podcast_episode, directory, directory_podcast,
                  directory_podcast_directory_search, directory_podcast_exception,
                  directory_search, episode, key, podcast, podcast_exception, podcast_feed_content,
                  podcast_feed_location};
@@ -193,6 +218,12 @@ pub mod insertable {
         pub episode_id:         i64,
         pub listened_seconds:   Option<i64>,
         pub played:             bool,
+    }
+
+    #[derive(Insertable)]
+    #[table_name = "directory"]
+    pub struct Directory {
+        pub name: String,
     }
 
     #[derive(Insertable)]

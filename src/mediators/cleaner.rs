@@ -42,6 +42,17 @@ impl Mediator {
                 .map_err(Error::from)?
         };
 
+        let key_thread = {
+            let thread_name = "key_cleaner".to_owned();
+            let log = log.new(o!("thread" => thread_name.clone()));
+            let pool_clone = self.pool.clone();
+
+            thread::Builder::new()
+                .name(thread_name)
+                .spawn(move || work(&log, &pool_clone, &delete_key_batch))
+                .map_err(Error::from)?
+        };
+
         let podcast_feed_content_thread = {
             let thread_name = "podcast_feed_content_cleaner".to_owned();
             let log = log.new(o!("thread" => thread_name.clone()));
@@ -60,15 +71,17 @@ impl Mediator {
         // is what the `?` is checking for.
         let num_directory_podcast_cleaned = directory_podcast_thread.join().unwrap()?;
         let num_directory_search_cleaned = directory_search_thread.join().unwrap()?;
+        let num_key_cleaned = key_thread.join().unwrap()?;
         let num_podcast_feed_content_cleaned = podcast_feed_content_thread.join().unwrap()?;
 
         Ok(RunResult {
             // total number of cleaned resources
             num_cleaned: num_directory_podcast_cleaned + num_directory_search_cleaned
-                + num_podcast_feed_content_cleaned,
+                + num_key_cleaned + num_podcast_feed_content_cleaned,
 
             num_directory_podcast_cleaned,
             num_directory_search_cleaned,
+            num_key_cleaned,
             num_podcast_feed_content_cleaned,
         })
     }
@@ -80,6 +93,7 @@ pub struct RunResult {
 
     pub num_directory_podcast_cleaned:    i64,
     pub num_directory_search_cleaned:     i64,
+    pub num_key_cleaned:                  i64,
     pub num_podcast_feed_content_cleaned: i64,
 }
 
@@ -102,6 +116,9 @@ const DELETE_LIMIT: i64 = 1000;
 // Should be formatted as a string that's coercable to the Postgres interval
 // type.
 static DIRECTORY_SEARCH_DELETE_HORIZON: &'static str = "1 week";
+
+// Target horizon beyond which we start to remove expired keys.
+static KEY_DELETE_HORIZON: &'static str = "1 week";
 
 // The maximum number of content rows to keep around for any given podcast.
 pub const PODCAST_FEED_CONTENT_LIMIT: i64 = 5;
@@ -150,6 +167,20 @@ fn delete_directory_search_batch(log: &Logger, conn: &PgConnection) -> Result<De
                 .bind::<BigInt, _>(DELETE_LIMIT)
                 .get_result::<DeleteResults>(conn)
                 .chain_err(|| "Error deleting directory search content batch")
+        },
+    )
+}
+
+fn delete_key_batch(log: &Logger, conn: &PgConnection) -> Result<DeleteResults> {
+    time_helpers::log_timed(
+        &log.new(o!("step" => "delete_key_batch", "limit" => DELETE_LIMIT)),
+        |_log| {
+            // This works because directory_podcast_directory_search is ON DELETE CASCADE
+            diesel::sql_query(include_str!("../sql/cleaner_key.sql"))
+                .bind::<Text, _>(KEY_DELETE_HORIZON)
+                .bind::<BigInt, _>(DELETE_LIMIT)
+                .get_result::<DeleteResults>(conn)
+                .chain_err(|| "Error deleting key batch")
         },
     )
 }
@@ -215,48 +246,6 @@ mod tests {
     use std::io::prelude::*;
     use std::iter;
     use time::Duration;
-
-    #[test]
-    #[ignore]
-    fn test_clean_podcast_feed_content() {
-        let mut bootstrap = TestBootstrap::new();
-
-        let num_contents = 25;
-        let podcast = test_data::podcast::insert(&bootstrap.log, &*bootstrap.conn);
-        for _i in 0..num_contents {
-            insert_podcast_feed_content(&bootstrap.log, &*bootstrap.conn, &podcast);
-        }
-
-        // This is here to ensure that a different podcast's records (one that only has
-        // one content row) aren't affected by the run
-        let _ = test_data::podcast::insert(&bootstrap.log, &*bootstrap.conn);
-
-        assert_eq!(
-            // +2: one inserted with the original podcast and one more for the other podcast
-            // inserted above
-            Ok(num_contents + 2),
-            schema::podcast_feed_content::table
-                .count()
-                .first(&*bootstrap.conn)
-        );
-
-        let (mut mediator, log) = bootstrap.mediator();
-        let res = mediator.run(&log).unwrap();
-
-        // Expect to have cleaned all except the limit number of rows
-        let expected_num_cleaned = num_contents + 1 - PODCAST_FEED_CONTENT_LIMIT;
-        assert_eq!(expected_num_cleaned, res.num_podcast_feed_content_cleaned);
-        assert_eq!(expected_num_cleaned, res.num_cleaned);
-
-        // Expect to have exactly the limit left in the database plus one more for the
-        // other podcast
-        assert_eq!(
-            Ok(PODCAST_FEED_CONTENT_LIMIT + 1),
-            schema::podcast_feed_content::table
-                .count()
-                .first(&*bootstrap.conn)
-        );
-    }
 
     #[test]
     #[ignore]
@@ -361,6 +350,93 @@ mod tests {
             // cleaning directory podcasts is a little behind it may also remove
             // that record, leaving us with two cleaned records in total.
         }
+    }
+
+    #[test]
+    #[ignore]
+    fn test_clean_key() {
+        let mut bootstrap = TestBootstrap::new();
+
+        // Insert a key that expired a week ago
+        let _key = test_data::key::insert_args(
+            &bootstrap.log,
+            &*bootstrap.conn,
+            test_data::key::Args {
+                expire_at: Some(Utc::now() - Duration::weeks(1)),
+            },
+        );
+
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
+
+        assert_eq!(1, res.num_key_cleaned);
+        assert_eq!(1, res.num_cleaned);
+    }
+
+    #[test]
+    #[ignore]
+    fn test_clean_key_ignore() {
+        let mut bootstrap = TestBootstrap::new();
+
+        // Insert a key that doesn't expire
+        let _key = test_data::key::insert(&bootstrap.log, &*bootstrap.conn);
+
+        // Insert a key that doesn't expire for a while
+        let _key = test_data::key::insert_args(
+            &bootstrap.log,
+            &*bootstrap.conn,
+            test_data::key::Args {
+                expire_at: Some(Utc::now() + Duration::weeks(4)),
+            },
+        );
+
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
+
+        assert_eq!(0, res.num_key_cleaned);
+        assert_eq!(0, res.num_cleaned);
+    }
+
+    #[test]
+    #[ignore]
+    fn test_clean_podcast_feed_content() {
+        let mut bootstrap = TestBootstrap::new();
+
+        let num_contents = 25;
+        let podcast = test_data::podcast::insert(&bootstrap.log, &*bootstrap.conn);
+        for _i in 0..num_contents {
+            insert_podcast_feed_content(&bootstrap.log, &*bootstrap.conn, &podcast);
+        }
+
+        // This is here to ensure that a different podcast's records (one that only has
+        // one content row) aren't affected by the run
+        let _ = test_data::podcast::insert(&bootstrap.log, &*bootstrap.conn);
+
+        assert_eq!(
+            // +2: one inserted with the original podcast and one more for the other podcast
+            // inserted above
+            Ok(num_contents + 2),
+            schema::podcast_feed_content::table
+                .count()
+                .first(&*bootstrap.conn)
+        );
+
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
+
+        // Expect to have cleaned all except the limit number of rows
+        let expected_num_cleaned = num_contents + 1 - PODCAST_FEED_CONTENT_LIMIT;
+        assert_eq!(expected_num_cleaned, res.num_podcast_feed_content_cleaned);
+        assert_eq!(expected_num_cleaned, res.num_cleaned);
+
+        // Expect to have exactly the limit left in the database plus one more for the
+        // other podcast
+        assert_eq!(
+            Ok(PODCAST_FEED_CONTENT_LIMIT + 1),
+            schema::podcast_feed_content::table
+                .count()
+                .first(&*bootstrap.conn)
+        );
     }
 
     //
