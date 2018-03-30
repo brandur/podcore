@@ -6,6 +6,7 @@ use model::insertable;
 use schema;
 use test_helpers;
 
+use chrono::{DateTime, Utc};
 use diesel;
 use diesel::pg::PgConnection;
 use rand::distributions::Alphanumeric;
@@ -102,6 +103,30 @@ pub mod directory_podcast {
             .values(&dir_podcast_ins)
             .get_result(conn)
             .unwrap()
+    }
+}
+
+pub mod key {
+    use mediators::key_creator;
+    use test_data::*;
+
+    #[derive(Default)]
+    pub struct Args {
+        pub expire_at: Option<DateTime<Utc>>,
+    }
+
+    pub fn insert(log: &Logger, conn: &PgConnection) -> model::Key {
+        insert_args(log, conn, Args::default())
+    }
+
+    fn insert_args(log: &Logger, conn: &PgConnection, args: Args) -> model::Key {
+        key_creator::Mediator {
+            account: &super::account::insert(log, conn),
+            conn,
+            expire_at: args.expire_at,
+        }.run(log)
+            .unwrap()
+            .key
     }
 }
 
