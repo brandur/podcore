@@ -19,9 +19,15 @@ impl<'a> Mediator<'a> {
     }
 
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
+        let num_account_podcast_deleted = self.delete_account_podcast(log)?;
         let num_account_deleted = self.delete_account(log)?;
+
+        // TODO: account_podcast_episode
+        // TODO: key
+
         Ok(RunResult {
             num_account_deleted,
+            num_account_podcast_deleted,
         })
     }
 
@@ -37,10 +43,20 @@ impl<'a> Mediator<'a> {
                 .chain_err(|| "Error deleting account")
         })
     }
+
+    fn delete_account_podcast(&mut self, log: &Logger) -> Result<usize> {
+        time_helpers::log_timed(&log.new(o!("step" => "delete_account_podcast")), |_log| {
+            diesel::delete(schema::account_podcast::table)
+                .filter(schema::account_podcast::account_id.eq(self.account.id))
+                .execute(self.conn)
+                .chain_err(|| "Error deleting account podcasts")
+        })
+    }
 }
 
 pub struct RunResult {
-    pub num_account_deleted: usize,
+    pub num_account_deleted:         usize,
+    pub num_account_podcast_deleted: usize,
 }
 
 //
@@ -60,10 +76,19 @@ mod tests {
     fn test_account_destroy() {
         let mut bootstrap = TestBootstrap::new();
 
+        test_data::account_podcast::insert_args(
+            &bootstrap.log,
+            &bootstrap.conn,
+            test_data::account_podcast::Args {
+                account: Some(&bootstrap.account),
+            },
+        );
+
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
 
         assert_eq!(1, res.num_account_deleted);
+        assert_eq!(1, res.num_account_podcast_deleted);
     }
 
     //

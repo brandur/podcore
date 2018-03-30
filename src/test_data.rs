@@ -51,15 +51,23 @@ pub mod account_podcast {
     use test_data::*;
 
     #[derive(Default)]
-    pub struct Args {}
+    pub struct Args<'a> {
+        pub account: Option<&'a model::Account>,
+    }
 
     pub fn insert(log: &Logger, conn: &PgConnection) -> model::AccountPodcast {
         insert_args(log, conn, Args::default())
     }
 
-    fn insert_args(log: &Logger, conn: &PgConnection, _args: Args) -> model::AccountPodcast {
+    pub fn insert_args(log: &Logger, conn: &PgConnection, args: Args) -> model::AccountPodcast {
+        let account = if args.account.is_none() {
+            Some(super::account::insert(log, conn))
+        } else {
+            None
+        };
+
         account_podcast_subscriber::Mediator {
-            account: &super::account::insert(log, conn),
+            account: args.account.unwrap_or_else(|| account.as_ref().unwrap()),
             conn,
             podcast: &super::podcast::insert(log, conn),
         }.run(log)
