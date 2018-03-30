@@ -218,9 +218,10 @@ mod tests {
     impl TestBootstrap {
         fn new(data: &[u8]) -> TestBootstrap {
             let conn = test_helpers::connection();
+            let log = test_helpers::log();
             let url = "https://example.com/feed.xml";
 
-            let itunes = model::Directory::itunes(&conn).unwrap();
+            let itunes = model::Directory::itunes(&log, &conn).unwrap();
             let dir_podcast_ins = insertable::DirectoryPodcast {
                 directory_id: itunes.id,
                 feed_url:     url.to_owned(),
@@ -237,7 +238,7 @@ mod tests {
                 _common:        test_helpers::CommonTestBootstrap::new(),
                 conn:           conn,
                 dir_podcast:    dir_podcast,
-                log:            test_helpers::log(),
+                log:            log,
                 http_requester: HttpRequesterPassThrough {
                     data: Arc::new(data.to_vec()),
                 },

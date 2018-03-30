@@ -513,10 +513,10 @@ mod tests {
             .unwrap();
     }
 
-    fn insert_directory_search(_log: &Logger, conn: &PgConnection) -> model::DirectorySearch {
+    fn insert_directory_search(log: &Logger, conn: &PgConnection) -> model::DirectorySearch {
         let mut rng = rand::thread_rng();
 
-        let directory = model::Directory::itunes(&conn).unwrap();
+        let directory = model::Directory::itunes(log, &conn).unwrap();
 
         let search_ins = insertable::DirectorySearch {
             directory_id: directory.id,

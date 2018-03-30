@@ -20,6 +20,13 @@ CREATE TABLE account (
     )
 );
 
+CREATE INDEX account_email
+    ON account (email);
+-- Used for cleaning ephemeral accounts.
+CREATE INDEX account_last_seen_at
+    ON account (last_seen_at)
+    WHERE email IS NULL;
+
 --
 -- account_podcast
 --
@@ -89,8 +96,11 @@ CREATE TABLE key (
 
 CREATE INDEX key_account_id
     ON key (account_id);
+
+-- Used for cleaning expired keys.
 CREATE INDEX key_expire_at
     ON key (expire_at)
     WHERE expire_at IS NOT NULL;
+
 CREATE INDEX key_secret
     ON key (secret);

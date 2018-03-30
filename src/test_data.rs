@@ -83,10 +83,10 @@ pub mod directory_podcast {
         insert_args(log, conn, Args::default())
     }
 
-    pub fn insert_args(_log: &Logger, conn: &PgConnection, args: Args) -> model::DirectoryPodcast {
+    pub fn insert_args(log: &Logger, conn: &PgConnection, args: Args) -> model::DirectoryPodcast {
         let mut rng = rand::thread_rng();
 
-        let directory = model::Directory::itunes(&conn).unwrap();
+        let directory = model::Directory::itunes(log, &conn).unwrap();
 
         let dir_podcast_ins = insertable::DirectoryPodcast {
             directory_id: directory.id,

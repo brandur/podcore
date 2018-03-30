@@ -35,7 +35,7 @@ impl<'a> Mediator<'a> {
     }
 
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
-        let directory = model::Directory::itunes(self.conn)?;
+        let directory = model::Directory::itunes(log, self.conn)?;
         let directory_search = match self.select_directory_search(log, &directory)? {
             Some(directory_search) => {
                 // The cache is fresh. Retrieve directory podcasts and search results, then

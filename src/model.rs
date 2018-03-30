@@ -1,12 +1,14 @@
 use errors::*;
 use schema;
 use schema::directory_podcast;
+use time_helpers;
 
 use chrono::{DateTime, Utc};
 use diesel;
 use diesel::pg::PgConnection;
 use diesel::pg::upsert::excluded;
 use diesel::prelude::*;
+use slog::Logger;
 
 // Database models for the application.
 //
@@ -53,8 +55,9 @@ pub struct Directory {
 }
 
 impl Directory {
-    pub fn itunes(conn: &PgConnection) -> Result<Self> {
+    pub fn itunes(log: &Logger, conn: &PgConnection) -> Result<Self> {
         Self::load_dir(
+            log,
             conn,
             &insertable::Directory {
                 name: "Apple iTunes".to_owned(),
@@ -62,7 +65,11 @@ impl Directory {
         )
     }
 
-    fn load_dir(conn: &PgConnection, ins_dir: &insertable::Directory) -> Result<Self> {
+    fn load_dir(
+        log: &Logger,
+        conn: &PgConnection,
+        ins_dir: &insertable::Directory,
+    ) -> Result<Self> {
         // We `SELECT` first because it's probably faster that way and we can pretty
         // much always expect the directory to exist, but if we want to take
         // all race conditions to zero, we could change this whole function to
@@ -78,13 +85,15 @@ impl Directory {
         }
 
         // If the directory was missing, upsert it.
-        diesel::insert_into(schema::directory::table)
-            .values(ins_dir)
-            .on_conflict(schema::directory::name)
-            .do_update()
-            .set((schema::directory::name.eq(excluded(schema::directory::name)),))
-            .get_result(conn)
-            .chain_err(|| "Error upserting directory")
+        time_helpers::log_timed(&log.new(o!("step" => "upsert_directory")), |_log| {
+            diesel::insert_into(schema::directory::table)
+                .values(ins_dir)
+                .on_conflict(schema::directory::name)
+                .do_update()
+                .set((schema::directory::name.eq(excluded(schema::directory::name)),))
+                .get_result(conn)
+                .chain_err(|| "Error upserting directory")
+        })
     }
 }
 
