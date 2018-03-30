@@ -19,8 +19,8 @@ pub mod account {
     use test_data::*;
 
     pub struct Args {
-        email:     Option<String>,
-        ephemeral: bool,
+        pub email:     Option<String>,
+        pub ephemeral: bool,
     }
 
     pub fn insert(log: &Logger, conn: &PgConnection) -> model::Account {
@@ -34,7 +34,7 @@ pub mod account {
         )
     }
 
-    fn insert_args(log: &Logger, conn: &PgConnection, args: Args) -> model::Account {
+    pub fn insert_args(log: &Logger, conn: &PgConnection, args: Args) -> model::Account {
         account_creator::Mediator {
             conn,
             email: args.email,
