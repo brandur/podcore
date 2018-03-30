@@ -114,6 +114,33 @@ mod tests {
         assert!(res.account.is_some());
     }
 
+    #[test]
+    fn test_account_authenticate_invalid_deleted() {
+        let mut bootstrap = TestBootstrap::new(Args {
+            key_expire_at: None,
+        });
+
+        // Delete the key completely
+        diesel::delete(schema::key::table)
+            .filter(schema::key::id.eq(bootstrap.key.id))
+            .execute(&*bootstrap.conn)
+            .unwrap();
+
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
+        assert!(res.account.is_none());
+    }
+
+    #[test]
+    fn test_account_authenticate_invalid_expired() {
+        let mut bootstrap = TestBootstrap::new(Args {
+            key_expire_at: Some(Utc::now() - Duration::days(1)),
+        });
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
+        assert!(res.account.is_none());
+    }
+
     //
     // Private types/functions
     //
