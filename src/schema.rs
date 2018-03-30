@@ -90,6 +90,16 @@ table! {
 }
 
 table! {
+    key (id) {
+        id -> Int8,
+        account_id -> Int8,
+        created_at -> Timestamptz,
+        expire_at -> Nullable<Timestamptz>,
+        secret -> Text,
+    }
+}
+
+table! {
     podcast (id) {
         id -> Int8,
         image_url -> Nullable<Text>,
@@ -140,6 +150,7 @@ joinable!(directory_podcast_directory_search -> directory_search (directory_sear
 joinable!(directory_podcast_exception -> directory_podcast (directory_podcast_id));
 joinable!(directory_search -> directory (directory_id));
 joinable!(episode -> podcast (podcast_id));
+joinable!(key -> account (account_id));
 joinable!(podcast_exception -> podcast (podcast_id));
 joinable!(podcast_feed_content -> podcast (podcast_id));
 joinable!(podcast_feed_location -> podcast (podcast_id));
@@ -154,6 +165,7 @@ allow_tables_to_appear_in_same_query!(
     directory_podcast_exception,
     directory_search,
     episode,
+    key,
     podcast,
     podcast_exception,
     podcast_feed_content,

@@ -71,3 +71,23 @@ CREATE TABLE account_podcast_episode (
 
 CREATE UNIQUE INDEX account_podcast_episode_account_podcast_id_episode_id
     ON account_podcast_episode (account_podcast_id, episode_id);
+
+---
+--- key
+---
+
+CREATE TABLE key (
+    id BIGSERIAL PRIMARY KEY,
+
+    account_id BIGINT NOT NULL
+        REFERENCES account (id) ON DELETE RESTRICT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expire_at TIMESTAMPTZ,
+    secret TEXT NOT NULL
+        CHECK (char_length(secret) = 60)
+);
+
+CREATE INDEX key_account_id
+    ON key (account_id);
+CREATE INDEX key_secret
+    ON key (secret);

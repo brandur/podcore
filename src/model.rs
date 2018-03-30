@@ -16,7 +16,6 @@ use diesel::prelude::*;
 // https://github.com/diesel-rs/diesel/issues/1440
 //
 
-#[allow(dead_code)]
 #[derive(Queryable)]
 pub struct Account {
     pub id:           i64,
@@ -27,7 +26,6 @@ pub struct Account {
     pub last_seen_at: DateTime<Utc>,
 }
 
-#[allow(dead_code)]
 #[derive(Queryable)]
 pub struct AccountPodcast {
     pub id:              i64,
@@ -37,7 +35,6 @@ pub struct AccountPodcast {
     pub unsubscribed_at: Option<DateTime<Utc>>,
 }
 
-#[allow(dead_code)]
 #[derive(Queryable)]
 pub struct AccountPodcastEpisode {
     pub id:                 i64,
@@ -47,7 +44,6 @@ pub struct AccountPodcastEpisode {
     pub played:             bool,
 }
 
-#[allow(dead_code)]
 #[derive(Queryable)]
 pub struct Directory {
     pub id:   i64,
@@ -55,12 +51,10 @@ pub struct Directory {
 }
 
 impl Directory {
-    #[allow(dead_code)]
     pub fn itunes(conn: &PgConnection) -> Result<Self> {
         Self::load_dir(conn, "Apple iTunes")
     }
 
-    #[allow(dead_code)]
     fn load_dir(conn: &PgConnection, name: &str) -> Result<Self> {
         schema::directory::table
             .filter(schema::directory::name.eq(name))
@@ -120,6 +114,15 @@ pub struct Episode {
 }
 
 #[derive(Queryable)]
+pub struct Key {
+    pub id:         i64,
+    pub account_id: i64,
+    pub created_at: DateTime<Utc>,
+    pub expire_at:  Option<DateTime<Utc>>,
+    pub secret:     String,
+}
+
+#[derive(Queryable)]
 pub struct Podcast {
     pub id:                i64,
     pub image_url:         Option<String>,
@@ -161,12 +164,11 @@ pub struct PodcastFeedLocation {
 pub mod insertable {
     use schema::{account, account_podcast, account_podcast_episode, directory_podcast,
                  directory_podcast_directory_search, directory_podcast_exception,
-                 directory_search, episode, podcast, podcast_exception, podcast_feed_content,
+                 directory_search, episode, key, podcast, podcast_exception, podcast_feed_content,
                  podcast_feed_location};
 
     use chrono::{DateTime, Utc};
 
-    //#[allow(dead_code)]
     #[derive(Insertable)]
     #[table_name = "account"]
     pub struct Account {
@@ -175,7 +177,6 @@ pub mod insertable {
         pub last_ip:   String,
     }
 
-    //#[allow(dead_code)]
     #[derive(Insertable)]
     #[table_name = "account_podcast"]
     pub struct AccountPodcast {
@@ -185,7 +186,6 @@ pub mod insertable {
         pub unsubscribed_at: Option<DateTime<Utc>>,
     }
 
-    //#[allow(dead_code)]
     #[derive(Insertable)]
     #[table_name = "account_podcast_episode"]
     pub struct AccountPodcastEpisode {
@@ -241,6 +241,14 @@ pub mod insertable {
         pub podcast_id:   i64,
         pub published_at: DateTime<Utc>,
         pub title:        String,
+    }
+
+    #[derive(Insertable)]
+    #[table_name = "key"]
+    pub struct Key {
+        pub account_id: i64,
+        pub expire_at:  Option<DateTime<Utc>>,
+        pub secret:     String,
     }
 
     #[changeset_options(treat_none_as_null = "true")]
