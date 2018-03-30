@@ -76,6 +76,53 @@ pub mod account_podcast {
     }
 }
 
+pub mod account_podcast_episode {
+    use mediators::account_podcast_episode_upserter;
+    use test_data::*;
+
+    use diesel::prelude::*;
+
+    #[derive(Default)]
+    pub struct Args<'a> {
+        pub account_podcast: Option<&'a model::AccountPodcast>,
+    }
+
+    #[allow(dead_code)]
+    fn insert(log: &Logger, conn: &PgConnection) -> model::AccountPodcastEpisode {
+        insert_args(log, conn, Args::default())
+    }
+
+    pub fn insert_args(
+        log: &Logger,
+        conn: &PgConnection,
+        args: Args,
+    ) -> model::AccountPodcastEpisode {
+        let account_podcast = if args.account_podcast.is_none() {
+            Some(super::account_podcast::insert(log, conn))
+        } else {
+            None
+        };
+
+        let account_podcast_ref = args.account_podcast
+            .unwrap_or_else(|| account_podcast.as_ref().unwrap());
+
+        let episode: model::Episode = schema::episode::table
+            .filter(schema::episode::podcast_id.eq(account_podcast_ref.podcast_id))
+            .first(conn)
+            .unwrap();
+
+        account_podcast_episode_upserter::Mediator {
+            account_podcast: account_podcast_ref,
+            conn,
+            episode: &episode,
+            listened_seconds: None,
+            played: true,
+        }.run(log)
+            .unwrap()
+            .account_podcast_episode
+    }
+}
+
 pub mod directory_podcast {
     use test_data::*;
 

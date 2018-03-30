@@ -19,15 +19,15 @@ impl<'a> Mediator<'a> {
     }
 
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
+        let num_account_podcast_episode_deleted = self.delete_account_podcast_episode(log)?;
         let num_account_podcast_deleted = self.delete_account_podcast(log)?;
         let num_key_deleted = self.delete_key(log)?;
         let num_account_deleted = self.delete_account(log)?;
 
-        // TODO: account_podcast_episode
-
         Ok(RunResult {
             num_account_deleted,
             num_account_podcast_deleted,
+            num_account_podcast_episode_deleted,
             num_key_deleted,
         })
     }
@@ -54,6 +54,29 @@ impl<'a> Mediator<'a> {
         })
     }
 
+    fn delete_account_podcast_episode(&mut self, log: &Logger) -> Result<usize> {
+        let account_podcast_ids: Vec<i64> =
+            time_helpers::log_timed(&log.new(o!("step" => "select_account_podcast")), |_log| {
+                schema::account_podcast::table
+                    .filter(schema::account_podcast::account_id.eq(self.account.id))
+                    .select(schema::account_podcast::id)
+                    .get_results(self.conn)
+            })?;
+
+        time_helpers::log_timed(
+            &log.new(o!("step" => "delete_account_podcast_episode")),
+            |_log| {
+                diesel::delete(schema::account_podcast_episode::table)
+                    .filter(
+                        schema::account_podcast_episode::account_podcast_id
+                            .eq_any(account_podcast_ids),
+                    )
+                    .execute(self.conn)
+                    .chain_err(|| "Error deleting account podcasts")
+            },
+        )
+    }
+
     fn delete_key(&mut self, log: &Logger) -> Result<usize> {
         time_helpers::log_timed(&log.new(o!("step" => "delete_key")), |_log| {
             diesel::delete(schema::key::table)
@@ -65,9 +88,10 @@ impl<'a> Mediator<'a> {
 }
 
 pub struct RunResult {
-    pub num_account_deleted:         usize,
-    pub num_account_podcast_deleted: usize,
-    pub num_key_deleted:             usize,
+    pub num_account_deleted:                 usize,
+    pub num_account_podcast_deleted:         usize,
+    pub num_account_podcast_episode_deleted: usize,
+    pub num_key_deleted:                     usize,
 }
 
 //
@@ -87,11 +111,19 @@ mod tests {
     fn test_account_destroy() {
         let mut bootstrap = TestBootstrap::new();
 
-        test_data::account_podcast::insert_args(
+        let account_podcast = test_data::account_podcast::insert_args(
             &bootstrap.log,
             &bootstrap.conn,
             test_data::account_podcast::Args {
                 account: Some(&bootstrap.account),
+            },
+        );
+
+        test_data::account_podcast_episode::insert_args(
+            &bootstrap.log,
+            &bootstrap.conn,
+            test_data::account_podcast_episode::Args {
+                account_podcast: Some(&account_podcast),
             },
         );
 
@@ -109,6 +141,7 @@ mod tests {
 
         assert_eq!(1, res.num_account_deleted);
         assert_eq!(1, res.num_account_podcast_deleted);
+        assert_eq!(1, res.num_account_podcast_episode_deleted);
         assert_eq!(1, res.num_key_deleted);
     }
 
