@@ -279,7 +279,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    fn test_clean_account() {
+    fn test_clean_account_cleans() {
         let mut bootstrap = TestBootstrap::new();
 
         let account = test_data::account::insert(&bootstrap.log, &bootstrap.conn);
@@ -325,7 +325,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    fn test_clean_account_ignore() {
+    fn test_clean_account_ignores() {
         let mut bootstrap = TestBootstrap::new();
 
         // Insert an account that's ephemeral, but has been seen recently
@@ -359,7 +359,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    fn test_clean_directory_podcast() {
+    fn test_clean_directory_podcast_cleans() {
         let mut bootstrap = TestBootstrap::new();
 
         let _dir_podcast = test_data::directory_podcast::insert(&bootstrap.log, &*bootstrap.conn);
@@ -373,7 +373,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    fn test_clean_directory_podcast_ignore() {
+    fn test_clean_directory_podcast_ignores() {
         let mut bootstrap = TestBootstrap::new();
 
         // This directory podcast is attached to a hydrated podcast, so it shouldn't be
@@ -420,7 +420,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    fn test_clean_directory_search() {
+    fn test_clean_directory_search_cleans() {
         let mut bootstrap = TestBootstrap::new();
 
         let dir_podcast = test_data::directory_podcast::insert(&bootstrap.log, &*bootstrap.conn);
@@ -464,7 +464,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    fn test_clean_key() {
+    fn test_clean_key_cleans() {
         let mut bootstrap = TestBootstrap::new();
 
         // Insert a key that expired a week ago
@@ -486,7 +486,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    fn test_clean_key_ignore() {
+    fn test_clean_key_ignores() {
         let mut bootstrap = TestBootstrap::new();
 
         // Insert a key that doesn't expire
@@ -511,7 +511,7 @@ mod tests {
 
     #[test]
     #[ignore]
-    fn test_clean_podcast_feed_content() {
+    fn test_clean_podcast_feed_content_cleans() {
         let mut bootstrap = TestBootstrap::new();
 
         let num_contents = 25;
