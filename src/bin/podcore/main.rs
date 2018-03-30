@@ -193,6 +193,7 @@ fn subcommand_clean(log: &Logger, matches: &ArgMatches, options: &GlobalOptions)
         num_loops += 1;
         info!(log, "Finished work loop";
             "num_loops" => num_loops,
+            "num_account_cleaned" => res.num_account_cleaned,
             "num_directory_podcast_cleaned" => res.num_directory_podcast_cleaned,
             "num_directory_search_cleaned" => res.num_directory_search_cleaned,
             "num_key_cleaned" => res.num_key_cleaned,

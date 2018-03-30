@@ -20,6 +20,17 @@ impl Mediator {
     }
 
     pub fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
+        let account_thread = {
+            let thread_name = "account_cleaner".to_owned();
+            let log = log.new(o!("thread" => thread_name.clone()));
+            let pool_clone = self.pool.clone();
+
+            thread::Builder::new()
+                .name(thread_name)
+                .spawn(move || work(&log, &pool_clone, &delete_account_batch))
+                .map_err(Error::from)?
+        };
+
         let directory_podcast_thread = {
             let thread_name = "directory_podcast_cleaner".to_owned();
             let log = log.new(o!("thread" => thread_name.clone()));
@@ -69,6 +80,7 @@ impl Mediator {
         // doesn't happen here and never expect to). Our work functions also
         // return a `Result<_>` which may contain an error that we've set which
         // is what the `?` is checking for.
+        let num_account_cleaned = account_thread.join().unwrap()?;
         let num_directory_podcast_cleaned = directory_podcast_thread.join().unwrap()?;
         let num_directory_search_cleaned = directory_search_thread.join().unwrap()?;
         let num_key_cleaned = key_thread.join().unwrap()?;
@@ -76,9 +88,11 @@ impl Mediator {
 
         Ok(RunResult {
             // total number of cleaned resources
-            num_cleaned: num_directory_podcast_cleaned + num_directory_search_cleaned
-                + num_key_cleaned + num_podcast_feed_content_cleaned,
+            num_cleaned: num_account_cleaned + num_directory_podcast_cleaned
+                + num_directory_search_cleaned + num_key_cleaned
+                + num_podcast_feed_content_cleaned,
 
+            num_account_cleaned,
             num_directory_podcast_cleaned,
             num_directory_search_cleaned,
             num_key_cleaned,
@@ -91,6 +105,7 @@ pub struct RunResult {
     // total number of cleaned resources
     pub num_cleaned: i64,
 
+    pub num_account_cleaned:              i64,
     pub num_directory_podcast_cleaned:    i64,
     pub num_directory_search_cleaned:     i64,
     pub num_key_cleaned:                  i64,
@@ -100,6 +115,9 @@ pub struct RunResult {
 //
 // Private constants
 //
+
+// Target horizon beyond which we start to remove ephemeral accounts.
+static ACCOUNT_DELETE_HORIZON: &'static str = "1 month";
 
 // The maximum number of objects to try and delete as part of one batch. It's a
 // good idea to constrain batch sizes so that we don't have any queries in the
@@ -139,6 +157,19 @@ struct DeleteResults {
 // Private functions
 //
 
+fn delete_account_batch(log: &Logger, conn: &PgConnection) -> Result<DeleteResults> {
+    time_helpers::log_timed(
+        &log.new(o!("step" => "delete_account_batch", "limit" => DELETE_LIMIT)),
+        |_log| {
+            diesel::sql_query(include_str!("../sql/cleaner_account.sql"))
+                .bind::<Text, _>(ACCOUNT_DELETE_HORIZON)
+                .bind::<BigInt, _>(DELETE_LIMIT)
+                .get_result::<DeleteResults>(conn)
+                .chain_err(|| "Error deleting account batch")
+        },
+    )
+}
+
 fn delete_directory_podcast_batch(log: &Logger, conn: &PgConnection) -> Result<DeleteResults> {
     time_helpers::log_timed(
         &log.new(o!("step" => "delete_directory_podcast_batch", "limit" => DELETE_LIMIT)),
@@ -175,7 +206,6 @@ fn delete_key_batch(log: &Logger, conn: &PgConnection) -> Result<DeleteResults> 
     time_helpers::log_timed(
         &log.new(o!("step" => "delete_key_batch", "limit" => DELETE_LIMIT)),
         |_log| {
-            // This works because directory_podcast_directory_search is ON DELETE CASCADE
             diesel::sql_query(include_str!("../sql/cleaner_key.sql"))
                 .bind::<Text, _>(KEY_DELETE_HORIZON)
                 .bind::<BigInt, _>(DELETE_LIMIT)
@@ -246,6 +276,52 @@ mod tests {
     use std::io::prelude::*;
     use std::iter;
     use time::Duration;
+
+    #[test]
+    #[ignore]
+    fn test_clean_account() {
+        let mut bootstrap = TestBootstrap::new();
+
+        let account = test_data::account::insert(&bootstrap.log, &bootstrap.conn);
+
+        // Update the account so that it hasn't been seen in quite some time
+        diesel::update(schema::account::table)
+            .filter(schema::account::id.eq(account.id))
+            .set(schema::account::last_seen_at.eq(Utc::now() - Duration::weeks(20)))
+            .execute(&*bootstrap.conn)
+            .unwrap();
+
+        let account_podcast = test_data::account_podcast::insert_args(
+            &bootstrap.log,
+            &bootstrap.conn,
+            test_data::account_podcast::Args {
+                account: Some(&account),
+            },
+        );
+
+        test_data::account_podcast_episode::insert_args(
+            &bootstrap.log,
+            &bootstrap.conn,
+            test_data::account_podcast_episode::Args {
+                account_podcast: Some(&account_podcast),
+            },
+        );
+
+        test_data::key::insert_args(
+            &bootstrap.log,
+            &bootstrap.conn,
+            test_data::key::Args {
+                account:   Some(&account),
+                expire_at: None,
+            },
+        );
+
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
+
+        assert_eq!(1, res.num_account_cleaned);
+        assert_eq!(1, res.num_cleaned);
+    }
 
     #[test]
     #[ignore]
