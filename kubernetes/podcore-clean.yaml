@@ -16,13 +16,6 @@ spec:
         image: gcr.io/podcore-194423/podcore:1.30
         command: ["/podcore", "clean"]
         env:
-
-        # We're constraining maximum connections with `NUM_CONNECTIONS` so use
-        # a relatively long connect timeout so threads don't timeout waiting
-        # for a connection to be available. In seconds.
-        - name: CONNECT_TIMEOUT
-          value: "60"
-
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
@@ -31,13 +24,20 @@ spec:
 
         # The cleaner has lots of jobs that will run in parallel given enough
         # connections, but our connection limits are low, so constrain the
-        # maximum number it uses. `CONNECT_TIMEOUT` must also be reasonably
-        # large so that threads don't timeout waiting for a connection.
+        # maximum number it uses. `POOL_TIMEOUT` must also be reasonably large
+        # so that threads don't timeout waiting for a connection.
         - name: NUM_CONNECTIONS
           value: "2"
 
         - name: PODCORE_ENV
           value: "production"
+
+        # We're constraining maximum connections with `NUM_CONNECTIONS` so use
+        # a relatively long pool timeout so threads don't timeout waiting for a
+        # connection to be available. In seconds.
+        - name: POOL_TIMEOUT
+          value: "60"
+
         - name: RUST_BACKTRACE
           value: "1"
         - name: SENTRY_URL

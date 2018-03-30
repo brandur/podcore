@@ -59,7 +59,9 @@ fn main() {
     let mut app = App::new("podcore")
         .version("0.1")
         .about("A general utility command for the podcore project")
-        .arg_from_usage("    --connect-timeout=[SECONDS] 'Connect timeout for database connections")
+        .arg_from_usage(
+            "    --pool-timeout=[SECONDS] 'Timeout for getting a database connection from pool",
+        )
         .arg_from_usage("    --log-async 'Log asynchronously (good for logging on servers)'")
         .arg_from_usage("-c, --num-connections=[NUM] 'Number of Postgres connections'")
         .arg_from_usage("-q, --quiet 'Quiets all output'")
@@ -349,14 +351,15 @@ fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
 // Private types/functions
 //
 
-// Default connect timeout for databse connections. In seconds.
-const CONNECT_TIMEOUT: u64 = 10;
-
 // Timeout after which to close idle database connections in the pool. In
 // seconds.
 const IDLE_TIMEOUT: u64 = 10;
 
 const NUM_CONNECTIONS: u32 = 50;
+
+// Default timeout for blocking on the database pool waiting for a connections.
+// In seconds.
+const POOL_TIMEOUT: u64 = 10;
 
 // Default port to start servers on.
 const SERVER_PORT: &str = "8080";
@@ -366,9 +369,9 @@ const SERVER_PORT: &str = "8080";
 const SLEEP_SECONDS: u64 = 60;
 
 struct GlobalOptions {
-    connect_timeout: Duration,
     log_async:       bool,
     num_connections: u32,
+    pool_timeout:    Duration,
     quiet:           bool,
 }
 
@@ -400,17 +403,6 @@ fn log(options: &GlobalOptions) -> Logger {
 fn parse_global_options(matches: &ArgMatches) -> GlobalOptions {
     println!("matches = {:?}", matches);
     GlobalOptions {
-        connect_timeout: Duration::from_secs(
-            matches
-                .value_of("connect-timeout")
-                .map(|s| s.parse::<u64>().unwrap())
-                .unwrap_or_else(|| {
-                    env::var("CONNECT_TIMEOUT")
-                        .map(|s| s.parse::<u64>().unwrap())
-                        .unwrap_or(CONNECT_TIMEOUT)
-                }),
-        ),
-
         // Go async if we've been explicitly told to do so. Otherwise, detect whether we should go
         // async based on whether stdout is a terminal. Sync is okay for terminals, but quite bad
         // for server logs.
@@ -429,6 +421,17 @@ fn parse_global_options(matches: &ArgMatches) -> GlobalOptions {
                     .unwrap_or(NUM_CONNECTIONS)
             }),
 
+        pool_timeout: Duration::from_secs(
+            matches
+                .value_of("pool-timeout")
+                .map(|s| s.parse::<u64>().unwrap())
+                .unwrap_or_else(|| {
+                    env::var("POOL_TIMEOUT")
+                        .map(|s| s.parse::<u64>().unwrap())
+                        .unwrap_or(POOL_TIMEOUT)
+                }),
+        ),
+
         quiet: matches.is_present("quiet"),
     }
 }
@@ -441,7 +444,7 @@ fn pool(log: &Logger, options: &GlobalOptions) -> Result<Pool<ConnectionManager<
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let manager = ConnectionManager::<PgConnection>::new(database_url);
     Pool::builder()
-        .connection_timeout(options.connect_timeout)
+        .connection_timeout(options.pool_timeout)
         .idle_timeout(Some(Duration::from_secs(IDLE_TIMEOUT)))
         .max_size(options.num_connections)
         .build(manager)
