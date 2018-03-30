@@ -73,7 +73,7 @@ impl Server {
                     format!("/assets/{}/", assets_version.as_str()).as_str(),
                     actix_web::fs::StaticFiles::new("./assets/", false),
                 )
-                .default_resource(|r| r.h(actix_web::NormalizePath::default()))
+                .default_resource(|r| r.h(actix_web::helpers::NormalizePath::default()))
         });
 
         let _addr = server.bind(host)?.start();

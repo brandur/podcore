@@ -66,7 +66,7 @@ impl Server {
                 .resource("/health", |r| {
                     r.method(Method::GET).f(|_req| actix_web::httpcodes::HTTPOk)
                 })
-                .default_resource(|r| r.h(actix_web::NormalizePath::default()))
+                .default_resource(|r| r.h(actix_web::helpers::NormalizePath::default()))
         });
 
         let _addr = server.bind(host)?.start();

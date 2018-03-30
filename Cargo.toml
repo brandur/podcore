@@ -52,7 +52,11 @@ percent-encoding = "*"
 quick-xml = "0.10.1"
 r2d2 = { version = "*" }
 r2d2-diesel = { version = "1.0.0-rc1" }
-rand = "0.4"
+
+# 0.5 has been in prerelease forever and contains some useful features. I try
+# not to use non-stable APIs, but lock to it for now.
+rand = "0.5.0-pre.0"
+
 regex = "0.2"
 rust-crypto = "^0.2"
 serde = { version = "1.0.24" }
