@@ -32,7 +32,7 @@ use diesel::pg::PgConnection;
 use hyper::Client;
 use hyper_tls::HttpsConnector;
 use isatty::stdout_isatty;
-use r2d2::{Pool, PooledConnection};
+use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use slog::{Drain, Logger};
 use std::env;
@@ -59,8 +59,9 @@ fn main() {
     let mut app = App::new("podcore")
         .version("0.1")
         .about("A general utility command for the podcore project")
+        .arg_from_usage("    --connect-timeout=[SECONDS] 'Connect timeout for database connections")
         .arg_from_usage("    --log-async 'Log asynchronously (good for logging on servers)'")
-        .arg_from_usage("-c, --num-connections=[NUM_CONNECTIONS] 'Number of Postgres connections'")
+        .arg_from_usage("-c, --num-connections=[NUM] 'Number of Postgres connections'")
         .arg_from_usage("-q, --quiet 'Quiets all output'")
         .subcommand(
             SubCommand::with_name("add")
@@ -146,8 +147,7 @@ fn main() {
 fn subcommand_api(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("api").unwrap();
 
-    let num_connections = options.num_connections;
-    let pool = pool(log, num_connections)?;
+    let pool = pool(log, options)?;
 
     let server = api::Server {
         log: log.clone(),
@@ -159,9 +159,12 @@ fn subcommand_api(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
     Ok(())
 }
 
-fn subcommand_add(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
+fn subcommand_add(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("add").unwrap();
     let force = matches.is_present("force");
+
+    let pool = pool(log, options)?;
+    let conn = pool.get()?;
 
     let core = Core::new().unwrap();
     let client = Client::configure()
@@ -171,7 +174,7 @@ fn subcommand_add(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) 
 
     for url in matches.values_of("URL").unwrap().collect::<Vec<_>>() {
         podcast_updater::Mediator {
-            conn:             &*connection(log)?,
+            conn:             &*conn,
             disable_shortcut: force,
             feed_url:         url.to_owned().to_owned(),
             http_requester:   &mut http_requester,
@@ -187,7 +190,7 @@ fn subcommand_clean(log: &Logger, matches: &ArgMatches, options: &GlobalOptions)
 
     loop {
         let res = cleaner::Mediator {
-            pool: pool(log, options.num_connections)?.clone(),
+            pool: pool(log, options)?.clone(),
         }.run(log)?;
 
         num_loops += 1;
@@ -218,7 +221,7 @@ fn subcommand_crawl(log: &Logger, matches: &ArgMatches, options: &GlobalOptions)
     loop {
         let res = podcast_crawler::Mediator {
             num_workers:            options.num_connections - 1,
-            pool:                   pool(log, options.num_connections)?.clone(),
+            pool:                   pool(log, options)?.clone(),
             http_requester_factory: Box::new(HttpRequesterFactoryLive {}),
         }.run(log)?;
 
@@ -248,7 +251,8 @@ fn subcommand_error(_log: &Logger, matches: &ArgMatches, _options: &GlobalOption
 
 fn subcommand_migrate(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let _matches = matches.subcommand_matches("migrate").unwrap();
-    let conn = connection(log)?;
+    let pool = pool(log, options)?;
+    let conn = pool.get()?;
 
     info!(log, "Running migrations");
 
@@ -267,13 +271,15 @@ fn subcommand_reingest(log: &Logger, matches: &ArgMatches, options: &GlobalOptio
 
     podcast_reingester::Mediator {
         num_workers: options.num_connections - 1,
-        pool:        pool(log, options.num_connections)?.clone(),
+        pool:        pool(log, options)?.clone(),
     }.run(log)?;
     Ok(())
 }
 
-fn subcommand_search(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions) -> Result<()> {
+fn subcommand_search(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("search").unwrap();
+    let pool = pool(log, options)?;
+    let conn = pool.get()?;
 
     let core = Core::new().unwrap();
     let client = Client::configure()
@@ -283,7 +289,7 @@ fn subcommand_search(log: &Logger, matches: &ArgMatches, _options: &GlobalOption
 
     let query = matches.value_of("QUERY").unwrap();
     directory_podcast_searcher::Mediator {
-        conn:           &*connection(log)?,
+        conn:           &*conn,
         query:          query.to_owned(),
         http_requester: &mut http_requester,
     }.run(log)?;
@@ -309,13 +315,13 @@ fn subcommand_sleep(log: &Logger, matches: &ArgMatches, _options: &GlobalOptions
 fn subcommand_upgrade_https(
     log: &Logger,
     matches: &ArgMatches,
-    _options: &GlobalOptions,
+    options: &GlobalOptions,
 ) -> Result<()> {
     let _matches = matches.subcommand_matches("upgrade-https").unwrap();
+    let pool = pool(log, options)?;
+    let conn = pool.get()?;
 
-    let res = podcast_feed_location_upgrader::Mediator {
-        conn: &*connection(log)?,
-    }.run(log)?;
+    let res = podcast_feed_location_upgrader::Mediator { conn: &*conn }.run(log)?;
 
     info!(log, "Finished podcast HTTPS upgrade"; "num_upgraded" => res.num_upgraded);
     Ok(())
@@ -326,8 +332,7 @@ fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
 
     let assets_version = env::var("ASSETS_VERSION").unwrap_or_else(|_| "1".to_owned());
 
-    let num_connections = options.num_connections;
-    let pool = pool(log, num_connections)?;
+    let pool = pool(log, options)?;
 
     let server = web::Server {
         assets_version,
@@ -344,6 +349,13 @@ fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
 // Private types/functions
 //
 
+// Default connect timeout for databse connections. In seconds.
+const CONNECT_TIMEOUT: u64 = 10;
+
+// Timeout after which to close idle database connections in the pool. In
+// seconds.
+const IDLE_TIMEOUT: u64 = 10;
+
 const NUM_CONNECTIONS: u32 = 50;
 
 // Default port to start servers on.
@@ -354,16 +366,10 @@ const SERVER_PORT: &str = "8080";
 const SLEEP_SECONDS: u64 = 60;
 
 struct GlobalOptions {
+    connect_timeout: Duration,
     log_async:       bool,
     num_connections: u32,
     quiet:           bool,
-}
-
-/// Acquires a single connection from a connection pool. This is suitable for
-/// use a shortcut by subcommands that only need to run one single-threaded
-/// task.
-fn connection(log: &Logger) -> Result<PooledConnection<ConnectionManager<PgConnection>>> {
-    pool(log, 1)?.get().map_err(Error::from)
 }
 
 fn handle_error(log: &Logger, e: &Error) {
@@ -394,6 +400,17 @@ fn log(options: &GlobalOptions) -> Logger {
 fn parse_global_options(matches: &ArgMatches) -> GlobalOptions {
     println!("matches = {:?}", matches);
     GlobalOptions {
+        connect_timeout: Duration::from_secs(
+            matches
+                .value_of("connect-timeout")
+                .map(|s| s.parse::<u64>().unwrap())
+                .unwrap_or_else(|| {
+                    env::var("CONNECT_TIMEOUT")
+                        .map(|s| s.parse::<u64>().unwrap())
+                        .unwrap_or(CONNECT_TIMEOUT)
+                }),
+        ),
+
         // Go async if we've been explicitly told to do so. Otherwise, detect whether we should go
         // async based on whether stdout is a terminal. Sync is okay for terminals, but quite bad
         // for server logs.
@@ -417,13 +434,16 @@ fn parse_global_options(matches: &ArgMatches) -> GlobalOptions {
 }
 
 /// Initializes and returns a connection pool suitable for use across threads.
-fn pool(log: &Logger, num_connections: u32) -> Result<Pool<ConnectionManager<PgConnection>>> {
-    debug!(log, "Initializing connection pool"; "num_connections" => num_connections);
+fn pool(log: &Logger, options: &GlobalOptions) -> Result<Pool<ConnectionManager<PgConnection>>> {
+    debug!(log, "Initializing connection pool";
+        "num_connections" => options.num_connections);
+
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let manager = ConnectionManager::<PgConnection>::new(database_url);
     Pool::builder()
-        .idle_timeout(Some(Duration::from_secs(10)))
-        .max_size(num_connections)
+        .connection_timeout(options.connect_timeout)
+        .idle_timeout(Some(Duration::from_secs(IDLE_TIMEOUT)))
+        .max_size(options.num_connections)
         .build(manager)
         .map_err(Error::from)
 }

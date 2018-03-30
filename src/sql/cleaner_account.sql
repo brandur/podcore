@@ -3,9 +3,7 @@ WITH expired AS (
     FROM account
     WHERE email IS NULL
         AND last_seen_at < NOW() - $1::interval
-    --WHERE last_seen_at < NOW() - '1 week'::interval
     LIMIT $2
-    --LIMIT 10
 ),
 deleted_account_batch AS (
     DELETE FROM account
