@@ -10,8 +10,9 @@ use diesel::prelude::*;
 use slog::Logger;
 
 pub struct Mediator<'a> {
-    pub conn:   &'a PgConnection,
-    pub secret: &'a str,
+    pub conn:    &'a PgConnection,
+    pub last_ip: &'a str,
+    pub secret:  &'a str,
 }
 
 impl<'a> Mediator<'a> {
@@ -53,7 +54,10 @@ impl<'a> Mediator<'a> {
         time_helpers::log_timed(&log.new(o!("step" => "touch_and_select_account")), |_log| {
             diesel::update(schema::account::table)
                 .filter(schema::account::id.eq(key.account_id))
-                .set(schema::account::last_seen_at.eq(Utc::now()))
+                .set((
+                    schema::account::last_ip.eq(self.last_ip),
+                    schema::account::last_seen_at.eq(Utc::now()),
+                ))
                 .get_result(self.conn)
                 .chain_err(|| "Error touching account")
         })
@@ -99,9 +103,13 @@ mod tests {
         let mut bootstrap = TestBootstrap::new(Args {
             key_expire_at: None,
         });
+
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
         assert!(res.account.is_some());
+
+        let account = res.account.unwrap();
+        assert_eq!(TEST_NEW_IP, account.last_ip);
     }
 
     #[test]
@@ -109,9 +117,13 @@ mod tests {
         let mut bootstrap = TestBootstrap::new(Args {
             key_expire_at: Some(Utc::now() + Duration::days(1)),
         });
+
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
         assert!(res.account.is_some());
+
+        let account = res.account.unwrap();
+        assert_eq!(TEST_NEW_IP, account.last_ip);
     }
 
     #[test]
@@ -144,6 +156,8 @@ mod tests {
     //
     // Private types/functions
     //
+
+    static TEST_NEW_IP: &'static str = "4.5.6.7";
 
     struct Args {
         key_expire_at: Option<DateTime<Utc>>,
@@ -182,8 +196,9 @@ mod tests {
         fn mediator(&mut self) -> (Mediator, Logger) {
             (
                 Mediator {
-                    conn:   &*self.conn,
-                    secret: &self.key.secret,
+                    conn:    &*self.conn,
+                    last_ip: TEST_NEW_IP,
+                    secret:  &self.key.secret,
                 },
                 self.log.clone(),
             )

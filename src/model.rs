@@ -90,7 +90,7 @@ impl Directory {
                 .values(ins_dir)
                 .on_conflict(schema::directory::name)
                 .do_update()
-                .set((schema::directory::name.eq(excluded(schema::directory::name)),))
+                .set(schema::directory::name.eq(excluded(schema::directory::name)))
                 .get_result(conn)
                 .chain_err(|| "Error upserting directory")
         })
