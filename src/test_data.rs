@@ -85,6 +85,7 @@ pub mod account_podcast_episode {
     #[derive(Default)]
     pub struct Args<'a> {
         pub account_podcast: Option<&'a model::AccountPodcast>,
+        pub episode:         Option<&'a model::Episode>,
     }
 
     #[allow(dead_code)]
@@ -106,15 +107,23 @@ pub mod account_podcast_episode {
         let account_podcast_ref = args.account_podcast
             .unwrap_or_else(|| account_podcast.as_ref().unwrap());
 
-        let episode: model::Episode = schema::episode::table
-            .filter(schema::episode::podcast_id.eq(account_podcast_ref.podcast_id))
-            .first(conn)
-            .unwrap();
+        let episode: Option<model::Episode> = if args.episode.is_none() {
+            Some(
+                schema::episode::table
+                    .filter(schema::episode::podcast_id.eq(account_podcast_ref.podcast_id))
+                    .first(conn)
+                    .unwrap(),
+            )
+        } else {
+            None
+        };
+
+        let episode_ref = args.episode.unwrap_or_else(|| episode.as_ref().unwrap());
 
         account_podcast_episode_upserter::Mediator {
             account_podcast: account_podcast_ref,
             conn,
-            episode: &episode,
+            episode: episode_ref,
             listened_seconds: None,
             played: true,
         }.run(log)

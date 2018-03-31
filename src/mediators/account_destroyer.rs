@@ -124,6 +124,7 @@ mod tests {
             &bootstrap.conn,
             test_data::account_podcast_episode::Args {
                 account_podcast: Some(&account_podcast),
+                episode:         None,
             },
         );
 

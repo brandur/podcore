@@ -93,7 +93,7 @@ mod tests {
     use r2d2_diesel::ConnectionManager;
 
     #[test]
-    fn test_account_podcast_episode_favorite() {
+    fn test_account_podcast_episode_favorite_new() {
         let mut bootstrap = TestBootstrap::new(Args { favorite: true });
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
@@ -103,13 +103,65 @@ mod tests {
     }
 
     #[test]
-    fn test_account_podcast_episode_unfavorite() {
+    fn test_account_podcast_episode_favorite_existing() {
+        let mut bootstrap = TestBootstrap::new(Args { favorite: true });
+
+        // Insert a new record so that upsert operates on that
+        let existing = insert_account_podcast_episode(&bootstrap);
+        assert_eq!(false, existing.favorite);
+
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
+
+        // All these fields should be unchanged
+        assert_eq!(existing.id, res.account_podcast_episode.id);
+        assert_eq!(
+            existing.listened_seconds,
+            res.account_podcast_episode.listened_seconds
+        );
+        assert_eq!(existing.played, res.account_podcast_episode.played);
+
+        // However, it's now a favorite
+        assert!(res.account_podcast_episode.favorite);
+    }
+
+    #[test]
+    fn test_account_podcast_episode_unfavorite_new() {
         let mut bootstrap = TestBootstrap::new(Args { favorite: false });
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
 
         assert_ne!(0, res.account_podcast_episode.id);
         assert_eq!(false, res.account_podcast_episode.favorite);
+    }
+
+    #[test]
+    fn test_account_podcast_episode_unfavorite_existing() {
+        let mut bootstrap = TestBootstrap::new(Args { favorite: true });
+
+        // Insert a new record so that upsert operates on that
+        let existing = insert_account_podcast_episode(&bootstrap);
+        assert_eq!(false, existing.favorite);
+
+        // Do a targeted `UPDATE` to set `favorite` on this existing row
+        diesel::update(schema::account_podcast_episode::table)
+            .set(schema::account_podcast_episode::favorite.eq(true))
+            .execute(&*bootstrap.conn)
+            .unwrap();
+
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
+
+        // All these fields should be unchanged
+        assert_eq!(existing.id, res.account_podcast_episode.id);
+        assert_eq!(
+            existing.listened_seconds,
+            res.account_podcast_episode.listened_seconds
+        );
+        assert_eq!(existing.played, res.account_podcast_episode.played);
+
+        // However, it's now a favorite
+        assert!(res.account_podcast_episode.favorite);
     }
 
     //
@@ -162,5 +214,16 @@ mod tests {
                 self.log.clone(),
             )
         }
+    }
+
+    fn insert_account_podcast_episode(bootstrap: &TestBootstrap) -> model::AccountPodcastEpisode {
+        test_data::account_podcast_episode::insert_args(
+            &bootstrap.log,
+            &bootstrap.conn,
+            test_data::account_podcast_episode::Args {
+                account_podcast: Some(&bootstrap.account_podcast),
+                episode:         Some(&bootstrap.episode),
+            },
+        )
     }
 }
