@@ -14,7 +14,11 @@ use r2d2_diesel::ConnectionManager;
 use slog::Logger;
 
 pub struct Server {
-    pub assets_version:     String,
+    pub assets_version: String,
+
+    // A secret to secure cookies sent to clients. Must be at least length 32.
+    pub cookie_secret: String,
+
     pub log:                Logger,
     pub num_sync_executors: u32,
     pub pool:               Pool<ConnectionManager<PgConnection>>,
@@ -23,7 +27,10 @@ pub struct Server {
 
 impl Server {
     pub fn run(&self) -> Result<()> {
+        // Clone some values locally that are safe to `move` into the server closure
+        // below.
         let assets_version = self.assets_version.clone();
+        let cookie_secret = self.cookie_secret.clone();
         let log = self.log.clone();
         let pool = self.pool.clone();
 
@@ -44,7 +51,13 @@ impl Server {
                 assets_version: assets_version.clone(),
                 log:            log.clone(),
                 sync_addr:      sync_addr.clone(),
-            }).middleware(middleware::log_initializer::Middleware)
+            }).middleware(actix_web::middleware::SessionStorage::new(
+                actix_web::middleware::CookieSessionBackend::build(cookie_secret.as_bytes())
+                    .name("podcore-session")
+                    .secure(true)
+                    .finish(),
+            ))
+                .middleware(middleware::log_initializer::Middleware)
                 .middleware(middleware::request_id::Middleware)
                 .middleware(middleware::request_response_logger::Middleware)
                 .resource("/", |r| {

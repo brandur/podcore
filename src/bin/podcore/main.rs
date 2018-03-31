@@ -2,6 +2,8 @@ extern crate clap;
 extern crate diesel;
 #[macro_use]
 extern crate diesel_migrations;
+#[macro_use]
+extern crate error_chain;
 extern crate hyper;
 extern crate hyper_tls;
 extern crate isatty;
@@ -9,6 +11,7 @@ extern crate openssl_probe;
 extern crate podcore;
 extern crate r2d2;
 extern crate r2d2_diesel;
+extern crate rand;
 #[macro_use]
 extern crate slog;
 extern crate slog_async;
@@ -34,8 +37,11 @@ use hyper_tls::HttpsConnector;
 use isatty::stdout_isatty;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
+use rand::EntropyRng;
+use rand::distributions::Alphanumeric;
 use slog::{Drain, Logger};
 use std::env;
+use std::iter;
 use std::thread;
 use std::time::Duration;
 use tokio_core::reactor::Core;
@@ -333,11 +339,17 @@ fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
     let matches = matches.subcommand_matches("web").unwrap();
 
     let assets_version = env::var("ASSETS_VERSION").unwrap_or_else(|_| "1".to_owned());
+    let cookie_secret = env::var("COOKIE_SECRET").unwrap_or_else(|_| secure_random_string(32));
+
+    if cookie_secret.len() < 32 {
+        bail!("COOKIE_SECRET must be at least 32 characters long");
+    }
 
     let pool = pool(log, options)?;
 
     let server = web::Server {
         assets_version,
+        cookie_secret,
         log: log.clone(),
         num_sync_executors: options.num_connections,
         pool,
@@ -450,6 +462,16 @@ fn pool(log: &Logger, options: &GlobalOptions) -> Result<Pool<ConnectionManager<
         .max_size(options.num_connections)
         .build(manager)
         .map_err(Error::from)
+}
+
+/// Generates a secure random string of the given length.
+fn secure_random_string(len: usize) -> String {
+    use rand::Rng;
+    let mut rng = EntropyRng::new();
+    iter::repeat(())
+        .map(|()| rng.sample(Alphanumeric))
+        .take(len)
+        .collect()
 }
 
 /// Gets a port from the program's argument or falls back to a value in `PORT`
