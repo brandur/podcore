@@ -231,7 +231,7 @@ pub mod episode_show {
     }
 
     impl server::Params for Params {
-        fn build(_log: &Logger, req: &mut HttpRequest<server::StateImpl>) -> Result<Self> {
+        fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
             Ok(Self {
                 id:         req.match_info()
                     .get("id")
@@ -327,7 +327,7 @@ pub mod directory_podcast_show {
     }
 
     impl server::Params for Params {
-        fn build(_log: &Logger, req: &mut HttpRequest<server::StateImpl>) -> Result<Self> {
+        fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
             Ok(Self {
                 id: req.match_info()
                     .get("id")
@@ -426,7 +426,7 @@ pub mod podcast_show {
     }
 
     impl server::Params for Params {
-        fn build(_log: &Logger, req: &mut HttpRequest<server::StateImpl>) -> Result<Self> {
+        fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
             Ok(Self {
                 id: req.match_info()
                     .get("id")
@@ -555,7 +555,7 @@ pub mod search_show {
         query: Option<String>,
     }
     impl server::Params for Params {
-        fn build(_log: &Logger, req: &mut HttpRequest<server::StateImpl>) -> Result<Self> {
+        fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
             Ok(Self {
                 query: req.query().get("q").map(|q| q.to_owned()),
             })

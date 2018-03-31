@@ -125,9 +125,11 @@ pub mod web {
         use middleware::log_initializer;
         use model;
         use server;
+        use server::Params as P;
         use time_helpers;
 
         use actix_web;
+        use actix_web::http::StatusCode;
         use actix_web::middleware::{Response, Started};
         use actix_web::{HttpRequest, HttpResponse};
         use diesel::pg::PgConnection;
@@ -143,6 +145,28 @@ pub mod web {
             fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
                 let log = log_initializer::log(req);
                 info!(log, "Authenticated");
+
+                let params_res = time_helpers::log_timed(
+                    &log.new(o!("step" => "build_params")),
+                    |log| Params::build(log, req),
+                );
+                let params = match params_res {
+                    Ok(params) => params,
+                    Err(e) => {
+                        // TODO: More cohesive error handling strategy
+                        error!(log, "Middleware error: {}", e);
+                        return Ok(Started::Response(
+                            HttpResponse::build(StatusCode::INTERNAL_SERVER_ERROR)
+                                .content_type("text/html; charset=utf-8")
+                                .body("Error getting session information"),
+                        ));
+                    }
+                };
+
+                let _message = server::Message::new(&log, params);
+
+                //req.state().sync_addr().send(message)
+
                 Ok(Started::Done)
             }
 
@@ -166,7 +190,7 @@ pub mod web {
         }
 
         impl server::Params for Params {
-            fn build(_log: &Logger, req: &mut HttpRequest<server::StateImpl>) -> Result<Self> {
+            fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
                 use actix_web::middleware::RequestSession;
                 Ok(Params {
                     last_ip: req.connection_info().host().to_owned(),

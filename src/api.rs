@@ -137,7 +137,7 @@ impl server::Params for Params {
     // Only exists as a symbolic target to let us implement `Params` because this
     // parameter type can be implemented in multiple ways. See `build_from_get`
     // and `build_from_post` instead.
-    fn build(_log: &Logger, _req: &mut HttpRequest<server::StateImpl>) -> Result<Self> {
+    fn build<S: server::State>(_log: &Logger, _req: &mut HttpRequest<S>) -> Result<Self> {
         unimplemented!()
     }
 }

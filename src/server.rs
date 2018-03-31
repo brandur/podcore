@@ -22,7 +22,7 @@ pub trait Params: Sized {
     ///
     /// `HttpRequest` is mutable because we're allowed to reach into a session
     /// to build parameters.
-    fn build(log: &Logger, req: &mut HttpRequest<StateImpl>) -> Result<Self>;
+    fn build<S: State>(log: &Logger, req: &mut HttpRequest<S>) -> Result<Self>;
 }
 
 pub trait State {
