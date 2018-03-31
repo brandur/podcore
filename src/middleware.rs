@@ -102,11 +102,7 @@ pub mod request_response_logger {
             req: &mut HttpRequest<S>,
             resp: HttpResponse,
         ) -> actix_web::Result<Response> {
-            let log = req.extensions()
-                .get::<log_initializer::Extension>()
-                .unwrap()
-                .0
-                .clone();
+            let log = log_initializer::log(req);
             let elapsed =
                 time::precise_time_ns() - req.extensions().get::<Extension>().unwrap().start_time;
             info!(log, "Request finished";
@@ -116,6 +112,41 @@ pub mod request_response_logger {
                     "status"  => resp.status().as_u16(),
                 );
             Ok(Response::Done(resp))
+        }
+    }
+}
+
+/// Holds web-specific (as opposed to for the API) middleware.
+pub mod web {
+    pub mod authenticator {
+        use middleware::log_initializer;
+        use model;
+        use server;
+
+        use actix_web;
+        use actix_web::middleware::{Response, Started};
+        use actix_web::{HttpRequest, HttpResponse};
+
+        pub struct Middleware;
+
+        struct Extension {
+            account: model::Account,
+        }
+
+        impl<S: server::State> actix_web::middleware::Middleware<S> for Middleware {
+            fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
+                let log = log_initializer::log(req);
+                info!(log, "Authenticated");
+                Ok(Started::Done)
+            }
+
+            fn response(
+                &self,
+                _req: &mut HttpRequest<S>,
+                resp: HttpResponse,
+            ) -> actix_web::Result<Response> {
+                Ok(Response::Done(resp))
+            }
         }
     }
 }

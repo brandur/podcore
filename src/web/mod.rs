@@ -60,6 +60,7 @@ impl Server {
                 .middleware(middleware::log_initializer::Middleware)
                 .middleware(middleware::request_id::Middleware)
                 .middleware(middleware::request_response_logger::Middleware)
+                .middleware(middleware::web::authenticator::Middleware)
                 .resource("/", |r| {
                     r.method(Method::GET).f(|_req| actix_web::httpcodes::HTTPOk)
                 })
