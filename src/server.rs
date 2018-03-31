@@ -1,12 +1,11 @@
 use actix;
-use actix_web;
-use actix_web::{HttpRequest, HttpResponse, StatusCode};
+use actix_web::http::StatusCode;
+use actix_web::{HttpRequest, HttpResponse};
 use diesel::pg::PgConnection;
 use errors::*;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use slog::Logger;
-use std::result;
 
 //
 // Traits
@@ -83,19 +82,6 @@ impl actix::Actor for SyncExecutor {
 //
 // Functions
 //
-
-// Takes a `Result<HttpResponse, actix_web::Error`, which is the standard type
-// seen when building an `HttpResponse`, and flattens it down to just an
-// `HttpResponse` by converting the error to a proper response if necessary.
-//
-// This is a bit of a cludge because I don't know of a better way to accomplish
-// this, but there probably is one.
-pub fn flatten_http(res: result::Result<HttpResponse, actix_web::Error>) -> HttpResponse {
-    match res {
-        Ok(resp) => resp,
-        Err(err_resp) => HttpResponse::from_error(err_resp),
-    }
-}
 
 /// Handles a `Result` and renders an error that was intended for the user.
 /// Otherwise (on either a successful result or non-user error), passes through

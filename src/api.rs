@@ -7,8 +7,8 @@ use time_helpers;
 use actix;
 use actix_web;
 use actix_web::AsyncResponder;
-use actix_web::Method;
-use actix_web::{HttpRequest, HttpResponse, StatusCode};
+use actix_web::http::{Method, StatusCode};
+use actix_web::{HttpRequest, HttpResponse};
 use bytes::Bytes;
 use diesel::pg::PgConnection;
 use futures::future;
@@ -46,16 +46,14 @@ impl Server {
         });
 
         let server = actix_web::HttpServer::new(move || {
-            actix_web::Application::with_state(server::StateImpl {
+            actix_web::App::with_state(server::StateImpl {
                 assets_version: "".to_owned(),
                 log:            log.clone(),
                 sync_addr:      sync_addr.clone(),
             }).middleware(middleware::log_initializer::Middleware)
                 .middleware(middleware::request_id::Middleware)
                 .middleware(middleware::request_response_logger::Middleware)
-                .resource("/", |r| {
-                    r.method(Method::GET).f(|_req| actix_web::httpcodes::HTTPOk)
-                })
+                .resource("/", |r| r.method(Method::GET).f(|_req| HttpResponse::Ok()))
                 .resource("/graphiql", |r| {
                     r.method(Method::GET).f(handler_graphiql_get);
                 })
@@ -64,9 +62,9 @@ impl Server {
                     r.method(Method::POST).a(handler_graphql_post);
                 })
                 .resource("/health", |r| {
-                    r.method(Method::GET).f(|_req| actix_web::httpcodes::HTTPOk)
+                    r.method(Method::GET).f(|_req| HttpResponse::Ok())
                 })
-                .default_resource(|r| r.h(actix_web::helpers::NormalizePath::default()))
+                .default_resource(|r| r.h(actix_web::http::NormalizePath::default()))
         });
 
         let _addr = server.bind(host)?.start();
@@ -194,7 +192,6 @@ fn handler_graphiql_get(_req: HttpRequest<server::StateImpl>) -> HttpResponse {
     HttpResponse::build(StatusCode::OK)
         .content_type("text/html; charset=utf-8")
         .body(graphiql::graphiql_source("/graphql"))
-        .unwrap()
 }
 
 //
@@ -259,8 +256,7 @@ where
                 };
                 Ok(HttpResponse::build(code)
                     .content_type("application/json; charset=utf-8")
-                    .body(response.json)
-                    .unwrap())
+                    .body(response.json))
             })
         })
         .then(|res| server::transform_user_error(res, render_user_error))
@@ -271,11 +267,9 @@ fn render_user_error(code: StatusCode, message: String) -> Result<HttpResponse> 
     let body = serde_json::to_string_pretty(&GraphQLErrors {
         errors: vec![GraphQLError { message }],
     })?;
-    Ok(server::flatten_http(
-        HttpResponse::build(code)
-            .content_type("application/json; charset=utf-8")
-            .body(body),
-    ))
+    Ok(HttpResponse::build(code)
+        .content_type("application/json; charset=utf-8")
+        .body(body))
 }
 
 //

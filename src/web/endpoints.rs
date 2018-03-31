@@ -3,7 +3,8 @@ use http_requester::HttpRequesterLive;
 use server;
 use web::views;
 
-use actix_web::{HttpRequest, HttpResponse, StatusCode};
+use actix_web::http::StatusCode;
+use actix_web::{HttpRequest, HttpResponse};
 use hyper::Client;
 use hyper_tls::HttpsConnector;
 use slog::Logger;
@@ -180,29 +181,23 @@ fn build_requester() -> Result<HttpRequesterLive> {
 }
 
 pub fn handle_404() -> Result<HttpResponse> {
-    Ok(server::flatten_http(
-        HttpResponse::build(StatusCode::NOT_FOUND)
-            .content_type("text/html; charset=utf-8")
-            .body("404!"),
-    ))
+    Ok(HttpResponse::build(StatusCode::NOT_FOUND)
+        .content_type("text/html; charset=utf-8")
+        .body("404!"))
 }
 
 pub fn handle_500(view_model: &CommonViewModel, error: &str) -> Result<HttpResponse> {
     let html = views::render_500(view_model, error)?;
-    Ok(server::flatten_http(
-        HttpResponse::build(StatusCode::OK)
-            .content_type("text/html; charset=utf-8")
-            .body(html),
-    ))
+    Ok(HttpResponse::build(StatusCode::OK)
+        .content_type("text/html; charset=utf-8")
+        .body(html))
 }
 
 /// Shortcut for a basic 200 response with standard HTML body content.
 pub fn respond_200(body: String) -> Result<HttpResponse> {
-    Ok(server::flatten_http(
-        HttpResponse::build(StatusCode::OK)
-            .content_type("text/html; charset=utf-8")
-            .body(body),
-    ))
+    Ok(HttpResponse::build(StatusCode::OK)
+        .content_type("text/html; charset=utf-8")
+        .body(body))
 }
 
 //
@@ -314,7 +309,8 @@ pub mod directory_podcast_show {
     use time_helpers;
     use web::endpoints;
 
-    use actix_web::{HttpRequest, HttpResponse, StatusCode};
+    use actix_web::http::StatusCode;
+    use actix_web::{HttpRequest, HttpResponse};
     use diesel::prelude::*;
     use futures::future::Future;
     use slog::Logger;
@@ -363,11 +359,11 @@ pub mod directory_podcast_show {
                     &endpoints::build_common(req, "Error"),
                     "Error ingesting podcast",
                 )?),
-                ViewModel::Found(ref view_model) => Ok(server::flatten_http(
-                    HttpResponse::build(StatusCode::PERMANENT_REDIRECT)
+                ViewModel::Found(ref view_model) => {
+                    Ok(HttpResponse::build(StatusCode::PERMANENT_REDIRECT)
                         .header("Location", format!("/podcasts/{}", view_model.id).as_str())
-                        .finish(),
-                )),
+                        .finish())
+                }
                 ViewModel::NotFound => Ok(endpoints::handle_404()?),
             }
         }
@@ -542,7 +538,8 @@ pub mod search_show {
     use web::endpoints;
     use web::views;
 
-    use actix_web::{HttpRequest, HttpResponse, StatusCode};
+    use actix_web::http::StatusCode;
+    use actix_web::{HttpRequest, HttpResponse};
     use diesel::pg::PgConnection;
     use futures::future::Future;
     use slog::Logger;
@@ -590,11 +587,9 @@ pub mod search_show {
             req: &HttpRequest<server::StateImpl>,
         ) -> Result<HttpResponse> {
             match *self {
-                ViewModel::NoQuery => Ok(server::flatten_http(
-                    HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
-                        .header("Location", "/search-home")
-                        .finish(),
-                )),
+                ViewModel::NoQuery => Ok(HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
+                    .header("Location", "/search-home")
+                    .finish()),
                 ViewModel::SearchResults(ref view_model) => {
                     let common = endpoints::build_common(
                         req,

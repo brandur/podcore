@@ -7,7 +7,8 @@ use server;
 
 use actix;
 use actix_web;
-use actix_web::Method;
+use actix_web::HttpResponse;
+use actix_web::http::Method;
 use diesel::pg::PgConnection;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
@@ -47,7 +48,7 @@ impl Server {
         });
 
         let server = actix_web::HttpServer::new(move || {
-            actix_web::Application::with_state(server::StateImpl {
+            actix_web::App::with_state(server::StateImpl {
                 assets_version: assets_version.clone(),
                 log:            log.clone(),
                 sync_addr:      sync_addr.clone(),
@@ -61,15 +62,13 @@ impl Server {
                 .middleware(middleware::request_id::Middleware)
                 .middleware(middleware::request_response_logger::Middleware)
                 .middleware(middleware::web::authenticator::Middleware)
-                .resource("/", |r| {
-                    r.method(Method::GET).f(|_req| actix_web::httpcodes::HTTPOk)
-                })
+                .resource("/", |r| r.method(Method::GET).f(|_req| HttpResponse::Ok()))
                 .resource("/directory-podcasts/{id}", |r| {
                     r.method(Method::GET)
                         .a(endpoints::directory_podcast_show::handler)
                 })
                 .resource("/health", |r| {
-                    r.method(Method::GET).f(|_req| actix_web::httpcodes::HTTPOk)
+                    r.method(Method::GET).f(|_req| HttpResponse::Ok())
                 })
                 .resource("/search", |r| {
                     r.method(Method::GET).a(endpoints::search_show::handler)
@@ -87,7 +86,7 @@ impl Server {
                     format!("/assets/{}/", assets_version.as_str()).as_str(),
                     actix_web::fs::StaticFiles::new("./assets/", false),
                 )
-                .default_resource(|r| r.h(actix_web::helpers::NormalizePath::default()))
+                .default_resource(|r| r.h(actix_web::http::NormalizePath::default()))
         });
 
         let _addr = server.bind(host)?.start();
