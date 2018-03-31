@@ -39,7 +39,7 @@ pub mod account {
             conn,
             email: args.email,
             ephemeral: args.ephemeral,
-            last_ip: "1.2.3.4".to_owned(),
+            last_ip: "1.2.3.4",
         }.run(log)
             .unwrap()
             .account

@@ -121,6 +121,7 @@ pub mod web {
     pub mod authenticator {
         use errors::*;
         use mediators::account_authenticator;
+        use mediators::account_creator;
         use middleware::log_initializer;
         use model;
         use server;
@@ -230,7 +231,18 @@ pub mod web {
                     }.run(log)?
                         .account
                 }
-                None => None,
+                None => {
+                    // TODO: Don't bother for Google bots, etc.
+                    Some(
+                        account_creator::Mediator {
+                            conn:      conn,
+                            email:     None,
+                            ephemeral: true,
+                            last_ip:   params.last_ip.as_str(),
+                        }.run(log)?
+                            .account,
+                    )
+                }
             };
             Ok(ViewModel { account })
         }
