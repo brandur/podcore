@@ -19,7 +19,10 @@ pub trait Params: Sized {
     /// Builds a `Params` implementation by decoding an HTTP request. This may
     /// result in an error if appropriate parameters were not found or not
     /// valid.
-    fn build(log: &Logger, req: &HttpRequest<StateImpl>) -> Result<Self>;
+    ///
+    /// `HttpRequest` is mutable because we're allowed to reach into a session
+    /// to build parameters.
+    fn build(log: &Logger, req: &mut HttpRequest<StateImpl>) -> Result<Self>;
 }
 
 pub trait State {

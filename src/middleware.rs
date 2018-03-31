@@ -119,13 +119,18 @@ pub mod request_response_logger {
 /// Holds web-specific (as opposed to for the API) middleware.
 pub mod web {
     pub mod authenticator {
+        use errors::*;
+        use mediators::account_authenticator;
         use middleware::log_initializer;
         use model;
         use server;
+        use time_helpers;
 
         use actix_web;
         use actix_web::middleware::{Response, Started};
         use actix_web::{HttpRequest, HttpResponse};
+        use diesel::pg::PgConnection;
+        use slog::Logger;
 
         pub struct Middleware;
 
@@ -140,6 +145,7 @@ pub mod web {
                 Ok(Started::Done)
             }
 
+            // No-op
             fn response(
                 &self,
                 _req: &mut HttpRequest<S>,
@@ -147,6 +153,86 @@ pub mod web {
             ) -> actix_web::Result<Response> {
                 Ok(Response::Done(resp))
             }
+        }
+
+        //
+        // Params
+        //
+
+        struct Params {
+            last_ip: String,
+            secret:  Option<String>,
+        }
+
+        impl server::Params for Params {
+            fn build(_log: &Logger, req: &mut HttpRequest<server::StateImpl>) -> Result<Self> {
+                use actix_web::middleware::RequestSession;
+                Ok(Params {
+                    last_ip: req.connection_info().host().to_owned(),
+                    secret:  req.session()
+                        .get::<String>(COOKIE_KEY_SECRET)
+                        .map_err(|_| Error::from("Error reading from session"))?,
+                })
+            }
+        }
+
+        //
+        // ViewModel
+        //
+
+        struct ViewModel {
+            account: Option<model::Account>,
+        }
+
+        //
+        // Sync handler
+        //
+
+        // TODO: Maybe combine this with the `handler!()` macro available in
+        // `endpoints`? It's the same right now, so try not to change it.
+        impl ::actix::prelude::Handler<server::Message<Params>> for server::SyncExecutor {
+            type Result = Result<ViewModel>;
+
+            fn handle(
+                &mut self,
+                message: server::Message<Params>,
+                _: &mut Self::Context,
+            ) -> Self::Result {
+                let conn = self.pool.get()?;
+                let log = message.log.clone();
+                time_helpers::log_timed(&log.new(o!("step" => "handle_message")), |log| {
+                    handle_inner(log, &*conn, &message.params)
+                })
+            }
+        }
+
+        impl ::actix::prelude::Message for server::Message<Params> {
+            type Result = Result<ViewModel>;
+        }
+
+        //
+        // Private constants
+        //
+
+        const COOKIE_KEY_SECRET: &str = "secret";
+
+        //
+        // Private functions
+        //
+
+        fn handle_inner(log: &Logger, conn: &PgConnection, params: &Params) -> Result<ViewModel> {
+            let account = match params.secret {
+                Some(ref secret) => {
+                    account_authenticator::Mediator {
+                        conn:    conn,
+                        last_ip: params.last_ip.as_str(),
+                        secret:  secret.as_str(),
+                    }.run(log)?
+                        .account
+                }
+                None => None,
+            };
+            Ok(ViewModel { account })
         }
     }
 }

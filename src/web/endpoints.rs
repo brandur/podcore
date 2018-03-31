@@ -50,7 +50,7 @@ macro_rules! handler {
 
             let params_res = time_helpers::log_timed(
                 &log.new(o!("step" => "build_params")),
-                |log| Params::build(log, &req),
+                |log| Params::build(log, &mut req),
             );
             let params = match params_res {
                 Ok(params) => params,
@@ -231,7 +231,7 @@ pub mod episode_show {
     }
 
     impl server::Params for Params {
-        fn build(_log: &Logger, req: &HttpRequest<server::StateImpl>) -> Result<Self> {
+        fn build(_log: &Logger, req: &mut HttpRequest<server::StateImpl>) -> Result<Self> {
             Ok(Self {
                 id:         req.match_info()
                     .get("id")
@@ -327,7 +327,7 @@ pub mod directory_podcast_show {
     }
 
     impl server::Params for Params {
-        fn build(_log: &Logger, req: &HttpRequest<server::StateImpl>) -> Result<Self> {
+        fn build(_log: &Logger, req: &mut HttpRequest<server::StateImpl>) -> Result<Self> {
             Ok(Self {
                 id: req.match_info()
                     .get("id")
@@ -426,7 +426,7 @@ pub mod podcast_show {
     }
 
     impl server::Params for Params {
-        fn build(_log: &Logger, req: &HttpRequest<server::StateImpl>) -> Result<Self> {
+        fn build(_log: &Logger, req: &mut HttpRequest<server::StateImpl>) -> Result<Self> {
             Ok(Self {
                 id: req.match_info()
                     .get("id")
@@ -555,7 +555,7 @@ pub mod search_show {
         query: Option<String>,
     }
     impl server::Params for Params {
-        fn build(_log: &Logger, req: &HttpRequest<server::StateImpl>) -> Result<Self> {
+        fn build(_log: &Logger, req: &mut HttpRequest<server::StateImpl>) -> Result<Self> {
             Ok(Self {
                 query: req.query().get("q").map(|q| q.to_owned()),
             })
