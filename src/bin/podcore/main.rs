@@ -413,7 +413,6 @@ fn log(options: &GlobalOptions) -> Logger {
 }
 
 fn parse_global_options(matches: &ArgMatches) -> GlobalOptions {
-    println!("matches = {:?}", matches);
     GlobalOptions {
         // Go async if we've been explicitly told to do so. Otherwise, detect whether we should go
         // async based on whether stdout is a terminal. Sync is okay for terminals, but quite bad
