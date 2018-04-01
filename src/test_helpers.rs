@@ -1,7 +1,9 @@
 use error_helpers;
 use errors::*;
 use schema;
+use server;
 
+use actix;
 use actix_web;
 use bytes::Bytes;
 use diesel::pg::PgConnection;
@@ -85,6 +87,41 @@ impl CommonTestBootstrap {
         env::remove_var("SENTRY_URL");
 
         CommonTestBootstrap {}
+    }
+}
+
+// A bootstrap specifically for use with HTTP API/web integration tests.
+// Encloses a `TestServerBuilder` which produces a lot of flexibility in how to
+// construct the app that's going to be tested.
+pub struct IntegrationTestBootstrap {
+    _common:            CommonTestBootstrap,
+    _pool:              Pool<ConnectionManager<PgConnection>>,
+    pub server_builder: actix_web::test::TestServerBuilder<server::StateImpl>,
+}
+
+impl IntegrationTestBootstrap {
+    pub fn new() -> IntegrationTestBootstrap {
+        let pool = pool();
+        let pool_clone = pool.clone();
+
+        let server_builder = actix_web::test::TestServer::build_with_state(move || {
+            // This is fucking disgusting. Ladies and gentlemen, I give you Rust.
+            let pool_clone = pool_clone.clone();
+
+            server::StateImpl {
+                assets_version: "".to_owned(),
+                log:            log(),
+                sync_addr:      actix::SyncArbiter::start(1, move || server::SyncExecutor {
+                    pool: pool_clone.clone(),
+                }),
+            }
+        });
+
+        IntegrationTestBootstrap {
+            _common:        CommonTestBootstrap::new(),
+            _pool:          pool,
+            server_builder: server_builder,
+        }
     }
 }
 

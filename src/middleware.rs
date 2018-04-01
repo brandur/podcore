@@ -411,12 +411,29 @@ pub mod web {
 
         #[cfg(test)]
         mod tests {
+            use middleware;
             use middleware::web::authenticator::*;
             use test_data;
             use test_helpers;
+            use test_helpers::IntegrationTestBootstrap;
 
+            use actix_web::http::Method;
             use r2d2::PooledConnection;
             use r2d2_diesel::ConnectionManager;
+
+            #[test]
+            fn test_middleware_web_authenticator_integration() {
+                let bootstrap = IntegrationTestBootstrap::new();
+                let mut server = bootstrap.server_builder.start(|app| {
+                    app.middleware(middleware::log_initializer::Middleware)
+                        .middleware(Middleware)
+                        .handler(|_req| HttpResponse::Ok())
+                });
+
+                let req = server.client(Method::GET, "/").finish().unwrap();
+                let resp = server.execute(req.send()).unwrap();
+                assert_eq!(StatusCode::OK, resp.status());
+            }
 
             #[test]
             fn test_middleware_web_authenticator_bot() {

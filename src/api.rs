@@ -279,19 +279,14 @@ fn render_user_error(code: StatusCode, message: String) -> Result<HttpResponse> 
 #[cfg(test)]
 mod tests {
     use api::*;
-    use server;
     use test_helpers;
+    use test_helpers::IntegrationTestBootstrap;
 
-    use actix;
-    use actix_web;
     use actix_web::http::Method;
-    use diesel::pg::PgConnection;
-    use r2d2::Pool;
-    use r2d2_diesel::ConnectionManager;
 
     #[test]
     fn test_handler_graphql_get() {
-        let bootstrap = TestBootstrap::new();
+        let bootstrap = IntegrationTestBootstrap::new();
         let mut server = bootstrap.server_builder.start(|app| {
             app.middleware(middleware::log_initializer::Middleware)
                 .handler(handler_graphql_get)
@@ -314,7 +309,7 @@ mod tests {
 
     #[test]
     fn test_handler_graphql_get_no_query() {
-        let bootstrap = TestBootstrap::new();
+        let bootstrap = IntegrationTestBootstrap::new();
         let mut server = bootstrap.server_builder.start(|app| {
             app.middleware(middleware::log_initializer::Middleware)
                 .handler(handler_graphql_get)
@@ -333,7 +328,7 @@ mod tests {
 
     #[test]
     fn test_handler_graphql_post() {
-        let bootstrap = TestBootstrap::new();
+        let bootstrap = IntegrationTestBootstrap::new();
         let mut server = bootstrap.server_builder.start(|app| {
             app.middleware(middleware::log_initializer::Middleware)
                 .handler(handler_graphql_post)
@@ -351,7 +346,7 @@ mod tests {
 
     #[test]
     fn test_handler_graphql_post_no_query() {
-        let bootstrap = TestBootstrap::new();
+        let bootstrap = IntegrationTestBootstrap::new();
         let mut server = bootstrap.server_builder.start(|app| {
             app.middleware(middleware::log_initializer::Middleware)
                 .handler(handler_graphql_post)
@@ -371,7 +366,7 @@ mod tests {
 
     #[test]
     fn test_handler_graphiql_get() {
-        let bootstrap = TestBootstrap::new();
+        let bootstrap = IntegrationTestBootstrap::new();
         let mut server = bootstrap
             .server_builder
             .start(|app| app.handler(handler_graphiql_get));
@@ -379,41 +374,5 @@ mod tests {
         let req = server.get().finish().unwrap();
         let resp = server.execute(req.send()).unwrap();
         assert_eq!(StatusCode::OK, resp.status());
-    }
-
-    //
-    // Private types/functions
-    //
-
-    struct TestBootstrap {
-        _common:        test_helpers::CommonTestBootstrap,
-        _pool:          Pool<ConnectionManager<PgConnection>>,
-        server_builder: actix_web::test::TestServerBuilder<server::StateImpl>,
-    }
-
-    impl TestBootstrap {
-        fn new() -> TestBootstrap {
-            let pool = test_helpers::pool();
-            let pool_clone = pool.clone();
-
-            let server_builder = actix_web::test::TestServer::build_with_state(move || {
-                // This is fucking disgusting. Ladies and gentlemen, I give you Rust.
-                let pool_clone = pool_clone.clone();
-
-                server::StateImpl {
-                    assets_version: "".to_owned(),
-                    log:            test_helpers::log(),
-                    sync_addr:      actix::SyncArbiter::start(1, move || server::SyncExecutor {
-                        pool: pool_clone.clone(),
-                    }),
-                }
-            });
-
-            TestBootstrap {
-                _common:        test_helpers::CommonTestBootstrap::new(),
-                _pool:          pool,
-                server_builder: server_builder,
-            }
-        }
     }
 }
