@@ -138,13 +138,15 @@ pub mod web {
         pub struct Middleware;
 
         struct Extension {
-            account: model::Account,
+            account: Option<model::Account>,
         }
 
         impl<S: server::State> actix_web::middleware::Middleware<S> for Middleware {
             fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
+                use futures::Future;
+
                 let log = log_initializer::log(req);
-                info!(log, "Authenticated");
+                debug!(log, "Authenticating");
 
                 let params_res = time_helpers::log_timed(
                     &log.new(o!("step" => "build_params")),
@@ -163,14 +165,26 @@ pub mod web {
                     }
                 };
 
-                let _message = server::Message::new(&log, params);
+                let message = server::Message::new(&log, params);
 
-                //req.state().sync_addr().send(message)
+                let fut = req.state()
+                    .sync_addr()
+                    .send(message)
+                    .map_err(|_e| Error::from("Error from SyncExecutor"))
+                    .flatten()
+                    .and_then(move |view_model: ViewModel| {
+                        req.extensions().insert(Extension {
+                            account: view_model.account,
+                        });
+                        (None as Option<HttpResponse>)
+                    });
 
-                Ok(Started::Done)
+                Ok(Started::Future(Box::new(fut)))
             }
 
             // No-op
+            //
+            // TODO: See if we can still compile without this?
             fn response(
                 &self,
                 _req: &mut HttpRequest<S>,
