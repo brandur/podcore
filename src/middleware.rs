@@ -133,6 +133,7 @@ pub mod web {
         use actix_web::middleware::{Response, Started};
         use actix_web::{HttpRequest, HttpResponse};
         use diesel::pg::PgConnection;
+        use futures::future;
         use slog::Logger;
 
         pub struct Middleware;
@@ -141,7 +142,7 @@ pub mod web {
             account: Option<model::Account>,
         }
 
-        impl<S: server::State> actix_web::middleware::Middleware<S> for Middleware {
+        impl<S: 'static + server::State> actix_web::middleware::Middleware<S> for Middleware {
             fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
                 use futures::Future;
 
@@ -166,19 +167,25 @@ pub mod web {
                 };
 
                 let message = server::Message::new(&log, params);
+                let mut req = req.clone();
 
                 let fut = req.state()
                     .sync_addr()
                     .send(message)
                     .map_err(|_e| Error::from("Error from SyncExecutor"))
                     .flatten()
-                    .and_then(move |view_model: ViewModel| {
-                        req.extensions().insert(Extension {
-                            account: view_model.account,
-                        });
-                        (None as Option<HttpResponse>)
+                    .then(move |res| match res {
+                        Ok(view_model) => {
+                            req.extensions().insert(Extension {
+                                account: view_model.account,
+                            });
+                            future::ok(None)
+                        }
+                        Err(e) => {
+                            error!(log, "Middleware error: {}", e);
+                            future::ok(None)
+                        }
                     });
-
                 Ok(Started::Future(Box::new(fut)))
             }
 
