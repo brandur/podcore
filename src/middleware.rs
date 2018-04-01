@@ -173,11 +173,7 @@ pub mod web {
                                     req.extensions().insert(Extension {
                                         account: Some(account),
                                     });
-                                    req.session()
-                                        .set(COOKIE_KEY_SECRET, key.secret)
-                                        .unwrap_or_else(|e| {
-                                            error!(log, "Error setting session: {}", e)
-                                        });
+                                    set_session_secret(&log, &mut req, &key.secret);
                                 }
                             };
                             future::ok(None)
@@ -355,6 +351,18 @@ pub mod web {
             }
 
             return false;
+        }
+
+        /// Sets a secret to a client's session/cookie. Logs an error if there
+        /// was a problem doing so.
+        fn set_session_secret<S: server::State>(
+            log: &Logger,
+            req: &mut HttpRequest<S>,
+            secret: &str,
+        ) {
+            req.session()
+                .set(COOKIE_KEY_SECRET, secret)
+                .unwrap_or_else(|e| error!(log, "Error setting session: {}", e));
         }
     }
 }
