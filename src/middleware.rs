@@ -2,8 +2,8 @@ pub mod log_initializer {
     use server;
 
     use actix_web;
-    use actix_web::middleware::{Response, Started};
-    use actix_web::{HttpRequest, HttpResponse};
+    use actix_web::HttpRequest;
+    use actix_web::middleware::Started;
     use slog::Logger;
 
     pub struct Middleware;
@@ -15,14 +15,6 @@ pub mod log_initializer {
             let log = req.state().log().clone();
             req.extensions().insert(Extension(log));
             Ok(Started::Done)
-        }
-
-        fn response(
-            &self,
-            _req: &mut HttpRequest<S>,
-            resp: HttpResponse,
-        ) -> actix_web::Result<Response> {
-            Ok(Response::Done(resp))
         }
     }
 
@@ -38,8 +30,8 @@ pub mod request_id {
     use server;
 
     use actix_web;
-    use actix_web::middleware::{Response, Started};
-    use actix_web::{HttpRequest, HttpResponse};
+    use actix_web::HttpRequest;
+    use actix_web::middleware::Started;
 
     use uuid::Uuid;
 
@@ -60,14 +52,6 @@ pub mod request_id {
             )));
 
             Ok(Started::Done)
-        }
-
-        fn response(
-            &self,
-            _req: &mut HttpRequest<S>,
-            resp: HttpResponse,
-        ) -> actix_web::Result<Response> {
-            Ok(Response::Done(resp))
         }
     }
 }
@@ -130,7 +114,7 @@ pub mod web {
         use actix_web;
         use actix_web::http::StatusCode;
         use actix_web::middleware::RequestSession;
-        use actix_web::middleware::{Response, Started};
+        use actix_web::middleware::Started;
         use actix_web::{HttpRequest, HttpResponse};
         use diesel::pg::PgConnection;
         use futures::future;
@@ -204,17 +188,6 @@ pub mod web {
                         }
                     });
                 Ok(Started::Future(Box::new(fut)))
-            }
-
-            // No-op
-            //
-            // TODO: See if we can still compile without this?
-            fn response(
-                &self,
-                _req: &mut HttpRequest<S>,
-                resp: HttpResponse,
-            ) -> actix_web::Result<Response> {
-                Ok(Response::Done(resp))
             }
         }
 
