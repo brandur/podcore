@@ -120,8 +120,7 @@ pub mod request_response_logger {
 pub mod web {
     pub mod authenticator {
         use errors::*;
-        use mediators::account_authenticator;
-        use mediators::account_creator;
+        use mediators;
         use middleware::log_initializer;
         use model;
         use server;
@@ -130,6 +129,7 @@ pub mod web {
 
         use actix_web;
         use actix_web::http::StatusCode;
+        use actix_web::middleware::RequestSession;
         use actix_web::middleware::{Response, Started};
         use actix_web::{HttpRequest, HttpResponse};
         use diesel::pg::PgConnection;
@@ -176,9 +176,25 @@ pub mod web {
                     .flatten()
                     .then(move |res| match res {
                         Ok(view_model) => {
-                            req.extensions().insert(Extension {
-                                account: view_model.account,
-                            });
+                            match view_model {
+                                ViewModel::Bot => {
+                                    req.extensions().insert(Extension { account: None });
+                                }
+                                ViewModel::ExistingAccount(account) => {
+                                    req.extensions().insert(Extension {
+                                        account: Some(account),
+                                    });
+                                }
+                                ViewModel::NewAccount(account, key) => {
+                                    req.extensions().insert(Extension {
+                                        account: Some(account),
+                                    });
+                                    match req.session().set(COOKIE_KEY_SECRET, key.secret) {
+                                        Err(e) => error!(log, "Error setting session: {}", e),
+                                        Ok(_) => (),
+                                    };
+                                }
+                            };
                             future::ok(None)
                         }
                         Err(e) => {
@@ -212,7 +228,6 @@ pub mod web {
 
         impl server::Params for Params {
             fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
-                use actix_web::middleware::RequestSession;
                 Ok(Params {
                     last_ip: req.connection_info().host().to_owned(),
                     secret:  req.session()
@@ -226,8 +241,10 @@ pub mod web {
         // ViewModel
         //
 
-        struct ViewModel {
-            account: Option<model::Account>,
+        enum ViewModel {
+            Bot,
+            ExistingAccount(model::Account),
+            NewAccount(model::Account, model::Key),
         }
 
         //
@@ -267,29 +284,36 @@ pub mod web {
         //
 
         fn handle_inner(log: &Logger, conn: &PgConnection, params: &Params) -> Result<ViewModel> {
-            let account = match params.secret {
-                Some(ref secret) => {
-                    account_authenticator::Mediator {
-                        conn:    conn,
-                        last_ip: params.last_ip.as_str(),
-                        secret:  secret.as_str(),
-                    }.run(log)?
-                        .account
+            if params.secret.is_some() {
+                let account = mediators::account_authenticator::Mediator {
+                    conn:    conn,
+                    last_ip: params.last_ip.as_str(),
+                    secret:  params.secret.as_ref().unwrap().as_str(),
+                }.run(log)?
+                    .account;
+
+                // Only has a value if the authenticator passed successfully. We fall through in
+                // the case of an invalid secret being presented.
+                if account.is_some() {
+                    return Ok(ViewModel::ExistingAccount(account.unwrap()));
                 }
-                None => {
-                    // TODO: Don't bother for Google bots, etc.
-                    Some(
-                        account_creator::Mediator {
-                            conn:      conn,
-                            email:     None,
-                            ephemeral: true,
-                            last_ip:   params.last_ip.as_str(),
-                        }.run(log)?
-                            .account,
-                    )
-                }
-            };
-            Ok(ViewModel { account })
+            }
+
+            let account = mediators::account_creator::Mediator {
+                conn:      conn,
+                email:     None,
+                ephemeral: true,
+                last_ip:   params.last_ip.as_str(),
+            }.run(log)?
+                .account;
+            let key = mediators::key_creator::Mediator {
+                account: &account,
+                conn,
+                expire_at: None,
+            }.run(log)?
+                .key;
+
+            return Ok(ViewModel::NewAccount(account, key));
         }
     }
 }
