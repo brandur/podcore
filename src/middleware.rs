@@ -189,10 +189,11 @@ pub mod web {
                                     req.extensions().insert(Extension {
                                         account: Some(account),
                                     });
-                                    match req.session().set(COOKIE_KEY_SECRET, key.secret) {
-                                        Err(e) => error!(log, "Error setting session: {}", e),
-                                        Ok(_) => (),
-                                    };
+                                    req.session()
+                                        .set(COOKIE_KEY_SECRET, key.secret)
+                                        .unwrap_or_else(|e| {
+                                            error!(log, "Error setting session: {}", e)
+                                        });
                                 }
                             };
                             future::ok(None)
