@@ -120,6 +120,10 @@ pub mod web {
         use futures::future;
         use slog::Logger;
 
+        // Gives us a `SyncExecutor` handler that trades `Params` for `ViewModel`. Runs
+        // `handle_inner`.
+        message_handler!();
+
         pub struct Middleware;
 
         struct Extension {
@@ -249,32 +253,6 @@ pub mod web {
             Bot,
             ExistingAccount(model::Account),
             NewAccount(model::Account, model::Key),
-        }
-
-        //
-        // Sync handler
-        //
-
-        // TODO: Maybe combine this with the `handler!()` macro available in
-        // `endpoints`? It's the same right now, so try not to change it.
-        impl ::actix::prelude::Handler<server::Message<Params>> for server::SyncExecutor {
-            type Result = Result<ViewModel>;
-
-            fn handle(
-                &mut self,
-                message: server::Message<Params>,
-                _: &mut Self::Context,
-            ) -> Self::Result {
-                let conn = self.pool.get()?;
-                let log = message.log.clone();
-                time_helpers::log_timed(&log.new(o!("step" => "handle_message")), |log| {
-                    handle_inner(log, &*conn, &message.params)
-                })
-            }
-        }
-
-        impl ::actix::prelude::Message for server::Message<Params> {
-            type Result = Result<ViewModel>;
         }
 
         //

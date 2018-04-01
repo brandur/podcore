@@ -8,6 +8,39 @@ use r2d2_diesel::ConnectionManager;
 use slog::Logger;
 
 //
+// Macros
+//
+
+/// Macro that easily creates the scaffolding necessary for a
+/// `server::SyncExecutor` message handler from within an endpoint. It puts the
+/// necessary type definitions in place and creates a wrapper function with
+/// access to a connection and log.
+#[macro_export]
+macro_rules! message_handler {
+    () => {
+        impl ::actix::prelude::Handler<server::Message<Params>> for server::SyncExecutor {
+            type Result = Result<ViewModel>;
+
+            fn handle(
+                &mut self,
+                message: server::Message<Params>,
+                _: &mut Self::Context,
+            ) -> Self::Result {
+                let conn = self.pool.get()?;
+                let log = message.log.clone();
+                time_helpers::log_timed(&log.new(o!("step" => "handle_message")), |log| {
+                    handle_inner(log, &*conn, &message.params)
+                })
+            }
+        }
+
+        impl ::actix::prelude::Message for server::Message<Params> {
+            type Result = Result<ViewModel>;
+        }
+    };
+}
+
+//
 // Traits
 //
 

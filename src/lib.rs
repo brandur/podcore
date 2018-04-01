@@ -68,14 +68,18 @@ mod macros;
 
 pub mod http_requester;
 pub mod mediators;
-mod middleware;
 mod model;
 
 // Generated file: skip rustfmt
 #[cfg_attr(rustfmt, rustfmt_skip)]
 mod schema;
 
+#[macro_use]
 mod server;
+
+// We try to keep alphabetical order, but `middleware` must appear after
+// `server` so that it can resolve its exported macros.
+mod middleware;
 
 #[cfg(test)]
 mod test_data;
