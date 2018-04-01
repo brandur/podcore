@@ -23,6 +23,32 @@ pub mod log_initializer {
     pub fn log<S: server::State>(req: &mut HttpRequest<S>) -> Logger {
         req.extensions().get::<Extension>().unwrap().0.clone()
     }
+
+    //
+    // Tests
+    //
+
+    #[cfg(test)]
+    mod tests {
+        use middleware::log_initializer::*;
+        use test_helpers::IntegrationTestBootstrap;
+
+        use actix_web::HttpResponse;
+        use actix_web::http::{Method, StatusCode};
+
+        #[test]
+        fn test_middleware_log_initializer_integration() {
+            let bootstrap = IntegrationTestBootstrap::new();
+            let mut server = bootstrap.server_builder.start(|app| {
+                app.middleware(Middleware)
+                    .handler(|_req| HttpResponse::Ok())
+            });
+
+            let req = server.client(Method::GET, "/").finish().unwrap();
+            let resp = server.execute(req.send()).unwrap();
+            assert_eq!(StatusCode::OK, resp.status());
+        }
+    }
 }
 
 pub mod request_id {
@@ -52,6 +78,34 @@ pub mod request_id {
             )));
 
             Ok(Started::Done)
+        }
+    }
+
+    //
+    // Tests
+    //
+
+    #[cfg(test)]
+    mod tests {
+        use middleware;
+        use middleware::request_id::*;
+        use test_helpers::IntegrationTestBootstrap;
+
+        use actix_web::HttpResponse;
+        use actix_web::http::{Method, StatusCode};
+
+        #[test]
+        fn test_middleware_request_id_integration() {
+            let bootstrap = IntegrationTestBootstrap::new();
+            let mut server = bootstrap.server_builder.start(|app| {
+                app.middleware(middleware::log_initializer::Middleware)
+                    .middleware(Middleware)
+                    .handler(|_req| HttpResponse::Ok())
+            });
+
+            let req = server.client(Method::GET, "/").finish().unwrap();
+            let resp = server.execute(req.send()).unwrap();
+            assert_eq!(StatusCode::OK, resp.status());
         }
     }
 }
@@ -96,6 +150,34 @@ pub mod request_response_logger {
                     "status"  => resp.status().as_u16(),
                 );
             Ok(Response::Done(resp))
+        }
+    }
+
+    //
+    // Tests
+    //
+
+    #[cfg(test)]
+    mod tests {
+        use middleware;
+        use middleware::request_response_logger::*;
+        use test_helpers::IntegrationTestBootstrap;
+
+        use actix_web::HttpResponse;
+        use actix_web::http::{Method, StatusCode};
+
+        #[test]
+        fn test_middleware_request_response_logger_integration() {
+            let bootstrap = IntegrationTestBootstrap::new();
+            let mut server = bootstrap.server_builder.start(|app| {
+                app.middleware(middleware::log_initializer::Middleware)
+                    .middleware(Middleware)
+                    .handler(|_req| HttpResponse::Ok())
+            });
+
+            let req = server.client(Method::GET, "/").finish().unwrap();
+            let resp = server.execute(req.send()).unwrap();
+            assert_eq!(StatusCode::OK, resp.status());
         }
     }
 }
