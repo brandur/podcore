@@ -192,6 +192,26 @@ pub mod web {
         }
 
         //
+        // Public functions
+        //
+
+        /// Shorthand for getting the active authenticated account.
+        ///
+        /// An account is usually available because even if a user failed to
+        /// authenticate, we'll create an account for them and store it to
+        /// their session so that they can use the app in an unauthenticated
+        /// way. However, `None` must still be handled because we don't
+        /// bother creating an account if the `User-Agent` looks like a
+        /// bot.
+        pub fn account<S: server::State>(req: &mut HttpRequest<S>) -> Option<&model::Account> {
+            req.extensions()
+                .get::<Extension>()
+                .unwrap()
+                .account
+                .as_ref()
+        }
+
+        //
         // Params
         //
 
