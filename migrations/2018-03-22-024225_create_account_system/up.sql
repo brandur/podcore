@@ -21,7 +21,7 @@ CREATE TABLE account (
 );
 
 CREATE INDEX account_email
-    ON account (email);
+    ON account (email) WHERE email IS NOT NULL;
 
 -- Used for cleaning ephemeral accounts.
 CREATE INDEX account_last_seen_at
