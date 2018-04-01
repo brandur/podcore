@@ -370,6 +370,10 @@ pub mod web {
             req: &mut HttpRequest<S>,
             secret: &str,
         ) {
+            // Don't actually log secrets. We rely on this being a `debug!` statement and
+            // being compiled out on any release build.
+            debug!(log, "Setting session secret"; "secret" => secret);
+
             req.session()
                 .set(COOKIE_KEY_SECRET, secret)
                 .unwrap_or_else(|e| error!(log, "Error setting session: {}", e));
