@@ -249,6 +249,7 @@ pub mod web {
         // ViewModel
         //
 
+        #[derive(Debug)]
         enum ViewModel {
             Bot,
             ExistingAccount(model::Account),
@@ -402,6 +403,119 @@ pub mod web {
             req.session()
                 .set(COOKIE_KEY_SECRET, secret)
                 .unwrap_or_else(|e| error!(log, "Error setting session: {}", e));
+        }
+
+        //
+        // Tests
+        //
+
+        #[cfg(test)]
+        mod tests {
+            use middleware::web::authenticator::*;
+            use test_data;
+            use test_helpers;
+
+            use r2d2::PooledConnection;
+            use r2d2_diesel::ConnectionManager;
+
+            #[test]
+            fn test_middleware_web_authenticator_bot() {
+                let bootstrap = TestBootstrap::new();
+
+                let params = Params {
+                    last_ip:    "1.2.3.4".to_owned(),
+                    secret:     None,
+                    user_agent: Some("Googlebot/2.1; Some Other Stuff".to_owned()),
+                };
+
+                let view_model = handle_inner(&bootstrap.log, &bootstrap.conn, &params).unwrap();
+                match view_model {
+                    ViewModel::Bot => (),
+                    _ => panic!("Unexpected view model: {:?}", view_model),
+                }
+            }
+
+            #[test]
+            fn test_middleware_web_authenticator_no_user_agent() {
+                let bootstrap = TestBootstrap::new();
+
+                let params = Params {
+                    last_ip:    "1.2.3.4".to_owned(),
+                    secret:     None,
+                    user_agent: None,
+                };
+
+                let view_model = handle_inner(&bootstrap.log, &bootstrap.conn, &params).unwrap();
+                match view_model {
+                    ViewModel::Bot => (),
+                    _ => panic!("Unexpected view model: {:?}", view_model),
+                }
+            }
+
+            #[test]
+            fn test_middleware_web_authenticator_existing_account() {
+                let bootstrap = TestBootstrap::new();
+
+                let account = test_data::account::insert(&bootstrap.log, &bootstrap.conn);
+                let key = test_data::key::insert_args(
+                    &bootstrap.log,
+                    &bootstrap.conn,
+                    test_data::key::Args {
+                        account:   Some(&account),
+                        expire_at: None,
+                    },
+                );
+
+                let params = Params {
+                    last_ip:    "1.2.3.4".to_owned(),
+                    secret:     Some(key.secret.clone()),
+                    user_agent: Some("Chrome".to_owned()),
+                };
+
+                let view_model = handle_inner(&bootstrap.log, &bootstrap.conn, &params).unwrap();
+                match view_model {
+                    ViewModel::ExistingAccount(actual_account) => {
+                        assert_eq!(account.id, actual_account.id);
+                    }
+                    _ => panic!("Unexpected view model: {:?}", view_model),
+                }
+            }
+
+            #[test]
+            fn test_middleware_web_authenticator_new_account() {
+                let bootstrap = TestBootstrap::new();
+
+                let params = Params {
+                    last_ip:    "1.2.3.4".to_owned(),
+                    secret:     None,
+                    user_agent: Some("Chrome".to_owned()),
+                };
+
+                let view_model = handle_inner(&bootstrap.log, &bootstrap.conn, &params).unwrap();
+                match view_model {
+                    ViewModel::NewAccount(account, key) => {
+                        assert_ne!(0, account.id);
+                        assert_ne!(0, key.id);
+                    }
+                    _ => panic!("Unexpected view model: {:?}", view_model),
+                }
+            }
+
+            struct TestBootstrap {
+                _common: test_helpers::CommonTestBootstrap,
+                conn:    PooledConnection<ConnectionManager<PgConnection>>,
+                log:     Logger,
+            }
+
+            impl TestBootstrap {
+                fn new() -> TestBootstrap {
+                    TestBootstrap {
+                        _common: test_helpers::CommonTestBootstrap::new(),
+                        conn:    test_helpers::connection(),
+                        log:     test_helpers::log(),
+                    }
+                }
+            }
         }
     }
 }
