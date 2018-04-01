@@ -294,7 +294,7 @@ pub mod web {
         // we don't end up creating new user accounts for them as they crawl
         // endlessly. For now, we just examine user agents and if they contain
         // any of these strings, we skip account creation.
-        const BOT_USER_AGENTS: &'static [&str] = &[
+        const BOT_USER_AGENTS: &[&str] = &[
             "APIs-Google",
             "AdsBot-Google",
             "Googlebot/2.1",
