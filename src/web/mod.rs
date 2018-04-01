@@ -20,6 +20,11 @@ pub struct Server {
     // A secret to secure cookies sent to clients. Must be at least length 32.
     pub cookie_secret: String,
 
+    // Whether the cookie should be marked as secure. Remember that secure cookies are only
+    // returned over encrypted connections, so this will cause problems if set in development and
+    // the server is being used over http://.
+    pub cookie_secure: bool,
+
     pub log:                Logger,
     pub num_sync_executors: u32,
     pub pool:               Pool<ConnectionManager<PgConnection>>,
@@ -32,6 +37,7 @@ impl Server {
         // below.
         let assets_version = self.assets_version.clone();
         let cookie_secret = self.cookie_secret.clone();
+        let cookie_secure = self.cookie_secure;
         let log = self.log.clone();
         let pool = self.pool.clone();
 
@@ -55,7 +61,7 @@ impl Server {
             }).middleware(actix_web::middleware::SessionStorage::new(
                 actix_web::middleware::CookieSessionBackend::build(cookie_secret.as_bytes())
                     .name("podcore-session")
-                    .secure(true)
+                    .secure(cookie_secure)
                     .finish(),
             ))
                 .middleware(middleware::log_initializer::Middleware)

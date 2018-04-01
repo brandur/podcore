@@ -340,9 +340,15 @@ fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
 
     let assets_version = env::var("ASSETS_VERSION").unwrap_or_else(|_| "1".to_owned());
     let cookie_secret = env::var("COOKIE_SECRET").unwrap_or_else(|_| secure_random_string(32));
+    let cookie_secure = env::var("COOKIE_SECURE")
+        .map(|s| s.parse::<bool>().unwrap())
+        .unwrap_or(true);
 
     if cookie_secret.len() < 32 {
         bail!("COOKIE_SECRET must be at least 32 characters long");
+    }
+    if cookie_secure {
+        debug!(log, "Using secured cookies; they'll only work over HTTPS");
     }
 
     let pool = pool(log, options)?;
@@ -350,6 +356,7 @@ fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
     let server = web::Server {
         assets_version,
         cookie_secret,
+        cookie_secure,
         log: log.clone(),
         num_sync_executors: options.num_connections,
         pool,

@@ -1,3 +1,4 @@
+export COOKIE_SECURE=false
 export DATABASE_URL=postgres://localhost/podcore
 export PODCORE_ENV=development
 export RUST_BACKTRACE=1
