@@ -34,10 +34,10 @@ impl<'a> Mediator<'a> {
         }
 
         let key = key.unwrap();
-        info!(log, "Found matching key"; "key" => key.id);
+        info!(log, "Found matching key"; "id" => key.id);
 
         let account = self.touch_and_select_account(log, &key)?;
-        info!(log, "Found account"; "account" => account.id);
+        info!(log, "Found account"; "id" => account.id);
 
         Ok(RunResult {
             account: Some(account),
