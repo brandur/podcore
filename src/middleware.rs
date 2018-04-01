@@ -220,7 +220,13 @@ pub mod web {
                     last_ip:    req.connection_info().host().to_owned(),
                     secret:     req.session()
                         .get::<String>(COOKIE_KEY_SECRET)
-                        .map_err(|_| Error::from("Error reading from session"))?,
+                        .map_err(|_| Error::from("Error reading from session"))
+                        .map(|s| {
+                            // Don't actually log secrets. We rely on this being a `debug!`
+                            // statement and being compiled out on any release build.
+                            debug!(log, "Reading session secret"; "secret" => format!("{:?}", s));
+                            s
+                        })?,
                     user_agent: match req.headers().get("User-Agent") {
                         Some(s) => match s.to_str() {
                             Ok(s) => Some(s.to_owned()),
