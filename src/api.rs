@@ -284,7 +284,7 @@ mod tests {
 
     use actix;
     use actix_web;
-    use actix_web::Method;
+    use actix_web::http::Method;
     use diesel::pg::PgConnection;
     use r2d2::Pool;
     use r2d2_diesel::ConnectionManager;
