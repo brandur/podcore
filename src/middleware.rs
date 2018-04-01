@@ -319,17 +319,8 @@ pub mod web {
                 }
             }
 
-            // Assume that an empty `User-Agent` is a bot
-            if params.user_agent.is_none() {
+            if is_bot(params) {
                 return Ok(ViewModel::Bot);
-            }
-
-            // Also run through a list of known bot `User-Agent` values
-            let user_agent = params.user_agent.as_ref().unwrap();
-            for &bot_user_agent in BOT_USER_AGENTS {
-                if user_agent.contains(bot_user_agent) {
-                    return Ok(ViewModel::Bot);
-                }
             }
 
             let account = mediators::account_creator::Mediator {
@@ -347,6 +338,23 @@ pub mod web {
                 .key;
 
             return Ok(ViewModel::NewAccount(account, key));
+        }
+
+        fn is_bot(params: &Params) -> bool {
+            // Assume that an empty `User-Agent` is a bot
+            if params.user_agent.is_none() {
+                return true;
+            }
+
+            // Also run through a list of known bot `User-Agent` values
+            let user_agent = params.user_agent.as_ref().unwrap();
+            for &bot_user_agent in BOT_USER_AGENTS {
+                if user_agent.contains(bot_user_agent) {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
