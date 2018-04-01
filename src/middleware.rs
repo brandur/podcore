@@ -223,17 +223,29 @@ pub mod web {
         //
 
         struct Params {
-            last_ip: String,
-            secret:  Option<String>,
+            last_ip:    String,
+            secret:     Option<String>,
+            user_agent: Option<String>,
         }
 
         impl server::Params for Params {
-            fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
+            fn build<S: server::State>(log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
+                use actix_web::HttpMessage;
                 Ok(Params {
-                    last_ip: req.connection_info().host().to_owned(),
-                    secret:  req.session()
+                    last_ip:    req.connection_info().host().to_owned(),
+                    secret:     req.session()
                         .get::<String>(COOKIE_KEY_SECRET)
                         .map_err(|_| Error::from("Error reading from session"))?,
+                    user_agent: match req.headers().get("User-Agent") {
+                        Some(s) => match s.to_str() {
+                            Ok(s) => Some(s.to_owned()),
+                            Err(e) => {
+                                error!(log, "Error parsing `User-Agent`: {}", e);
+                                None
+                            }
+                        },
+                        None => None,
+                    },
                 })
             }
         }
@@ -278,6 +290,20 @@ pub mod web {
         // Private constants
         //
 
+        // We're going to start with some pretty dumb heuristics to detect bots so that
+        // we don't end up creating new user accounts for them as they crawl
+        // endlessly. For now, we just examine user agents and if they contain
+        // any of these strings, we skip account creation.
+        const BOT_USER_AGENTS: &'static [&str] = &[
+            "APIs-Google",
+            "AdsBot-Google",
+            "Googlebot/2.1",
+            "Googlebot-Image/1.0",
+            "Googlebot-News",
+            "Googlebot-Video/1.0",
+            "Mediapartners-Google",
+        ];
+
         const COOKIE_KEY_SECRET: &str = "secret";
 
         //
@@ -297,6 +323,19 @@ pub mod web {
                 // the case of an invalid secret being presented.
                 if account.is_some() {
                     return Ok(ViewModel::ExistingAccount(account.unwrap()));
+                }
+            }
+
+            // Assume that an empty `User-Agent` is a bot
+            if params.user_agent.is_none() {
+                return Ok(ViewModel::Bot);
+            }
+
+            // Also run through a list of known bot `User-Agent` values
+            let user_agent = params.user_agent.as_ref().unwrap();
+            for &bot_user_agent in BOT_USER_AGENTS {
+                if user_agent.contains(bot_user_agent) {
+                    return Ok(ViewModel::Bot);
                 }
             }
 
