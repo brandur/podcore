@@ -162,17 +162,13 @@ pub mod web {
                         Ok(view_model) => {
                             match view_model {
                                 ViewModel::Bot => {
-                                    req.extensions().insert(Extension { account: None });
+                                    set_request_account(&log, &mut req, None);
                                 }
                                 ViewModel::ExistingAccount(account) => {
-                                    req.extensions().insert(Extension {
-                                        account: Some(account),
-                                    });
+                                    set_request_account(&log, &mut req, Some(account));
                                 }
                                 ViewModel::NewAccount(account, key) => {
-                                    req.extensions().insert(Extension {
-                                        account: Some(account),
-                                    });
+                                    set_request_account(&log, &mut req, Some(account));
                                     set_session_secret(&log, &mut req, &key.secret);
                                 }
                             };
@@ -351,6 +347,20 @@ pub mod web {
             }
 
             return false;
+        }
+
+        fn set_request_account<S: server::State>(
+            log: &Logger,
+            req: &mut HttpRequest<S>,
+            account: Option<model::Account>,
+        ) {
+            if account.is_none() {
+                debug!(log, "Setting request account to none");
+            } else {
+                debug!(log, "Setting request account"; "id" => account.as_ref().unwrap().id);
+            }
+
+            req.extensions().insert(Extension { account });
         }
 
         /// Sets a secret to a client's session/cookie. Logs an error if there
