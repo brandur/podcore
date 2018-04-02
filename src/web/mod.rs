@@ -2,6 +2,7 @@ mod endpoints;
 mod views;
 
 use errors::*;
+use graphql;
 use middleware;
 use server;
 
@@ -72,6 +73,15 @@ impl Server {
                 .resource("/directory-podcasts/{id}", |r| {
                     r.method(Method::GET)
                         .a(endpoints::directory_podcast_show::handler)
+                })
+                .resource("/graphiql", |r| {
+                    r.method(Method::GET).f(graphql::handlers::graphiql_get);
+                })
+                .resource("/graphql", |r| {
+                    // We really don't want to use `GET` operations that are potentially mutations
+                    // on the web because of the possibility that crawlers will follow them, so
+                    // just mount the `POST` handler for GraphQL.
+                    r.method(Method::POST).a(graphql::handlers::graphql_post);
                 })
                 .resource("/health", |r| {
                     r.method(Method::GET).f(|_req| HttpResponse::Ok())
