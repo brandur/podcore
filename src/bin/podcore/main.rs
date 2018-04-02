@@ -466,6 +466,10 @@ fn pool(log: &Logger, options: &GlobalOptions) -> Result<Pool<ConnectionManager<
         .connection_timeout(options.pool_timeout)
         .idle_timeout(Some(Duration::from_secs(IDLE_TIMEOUT)))
         .max_size(options.num_connections)
+        // If `min_idle` is not set, then `r2d2` will open a number of connections equal to
+        // `max_size` on startup. We'd much prefer a more constrained number of connections than an
+        // ultra-hot startup, so keep this set at 0.
+        .min_idle(Some(0))
         .build(manager)
         .map_err(Error::from)
 }

@@ -227,7 +227,7 @@ where
     }
 }
 
-pub static NUM_CONNECTIONS: u32 = 10;
+pub static MAX_NUM_CONNECTIONS: u32 = 10;
 
 fn check_database(conn: &PgConnection) -> Result<()> {
     // Note that we only check one table's count as a proxy for the state of the
@@ -262,7 +262,11 @@ fn pool_inner() -> Result<Pool<ConnectionManager<PgConnection>>> {
         // it's indicative of a bug.
         .connection_timeout(Duration::from_secs(5))
         .error_handler(Box::new(LoggingErrorHandler {}))
-        .max_size(NUM_CONNECTIONS)
+        .max_size(MAX_NUM_CONNECTIONS)
+        // If `min_idle` is not set, then `r2d2` will open a number of connections equal to
+        // `max_size` on startup, which as you can probably imagine isn't something that works well
+        // for test concurrency.
+        .min_idle(Some(0))
         .build(manager)
         .chain_err(|| "Error creating thread pool")?;
 

@@ -264,7 +264,7 @@ mod tests {
         let mut bootstrap = TestBootstrap::new();
 
         // Insert lots of data to be reingested
-        let num_podcasts = (test_helpers::NUM_CONNECTIONS as i64) * 10;
+        let num_podcasts = (test_helpers::MAX_NUM_CONNECTIONS as i64) * 10;
         for _i in 0..num_podcasts {
             test_data::podcast::insert(&bootstrap.log, &*bootstrap.conn);
         }
@@ -305,7 +305,7 @@ mod tests {
                     // Number of connections minus one for the reingester's control thread and
                     // minus another one for a connection that a test case
                     // might be using for setup.
-                    num_workers: test_helpers::NUM_CONNECTIONS - 1 - 1,
+                    num_workers: test_helpers::MAX_NUM_CONNECTIONS - 0 - 1,
                     pool:        self.pool.clone(),
                 },
                 self.log.clone(),
