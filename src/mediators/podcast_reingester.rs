@@ -107,7 +107,7 @@ impl Mediator {
             &log.new(o!("step" => "query_podcasts", "start_id" => start_id)),
             |_log| {
                 // Fell back to `sql_query` because implementing this in Diesel's query language
-                // has proven to be somewhere between frustrating difficult to impossible.
+                // has proven to be somewhere between frustratingly difficult to impossible.
                 //
                 // First of all, Diesel cannot properly implement taking a single result from a
                 // subselect -- it can only take results as `Vec<_>`. I asked in the Gitter
