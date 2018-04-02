@@ -1,6 +1,7 @@
 use errors::*;
 use graphql;
 use middleware;
+use model;
 use server;
 use time_helpers;
 
@@ -174,6 +175,14 @@ impl ::actix::prelude::Message for server::Message<Params> {
 //
 // Private functions
 //
+
+// Gets the authenticated account through either the API or web authenticator
+// middleware (the former not being implemented yet). It'd be nice to know in
+// advance which is in use in this context,  but I'm not totally sure how to do
+// that in a way that doesn't suck.
+fn account<S: server::State>(req: &mut HttpRequest<S>) -> Option<&model::Account> {
+    middleware::web::authenticator::account(req)
+}
 
 fn execute<F>(
     log: Logger,
