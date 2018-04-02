@@ -203,11 +203,14 @@ impl ::actix::prelude::Handler<server::Message<Params>> for server::SyncExecutor
 
     fn handle(&mut self, message: server::Message<Params>, _: &mut Self::Context) -> Self::Result {
         let conn = self.pool.get()?;
-        let root_node = RootNode::new(graphql::Query::default(), graphql::Mutation::default());
+        let root_node = RootNode::new(
+            graphql::operations::Query::default(),
+            graphql::operations::Mutation::default(),
+        );
         time_helpers::log_timed(
             &message.log.new(o!("step" => "handle_message")),
             move |log| {
-                let context = graphql::Context {
+                let context = graphql::operations::Context {
                     conn,
                     log: log.clone(),
                 };
