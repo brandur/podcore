@@ -182,6 +182,42 @@ pub mod request_response_logger {
     }
 }
 
+pub mod api {
+    pub mod authenticator {
+        use model;
+        use server;
+
+        use actix_web;
+        use actix_web::HttpRequest;
+        use actix_web::middleware::Started;
+
+        pub struct Middleware;
+
+        struct Extension {
+            account: Option<model::Account>,
+        }
+
+        // This is in place to demonstrate what the `graphql` module using either type
+        // of authenticator would look like, but is not implemented or used yet.
+        impl<S: 'static + server::State> actix_web::middleware::Middleware<S> for Middleware {
+            fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
+                req.extensions().insert(Extension { account: None });
+                Ok(Started::Done)
+            }
+        }
+
+        //
+        // Public functions
+        //
+
+        pub fn account<S: server::State>(req: &mut HttpRequest<S>) -> Option<&model::Account> {
+            req.extensions()
+                .get::<Extension>()
+                .and_then(|e| e.account.as_ref())
+        }
+    }
+}
+
 /// Holds web-specific (as opposed to for the API) middleware.
 pub mod web {
     pub mod authenticator {
@@ -281,12 +317,12 @@ pub mod web {
         /// way. However, `None` must still be handled because we don't
         /// bother creating an account if the `User-Agent` looks like a
         /// bot.
+        ///
+        /// Returns `None` even this authenticator middleware was not active.
         pub fn account<S: server::State>(req: &mut HttpRequest<S>) -> Option<&model::Account> {
             req.extensions()
                 .get::<Extension>()
-                .unwrap()
-                .account
-                .as_ref()
+                .and_then(|e| e.account.as_ref())
         }
 
         //
