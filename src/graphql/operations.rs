@@ -13,8 +13,9 @@ use slog::Logger;
 use std::str::FromStr;
 
 pub struct Context {
-    pub conn: PooledConnection<ConnectionManager<PgConnection>>,
-    pub log:  Logger,
+    pub account: model::Account,
+    pub conn:    PooledConnection<ConnectionManager<PgConnection>>,
+    pub log:     Logger,
 }
 
 impl juniper::Context for Context {}

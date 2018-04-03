@@ -132,11 +132,14 @@ pub fn transform_user_error<F>(res: Result<HttpResponse>, render: F) -> Result<H
 where
     F: FnOnce(StatusCode, String) -> Result<HttpResponse>,
 {
+    // Note that `format!` activates the `Display` trait and shows our errors'
+    // `display` definition
     match res {
         Err(e @ Error(ErrorKind::BadRequest(_), _)) => {
-            // `format!` activates the `Display` traits and shows our error's `display`
-            // definition
             render(StatusCode::BAD_REQUEST, format!("{}", e))
+        }
+        Err(e @ Error(ErrorKind::Unauthorized, _)) => {
+            render(StatusCode::UNAUTHORIZED, format!("{}", e))
         }
         r => r,
     }

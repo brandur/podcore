@@ -42,15 +42,21 @@ struct GraphQLError {
 }
 
 struct Params {
+    account:     model::Account,
     graphql_req: GraphQLRequest,
 }
 
 impl Params {
     /// Builds `Params` from a `GET` request.
-    fn build_from_get(_log: &Logger, req: &HttpRequest<server::StateImpl>) -> Result<Self> {
+    fn build_from_get(_log: &Logger, req: &mut HttpRequest<server::StateImpl>) -> Result<Self> {
+        let account = match account(req) {
+            Some(account) => account,
+            None => return Err(ErrorKind::Unauthorized.into()),
+        };
+
         let input_query = match req.query().get("query") {
             Some(q) => q.to_owned(),
-            None => bail!("No query provided"),
+            None => return Err(ErrorKind::BadRequest("No query provided".to_owned()).into()),
         };
 
         let operation_name = req.query().get("operationName").map(|n| n.to_owned());
@@ -58,21 +64,41 @@ impl Params {
         let variables: Option<InputValue> = match req.query().get("variables") {
             Some(v) => match serde_json::from_str::<InputValue>(v) {
                 Ok(v) => Some(v),
-                Err(e) => bail!("Malformed variables JSON: {}", e),
+                Err(e) => {
+                    return Err(
+                        ErrorKind::BadRequest(format!("Malformed variables JSON: {}", e)).into(),
+                    )
+                }
             },
             None => None,
         };
 
         Ok(Self {
+            account,
             graphql_req: GraphQLRequest::new(input_query, operation_name, variables),
         })
     }
 
     /// Builds `Params` from a `POST` request.
-    fn build_from_post(_log: &Logger, data: &[u8]) -> Result<Self> {
+    fn build_from_post(
+        _log: &Logger,
+        req: &mut HttpRequest<server::StateImpl>,
+        data: &[u8],
+    ) -> Result<Self> {
+        let account = match account(req) {
+            Some(account) => account,
+            None => return Err(ErrorKind::Unauthorized.into()),
+        };
+
         match serde_json::from_slice::<GraphQLRequest>(data) {
-            Ok(graphql_req) => Ok(Params { graphql_req }),
-            Err(e) => bail!("Error deserializing request body: {}", e),
+            Ok(graphql_req) => Ok(Params {
+                account,
+                graphql_req,
+            }),
+            Err(e) => Err(ErrorKind::BadRequest(format!(
+                "Error deserializing request body: {}",
+                e
+            )).into()),
         }
     }
 }
@@ -97,17 +123,16 @@ pub fn graphql_post(
 
     let log = middleware::log_initializer::log(&mut req);
     let log_clone = log.clone();
-
+    let mut req_clone = req.clone();
     let sync_addr = req.state().sync_addr.clone();
+
     let fut = req.body()
         // `map_err` is used here instead of `chain_err` because `PayloadError` doesn't implement
         // the `Error` trait and I was unable to put it in the error chain.
         .map_err(|_e| Error::from("Error reading request body"))
         .and_then(move |bytes: Bytes| {
             time_helpers::log_timed(&log_clone.new(o!("step" => "build_params")), |log| {
-                Params::build_from_post(log, bytes.as_ref()).map_err(|e|
-                    ErrorKind::BadRequest(e.to_string()).into()
-                )
+                Params::build_from_post(log, &mut req_clone, bytes.as_ref())
             })
         })
         .from_err();
@@ -121,7 +146,7 @@ pub fn graphql_get(
     let log = middleware::log_initializer::log(&mut req);
 
     let params_res = time_helpers::log_timed(&log.new(o!("step" => "build_params")), |log| {
-        Params::build_from_get(log, &req).map_err(|e| ErrorKind::BadRequest(e.to_string()).into())
+        Params::build_from_get(log, &mut req)
     });
 
     execute(
@@ -155,6 +180,7 @@ impl ::actix::prelude::Handler<server::Message<Params>> for server::SyncExecutor
             &message.log.new(o!("step" => "handle_message")),
             move |log| {
                 let context = graphql::operations::Context {
+                    account: message.params.account,
                     conn,
                     log: log.clone(),
                 };

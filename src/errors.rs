@@ -41,6 +41,11 @@ error_chain!{
             description("Bad request"),
             display("Bad request: {}", message),
         }
+
+        Unauthorized {
+            description("Unauthorized"),
+            display("Unauthorized"),
+        }
     }
 }
 
