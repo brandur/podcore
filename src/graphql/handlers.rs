@@ -177,37 +177,27 @@ impl ::actix::prelude::Message for server::Message<Params> {
 //
 
 // Gets the authenticated account through either the API or web authenticator
-// middleware (the former not being implemented yet). It'd be nice to know in
-// advance which is in use in this context,  but I'm not totally sure how to do
+// middleware (the former not being implemented yet). The account is cloned so
+// that it can be moved into a `Param` and sent to a `SyncExecutor`.
+//
+// It'd be nice to know in
+// advance which is in use in this context, but I'm not totally sure how to do
 // that in a way that doesn't suck.
-fn account<S: server::State>(req: &mut HttpRequest<S>) -> Option<&model::Account> {
-    let extensions = req.extensions();
-
-    if let Some(extension) = extensions.get::<middleware::api::authenticator::Extension>() {
-        return Some(&extension.account);
-    }
-
-    return extensions
-        .get::<middleware::web::authenticator::Extension>()
-        .and_then(|e| e.account.as_ref());
-
-    // I'd prefer to do it this way, but can't get this to compile because the compiler
-    // detects a double mutable borrow, despite the blocks. I'm not sure.
-    /*
+fn account<S: server::State>(req: &mut HttpRequest<S>) -> Option<model::Account> {
     {
         if let Some(account) = middleware::api::authenticator::account(req) {
-            return Some(account);
+            return Some(account.clone());
         }
     };
 
     {
         if let Some(account) = middleware::web::authenticator::account(req) {
-            return Some(account);
+            return Some(account.clone());
         }
     };
 
     None
-    */}
+}
 
 fn execute<F>(
     log: Logger,

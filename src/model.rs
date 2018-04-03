@@ -20,7 +20,7 @@ use slog::Logger;
 // https://github.com/diesel-rs/diesel/issues/1440
 //
 
-#[derive(Debug, Queryable)]
+#[derive(Clone, Debug, Queryable)]
 pub struct Account {
     pub id:           i64,
     pub created_at:   DateTime<Utc>,

@@ -194,8 +194,8 @@ pub mod api {
 
         pub struct Middleware;
 
-        pub struct Extension {
-            pub account: model::Account,
+        struct Extension {
+            account: model::Account,
         }
 
         // This is in place to demonstrate what the `graphql` module using either type
@@ -244,8 +244,8 @@ pub mod web {
 
         pub struct Middleware;
 
-        pub struct Extension {
-            pub account: Option<model::Account>,
+        struct Extension {
+            account: Option<model::Account>,
         }
 
         impl<S: 'static + server::State> actix_web::middleware::Middleware<S> for Middleware {
