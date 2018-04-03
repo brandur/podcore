@@ -58,7 +58,7 @@ graphql_object!(
         // ```
         field subscribe(&executor, podcast_id: String as "The podcast's ID.") -> FieldResult<resource::AccountPodcast> as "The object representing the subscription." {
             let podcast_id = i64::from_str(podcast_id.as_str()).
-                map_err(|e| ErrorKind::BadParameter("podcast_id".to_owned(), format!("{}", e).to_owned()))?;
+                map_err(|e| bad_parameter("podcast_id", &e))?;
 
             let podcast: model::Podcast = schema::podcast::table
                 .filter(schema::podcast::id.eq(podcast_id))
@@ -221,4 +221,14 @@ mod resource {
             }
         }
     }
+}
+
+//
+// Private functions
+//
+
+#[inline]
+fn bad_parameter<E: ::std::error::Error>(name: &str, e: &E) -> Error {
+    // `format!` invokes the error's `Display` trait implementation
+    ErrorKind::BadParameter(name.to_owned(), format!("{}", e).to_owned()).into()
 }
