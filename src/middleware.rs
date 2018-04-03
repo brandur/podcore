@@ -310,7 +310,7 @@ pub mod web {
                 debug!(log, "Authenticating");
 
                 let params_res = time_helpers::log_timed(
-                    &log.new(o!("step" => "build_params")),
+                    &log.new(o!("step" => "authenticator_build_params")),
                     |log| Params::build(log, req),
                 );
                 let params = match params_res {

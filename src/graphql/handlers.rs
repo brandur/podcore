@@ -183,6 +183,7 @@ impl ::actix::prelude::Handler<server::Message<Params>> for server::SyncExecutor
                     conn,
                     log: log.clone(),
                 };
+                info!(log, "Executing GraphQL query");
                 let graphql_response = message.params.graphql_req.execute(&root_node, &context);
                 Ok(ExecutionResponse {
                     json: serde_json::to_string_pretty(&graphql_response)?,
