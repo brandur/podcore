@@ -37,9 +37,9 @@ error_chain!{
         // appropriate. Add a new one if necessary.
         //
 
-        BadParameter(parameter: String) {
+        BadParameter(parameter: String, detail: String) {
             description("Bad parameter"),
-            display("Bad request: Error parsing parameter \"{}\".", parameter),
+            display("Bad request: Error parsing parameter \"{}\": {}", parameter, detail),
         }
 
         BadRequest(message: String) {

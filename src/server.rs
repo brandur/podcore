@@ -135,7 +135,7 @@ where
     // Note that `format!` activates the `Display` trait and shows our errors'
     // `display` definition
     match res {
-        Err(e @ Error(ErrorKind::BadParameter(_), _)) => {
+        Err(e @ Error(ErrorKind::BadParameter(_, _), _)) => {
             render(StatusCode::BAD_REQUEST, format!("{}", e))
         }
         Err(e @ Error(ErrorKind::BadRequest(_), _)) => {

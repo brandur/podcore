@@ -58,7 +58,7 @@ graphql_object!(
         // ```
         field subscribe(&executor, podcast_id: String as "The podcast's ID.") -> FieldResult<resource::AccountPodcast> as "The object representing the subscription." {
             let podcast_id = i64::from_str(podcast_id.as_str()).
-                chain_err(|| ErrorKind::BadParameter("podcast_id".to_owned()))?;
+                map_err(|e| ErrorKind::BadParameter("podcast_id".to_owned(), format!("{}", e).to_owned()))?;
 
             let podcast: model::Podcast = schema::podcast::table
                 .filter(schema::podcast::id.eq(podcast_id))
