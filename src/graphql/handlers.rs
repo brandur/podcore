@@ -316,8 +316,10 @@ mod tests {
     #[test]
     fn test_graphql_handlers_graphql_get_no_query() {
         let bootstrap = IntegrationTestBootstrap::new();
-        let mut server = bootstrap.server_builder.start(|app| {
+        let middleware = bootstrap.authenticated_middleware();
+        let mut server = bootstrap.server_builder.start(move |app| {
             app.middleware(middleware::log_initializer::Middleware)
+                .middleware(middleware.clone())
                 .handler(graphql_get)
         });
 
@@ -335,8 +337,10 @@ mod tests {
     #[test]
     fn test_graphql_handlers_graphql_post_ok() {
         let bootstrap = IntegrationTestBootstrap::new();
-        let mut server = bootstrap.server_builder.start(|app| {
+        let middleware = bootstrap.authenticated_middleware();
+        let mut server = bootstrap.server_builder.start(move |app| {
             app.middleware(middleware::log_initializer::Middleware)
+                .middleware(middleware.clone())
                 .handler(graphql_post)
         });
 
@@ -353,8 +357,10 @@ mod tests {
     #[test]
     fn test_graphql_handlers_graphql_post_no_query() {
         let bootstrap = IntegrationTestBootstrap::new();
-        let mut server = bootstrap.server_builder.start(|app| {
+        let middleware = bootstrap.authenticated_middleware();
+        let mut server = bootstrap.server_builder.start(move |app| {
             app.middleware(middleware::log_initializer::Middleware)
+                .middleware(middleware.clone())
                 .handler(graphql_post)
         });
 

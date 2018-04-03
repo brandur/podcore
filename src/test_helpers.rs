@@ -132,8 +132,16 @@ impl IntegrationTestBootstrap {
 
     /// Creates an `Account` and produces a test authenticator middleware that
     /// will guarantee that an account looks authenticated to handlers.
+    ///
+    /// Note that the one problem with this approach is that because we insert
+    /// the account on a test transaction (in order to not leave garbage
+    /// left over in the database), it won't be visible to any other
+    /// connections that try to load it. We may need to change this behavior
+    /// in the future, but if we do, we'll also have to make sure to clean the
+    /// database afterwards.
     pub fn authenticated_middleware(&self) -> middleware::test::authenticator::Middleware {
         let conn = self.pool.get().unwrap();
+        conn.begin_test_transaction().unwrap();
         let account = test_data::account::insert(&self.log, &*conn);
         middleware::test::authenticator::Middleware { account }
     }
