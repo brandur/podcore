@@ -213,13 +213,22 @@ fn account<S: server::State>(req: &mut HttpRequest<S>) -> Option<model::Account>
         if let Some(account) = middleware::api::authenticator::account(req) {
             return Some(account.clone());
         }
-    };
+    }
 
     {
         if let Some(account) = middleware::web::authenticator::account(req) {
             return Some(account.clone());
         }
-    };
+    }
+
+    // This is a path that's used only by the test suite which allows us to set an
+    // authenticated account much more easily. The `cfg!` macro allows it to be
+    // optimized out for release builds so that it doesn't slow things down.
+    if cfg!(test) {
+        if let Some(account) = middleware::test::authenticator::account(req) {
+            return Some(account.clone());
+        }
+    }
 
     None
 }
@@ -274,16 +283,22 @@ fn render_user_error(code: StatusCode, message: String) -> Result<HttpResponse> 
 #[cfg(test)]
 mod tests {
     use graphql::handlers::*;
+    use test_data;
     use test_helpers;
     use test_helpers::IntegrationTestBootstrap;
 
     use actix_web::http::Method;
 
     #[test]
-    fn test_graphql_handlers_graphql_get() {
+    fn test_graphql_handlers_graphql_get_ok() {
         let bootstrap = IntegrationTestBootstrap::new();
-        let mut server = bootstrap.server_builder.start(|app| {
+        let conn = bootstrap.pool.get().unwrap();
+        let account = test_data::account::insert(&bootstrap.log, &*conn);
+        let mut server = bootstrap.server_builder.start(move |app| {
             app.middleware(middleware::log_initializer::Middleware)
+                .middleware(middleware::test::authenticator::Middleware {
+                    account: account.clone(),
+                })
                 .handler(graphql_get)
         });
 
@@ -322,7 +337,7 @@ mod tests {
     }
 
     #[test]
-    fn test_graphql_handlers_graphql_post() {
+    fn test_graphql_handlers_graphql_post_ok() {
         let bootstrap = IntegrationTestBootstrap::new();
         let mut server = bootstrap.server_builder.start(|app| {
             app.middleware(middleware::log_initializer::Middleware)
@@ -360,7 +375,7 @@ mod tests {
     }
 
     #[test]
-    fn test_graphql_handlers_graphiql_get() {
+    fn test_graphql_handlers_graphiql_get_ok() {
         let bootstrap = IntegrationTestBootstrap::new();
         let mut server = bootstrap
             .server_builder

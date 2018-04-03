@@ -95,12 +95,15 @@ impl CommonTestBootstrap {
 // construct the app that's going to be tested.
 pub struct IntegrationTestBootstrap {
     _common:            CommonTestBootstrap,
-    _pool:              Pool<ConnectionManager<PgConnection>>,
+    pub log:            Logger,
+    pub pool:           Pool<ConnectionManager<PgConnection>>,
     pub server_builder: actix_web::test::TestServerBuilder<server::StateImpl>,
 }
 
 impl IntegrationTestBootstrap {
     pub fn new() -> IntegrationTestBootstrap {
+        let log = log();
+        let log_clone = log.clone();
         let pool = pool();
         let pool_clone = pool.clone();
 
@@ -110,7 +113,7 @@ impl IntegrationTestBootstrap {
 
             server::StateImpl {
                 assets_version: "".to_owned(),
-                log:            log(),
+                log:            log_clone.clone(),
                 sync_addr:      actix::SyncArbiter::start(1, move || server::SyncExecutor {
                     pool: pool_clone.clone(),
                 }),
@@ -119,7 +122,8 @@ impl IntegrationTestBootstrap {
 
         IntegrationTestBootstrap {
             _common:        CommonTestBootstrap::new(),
-            _pool:          pool,
+            log:            log,
+            pool:           pool,
             server_builder: server_builder,
         }
     }

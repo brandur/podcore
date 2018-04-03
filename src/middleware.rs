@@ -20,6 +20,7 @@ pub mod log_initializer {
 
     /// Shorthand for getting a usable `Logger` out of a request. It's also
     /// possible to access the request's extensions directly.
+    #[inline]
     pub fn log<S: server::State>(req: &mut HttpRequest<S>) -> Logger {
         req.extensions().get::<Extension>().unwrap().0.clone()
     }
@@ -210,6 +211,53 @@ pub mod api {
         // Public functions
         //
 
+        #[inline]
+        pub fn account<S: server::State>(req: &mut HttpRequest<S>) -> Option<&model::Account> {
+            req.extensions()
+                .get::<Extension>()
+                .and_then(|e| Some(&e.account))
+        }
+    }
+}
+
+/// Holds middleware that are useful for testing.
+pub mod test {
+    pub mod authenticator {
+        use middleware;
+        use model;
+        use server;
+
+        use actix_web;
+        use actix_web::HttpRequest;
+        use actix_web::middleware::Started;
+
+        // This needs to allow `dead_code` because it's only ever created from the test
+        // suite.
+        #[allow(dead_code)]
+        pub struct Middleware {
+            pub account: model::Account,
+        }
+
+        struct Extension {
+            account: model::Account,
+        }
+
+        impl<S: 'static + server::State> actix_web::middleware::Middleware<S> for Middleware {
+            fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
+                let log = middleware::log_initializer::log(req);
+                debug!(log, "Test authenticator setting account"; "id" => self.account.id);
+                req.extensions().insert(Extension {
+                    account: self.account.clone(),
+                });
+                Ok(Started::Done)
+            }
+        }
+
+        //
+        // Public functions
+        //
+
+        #[inline]
         pub fn account<S: server::State>(req: &mut HttpRequest<S>) -> Option<&model::Account> {
             req.extensions()
                 .get::<Extension>()
@@ -223,7 +271,7 @@ pub mod web {
     pub mod authenticator {
         use errors::*;
         use mediators;
-        use middleware::log_initializer;
+        use middleware;
         use model;
         use server;
         use server::Params as P;
@@ -252,7 +300,7 @@ pub mod web {
             fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
                 use futures::Future;
 
-                let log = log_initializer::log(req);
+                let log = middleware::log_initializer::log(req);
                 debug!(log, "Authenticating");
 
                 let params_res = time_helpers::log_timed(
@@ -319,7 +367,7 @@ pub mod web {
         /// bot.
         ///
         /// Returns `None` even this authenticator middleware was not active.
-        #[allow(dead_code)]
+        #[inline]
         pub fn account<S: server::State>(req: &mut HttpRequest<S>) -> Option<&model::Account> {
             req.extensions()
                 .get::<Extension>()
