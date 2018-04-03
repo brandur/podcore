@@ -37,6 +37,11 @@ error_chain!{
         // appropriate. Add a new one if necessary.
         //
 
+        BadParameter(parameter: String) {
+            description("Bad parameter"),
+            display("Bad request: Error parsing parameter \"{}\".", parameter),
+        }
+
         BadRequest(message: String) {
             description("Bad request"),
             display("Bad request: {}", message),
@@ -44,7 +49,7 @@ error_chain!{
 
         NotFound(resource: String, id: i64) {
             description("Not found"),
-            display("Not found: resource \"{}\" with ID {} was not found", resource, id),
+            display("Not found: resource \"{}\" with ID {} was not found.", resource, id),
         }
 
         Unauthorized {
