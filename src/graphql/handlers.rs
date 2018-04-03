@@ -314,6 +314,25 @@ mod tests {
     }
 
     #[test]
+    fn test_graphql_handlers_graphql_get_no_credentials() {
+        let bootstrap = IntegrationTestBootstrap::new();
+        let mut server = bootstrap.server_builder.start(|app| {
+            app.middleware(middleware::log_initializer::Middleware)
+                .handler(graphql_get)
+        });
+
+        let req = server.get().finish().unwrap();
+        let resp = server.execute(req.send()).unwrap();
+
+        assert_eq!(StatusCode::UNAUTHORIZED, resp.status());
+        let value = test_helpers::read_body_json(resp);
+        assert_eq!(
+            json!({"errors": [{"message": format!("{}", ErrorKind::Unauthorized)}]}),
+            value
+        );
+    }
+
+    #[test]
     fn test_graphql_handlers_graphql_get_no_query() {
         let bootstrap = IntegrationTestBootstrap::new();
         let middleware = bootstrap.authenticated_middleware();
@@ -352,6 +371,25 @@ mod tests {
         assert_eq!(StatusCode::OK, resp.status());
         let value = test_helpers::read_body_json(resp);
         assert_eq!(json!({"data": {"podcast": []}}), value);
+    }
+
+    #[test]
+    fn test_graphql_handlers_graphql_post_no_credentials() {
+        let bootstrap = IntegrationTestBootstrap::new();
+        let mut server = bootstrap.server_builder.start(|app| {
+            app.middleware(middleware::log_initializer::Middleware)
+                .handler(graphql_post)
+        });
+
+        let req = server.post().finish().unwrap();
+        let resp = server.execute(req.send()).unwrap();
+
+        assert_eq!(StatusCode::UNAUTHORIZED, resp.status());
+        let value = test_helpers::read_body_json(resp);
+        assert_eq!(
+            json!({"errors": [{"message": format!("{}", ErrorKind::Unauthorized)}]}),
+            value
+        );
     }
 
     #[test]
