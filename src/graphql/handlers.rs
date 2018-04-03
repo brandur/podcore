@@ -181,8 +181,33 @@ impl ::actix::prelude::Message for server::Message<Params> {
 // advance which is in use in this context,  but I'm not totally sure how to do
 // that in a way that doesn't suck.
 fn account<S: server::State>(req: &mut HttpRequest<S>) -> Option<&model::Account> {
-    middleware::web::authenticator::account(req)
-}
+    let extensions = req.extensions();
+
+    if let Some(extension) = extensions.get::<middleware::api::authenticator::Extension>() {
+        return Some(&extension.account);
+    }
+
+    return extensions
+        .get::<middleware::web::authenticator::Extension>()
+        .and_then(|e| e.account.as_ref());
+
+    // I'd prefer to do it this way, but can't get this to compile because the compiler
+    // detects a double mutable borrow, despite the blocks. I'm not sure.
+    /*
+    {
+        if let Some(account) = middleware::api::authenticator::account(req) {
+            return Some(account);
+        }
+    };
+
+    {
+        if let Some(account) = middleware::web::authenticator::account(req) {
+            return Some(account);
+        }
+    };
+
+    None
+    */}
 
 fn execute<F>(
     log: Logger,
