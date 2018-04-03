@@ -203,13 +203,12 @@ impl ::actix::prelude::Message for server::Message<Params> {
 // Private functions
 //
 
-// Gets the authenticated account through either the API or web authenticator
-// middleware (the former not being implemented yet). The account is cloned so
-// that it can be moved into a `Param` and sent to a `SyncExecutor`.
-//
-// It'd be nice to know in
-// advance which is in use in this context, but I'm not totally sure how to do
-// that in a way that doesn't suck.
+/// Gets the authenticated account through either the API or web authenticator
+/// middleware (the former not being implemented yet). The account is cloned so
+/// that it can be moved into a `Param` and sent to a `SyncExecutor`.
+///
+/// It'd be nice to know in advance which is in use in this context, but I'm
+/// not totally sure how to do that in a way that doesn't suck.
 fn account<S: server::State>(req: &mut HttpRequest<S>) -> Option<model::Account> {
     {
         if let Some(account) = middleware::api::authenticator::account(req) {
