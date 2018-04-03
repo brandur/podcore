@@ -108,7 +108,7 @@ impl Mediator {
             |_log| {
                 // We select into a custom type because Diesel's query DSL cannot handle
                 // subselects.
-                diesel::sql_query(include_str!("../sql/podcast_crawler_select.sql"))
+                diesel::sql_query(include_str!("../static/sql/podcast_crawler_select.sql"))
                     .bind::<Text, _>(REFRESH_INTERVAL_SHORT)
                     .bind::<Text, _>(REFRESH_INTERVAL_LONG)
                     .bind::<BigInt, _>(start_id)

@@ -34,7 +34,7 @@ impl<'a> Mediator<'a> {
                 // We select into a custom type because Diesel's query DSL cannot handle
                 // subselects.
                 diesel::sql_query(include_str!(
-                    "../sql/podcast_feed_location_upgrader_insert.sql"
+                    "../static/sql/podcast_feed_location_upgrader_insert.sql"
                 )).execute(conn)
             },
         )?;

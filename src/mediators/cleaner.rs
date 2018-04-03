@@ -161,7 +161,7 @@ fn delete_account_batch(log: &Logger, conn: &PgConnection) -> Result<DeleteResul
     time_helpers::log_timed(
         &log.new(o!("step" => "delete_account_batch", "limit" => DELETE_LIMIT)),
         |_log| {
-            diesel::sql_query(include_str!("../sql/cleaner_account.sql"))
+            diesel::sql_query(include_str!("../static/sql/cleaner_account.sql"))
                 .bind::<Text, _>(ACCOUNT_DELETE_HORIZON)
                 .bind::<BigInt, _>(DELETE_LIMIT)
                 .get_result::<DeleteResults>(conn)
@@ -180,7 +180,7 @@ fn delete_directory_podcast_batch(log: &Logger, conn: &PgConnection) -> Result<D
             // directory searches still pointing to (directory searches will
             // themselves be removed after a certain time period of disuse by another
             // cleaner below, but they won't remove any directory podcast records).
-            diesel::sql_query(include_str!("../sql/cleaner_directory_podcast.sql"))
+            diesel::sql_query(include_str!("../static/sql/cleaner_directory_podcast.sql"))
                 .bind::<BigInt, _>(DELETE_LIMIT)
                 .get_result::<DeleteResults>(conn)
                 .chain_err(|| "Error deleting directory podcast content batch")
@@ -193,7 +193,7 @@ fn delete_directory_search_batch(log: &Logger, conn: &PgConnection) -> Result<De
         &log.new(o!("step" => "delete_directory_search_batch", "limit" => DELETE_LIMIT)),
         |_log| {
             // This works because directory_podcast_directory_search is ON DELETE CASCADE
-            diesel::sql_query(include_str!("../sql/cleaner_directory_search.sql"))
+            diesel::sql_query(include_str!("../static/sql/cleaner_directory_search.sql"))
                 .bind::<Text, _>(DIRECTORY_SEARCH_DELETE_HORIZON)
                 .bind::<BigInt, _>(DELETE_LIMIT)
                 .get_result::<DeleteResults>(conn)
@@ -206,7 +206,7 @@ fn delete_key_batch(log: &Logger, conn: &PgConnection) -> Result<DeleteResults> 
     time_helpers::log_timed(
         &log.new(o!("step" => "delete_key_batch", "limit" => DELETE_LIMIT)),
         |_log| {
-            diesel::sql_query(include_str!("../sql/cleaner_key.sql"))
+            diesel::sql_query(include_str!("../static/sql/cleaner_key.sql"))
                 .bind::<Text, _>(KEY_DELETE_HORIZON)
                 .bind::<BigInt, _>(DELETE_LIMIT)
                 .get_result::<DeleteResults>(conn)
@@ -219,8 +219,9 @@ fn delete_podcast_feed_content_batch(log: &Logger, conn: &PgConnection) -> Resul
     time_helpers::log_timed(
         &log.new(o!("step" => "delete_podcast_feed_content_batch", "limit" => DELETE_LIMIT)),
         |_log| {
-            diesel::sql_query(include_str!("../sql/cleaner_podcast_feed_content.sql"))
-                .bind::<BigInt, _>(PODCAST_FEED_CONTENT_LIMIT)
+            diesel::sql_query(include_str!(
+                "../static/sql/cleaner_podcast_feed_content.sql"
+            )).bind::<BigInt, _>(PODCAST_FEED_CONTENT_LIMIT)
                 .bind::<BigInt, _>(DELETE_LIMIT)
                 .get_result::<DeleteResults>(conn)
                 .chain_err(|| "Error deleting directory podcast content batch")
