@@ -44,7 +44,7 @@ error_chain!{
 
         Unauthorized {
             description("Unauthorized"),
-            display("Unauthorized"),
+            display("Unauthorized: You need to present valid credentials to access this endpoint."),
         }
     }
 }
