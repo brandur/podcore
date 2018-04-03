@@ -283,7 +283,6 @@ fn render_user_error(code: StatusCode, message: String) -> Result<HttpResponse> 
 #[cfg(test)]
 mod tests {
     use graphql::handlers::*;
-    use test_data;
     use test_helpers;
     use test_helpers::IntegrationTestBootstrap;
 
@@ -292,13 +291,10 @@ mod tests {
     #[test]
     fn test_graphql_handlers_graphql_get_ok() {
         let bootstrap = IntegrationTestBootstrap::new();
-        let conn = bootstrap.pool.get().unwrap();
-        let account = test_data::account::insert(&bootstrap.log, &*conn);
+        let middleware = bootstrap.authenticated_middleware();
         let mut server = bootstrap.server_builder.start(move |app| {
             app.middleware(middleware::log_initializer::Middleware)
-                .middleware(middleware::test::authenticator::Middleware {
-                    account: account.clone(),
-                })
+                .middleware(middleware.clone())
                 .handler(graphql_get)
         });
 

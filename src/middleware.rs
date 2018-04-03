@@ -231,9 +231,15 @@ pub mod test {
         use actix_web::HttpRequest;
         use actix_web::middleware::Started;
 
-        // This needs to allow `dead_code` because it's only ever created from the test
-        // suite.
+        /// The test authentication middleware.
+        ///
+        /// This needs to allow `dead_code` because it's only ever created from
+        /// the test suite.
+        ///
+        /// This needs to be `Clone` because we need to be able to clone it
+        /// into an `Fn` when building a test server.
         #[allow(dead_code)]
+        #[derive(Clone)]
         pub struct Middleware {
             pub account: model::Account,
         }

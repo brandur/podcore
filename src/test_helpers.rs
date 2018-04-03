@@ -1,7 +1,9 @@
 use error_helpers;
 use errors::*;
+use middleware;
 use schema;
 use server;
+use test_data;
 
 use actix;
 use actix_web;
@@ -126,6 +128,14 @@ impl IntegrationTestBootstrap {
             pool:           pool,
             server_builder: server_builder,
         }
+    }
+
+    /// Creates an `Account` and produces a test authenticator middleware that
+    /// will guarantee that an account looks authenticated to handlers.
+    pub fn authenticated_middleware(&self) -> middleware::test::authenticator::Middleware {
+        let conn = self.pool.get().unwrap();
+        let account = test_data::account::insert(&self.log, &*conn);
+        middleware::test::authenticator::Middleware { account }
     }
 }
 
