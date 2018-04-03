@@ -42,6 +42,11 @@ error_chain!{
             display("Bad request: {}", message),
         }
 
+        NotFound(resource: String, id: i64) {
+            description("Not found"),
+            display("Not found: resource \"{}\" with ID {} was not found", resource, id),
+        }
+
         Unauthorized {
             description("Unauthorized"),
             display("Unauthorized: You need to present valid credentials to access this endpoint."),

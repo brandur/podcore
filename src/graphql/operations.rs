@@ -1,4 +1,5 @@
 use errors::*;
+use mediators;
 use model;
 use schema;
 
@@ -12,13 +13,30 @@ use r2d2_diesel::ConnectionManager;
 use slog::Logger;
 use std::str::FromStr;
 
+//
+// Context
+//
+
 pub struct Context {
     pub account: model::Account,
     pub conn:    PooledConnection<ConnectionManager<PgConnection>>,
     pub log:     Logger,
 }
 
+impl Context {
+    /// Convenience function for accessing a `Context`'s internal connection as
+    /// a `PgConnection` reference (which is what most mediators take).
+    #[inline]
+    fn conn(&self) -> &PgConnection {
+        &*self.conn
+    }
+}
+
 impl juniper::Context for Context {}
+
+//
+// Mutations
+//
 
 #[derive(Default)]
 pub struct Mutation;
@@ -28,15 +46,67 @@ impl Mutation {}
 graphql_object!(
     Mutation: Context | &self | {
 
-    description: "The root mutation object of the schema."
+        description: "The root mutation object of the schema."
 
-// field createHuman(&executor, new_human: NewHuman) -> FieldResult<Human> {
-//    let db = executor.context().pool.get_connection()?;
-//    let human: Human = db.insert_human(&new_human)?;
-//    Ok(human)
-// }
+        // `juniper` does some parameter name mangling -- this is invoked for example as:
+        //
+        // ``` graphql
+        // mutation {
+        //   subscribe(podcastId: "1") {
+        //     id
+        //   }
+        // }
+        // ```
+        field subscribe(&executor, podcast_id: String as "The podcast's ID.") -> FieldResult<resource::AccountPodcast> as "The object representing the subscription." {
+            let podcast_id = i64::from_str(podcast_id.as_str()).
+                chain_err(|| "Error parsing podcast ID")?;
+
+            let podcast: Option<model::Podcast> = schema::podcast::table
+                .filter(schema::podcast::id.eq(podcast_id))
+                .first(executor.context().conn())
+                .optional()?;
+
+            if podcast.is_none() {
+                bail!(ErrorKind::NotFound("podcast".to_owned(), podcast_id));
+            }
+            let podcast = podcast.unwrap();
+
+            let account_podcast = mediators::account_podcast_subscriber::Mediator {
+                account: &executor.context().account,
+                conn: executor.context().conn(),
+                podcast: &podcast,
+            }.run(&executor.context().log)?.account_podcast;
+
+            Ok(resource::AccountPodcast::from(&account_podcast))
+        }
     }
 );
+
+//
+// GraphQL resources
+//
+
+mod resource {
+    use model;
+
+    #[derive(GraphQLObject)]
+    pub struct AccountPodcast {
+        #[graphql(description = "The account podcast's ID.")]
+        pub id: String,
+    }
+
+    impl<'a> From<&'a model::AccountPodcast> for AccountPodcast {
+        fn from(e: &model::AccountPodcast) -> Self {
+            AccountPodcast {
+                id: e.id.to_string(),
+            }
+        }
+    }
+}
+
+//
+// Queries
+//
 
 #[derive(GraphQLObject)]
 struct EpisodeObject {

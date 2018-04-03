@@ -138,6 +138,9 @@ where
         Err(e @ Error(ErrorKind::BadRequest(_), _)) => {
             render(StatusCode::BAD_REQUEST, format!("{}", e))
         }
+        Err(e @ Error(ErrorKind::NotFound(_, _), _)) => {
+            render(StatusCode::NOT_FOUND, format!("{}", e))
+        }
         Err(e @ Error(ErrorKind::Unauthorized, _)) => {
             render(StatusCode::UNAUTHORIZED, format!("{}", e))
         }
