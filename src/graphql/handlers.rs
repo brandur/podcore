@@ -346,9 +346,10 @@ mod tests {
         let resp = server.execute(req.send()).unwrap();
 
         assert_eq!(StatusCode::BAD_REQUEST, resp.status());
+        let error = ErrorKind::BadRequest("No query provided".to_owned());
         let value = test_helpers::read_body_json(resp);
         assert_eq!(
-            json!({"errors": [{"message": format!("{}", ErrorKind::BadRequest("No query provided".to_owned()))}]}),
+            json!({"errors": [{"message": format!("{}", error)}]}),
             value
         );
     }
@@ -406,10 +407,15 @@ mod tests {
         let resp = server.execute(req.send()).unwrap();
 
         assert_eq!(StatusCode::BAD_REQUEST, resp.status());
+        let error = ErrorKind::BadRequest(
+            concat!(
+                "Error deserializing request body: ",
+                "EOF while parsing a value at line 1 column 0"
+            ).to_owned(),
+        );
         let value = test_helpers::read_body_json(resp);
         assert_eq!(
-            json!({"errors": [{"message": concat!("Bad request: Error deserializing request body: ",
-                "EOF while parsing a value at line 1 column 0")}]}),
+            json!({"errors": [{"message": format!("{}", error)}]}),
             value
         );
     }
