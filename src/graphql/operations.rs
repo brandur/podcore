@@ -60,15 +60,11 @@ graphql_object!(
             let podcast_id = i64::from_str(podcast_id.as_str()).
                 chain_err(|| ErrorKind::BadParameter("podcast_id".to_owned()))?;
 
-            let podcast: Option<model::Podcast> = schema::podcast::table
+            let podcast: model::Podcast = schema::podcast::table
                 .filter(schema::podcast::id.eq(podcast_id))
                 .first(executor.context().conn())
-                .optional()?;
-
-            if podcast.is_none() {
-                bail!(ErrorKind::NotFound("podcast".to_owned(), podcast_id));
-            }
-            let podcast = podcast.unwrap();
+                .optional()?
+                .ok_or_else(|| ErrorKind::NotFound("podcast".to_owned(), podcast_id))?;
 
             let account_podcast = mediators::account_podcast_subscriber::Mediator {
                 account: &executor.context().account,
