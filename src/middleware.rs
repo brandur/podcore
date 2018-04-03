@@ -306,11 +306,12 @@ pub mod web {
             fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
                 use futures::Future;
 
-                let log = middleware::log_initializer::log(req);
+                let log =
+                    middleware::log_initializer::log(req).new(o!("middleware" => "authenticator"));
                 debug!(log, "Authenticating");
 
                 let params_res = time_helpers::log_timed(
-                    &log.new(o!("step" => "authenticator_build_params")),
+                    &log.new(o!("step" => "build_params")),
                     |log| Params::build(log, req),
                 );
                 let params = match params_res {
