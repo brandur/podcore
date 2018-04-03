@@ -51,7 +51,7 @@ impl Params {
     fn build_from_get(_log: &Logger, req: &mut HttpRequest<server::StateImpl>) -> Result<Self> {
         let account = match account(req) {
             Some(account) => account,
-            None => return Err(ErrorKind::Unauthorized.into()),
+            None => bail!(ErrorKind::Unauthorized),
         };
 
         let input_query = match req.query().get("query") {
@@ -87,7 +87,7 @@ impl Params {
     ) -> Result<Self> {
         let account = match account(req) {
             Some(account) => account,
-            None => return Err(ErrorKind::Unauthorized.into()),
+            None => bail!(ErrorKind::Unauthorized),
         };
 
         match serde_json::from_slice::<GraphQLRequest>(data) {
