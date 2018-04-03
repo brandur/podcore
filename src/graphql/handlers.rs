@@ -56,7 +56,7 @@ impl Params {
 
         let input_query = match req.query().get("query") {
             Some(q) => q.to_owned(),
-            None => return Err(ErrorKind::BadRequest("No query provided".to_owned()).into()),
+            None => bail!(ErrorKind::BadRequest("No query provided".to_owned())),
         };
 
         let operation_name = req.query().get("operationName").map(|n| n.to_owned());
@@ -64,11 +64,10 @@ impl Params {
         let variables: Option<InputValue> = match req.query().get("variables") {
             Some(v) => match serde_json::from_str::<InputValue>(v) {
                 Ok(v) => Some(v),
-                Err(e) => {
-                    return Err(
-                        ErrorKind::BadRequest(format!("Malformed variables JSON: {}", e)).into(),
-                    )
-                }
+                Err(e) => bail!(ErrorKind::BadRequest(format!(
+                    "Malformed variables JSON: {}",
+                    e
+                ))),
             },
             None => None,
         };
@@ -95,10 +94,10 @@ impl Params {
                 account,
                 graphql_req,
             }),
-            Err(e) => Err(ErrorKind::BadRequest(format!(
+            Err(e) => bail!(ErrorKind::BadRequest(format!(
                 "Error deserializing request body: {}",
                 e
-            )).into()),
+            ))),
         }
     }
 }
