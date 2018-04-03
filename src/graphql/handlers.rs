@@ -348,7 +348,7 @@ mod tests {
         assert_eq!(StatusCode::BAD_REQUEST, resp.status());
         let value = test_helpers::read_body_json(resp);
         assert_eq!(
-            json!({"errors": [{"message": "Bad request: No query provided"}]}),
+            json!({"errors": [{"message": format!("{}", ErrorKind::BadRequest("No query provided".to_owned()))}]}),
             value
         );
     }
