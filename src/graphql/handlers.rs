@@ -12,7 +12,6 @@ use actix_web::{HttpRequest, HttpResponse};
 use bytes::Bytes;
 use futures::future;
 use futures::future::Future;
-use juniper::graphiql;
 use juniper::http::GraphQLRequest;
 use juniper::{InputValue, RootNode};
 use serde_json;
@@ -157,9 +156,11 @@ pub fn graphql_get(
 
 #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
 pub fn graphiql_get(_req: HttpRequest<server::StateImpl>) -> HttpResponse {
+    // This HTML file was carbon copied from `juniper`'s source, but modified to
+    // support sending credentials so that we can authenticate via cookie.
     HttpResponse::build(StatusCode::OK)
         .content_type("text/html; charset=utf-8")
-        .body(graphiql::graphiql_source("/graphql"))
+        .body(include_str!("../static/html/graphiql.html"))
 }
 
 //
