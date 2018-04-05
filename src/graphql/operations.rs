@@ -46,23 +46,26 @@ graphql_object!(
 
         description: "The root mutation object of the schema."
 
-        // `juniper` does some parameter name mangling -- this is invoked for example as:
+        // `juniper` does some function/parameter name mangling -- this is invoked for example as:
         //
         // ``` graphql
         // mutation {
-        //   subscribe(podcastId: "1") {
+        //   accountPodcastSubscribe(podcastId: "1") {
         //     id
         //   }
         // }
         // ```
-        field subscribe(&executor,
+        field account_podcast_subscribe(&executor,
             podcast_id: String as "The podcast's ID."
         ) -> FieldResult<resource::AccountPodcast> as "The object representing the subscription." {
-            Ok(mutation::subscribe::execute(&executor.context().log, &mutation::subscribe::Params {
-                account:    &executor.context().account,
-                conn:       &executor.context().conn(),
-                podcast_id: &podcast_id,
-            })?)
+            Ok(mutation::account_podcast_subscribe::execute(
+                &executor.context().log,
+                &mutation::account_podcast_subscribe::Params {
+                    account:    &executor.context().account,
+                    conn:       &executor.context().conn(),
+                    podcast_id: &podcast_id,
+                }
+            )?)
         }
     }
 );
@@ -77,7 +80,7 @@ mod mutation {
     use diesel::pg::PgConnection;
     use slog::Logger;
 
-    pub mod subscribe {
+    pub mod account_podcast_subscribe {
         use graphql::operations::mutation::*;
 
         use diesel::prelude::*;
