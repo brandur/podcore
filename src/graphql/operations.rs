@@ -124,6 +124,62 @@ mod mutation {
 
             Ok(resource::AccountPodcast::from(&account_podcast))
         }
+
+        #[cfg(test)]
+        mod tests {
+            use graphql::operations::mutation::account_podcast_subscribe::*;
+            use test_data;
+            use test_helpers;
+
+            use r2d2::PooledConnection;
+            use r2d2_diesel::ConnectionManager;
+
+            #[test]
+            fn test_mutation_account_podcast_subscribe() {
+                let bootstrap = TestBootstrap::new();
+
+                let account_podcast = execute(
+                    &bootstrap.log,
+                    &Params {
+                        account:    &bootstrap.account,
+                        conn:       &*bootstrap.conn,
+                        podcast_id: &bootstrap.podcast.id.to_string(),
+                    },
+                ).unwrap();
+                assert_ne!("0", account_podcast.id);
+                assert_eq!(bootstrap.account.id.to_string(), account_podcast.account_id);
+                assert_eq!(bootstrap.podcast.id.to_string(), account_podcast.podcast_id);
+            }
+
+            //
+            // Private types/functions
+            //
+
+            struct TestBootstrap {
+                _common: test_helpers::CommonTestBootstrap,
+                account: model::Account,
+                conn:    PooledConnection<ConnectionManager<PgConnection>>,
+                log:     Logger,
+                podcast: model::Podcast,
+            }
+
+            impl TestBootstrap {
+                fn new() -> TestBootstrap {
+                    let conn = test_helpers::connection();
+                    let log = test_helpers::log();
+
+                    TestBootstrap {
+                        _common: test_helpers::CommonTestBootstrap::new(),
+                        account: test_data::account::insert(&log, &conn),
+                        podcast: test_data::podcast::insert(&log, &conn),
+
+                        // Only move these after filling the above
+                        conn: conn,
+                        log:  log,
+                    }
+                }
+            }
+        }
     }
 
     pub mod account_podcast_unsubscribe {
@@ -236,12 +292,20 @@ mod resource {
     pub struct AccountPodcast {
         #[graphql(description = "The account podcast's ID.")]
         pub id: String,
+
+        #[graphql(description = "The account's ID.")]
+        pub account_id: String,
+
+        #[graphql(description = "The podcast's ID.")]
+        pub podcast_id: String,
     }
 
     impl<'a> From<&'a model::AccountPodcast> for AccountPodcast {
         fn from(e: &model::AccountPodcast) -> Self {
             AccountPodcast {
-                id: e.id.to_string(),
+                id:         e.id.to_string(),
+                account_id: e.account_id.to_string(),
+                podcast_id: e.podcast_id.to_string(),
             }
         }
     }
