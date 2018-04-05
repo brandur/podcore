@@ -1,5 +1,4 @@
 use errors::*;
-use mediators;
 use model;
 use schema;
 
@@ -57,25 +56,68 @@ graphql_object!(
         // }
         // ```
         field subscribe(&executor, podcast_id: String as "The podcast's ID.") -> FieldResult<resource::AccountPodcast> as "The object representing the subscription." {
-            let podcast_id = i64::from_str(podcast_id.as_str()).
-                map_err(|e| bad_parameter("podcast_id", &e))?;
+            Ok(mutation::subscribe::execute(&executor.context().log, &mutation::subscribe::Params {
+                account:    &executor.context().account,
+                conn:       &executor.context().conn(),
+                podcast_id: &podcast_id,
+            })?)
+        }
+    }
+);
+
+mod mutation {
+    use errors::*;
+    use graphql::operations::resource;
+    use mediators;
+    use model;
+    use schema;
+
+    use diesel::pg::PgConnection;
+    use slog::Logger;
+
+    pub mod subscribe {
+        use graphql::operations::mutation::*;
+
+        use diesel::prelude::*;
+        use std::str::FromStr;
+
+        pub struct Params<'a> {
+            pub account:    &'a model::Account,
+            pub conn:       &'a PgConnection,
+            pub podcast_id: &'a str,
+        }
+
+        pub fn execute<'a>(log: &Logger, params: &Params<'a>) -> Result<resource::AccountPodcast> {
+            let podcast_id =
+                i64::from_str(params.podcast_id).map_err(|e| bad_parameter("podcast_id", &e))?;
 
             let podcast: model::Podcast = schema::podcast::table
                 .filter(schema::podcast::id.eq(podcast_id))
-                .first(executor.context().conn())
+                .first(params.conn)
                 .optional()?
                 .ok_or_else(|| ErrorKind::NotFound("podcast".to_owned(), podcast_id))?;
 
             let account_podcast = mediators::account_podcast_subscriber::Mediator {
-                account: &executor.context().account,
-                conn: executor.context().conn(),
+                account: params.account,
+                conn:    params.conn,
                 podcast: &podcast,
-            }.run(&executor.context().log)?.account_podcast;
+            }.run(log)?
+                .account_podcast;
 
             Ok(resource::AccountPodcast::from(&account_podcast))
         }
     }
-);
+
+    //
+    // Functions
+    //
+
+    #[inline]
+    pub fn bad_parameter<E: ::std::error::Error>(name: &str, e: &E) -> Error {
+        // `format!` invokes the error's `Display` trait implementation
+        ErrorKind::BadParameter(name.to_owned(), format!("{}", e).to_owned()).into()
+    }
+}
 
 //
 // Queries
@@ -221,14 +263,4 @@ mod resource {
             }
         }
     }
-}
-
-//
-// Private functions
-//
-
-#[inline]
-fn bad_parameter<E: ::std::error::Error>(name: &str, e: &E) -> Error {
-    // `format!` invokes the error's `Display` trait implementation
-    ErrorKind::BadParameter(name.to_owned(), format!("{}", e).to_owned()).into()
 }
