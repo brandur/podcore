@@ -340,11 +340,28 @@ mod tests {
             },
         );
 
+        // Insert an account that's ephemeral, but created from a mobile client (these
+        // are not deleted in case someone just hasn't opened their app in a
+        // long time)
+        let mobile_account = test_data::account::insert_args(
+            &bootstrap.log,
+            &*bootstrap.conn,
+            test_data::account::Args {
+                email:     None,
+                ephemeral: true,
+                mobile:    true,
+            },
+        );
+
         // For good measure (to test that the cleaner really won't clean permanent
         // accounts) update the permanent account so that it hasn't been seen in
         // a long time
         diesel::update(schema::account::table)
-            .filter(schema::account::id.eq(permanent_account.id))
+            .filter(
+                schema::account::id
+                    .eq(permanent_account.id)
+                    .or(schema::account::id.eq(mobile_account.id)),
+            )
             .set(schema::account::last_seen_at.eq(Utc::now() - Duration::weeks(20)))
             .execute(&*bootstrap.conn)
             .unwrap();

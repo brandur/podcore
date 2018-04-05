@@ -2,7 +2,9 @@ WITH expired AS (
     SELECT id
     FROM account
     WHERE email IS NULL
+        AND ephemeral = true
         AND last_seen_at < NOW() - $1::interval
+        AND mobile = false
     LIMIT $2
 ),
 deleted_account_batch AS (
