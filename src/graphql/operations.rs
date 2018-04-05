@@ -57,10 +57,23 @@ graphql_object!(
         // ```
         field account_podcast_subscribe(&executor,
             podcast_id: String as "The podcast's ID."
-        ) -> FieldResult<resource::AccountPodcast> as "The object representing the subscription." {
+        ) -> FieldResult<resource::AccountPodcast> as "An object representing the subscription." {
             Ok(mutation::account_podcast_subscribe::execute(
                 &executor.context().log,
                 &mutation::account_podcast_subscribe::Params {
+                    account:    &executor.context().account,
+                    conn:       &executor.context().conn(),
+                    podcast_id: &podcast_id,
+                }
+            )?)
+        }
+
+        field account_podcast_unsubscribe(&executor,
+            podcast_id: String as "The podcast's ID."
+        ) -> FieldResult<Option<resource::AccountPodcast>> as "An object representing the removed subscription, or null if the account wasn't subscribed." {
+            Ok(mutation::account_podcast_unsubscribe::execute(
+                &executor.context().log,
+                &mutation::account_podcast_unsubscribe::Params {
                     account:    &executor.context().account,
                     conn:       &executor.context().conn(),
                     podcast_id: &podcast_id,
@@ -110,6 +123,44 @@ mod mutation {
                 .account_podcast;
 
             Ok(resource::AccountPodcast::from(&account_podcast))
+        }
+    }
+
+    pub mod account_podcast_unsubscribe {
+        use graphql::operations::mutation::*;
+
+        use diesel::prelude::*;
+        use std::str::FromStr;
+
+        pub struct Params<'a> {
+            pub account:    &'a model::Account,
+            pub conn:       &'a PgConnection,
+            pub podcast_id: &'a str,
+        }
+
+        pub fn execute<'a>(
+            log: &Logger,
+            params: &Params<'a>,
+        ) -> Result<Option<resource::AccountPodcast>> {
+            let podcast_id =
+                i64::from_str(params.podcast_id).map_err(|e| bad_parameter("podcast_id", &e))?;
+
+            let account_podcast: model::AccountPodcast = match schema::account_podcast::table
+                .filter(schema::account_podcast::podcast_id.eq(podcast_id))
+                .first(params.conn)
+                .optional()?
+            {
+                Some(account_podcast) => account_podcast,
+                None => return Ok(None),
+            };
+
+            let account_podcast = mediators::account_podcast_unsubscriber::Mediator {
+                conn:            params.conn,
+                account_podcast: &account_podcast,
+            }.run(log)?
+                .account_podcast;
+
+            Ok(Some(resource::AccountPodcast::from(&account_podcast)))
         }
     }
 
