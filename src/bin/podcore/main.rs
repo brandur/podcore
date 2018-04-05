@@ -182,10 +182,10 @@ fn subcommand_add(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
 
     for url in matches.values_of("URL").unwrap().collect::<Vec<_>>() {
         podcast_updater::Mediator {
-            conn: &*conn,
+            conn:             &*conn,
             disable_shortcut: force,
-            feed_url: url.to_owned().to_owned(),
-            http_requester: &mut http_requester,
+            feed_url:         url.to_owned().to_owned(),
+            http_requester:   &mut http_requester,
         }.run(log)?;
     }
     Ok(())
@@ -228,8 +228,8 @@ fn subcommand_crawl(log: &Logger, matches: &ArgMatches, options: &GlobalOptions)
 
     loop {
         let res = podcast_crawler::Mediator {
-            num_workers: options.num_connections - 1,
-            pool: pool(log, options)?.clone(),
+            num_workers:            options.num_connections - 1,
+            pool:                   pool(log, options)?.clone(),
             http_requester_factory: Box::new(HttpRequesterFactoryLive {}),
         }.run(log)?;
 
@@ -279,7 +279,7 @@ fn subcommand_reingest(log: &Logger, matches: &ArgMatches, options: &GlobalOptio
 
     podcast_reingester::Mediator {
         num_workers: options.num_connections - 1,
-        pool: pool(log, options)?.clone(),
+        pool:        pool(log, options)?.clone(),
     }.run(log)?;
     Ok(())
 }
@@ -297,8 +297,8 @@ fn subcommand_search(log: &Logger, matches: &ArgMatches, options: &GlobalOptions
 
     let query = matches.value_of("QUERY").unwrap();
     directory_podcast_searcher::Mediator {
-        conn: &*conn,
-        query: query.to_owned(),
+        conn:           &*conn,
+        query:          query.to_owned(),
         http_requester: &mut http_requester,
     }.run(log)?;
     Ok(())
@@ -388,10 +388,10 @@ const SERVER_PORT: &str = "8080";
 const SLEEP_SECONDS: u64 = 60;
 
 struct GlobalOptions {
-    log_async: bool,
+    log_async:       bool,
     num_connections: u32,
-    pool_timeout: Duration,
-    quiet: bool,
+    pool_timeout:    Duration,
+    quiet:           bool,
 }
 
 fn handle_error(log: &Logger, e: &Error) {

@@ -55,7 +55,9 @@ graphql_object!(
         //   }
         // }
         // ```
-        field subscribe(&executor, podcast_id: String as "The podcast's ID.") -> FieldResult<resource::AccountPodcast> as "The object representing the subscription." {
+        field subscribe(&executor,
+            podcast_id: String as "The podcast's ID."
+        ) -> FieldResult<resource::AccountPodcast> as "The object representing the subscription." {
             Ok(mutation::subscribe::execute(&executor.context().log, &mutation::subscribe::Params {
                 account:    &executor.context().account,
                 conn:       &executor.context().conn(),
