@@ -336,6 +336,7 @@ mod tests {
             test_data::account::Args {
                 email:     Some("foo@example.com".to_owned()),
                 ephemeral: false,
+                mobile:    false,
             },
         );
 

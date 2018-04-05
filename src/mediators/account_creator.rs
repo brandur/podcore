@@ -13,6 +13,7 @@ pub struct Mediator<'a> {
     pub conn:      &'a PgConnection,
     pub email:     Option<String>,
     pub ephemeral: bool,
+    pub mobile:    bool,
     pub last_ip:   &'a str,
 }
 
@@ -39,6 +40,7 @@ impl<'a> Mediator<'a> {
                     email:     self.email.clone(),
                     ephemeral: self.ephemeral,
                     last_ip:   self.last_ip.to_owned(),
+                    mobile:    self.mobile,
                 })
                 .get_result(self.conn)
                 .chain_err(|| "Error inserting account")
@@ -145,6 +147,7 @@ mod tests {
                     email:     self.args.email.clone(),
                     ephemeral: self.args.ephemeral,
                     last_ip:   "1.2.3.4",
+                    mobile:    false,
                 },
                 self.log.clone(),
             )

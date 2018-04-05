@@ -28,6 +28,7 @@ pub struct Account {
     pub ephemeral:    bool,
     pub last_ip:      String,
     pub last_seen_at: DateTime<Utc>,
+    pub mobile:       bool,
 }
 
 #[derive(Queryable)]
@@ -211,6 +212,7 @@ pub mod insertable {
         pub email:     Option<String>,
         pub ephemeral: bool,
         pub last_ip:   String,
+        pub mobile:    bool,
     }
 
     #[derive(Insertable)]

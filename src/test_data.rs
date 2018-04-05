@@ -21,6 +21,7 @@ pub mod account {
     pub struct Args {
         pub email:     Option<String>,
         pub ephemeral: bool,
+        pub mobile:    bool,
     }
 
     pub fn insert(log: &Logger, conn: &PgConnection) -> model::Account {
@@ -30,6 +31,7 @@ pub mod account {
             Args {
                 email:     None,
                 ephemeral: true,
+                mobile:    false,
             },
         )
     }
@@ -40,6 +42,7 @@ pub mod account {
             email: args.email,
             ephemeral: args.ephemeral,
             last_ip: "1.2.3.4",
+            mobile: args.mobile,
         }.run(log)
             .unwrap()
             .account

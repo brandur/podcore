@@ -520,6 +520,11 @@ pub mod web {
                 email:     None,
                 ephemeral: true,
                 last_ip:   params.last_ip.as_str(),
+
+                // This is very much a middleware only for use on the web, so `mobile` is false.
+                // Mobile clients will create an account explicitly instead of automatically like
+                // we're doing here.
+                mobile: false,
             }.run(log)?
                 .account;
             let key = mediators::key_creator::Mediator {

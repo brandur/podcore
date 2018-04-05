@@ -6,6 +6,7 @@ table! {
         ephemeral -> Bool,
         last_ip -> Text,
         last_seen_at -> Timestamptz,
+        mobile -> Bool,
     }
 }
 
