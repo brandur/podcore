@@ -18,9 +18,20 @@ pub fn render_layout(view_model: &endpoints::CommonViewModel, content: &str) -> 
                 meta(content="text/html; charset=utf-8", http-equiv="Content-Type");
 
                 link(href=format_args!("/assets/{}/app.css", view_model.assets_version), media="screen", rel="stylesheet", type="text/css");
+
+                // curl -L -o assets/react.production.min.js https://unpkg.com/react@16/umd/react.production.min.js
+                script(defer, src=format_args!("/assets/{}/react.production.min.js", view_model.assets_version)) {}
+
+                // curl -L -o assets/react-dom.production.min.js https://unpkg.com/react-dom@16/umd/react-dom.production.min.js
+                script(defer, src=format_args!("/assets/{}/react-dom.production.min.js", view_model.assets_version)) {}
+
+                script(defer, src=format_args!("/assets/{}/app.js", view_model.assets_version)) {}
             }
             body {
-                : Raw(content)
+                container {
+                    : Raw(content)
+                }
+                div(id="react-container");
             }
         }
     }).into_string()
