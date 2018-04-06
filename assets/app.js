@@ -1,12 +1,3 @@
-//import React from './react.production.min.js';
-//import ReactDOM from './react-dom.production.min.js';
-
-//import React from './react';
-//import ReactDOM from './react-dom';
-
-//const React = require('./react.production.min');
-//const ReactDOM = require('./react-dom.production.min');
-
 // Example of string interpolation:
 //
 // React.createElement('div', null, `Hello ${this.props.toWhat}`),
