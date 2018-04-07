@@ -1,3 +1,6 @@
+use middleware;
+use model;
+
 use actix;
 use actix_web::http::StatusCode;
 use actix_web::{HttpRequest, HttpResponse};
@@ -124,6 +127,37 @@ impl actix::Actor for SyncExecutor {
 //
 // Functions
 //
+
+/// Gets the authenticated account through either the API or web authenticator
+/// middleware (the former not being implemented yet). The account is cloned so
+/// that it can be moved into a `Param` and sent to a `SyncExecutor`.
+///
+/// It'd be nice to know in advance which is in use in this context, but I'm
+/// not totally sure how to do that in a way that doesn't suck.
+pub fn account<S: State>(req: &mut HttpRequest<S>) -> Option<model::Account> {
+    {
+        if let Some(account) = middleware::api::authenticator::account(req) {
+            return Some(account.clone());
+        }
+    }
+
+    {
+        if let Some(account) = middleware::web::authenticator::account(req) {
+            return Some(account.clone());
+        }
+    }
+
+    // This is a path that's used only by the test suite which allows us to set an
+    // authenticated account much more easily. The `cfg!` macro allows it to be
+    // optimized out for release builds so that it doesn't slow things down.
+    if cfg!(test) {
+        if let Some(account) = middleware::test::authenticator::account(req) {
+            return Some(account.clone());
+        }
+    }
+
+    None
+}
 
 /// Handles a `Result` and renders an error that was intended for the user.
 /// Otherwise (on either a successful result or non-user error), passes through

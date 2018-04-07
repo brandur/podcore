@@ -48,7 +48,7 @@ struct Params {
 impl Params {
     /// Builds `Params` from a `GET` request.
     fn build_from_get(_log: &Logger, req: &mut HttpRequest<server::StateImpl>) -> Result<Self> {
-        let account = match account(req) {
+        let account = match server::account(req) {
             Some(account) => account,
             None => bail!(ErrorKind::Unauthorized),
         };
@@ -83,7 +83,7 @@ impl Params {
         req: &mut HttpRequest<server::StateImpl>,
         data: &[u8],
     ) -> Result<Self> {
-        let account = match account(req) {
+        let account = match server::account(req) {
             Some(account) => account,
             None => bail!(ErrorKind::Unauthorized),
         };
@@ -202,37 +202,6 @@ impl ::actix::prelude::Message for server::Message<Params> {
 //
 // Private functions
 //
-
-/// Gets the authenticated account through either the API or web authenticator
-/// middleware (the former not being implemented yet). The account is cloned so
-/// that it can be moved into a `Param` and sent to a `SyncExecutor`.
-///
-/// It'd be nice to know in advance which is in use in this context, but I'm
-/// not totally sure how to do that in a way that doesn't suck.
-fn account<S: server::State>(req: &mut HttpRequest<S>) -> Option<model::Account> {
-    {
-        if let Some(account) = middleware::api::authenticator::account(req) {
-            return Some(account.clone());
-        }
-    }
-
-    {
-        if let Some(account) = middleware::web::authenticator::account(req) {
-            return Some(account.clone());
-        }
-    }
-
-    // This is a path that's used only by the test suite which allows us to set an
-    // authenticated account much more easily. The `cfg!` macro allows it to be
-    // optimized out for release builds so that it doesn't slow things down.
-    if cfg!(test) {
-        if let Some(account) = middleware::test::authenticator::account(req) {
-            return Some(account.clone());
-        }
-    }
-
-    None
-}
 
 fn execute<F>(
     log: Logger,
