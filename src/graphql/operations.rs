@@ -106,14 +106,14 @@ mod mutation {
         }
 
         pub fn execute<'a>(log: &Logger, params: &Params<'a>) -> Result<resource::AccountPodcast> {
-            let podcast_id =
-                i64::from_str(params.podcast_id).map_err(|e| bad_parameter("podcast_id", &e))?;
+            let podcast_id = i64::from_str(params.podcast_id)
+                .map_err(|e| error::bad_parameter("podcast_id", &e))?;
 
             let podcast: model::Podcast = schema::podcast::table
                 .filter(schema::podcast::id.eq(podcast_id))
                 .first(params.conn)
                 .optional()?
-                .ok_or_else(|| ErrorKind::NotFound("podcast".to_owned(), podcast_id))?;
+                .ok_or_else(|| error::not_found(&"podcast", podcast_id))?;
 
             let account_podcast = mediators::account_podcast_subscriber::Mediator {
                 account: params.account,
@@ -198,8 +198,8 @@ mod mutation {
             log: &Logger,
             params: &Params<'a>,
         ) -> Result<Option<resource::AccountPodcast>> {
-            let podcast_id =
-                i64::from_str(params.podcast_id).map_err(|e| bad_parameter("podcast_id", &e))?;
+            let podcast_id = i64::from_str(params.podcast_id)
+                .map_err(|e| error::bad_parameter("podcast_id", &e))?;
 
             let account_podcast: model::AccountPodcast = match schema::account_podcast::table
                 .filter(schema::account_podcast::account_id.eq(params.account.id))
@@ -297,16 +297,6 @@ mod mutation {
                 }
             }
         }
-    }
-
-    //
-    // Functions
-    //
-
-    #[inline]
-    pub fn bad_parameter<E: ::std::error::Error>(name: &str, e: &E) -> Error {
-        // `format!` invokes the error's `Display` trait implementation
-        ErrorKind::BadParameter(name.to_owned(), format!("{}", e).to_owned()).into()
     }
 }
 

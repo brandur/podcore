@@ -4,7 +4,7 @@
 //
 
 use futures::Future;
-use std::error;
+use std;
 
 // Create the Error, ErrorKind, ResultExt, and Result types
 error_chain!{
@@ -69,7 +69,7 @@ pub trait FutureChainErr<T> {
 impl<F> FutureChainErr<F::Item> for F
 where
     F: Future + 'static,
-    F::Error: error::Error + Send + 'static,
+    F::Error: std::error::Error + Send + 'static,
 {
     fn chain_err<C, E>(self, callback: C) -> Box<Future<Item = F::Item, Error = Error>>
     where
@@ -79,6 +79,29 @@ where
         Box::new(self.then(|r| r.chain_err(callback)))
     }
 }
+
+//
+// Error functions
+//
+
+pub mod error {
+    use errors::*;
+
+    #[inline]
+    pub fn bad_parameter<E: ::std::error::Error>(name: &str, e: &E) -> Error {
+        // `format!` invokes the error's `Display` trait implementation
+        ErrorKind::BadParameter(name.to_owned(), format!("{}", e).to_owned()).into()
+    }
+
+    #[inline]
+    pub fn not_found(resource: &str, id: i64) -> Error {
+        ErrorKind::NotFound(resource.to_owned(), id).into()
+    }
+}
+
+//
+// Other functions
+//
 
 // Collect error strings together so that we can build a good error message to
 // send up. It's worth nothing that the original error is actually at the end of
