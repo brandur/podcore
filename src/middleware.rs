@@ -495,7 +495,7 @@ pub mod web {
         // Private functions
         //
 
-        fn handle_inner(log: &Logger, conn: &PgConnection, params: &Params) -> Result<ViewModel> {
+        fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
             if params.secret.is_some() {
                 let account = mediators::account_authenticator::Mediator {
                     conn:    conn,
@@ -511,7 +511,7 @@ pub mod web {
                 }
             }
 
-            if is_bot(params) {
+            if is_bot(&params) {
                 return Ok(ViewModel::Bot);
             }
 
@@ -624,7 +624,7 @@ pub mod web {
                     user_agent: Some("Googlebot/2.1; Some Other Stuff".to_owned()),
                 };
 
-                let view_model = handle_inner(&bootstrap.log, &bootstrap.conn, &params).unwrap();
+                let view_model = handle_inner(&bootstrap.log, &bootstrap.conn, params).unwrap();
                 match view_model {
                     ViewModel::Bot => (),
                     _ => panic!("Unexpected view model: {:?}", view_model),
@@ -641,7 +641,7 @@ pub mod web {
                     user_agent: None,
                 };
 
-                let view_model = handle_inner(&bootstrap.log, &bootstrap.conn, &params).unwrap();
+                let view_model = handle_inner(&bootstrap.log, &bootstrap.conn, params).unwrap();
                 match view_model {
                     ViewModel::Bot => (),
                     _ => panic!("Unexpected view model: {:?}", view_model),
@@ -668,7 +668,7 @@ pub mod web {
                     user_agent: Some("Chrome".to_owned()),
                 };
 
-                let view_model = handle_inner(&bootstrap.log, &bootstrap.conn, &params).unwrap();
+                let view_model = handle_inner(&bootstrap.log, &bootstrap.conn, params).unwrap();
                 match view_model {
                     ViewModel::ExistingAccount(actual_account) => {
                         assert_eq!(account.id, actual_account.id);
@@ -687,7 +687,7 @@ pub mod web {
                     user_agent: Some("Chrome".to_owned()),
                 };
 
-                let view_model = handle_inner(&bootstrap.log, &bootstrap.conn, &params).unwrap();
+                let view_model = handle_inner(&bootstrap.log, &bootstrap.conn, params).unwrap();
                 match view_model {
                     ViewModel::NewAccount(account, key) => {
                         assert_ne!(0, account.id);

@@ -32,7 +32,7 @@ macro_rules! message_handler {
                 let conn = self.pool.get()?;
                 let log = message.log.clone();
                 time_helpers::log_timed(&log.new(o!("step" => "handle_message")), |log| {
-                    handle_inner(log, &*conn, &message.params)
+                    handle_inner(log, &*conn, message.params)
                 })
             }
         }

@@ -260,7 +260,7 @@ pub mod episode_show {
     // Private functions
     //
 
-    fn handle_inner(_log: &Logger, conn: &PgConnection, params: &Params) -> Result<ViewModel> {
+    fn handle_inner(_log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
         let episode: Option<model::Episode> = schema::episode::table
             .filter(schema::episode::id.eq(params.id))
             .filter(schema::episode::podcast_id.eq(params.podcast_id))
@@ -346,7 +346,7 @@ pub mod directory_podcast_show {
     // Private functions
     //
 
-    fn handle_inner(log: &Logger, conn: &PgConnection, params: &Params) -> Result<ViewModel> {
+    fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
         info!(log, "Expanding directory podcast"; "id" => params.id);
 
         let dir_podcast: Option<model::DirectoryPodcast> = schema::directory_podcast::table
@@ -383,6 +383,7 @@ pub mod podcast_show {
     use web::views;
 
     use actix_web::{HttpRequest, HttpResponse};
+    use diesel;
     use diesel::prelude::*;
     use futures::future::Future;
     use slog::Logger;
@@ -395,13 +396,15 @@ pub mod podcast_show {
     //
 
     struct Params {
-        id: i64,
+        account:    Option<model::Account>,
+        podcast_id: i64,
     }
 
     impl server::Params for Params {
         fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
             Ok(Self {
-                id: req.match_info()
+                account:    server::account(req),
+                podcast_id: req.match_info()
                     .get("id")
                     .unwrap()
                     .parse::<i64>()
@@ -423,8 +426,10 @@ pub mod podcast_show {
         use model;
 
         pub struct Found {
-            pub episodes: Vec<model::Episode>,
-            pub podcast:  model::Podcast,
+            pub account:    Option<model::Account>,
+            pub episodes:   Vec<model::Episode>,
+            pub podcast:    model::Podcast,
+            pub subscribed: bool,
         }
     }
 
@@ -451,10 +456,10 @@ pub mod podcast_show {
     // Private functions
     //
 
-    fn handle_inner(log: &Logger, conn: &PgConnection, params: &Params) -> Result<ViewModel> {
-        info!(log, "Looking up podcast"; "id" => params.id);
+    fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
+        info!(log, "Looking up podcast"; "id" => params.podcast_id);
         let podcast: Option<model::Podcast> = schema::podcast::table
-            .filter(schema::podcast::id.eq(params.id))
+            .filter(schema::podcast::id.eq(params.podcast_id))
             .first(&*conn)
             .optional()?;
         match podcast {
@@ -464,7 +469,22 @@ pub mod podcast_show {
                     .order(schema::episode::published_at.desc())
                     .limit(50)
                     .load(&*conn)?;
-                Ok(ViewModel::Found(view_model::Found { episodes, podcast }))
+
+                let subscribed = match params.account {
+                    Some(ref account) => diesel::select(diesel::dsl::exists(
+                        schema::account_podcast::table
+                            .filter(schema::account_podcast::account_id.eq(account.id))
+                            .filter(schema::account_podcast::podcast_id.eq(podcast.id)),
+                    )).get_result(conn)?,
+                    None => false,
+                };
+
+                Ok(ViewModel::Found(view_model::Found {
+                    account: params.account,
+                    episodes,
+                    podcast,
+                    subscribed,
+                }))
             }
             None => Ok(ViewModel::NotFound),
         }
@@ -578,7 +598,7 @@ pub mod search_show {
     // Private functions
     //
 
-    fn handle_inner(log: &Logger, conn: &PgConnection, params: &Params) -> Result<ViewModel> {
+    fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
         if params.query.is_none() {
             return Ok(ViewModel::NoQuery);
         }
