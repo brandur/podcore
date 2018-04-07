@@ -26,6 +26,12 @@
 // )
 
 //
+// Constants
+//
+
+const GRAPHQL_URL = "/graphql";
+
+//
 // AccountPodcastSubscriptionToggler
 //
 
@@ -42,9 +48,42 @@ class AccountPodcastSubscriptionToggler extends React.Component {
     this.handleClick = this.handleClick.bind(this);
   }
 
-  handleClick(e) {
+  async handleClick(e) {
     e.preventDefault();
-    console.log(`The link was clicked for: ${this.state.podcastId} w/ state: ${this.state.subscribed}`);
+    //console.log(`The link was clicked for: ${this.state.podcastId} w/ state: ${this.state.subscribed}`);
+
+    const query = this.state.subscribed ? `
+mutation {
+  accountPodcastUnsubscribe(podcastId: "${this.state.podcastId}") {
+    id
+  }
+}` : `
+mutation {
+  accountPodcastSubscribe(podcastId: "${this.state.podcastId}") {
+    id
+  }
+}`;
+
+    const params = {
+      query: query,
+    };
+    const resp = await fetch(GRAPHQL_URL, {
+        method: 'post',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+
+        // This line has been added so that we can authenticate GraphQL
+        // requests via cookie.
+        credentials: 'same-origin',
+
+        body: JSON.stringify(params)
+    });
+    const body = await resp.text();
+    const _data = JSON.parse(body);
+    console.log(`Response data: ${body}`);
+
     this.setState(prevState => ({
       subscribed: !prevState.subscribed
     }));
@@ -56,6 +95,10 @@ class AccountPodcastSubscriptionToggler extends React.Component {
     );
   }
 }
+
+//
+// Private functions
+//
 
 ReactDOM.render(
   React.createElement(AccountPodcastSubscriptionToggler, {podcastId: "1", subscribed: false}),
