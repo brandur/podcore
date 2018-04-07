@@ -28,6 +28,13 @@ pub fn render_layout(view_model: &endpoints::CommonViewModel, content: &str) -> 
                 script(defer, src=format_args!("/assets/{}/app.js", view_model.assets_version)) {}
             }
             body {
+                span {
+                    @ if let Some(ref account) = view_model.account {
+                        : format_args!("Account ID: {}", account.id)
+                    } else {
+                        : "Not account set"
+                    }
+                }
                 container {
                     : Raw(content)
                 }

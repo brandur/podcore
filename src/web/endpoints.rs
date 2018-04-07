@@ -1,5 +1,6 @@
 use errors::*;
 use http_requester::HttpRequesterLive;
+use model;
 use server;
 use web::views;
 
@@ -129,7 +130,8 @@ pub trait ViewModel {
 // Structs
 //
 
-pub struct CommonViewModel {
+pub struct CommonViewModel<'a> {
+    pub account:        Option<&'a model::Account>,
     pub assets_version: String,
     pub title:          String,
 }
@@ -140,8 +142,13 @@ pub struct CommonViewModel {
 
 /// Builds a `CommonViewModel` from request information and takes in any other
 /// required parameters to do so.
-fn build_common(req: &HttpRequest<server::StateImpl>, title: &str) -> CommonViewModel {
+fn build_common<'a>(
+    req: &HttpRequest<server::StateImpl>,
+    account: Option<&'a model::Account>,
+    title: &str,
+) -> CommonViewModel<'a> {
     CommonViewModel {
+        account:        account,
         assets_version: req.state().assets_version.clone(),
         title:          title.to_owned(),
     }
@@ -252,6 +259,7 @@ pub mod episode_show {
                 ViewModel::Found(ref view_model) => {
                     let common = endpoints::build_common(
                         req,
+                        view_model.account.as_ref(),
                         &format!("Episode: {}", view_model.episode.title.as_str()),
                     );
                     endpoints::respond_200(views::episode_show::render(&common, view_model)?)
@@ -337,7 +345,7 @@ pub mod directory_podcast_show {
         ) -> Result<HttpResponse> {
             match *self {
                 ViewModel::Exception(ref _exception) => Ok(endpoints::handle_500(
-                    &endpoints::build_common(req, "Error"),
+                    &endpoints::build_common(req, None, "Error"),
                     "Error ingesting podcast",
                 )?),
                 ViewModel::Found(ref view_model) => {
@@ -451,6 +459,7 @@ pub mod podcast_show {
                 ViewModel::Found(ref view_model) => {
                     let common = endpoints::build_common(
                         req,
+                        view_model.account.as_ref(),
                         &format!("Podcast: {}", view_model.podcast.title.as_str()),
                     );
                     endpoints::respond_200(views::podcast_show::render(&common, view_model)?)
@@ -533,8 +542,13 @@ pub mod search_new_show {
             _log: &Logger,
             req: &HttpRequest<server::StateImpl>,
         ) -> Result<HttpResponse> {
-            let common = endpoints::build_common(req, "Search");
-            endpoints::respond_200(views::search_new_show::render(&common, self)?)
+            match *self {
+                ViewModel::Found(ref view_model) => {
+                    let common =
+                        endpoints::build_common(req, view_model.account.as_ref(), "Search");
+                    endpoints::respond_200(views::search_new_show::render(&common, self)?)
+                }
+            }
         }
     }
 }
@@ -606,6 +620,7 @@ pub mod search_show {
                 ViewModel::SearchResults(ref view_model) => {
                     let common = endpoints::build_common(
                         req,
+                        view_model.account.as_ref(),
                         &format!("Search: {}", view_model.query.as_str()),
                     );
                     endpoints::respond_200(views::search_show::render(&common, view_model)?)
