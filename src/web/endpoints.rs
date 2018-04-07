@@ -79,7 +79,7 @@ macro_rules! handler {
 /// blocking message to `server::SyncExecutor` and getting a Postgres connection
 /// from the pool to increase performance and avoid contention.
 macro_rules! handler_noop {
-    ($noop_response:path) => {
+    () => {
         pub fn handler(
             mut req: HttpRequest<server::StateImpl>,
         ) -> Box<Future<Item = HttpResponse, Error = Error>> {
@@ -93,7 +93,9 @@ macro_rules! handler_noop {
 
             let log = middleware::log_initializer::log(&mut req);
 
-            let view_model = $noop_response;
+            let view_model = ViewModel::Found(view_model::Found {
+                account: server::account(&mut req),
+            });
             let response_res = time_helpers::log_timed(
                 &log.new(o!("step" => "render_view_model")),
                 |log| view_model.render(log, &req),
@@ -199,14 +201,16 @@ pub mod episode_show {
     //
 
     struct Params {
-        id:         i64,
+        account:    Option<model::Account>,
+        episode_id: i64,
         podcast_id: i64,
     }
 
     impl server::Params for Params {
         fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
             Ok(Self {
-                id:         req.match_info()
+                account:    server::account(req),
+                episode_id: req.match_info()
                     .get("id")
                     .unwrap()
                     .parse::<i64>()
@@ -233,6 +237,7 @@ pub mod episode_show {
         use model;
 
         pub struct Found {
+            pub account: Option<model::Account>,
             pub episode: model::Episode,
         }
     }
@@ -262,12 +267,15 @@ pub mod episode_show {
 
     fn handle_inner(_log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
         let episode: Option<model::Episode> = schema::episode::table
-            .filter(schema::episode::id.eq(params.id))
+            .filter(schema::episode::id.eq(params.episode_id))
             .filter(schema::episode::podcast_id.eq(params.podcast_id))
             .first(conn)
             .optional()?;
         match episode {
-            Some(episode) => Ok(ViewModel::Found(view_model::Found { episode })),
+            Some(episode) => Ok(ViewModel::Found(view_model::Found {
+                account: params.account,
+                episode,
+            })),
             None => Ok(ViewModel::NotFound),
         }
     }
@@ -296,13 +304,13 @@ pub mod directory_podcast_show {
     //
 
     struct Params {
-        id: i64,
+        directory_podcast_id: i64,
     }
 
     impl server::Params for Params {
         fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
             Ok(Self {
-                id: req.match_info()
+                directory_podcast_id: req.match_info()
                     .get("id")
                     .unwrap()
                     .parse::<i64>()
@@ -347,10 +355,10 @@ pub mod directory_podcast_show {
     //
 
     fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
-        info!(log, "Expanding directory podcast"; "id" => params.id);
+        info!(log, "Expanding directory podcast"; "id" => params.directory_podcast_id);
 
         let dir_podcast: Option<model::DirectoryPodcast> = schema::directory_podcast::table
-            .filter(schema::directory_podcast::id.eq(params.id))
+            .filter(schema::directory_podcast::id.eq(params.directory_podcast_id))
             .first(conn)
             .optional()?;
         match dir_podcast {
@@ -501,14 +509,22 @@ pub mod search_new_show {
     use futures::future::Future;
     use slog::Logger;
 
-    handler_noop!(ViewModel::Found);
+    handler_noop!();
 
     //
     // ViewModel
     //
 
     pub enum ViewModel {
-        Found,
+        Found(view_model::Found),
+    }
+
+    pub mod view_model {
+        use model;
+
+        pub struct Found {
+            pub account: Option<model::Account>,
+        }
     }
 
     impl endpoints::ViewModel for ViewModel {
@@ -526,6 +542,7 @@ pub mod search_new_show {
 pub mod search_show {
     use errors::*;
     use mediators::directory_podcast_searcher;
+    use model;
     use server;
     use time_helpers;
     use web::endpoints;
@@ -545,12 +562,14 @@ pub mod search_show {
     //
 
     struct Params {
-        query: Option<String>,
+        account: Option<model::Account>,
+        query:   Option<String>,
     }
     impl server::Params for Params {
         fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
             Ok(Self {
-                query: req.query().get("q").map(|q| q.to_owned()),
+                account: server::account(req),
+                query:   req.query().get("q").map(|q| q.to_owned()),
             })
         }
     }
@@ -568,6 +587,7 @@ pub mod search_show {
         use model;
 
         pub struct SearchResults {
+            pub account:            Option<model::Account>,
             pub directory_podcasts: Vec<model::DirectoryPodcast>,
             pub query:              String,
         }
@@ -617,6 +637,7 @@ pub mod search_show {
         }.run(log)?;
 
         Ok(ViewModel::SearchResults(view_model::SearchResults {
+            account: params.account,
             directory_podcasts: res.directory_podcasts,
             query,
         }))
