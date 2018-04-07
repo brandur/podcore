@@ -94,7 +94,7 @@ macro_rules! handler_noop {
 
             let log = middleware::log_initializer::log(&mut req);
 
-            let view_model = ViewModel::Found(view_model::Found {
+            let view_model = ViewModel::Ok(view_model::Ok {
                 account: server::account(&mut req),
             });
             let response_res = time_helpers::log_timed(
@@ -236,14 +236,14 @@ pub mod episode_show {
     //
 
     pub enum ViewModel {
-        Found(view_model::Found),
         NotFound,
+        Ok(view_model::Ok),
     }
 
     pub mod view_model {
         use model;
 
-        pub struct Found {
+        pub struct Ok {
             pub account: Option<model::Account>,
             pub episode: model::Episode,
         }
@@ -256,7 +256,8 @@ pub mod episode_show {
             req: &HttpRequest<server::StateImpl>,
         ) -> Result<HttpResponse> {
             match *self {
-                ViewModel::Found(ref view_model) => {
+                ViewModel::NotFound => Ok(endpoints::handle_404()?),
+                ViewModel::Ok(ref view_model) => {
                     let common = endpoints::build_common(
                         req,
                         view_model.account.as_ref(),
@@ -264,7 +265,6 @@ pub mod episode_show {
                     );
                     endpoints::respond_200(views::episode_show::render(&common, view_model)?)
                 }
-                ViewModel::NotFound => Ok(endpoints::handle_404()?),
             }
         }
     }
@@ -280,7 +280,7 @@ pub mod episode_show {
             .first(conn)
             .optional()?;
         match episode {
-            Some(episode) => Ok(ViewModel::Found(view_model::Found {
+            Some(episode) => Ok(ViewModel::Ok(view_model::Ok {
                 account: params.account,
                 episode,
             })),
@@ -333,8 +333,8 @@ pub mod directory_podcast_show {
 
     pub enum ViewModel {
         Exception(model::DirectoryPodcastException),
-        Found(model::Podcast),
         NotFound,
+        Ok(model::Podcast),
     }
 
     impl endpoints::ViewModel for ViewModel {
@@ -348,7 +348,7 @@ pub mod directory_podcast_show {
                     &endpoints::build_common(req, None, "Error"),
                     "Error ingesting podcast",
                 )?),
-                ViewModel::Found(ref view_model) => {
+                ViewModel::Ok(ref view_model) => {
                     Ok(HttpResponse::build(StatusCode::PERMANENT_REDIRECT)
                         .header("Location", format!("/podcasts/{}", view_model.id).as_str())
                         .finish())
@@ -382,7 +382,7 @@ pub mod directory_podcast_show {
                     return Ok(ViewModel::Exception(dir_podcast_ex));
                 }
 
-                Ok(ViewModel::Found(res.podcast.unwrap()))
+                Ok(ViewModel::Ok(res.podcast.unwrap()))
             }
             None => Ok(ViewModel::NotFound),
         }
@@ -434,14 +434,14 @@ pub mod podcast_show {
     //
 
     pub enum ViewModel {
-        Found(view_model::Found),
         NotFound,
+        Ok(view_model::Ok),
     }
 
     pub mod view_model {
         use model;
 
-        pub struct Found {
+        pub struct Ok {
             pub account:    Option<model::Account>,
             pub episodes:   Vec<model::Episode>,
             pub podcast:    model::Podcast,
@@ -456,7 +456,8 @@ pub mod podcast_show {
             req: &HttpRequest<server::StateImpl>,
         ) -> Result<HttpResponse> {
             match *self {
-                ViewModel::Found(ref view_model) => {
+                ViewModel::NotFound => Ok(endpoints::handle_404()?),
+                ViewModel::Ok(ref view_model) => {
                     let common = endpoints::build_common(
                         req,
                         view_model.account.as_ref(),
@@ -464,7 +465,6 @@ pub mod podcast_show {
                     );
                     endpoints::respond_200(views::podcast_show::render(&common, view_model)?)
                 }
-                ViewModel::NotFound => Ok(endpoints::handle_404()?),
             }
         }
     }
@@ -496,7 +496,7 @@ pub mod podcast_show {
                     None => false,
                 };
 
-                Ok(ViewModel::Found(view_model::Found {
+                Ok(ViewModel::Ok(view_model::Ok {
                     account: params.account,
                     episodes,
                     podcast,
@@ -525,13 +525,13 @@ pub mod search_new_show {
     //
 
     pub enum ViewModel {
-        Found(view_model::Found),
+        Ok(view_model::Ok),
     }
 
     pub mod view_model {
         use model;
 
-        pub struct Found {
+        pub struct Ok {
             pub account: Option<model::Account>,
         }
     }
@@ -543,7 +543,7 @@ pub mod search_new_show {
             req: &HttpRequest<server::StateImpl>,
         ) -> Result<HttpResponse> {
             match *self {
-                ViewModel::Found(ref view_model) => {
+                ViewModel::Ok(ref view_model) => {
                     let common =
                         endpoints::build_common(req, view_model.account.as_ref(), "Search");
                     endpoints::respond_200(views::search_new_show::render(&common, self)?)

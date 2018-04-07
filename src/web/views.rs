@@ -71,7 +71,7 @@ pub mod episode_show {
 
     use horrorshow::Template;
 
-    pub fn render(common: &CommonViewModel, view_model: &view_model::Found) -> Result<String> {
+    pub fn render(common: &CommonViewModel, view_model: &view_model::Ok) -> Result<String> {
         views::render_layout(
             common,
             (html! {
@@ -95,7 +95,7 @@ pub mod podcast_show {
     use horrorshow::Template;
     use horrorshow::prelude::*;
 
-    pub fn render(common: &CommonViewModel, view_model: &view_model::Found) -> Result<String> {
+    pub fn render(common: &CommonViewModel, view_model: &view_model::Ok) -> Result<String> {
         views::render_layout(
             common,
             (html! {
