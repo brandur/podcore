@@ -44,7 +44,7 @@ class AccountPodcastSubscriptionToggler extends React.Component {
     };
 
     // I tried arrow functions, but couldn't get them working for a class
-    // function.
+    // function. Bind it is!
     this.handleClick = this.handleClick.bind(this);
   }
 
@@ -63,7 +63,25 @@ mutation {
     id
   }
 }`;
+    const _data = executeGraphQL(query);
 
+    this.setState(prevState => ({
+      subscribed: !prevState.subscribed
+    }));
+  }
+
+  render() {
+    return React.createElement('a', {href: '#', onClick: this.handleClick},
+      this.state.subscribed ? 'Unsubscribe' : 'Subscribe'
+    );
+  }
+}
+
+//
+// Private functions
+//
+
+async function executeGraphQL(query) {
     const params = {
       query: query,
     };
@@ -81,24 +99,9 @@ mutation {
         body: JSON.stringify(params)
     });
     const body = await resp.text();
-    const _data = JSON.parse(body);
-    console.log(`Response data: ${body}`);
-
-    this.setState(prevState => ({
-      subscribed: !prevState.subscribed
-    }));
-  }
-
-  render() {
-    return React.createElement('a', {href: '#', onClick: this.handleClick},
-      this.state.subscribed ? 'Unsubscribe' : 'Subscribe'
-    );
-  }
+    //console.log(`Response data: ${body}`);
+    return JSON.parse(body);
 }
-
-//
-// Private functions
-//
 
 ReactDOM.render(
   React.createElement(AccountPodcastSubscriptionToggler, {podcastId: "1", subscribed: false}),
