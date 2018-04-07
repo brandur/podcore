@@ -31,7 +31,6 @@ pub fn render_layout(view_model: &endpoints::CommonViewModel, content: &str) -> 
                 container {
                     : Raw(content)
                 }
-                div(id="react-container");
             }
         }
     }).into_string()
@@ -87,12 +86,14 @@ pub mod podcast_show {
     use web::views;
 
     use horrorshow::Template;
+    use horrorshow::prelude::*;
 
     pub fn render(common: &CommonViewModel, view_model: &view_model::Found) -> Result<String> {
         views::render_layout(
             common,
             (html! {
                 h1: view_model.podcast.title.as_str();
+                div(id="subscription-toggle") {}
                 p {
                     : "Hello! This is <html />"
                 }
@@ -105,6 +106,14 @@ pub mod podcast_show {
                         }
                     }
                 }
+                script : Raw(views::react_element(
+                    "AccountPodcastSubscriptionToggler",
+                    "subscription-toggle",
+                    &json!({
+                        "podcastId": view_model.podcast.id.to_string(),
+                        "subscribed": false,
+                    }).to_string(),
+                ));
             }).into_string()?
                 .as_str(),
         )
@@ -171,4 +180,22 @@ pub mod search_show {
                 .as_str(),
         )
     }
+}
+
+//
+// Other helpers
+//
+
+/// Generates a simple initializer for a React component targeting a specific
+/// container in the DOM. Use of the `json!` macro is recommended to generate
+/// properties.
+///
+/// This should probably be a macro, but I'm too lazy to write on right now.
+#[inline]
+pub fn react_element(component: &str, container: &str, properties: &str) -> String {
+    // Our scripts use `defer` so make sure to only run this on the `load` event.
+    format!(
+        "window.addEventListener('load', function () {{ ReactDOM.render(React.createElement({}, {}), document.getElementById('{}')); }});",
+        component, properties, container
+    ).to_owned()
 }

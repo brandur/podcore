@@ -13,18 +13,6 @@
 // instead of the more familiar JSX. I nominally like the latter better, but
 // not my *that* much, and am okay with this tradeoff for the time being.
 
-// Example of string interpolation:
-//
-// React.createElement('div', null, `Hello ${this.props.toWhat}`),
-
-// Example of multiple child elements:
-//
-// React.createElement('div', null,
-//     React.createElement(Greetings, { name : 'Chris' }),
-//     React.createElement(Greetings, { name : 'Ming' }),
-//     React.createElement(Greetings, { name : 'Joe' }),
-// )
-
 //
 // Constants
 //
@@ -103,7 +91,27 @@ async function executeGraphQL(query) {
     return JSON.parse(body);
 }
 
-ReactDOM.render(
-  React.createElement(AccountPodcastSubscriptionToggler, {podcastId: "1", subscribed: false}),
-  document.getElementById('react-container')
-);
+/*
+
+# Examples
+
+Activating a React component:
+
+    ReactDOM.render(
+      React.createElement(AccountPodcastSubscriptionToggler, {podcastId: "1", subscribed: false}),
+      document.getElementById('react-container')
+    );
+
+String interpolation:
+
+    React.createElement('div', null, `Hello ${this.props.toWhat}`),
+
+Use of `createElement` with multiple child elements:
+
+    React.createElement('div', null,
+      React.createElement(Greetings, { name : 'Chris' }),
+      React.createElement(Greetings, { name : 'Ming' }),
+      React.createElement(Greetings, { name : 'Joe' }),
+    );
+
+*/
