@@ -310,6 +310,12 @@ pub mod web {
                     middleware::log_initializer::log(req).new(o!("middleware" => "authenticator"));
                 debug!(log, "Authenticating");
 
+                // Let anyone have our static assets
+                if req.path().starts_with("/assets/") {
+                    debug!(log, "Static asset; skipping authentication");
+                    return Ok(Started::Done);
+                }
+
                 let params_res = time_helpers::log_timed(
                     &log.new(o!("step" => "build_params")),
                     |log| Params::build(log, req),
