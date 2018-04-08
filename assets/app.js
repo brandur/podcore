@@ -20,10 +20,10 @@
 const GRAPHQL_URL = "/graphql";
 
 //
-// AccountPodcastSubscriptionToggler
+// AccountPodcastSubscribedToggler
 //
 
-class AccountPodcastSubscriptionToggler extends React.Component {
+class AccountPodcastSubscribedToggler extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -101,7 +101,7 @@ async function executeGraphQL(query) {
 Activating a React component:
 
     ReactDOM.render(
-      React.createElement(AccountPodcastSubscriptionToggler, {podcastId: "1", subscribed: false}),
+      React.createElement(AccountPodcastSubscribedToggler, {podcastId: "1", subscribed: false}),
       document.getElementById('react-container')
     );
 
