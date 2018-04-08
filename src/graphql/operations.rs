@@ -140,7 +140,7 @@ mod mutation {
 
         #[cfg(test)]
         mod tests {
-            use graphql::operations::mutation::account_podcast_subscribe::*;
+            use graphql::operations::mutation::account_podcast_subscription_update::*;
             use test_data;
             use test_helpers;
 
@@ -148,17 +148,22 @@ mod mutation {
             use r2d2_diesel::ConnectionManager;
 
             #[test]
-            fn test_mutation_account_podcast_subscribe() {
+            fn test_mutation_account_podcast_subscription_update_subscribe() {
                 let bootstrap = TestBootstrap::new();
 
+                // Two `unwrap`s: once to verify successful execution, and once to verify that
+                // we were indeed handed a `model::AccountPodcast` which is
+                // always expected when subscribing.
                 let account_podcast = execute(
                     &bootstrap.log,
                     &Params {
                         account:    &bootstrap.account,
                         conn:       &*bootstrap.conn,
                         podcast_id: &bootstrap.podcast.id.to_string(),
+                        subscribed: true,
                     },
-                ).unwrap();
+                ).unwrap()
+                    .unwrap();
                 assert_ne!("0", account_podcast.id);
                 assert_eq!(bootstrap.account.id.to_string(), account_podcast.account_id);
                 assert_eq!(bootstrap.podcast.id.to_string(), account_podcast.podcast_id);
