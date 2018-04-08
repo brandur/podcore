@@ -169,6 +169,49 @@ mod mutation {
                 assert_eq!(bootstrap.podcast.id.to_string(), account_podcast.podcast_id);
             }
 
+            #[test]
+            fn test_mutation_account_podcast_subscription_update_unsubscribe_subscribed() {
+                let bootstrap = TestBootstrap::new();
+
+                let account_podcast = test_data::account_podcast::insert_args(
+                    &bootstrap.log,
+                    &*bootstrap.conn,
+                    test_data::account_podcast::Args {
+                        account: Some(&bootstrap.account),
+                    },
+                );
+
+                let account_podcast_resource = execute(
+                    &bootstrap.log,
+                    &Params {
+                        account:    &bootstrap.account,
+                        conn:       &*bootstrap.conn,
+                        podcast_id: &account_podcast.podcast_id.to_string(),
+                        subscribed: false,
+                    },
+                ).unwrap()
+                    .unwrap();
+                assert_eq!(account_podcast.id.to_string(), account_podcast_resource.id);
+            }
+
+            // Unsubscribing when not subscribed is a no-op, but returns a successful
+            // response.
+            #[test]
+            fn test_mutation_account_podcast_subscription_update_unsubscribed_not_subscribed() {
+                let bootstrap = TestBootstrap::new();
+
+                let account_podcast = execute(
+                    &bootstrap.log,
+                    &Params {
+                        account:    &bootstrap.account,
+                        conn:       &*bootstrap.conn,
+                        podcast_id: &"0",
+                        subscribed: false,
+                    },
+                ).unwrap();
+                assert!(account_podcast.is_none());
+            }
+
             //
             // Private types/functions
             //
@@ -199,107 +242,6 @@ mod mutation {
             }
         }
     }
-
-    /*
-    pub mod account_podcast_unsubscribe {
-        use graphql::operations::mutation::*;
-
-        use diesel::prelude::*;
-        use std::str::FromStr;
-
-        pub struct Params<'a> {
-            pub account:    &'a model::Account,
-            pub conn:       &'a PgConnection,
-            pub podcast_id: &'a str,
-        }
-
-        pub fn execute<'a>(
-            log: &Logger,
-            params: &Params<'a>,
-        ) -> Result<Option<resource::AccountPodcast>> {
-            let podcast_id = i64::from_str(params.podcast_id)
-                .map_err(|e| error::bad_parameter("podcast_id", &e))?;
-        }
-
-        #[cfg(test)]
-        mod tests {
-            use graphql::operations::mutation::account_podcast_unsubscribe::*;
-            use test_data;
-            use test_helpers;
-
-            use r2d2::PooledConnection;
-            use r2d2_diesel::ConnectionManager;
-
-            #[test]
-            fn test_mutation_account_podcast_unsubscribe_subscribed() {
-                let bootstrap = TestBootstrap::new();
-
-                let account_podcast = test_data::account_podcast::insert_args(
-                    &bootstrap.log,
-                    &*bootstrap.conn,
-                    test_data::account_podcast::Args {
-                        account: Some(&bootstrap.account),
-                    },
-                );
-
-                let account_podcast_resource = execute(
-                    &bootstrap.log,
-                    &Params {
-                        account:    &bootstrap.account,
-                        conn:       &*bootstrap.conn,
-                        podcast_id: &account_podcast.podcast_id.to_string(),
-                    },
-                ).unwrap()
-                    .unwrap();
-                assert_eq!(account_podcast.id.to_string(), account_podcast_resource.id);
-            }
-
-            // Unsubscribing when not subscribed is a no-op, but returns a successful
-            // response.
-            #[test]
-            fn test_mutation_account_podcast_unsubscribe_not_subscribed() {
-                let bootstrap = TestBootstrap::new();
-
-                let account_podcast = execute(
-                    &bootstrap.log,
-                    &Params {
-                        account:    &bootstrap.account,
-                        conn:       &*bootstrap.conn,
-                        podcast_id: &"0",
-                    },
-                ).unwrap();
-                assert!(account_podcast.is_none());
-            }
-
-            //
-            // Private types/functions
-            //
-
-            struct TestBootstrap {
-                _common: test_helpers::CommonTestBootstrap,
-                account: model::Account,
-                conn:    PooledConnection<ConnectionManager<PgConnection>>,
-                log:     Logger,
-            }
-
-            impl TestBootstrap {
-                fn new() -> TestBootstrap {
-                    let conn = test_helpers::connection();
-                    let log = test_helpers::log();
-
-                    TestBootstrap {
-                        _common: test_helpers::CommonTestBootstrap::new(),
-                        account: test_data::account::insert(&log, &conn),
-
-                        // Only move these after filling the above
-                        conn: conn,
-                        log:  log,
-                    }
-                }
-            }
-        }
-    }
-    */
 }
 
 //
