@@ -204,7 +204,7 @@ mod mutation {
                 account_podcast: &fetches.account_podcast,
                 conn:            conn,
                 episode:         &fetches.episode,
-                favorite:        params.favorited,
+                favorited:       params.favorited,
             }.run(log)?;
 
             Ok(resource::AccountPodcastEpisode::from(
@@ -926,7 +926,7 @@ mod resource {
             AccountPodcastEpisode {
                 id:         e.id.to_string(),
                 episode_id: e.episode_id.to_string(),
-                favorited:  e.favorite,
+                favorited:  e.favorited,
                 played:     e.played,
             }
         }

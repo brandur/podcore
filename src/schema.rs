@@ -25,7 +25,7 @@ table! {
         id -> Int8,
         account_podcast_id -> Int8,
         episode_id -> Int8,
-        favorite -> Bool,
+        favorited -> Bool,
         listened_seconds -> Nullable<Int8>,
         played -> Bool,
         updated_at -> Timestamptz,

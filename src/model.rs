@@ -45,7 +45,7 @@ pub struct AccountPodcastEpisode {
     pub id:                 i64,
     pub account_podcast_id: i64,
     pub episode_id:         i64,
-    pub favorite:           bool,
+    pub favorited:          bool,
     pub listened_seconds:   Option<i64>,
     pub played:             bool,
     pub updated_at:         DateTime<Utc>,
@@ -239,7 +239,7 @@ pub mod insertable {
     pub struct AccountPodcastEpisodeFavorite {
         pub account_podcast_id: i64,
         pub episode_id:         i64,
-        pub favorite:           bool,
+        pub favorited:          bool,
         pub listened_seconds:   Option<i64>,
         pub updated_at:         DateTime<Utc>,
     }

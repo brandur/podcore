@@ -15,7 +15,7 @@ pub struct Mediator<'a> {
     pub account_podcast: &'a model::AccountPodcast,
     pub conn:            &'a PgConnection,
     pub episode:         &'a model::Episode,
-    pub favorite:        bool,
+    pub favorited:       bool,
 }
 
 impl<'a> Mediator<'a> {
@@ -45,7 +45,7 @@ impl<'a> Mediator<'a> {
         let ins_episode = insertable::AccountPodcastEpisodeFavorite {
             account_podcast_id: self.account_podcast.id,
             episode_id:         self.episode.id,
-            favorite:           self.favorite,
+            favorited:          self.favorited,
             updated_at:         Utc::now(),
 
             // We insert a listened seconds value of `0`, but we only expect this to take affect if
@@ -65,8 +65,8 @@ impl<'a> Mediator<'a> {
                     ))
                     .do_update()
                     .set((
-                        schema::account_podcast_episode::favorite
-                            .eq(excluded(schema::account_podcast_episode::favorite)),
+                        schema::account_podcast_episode::favorited
+                            .eq(excluded(schema::account_podcast_episode::favorited)),
                         schema::account_podcast_episode::updated_at
                             .eq(excluded(schema::account_podcast_episode::updated_at)),
                     ))
@@ -96,21 +96,21 @@ mod tests {
 
     #[test]
     fn test_account_podcast_episode_favorite_new() {
-        let mut bootstrap = TestBootstrap::new(Args { favorite: true });
+        let mut bootstrap = TestBootstrap::new(Args { favorited: true });
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
 
         assert_ne!(0, res.account_podcast_episode.id);
-        assert!(res.account_podcast_episode.favorite);
+        assert!(res.account_podcast_episode.favorited);
     }
 
     #[test]
     fn test_account_podcast_episode_favorite_existing() {
-        let mut bootstrap = TestBootstrap::new(Args { favorite: true });
+        let mut bootstrap = TestBootstrap::new(Args { favorited: true });
 
         // Insert a new record so that upsert operates on that
         let existing = insert_account_podcast_episode(&bootstrap);
-        assert_eq!(false, existing.favorite);
+        assert_eq!(false, existing.favorited);
 
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
@@ -124,30 +124,30 @@ mod tests {
         assert_eq!(existing.played, res.account_podcast_episode.played);
 
         // However, it's now a favorite
-        assert!(res.account_podcast_episode.favorite);
+        assert!(res.account_podcast_episode.favorited);
     }
 
     #[test]
     fn test_account_podcast_episode_unfavorite_new() {
-        let mut bootstrap = TestBootstrap::new(Args { favorite: false });
+        let mut bootstrap = TestBootstrap::new(Args { favorited: false });
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
 
         assert_ne!(0, res.account_podcast_episode.id);
-        assert_eq!(false, res.account_podcast_episode.favorite);
+        assert_eq!(false, res.account_podcast_episode.favorited);
     }
 
     #[test]
     fn test_account_podcast_episode_unfavorite_existing() {
-        let mut bootstrap = TestBootstrap::new(Args { favorite: true });
+        let mut bootstrap = TestBootstrap::new(Args { favorited: true });
 
         // Insert a new record so that upsert operates on that
         let existing = insert_account_podcast_episode(&bootstrap);
-        assert_eq!(false, existing.favorite);
+        assert_eq!(false, existing.favorited);
 
         // Do a targeted `UPDATE` to set `favorite` on this existing row
         diesel::update(schema::account_podcast_episode::table)
-            .set(schema::account_podcast_episode::favorite.eq(true))
+            .set(schema::account_podcast_episode::favorited.eq(true))
             .execute(&*bootstrap.conn)
             .unwrap();
 
@@ -163,7 +163,7 @@ mod tests {
         assert_eq!(existing.played, res.account_podcast_episode.played);
 
         // However, it's now a favorite
-        assert!(res.account_podcast_episode.favorite);
+        assert!(res.account_podcast_episode.favorited);
     }
 
     //
@@ -171,7 +171,7 @@ mod tests {
     //
 
     struct Args {
-        favorite: bool,
+        favorited: bool,
     }
 
     struct TestBootstrap {
@@ -211,7 +211,7 @@ mod tests {
                     account_podcast: &self.account_podcast,
                     conn:            &*self.conn,
                     episode:         &self.episode,
-                    favorite:        self.args.favorite,
+                    favorited:       self.args.favorited,
                 },
                 self.log.clone(),
             )
