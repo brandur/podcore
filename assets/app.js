@@ -61,6 +61,46 @@ mutation {
 }
 
 //
+// EpisodePlayedToggler
+//
+
+class EpisodePlayedToggler extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+	  episodeId: props.episodeId,
+	  played: props.played
+    };
+
+    // I tried arrow functions, but couldn't get them working for a class
+    // function. Bind it is!
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  async handleClick(e) {
+    e.preventDefault();
+
+    const query = `
+mutation {
+  episodePlayedUpdate(episodeId: "${this.state.episodeId}", played: ${!this.state.played}) {
+    id
+  }
+}`;
+    const data = executeGraphQL(query);
+
+    this.setState(prevState => ({
+      played: !prevState.played
+    }));
+  }
+
+  render() {
+    return React.createElement('a', {href: '#', onClick: this.handleClick},
+      this.state.played ? 'Set unplayed' : 'Set played'
+    );
+  }
+}
+
+//
 // Private functions
 //
 
