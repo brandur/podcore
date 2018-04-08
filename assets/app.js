@@ -42,7 +42,7 @@ class AccountPodcastSubscriptionToggler extends React.Component {
 
     const query = `
 mutation {
-  accountPodcastSubscriptionUpdate(podcastId: "${this.state.podcastId}", subscribed: ${!this.state.subscribed}) {
+  accountPodcastSubscribedUpdate(podcastId: "${this.state.podcastId}", subscribed: ${!this.state.subscribed}) {
     id
   }
 }`;

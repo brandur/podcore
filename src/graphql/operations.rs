@@ -50,18 +50,18 @@ graphql_object!(
         //
         // ``` graphql
         // mutation {
-        //   accountPodcastSubscriptionUpdate(podcastId: "1", subscribed: true) {
+        //   accountPodcastSubscribedUpdate(podcastId: "1", subscribed: true) {
         //     id
         //   }
         // }
         // ```
-        field account_podcast_subscription_update(&executor,
+        field account_podcast_subscribed_update(&executor,
             podcast_id: String as "The podcast's ID.",
             subscribed: bool as "True to subscribe or false to unsubscribe."
-        ) -> FieldResult<Option<resource::AccountPodcast>> as "An object representing the added or removed subscription, or null if unsubscribing and the account wasn't subscribed." {
-            Ok(mutation::account_podcast_subscription_update::execute(
+        ) -> FieldResult<Option<resource::AccountPodcast>> as "An object representing the added or removed subscribed, or null if unsubscribing and the account wasn't subscribed." {
+            Ok(mutation::account_podcast_subscribed_update::execute(
                 &executor.context().log,
-                &mutation::account_podcast_subscription_update::Params {
+                &mutation::account_podcast_subscribed_update::Params {
                     account:    &executor.context().account,
                     conn:       &executor.context().conn(),
                     podcast_id: &podcast_id,
@@ -82,7 +82,7 @@ mod mutation {
     use diesel::pg::PgConnection;
     use slog::Logger;
 
-    pub mod account_podcast_subscription_update {
+    pub mod account_podcast_subscribed_update {
         use graphql::operations::mutation::*;
 
         use diesel::prelude::*;
@@ -164,7 +164,7 @@ mod mutation {
 
         #[cfg(test)]
         mod tests {
-            use graphql::operations::mutation::account_podcast_subscription_update::*;
+            use graphql::operations::mutation::account_podcast_subscribed_update::*;
             use test_data;
             use test_helpers;
 
@@ -172,7 +172,7 @@ mod mutation {
             use r2d2_diesel::ConnectionManager;
 
             #[test]
-            fn test_mutation_account_podcast_subscription_update_subscribe() {
+            fn test_mutation_account_podcast_subscribed_update_subscribe() {
                 let bootstrap = TestBootstrap::new();
 
                 // Two `unwrap`s: once to verify successful execution, and once to verify that
@@ -194,7 +194,7 @@ mod mutation {
             }
 
             #[test]
-            fn test_mutation_account_podcast_subscription_update_unsubscribe_subscribed() {
+            fn test_mutation_account_podcast_subscribed_update_unsubscribe_subscribed() {
                 let bootstrap = TestBootstrap::new();
 
                 let account_podcast = test_data::account_podcast::insert_args(
@@ -221,7 +221,7 @@ mod mutation {
             // Unsubscribing when not subscribed is a no-op, but returns a successful
             // response.
             #[test]
-            fn test_mutation_account_podcast_subscription_update_unsubscribed_not_subscribed() {
+            fn test_mutation_account_podcast_subscribed_update_unsubscribed_not_subscribed() {
                 let bootstrap = TestBootstrap::new();
 
                 let account_podcast = execute(
