@@ -299,6 +299,15 @@ pub mod episode_show {
             pub account_podcast_episode: Option<model::AccountPodcastEpisode>,
             pub episode:                 model::Episode,
         }
+
+        impl Ok {
+            pub fn is_episode_played(&self) -> bool {
+                match self.account_podcast_episode {
+                    Some(ref episode) => episode.played,
+                    None => false,
+                }
+            }
+        }
     }
 
     impl endpoints::ViewModel for ViewModel {

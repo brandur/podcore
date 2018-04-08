@@ -97,7 +97,7 @@ pub mod episode_show {
                         "played-toggle",
                         &json!({
                             "episodeId": view_model.episode.id.to_string(),
-                            "played": false,
+                            "played": view_model.is_episode_played(),
                         }).to_string(),
                     ));
                 }
