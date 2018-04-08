@@ -166,7 +166,7 @@ fn build_requester() -> Result<HttpRequesterLive> {
 
 pub fn render_user_error(code: StatusCode, message: String) -> Result<HttpResponse> {
     let html = views::render_user_error(code, message)?;
-    Ok(HttpResponse::build(StatusCode::OK)
+    Ok(HttpResponse::build(code)
         .content_type("text/html; charset=utf-8")
         .body(html))
 }
