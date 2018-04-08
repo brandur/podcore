@@ -453,6 +453,7 @@ pub mod podcast_show {
                     )).get_result(conn)?,
                     None => false,
                 };
+                debug!(log, "Is subscribed"; "subscribed" => subscribed);
 
                 Ok(ViewModel::Ok(view_model::Ok {
                     account: params.account,
