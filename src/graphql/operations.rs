@@ -438,6 +438,26 @@ mod mutation {
                 assert_eq!(false, episode.played);
             }
 
+            #[test]
+            fn test_mutation_episode_played_update_no_episode() {
+                let bootstrap = TestBootstrap::new();
+
+                let err = execute(
+                    &bootstrap.log,
+                    &*bootstrap.conn,
+                    &RawParams {
+                        account:    &bootstrap.account,
+                        episode_id: "0",
+                        played:     false,
+                    },
+                ).err()
+                    .unwrap();
+                assert_eq!(
+                    format!("{}", error::not_found("episode", 0)),
+                    format!("{}", err)
+                );
+            }
+
             /*
             #[test]
             fn test_mutation_account_podcast_subscribed_update_unsubscribe_subscribed() {
