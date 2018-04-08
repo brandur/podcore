@@ -10,4 +10,8 @@ lint:
 
 test:
 	cargo test
+	cargo test test_clean_database -- --ignored
 	cargo test -- --ignored --test-threads=1
+
+test_clean_database:
+	cargo test test_clean_database -- --ignored

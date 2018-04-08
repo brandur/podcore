@@ -233,6 +233,22 @@ pub fn url_encode(bytes: &[u8]) -> PercentEncode<DEFAULT_ENCODE_SET> {
 }
 
 //
+// Tests
+//
+
+// A no-op test that will clean the database. This is useful to run before a
+// test suite that's not using test transactions just in case a failed test
+// previously left some state in there.
+//
+// When running through the ignored test suite we can expect this test to run a
+// second time, but it's okay, it should be a no-op by then.
+#[test]
+#[ignore]
+fn test_clean_database() {
+    clean_database(&log(), &*connection());
+}
+
+//
 // Private types/functions
 //
 
