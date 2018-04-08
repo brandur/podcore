@@ -102,41 +102,65 @@ mod mutation {
             let podcast_id = i64::from_str(params.podcast_id)
                 .map_err(|e| error::bad_parameter("podcast_id", &e))?;
 
-            if params.subscribed {
-                let podcast: model::Podcast = schema::podcast::table
-                    .filter(schema::podcast::id.eq(podcast_id))
-                    .first(params.conn)
-                    .optional()?
-                    .ok_or_else(|| error::not_found(&"podcast", podcast_id))?;
-
-                let account_podcast = mediators::account_podcast_subscriber::Mediator {
-                    account: params.account,
-                    conn:    params.conn,
-                    podcast: &podcast,
-                }.run(log)?
-                    .account_podcast;
-
-                Ok(Some(resource::AccountPodcast::from(&account_podcast)))
+            let account_podcast = if params.subscribed {
+                // Subscription always produces an `AccountPodcast`
+                Some(subscribe(log, params, podcast_id)?)
             } else {
-                let account_podcast: model::AccountPodcast = match schema::account_podcast::table
-                    .filter(schema::account_podcast::account_id.eq(params.account.id))
-                    .filter(schema::account_podcast::podcast_id.eq(podcast_id))
-                    .first(params.conn)
-                    .optional()?
-                {
-                    Some(account_podcast) => account_podcast,
-                    None => return Ok(None),
-                };
-
-                let account_podcast = mediators::account_podcast_unsubscriber::Mediator {
-                    conn:            params.conn,
-                    account_podcast: &account_podcast,
-                }.run(log)?
-                    .account_podcast;
-
-                Ok(Some(resource::AccountPodcast::from(&account_podcast)))
-            }
+                unsubscribe(log, params, podcast_id)?
+            };
+            Ok(account_podcast.map(|ref ap| resource::AccountPodcast::from(ap)))
         }
+
+        //
+        // Private functions
+        //
+
+        pub fn subscribe<'a>(
+            log: &Logger,
+            params: &Params<'a>,
+            podcast_id: i64,
+        ) -> Result<model::AccountPodcast> {
+            let podcast: model::Podcast = schema::podcast::table
+                .filter(schema::podcast::id.eq(podcast_id))
+                .first(params.conn)
+                .optional()?
+                .ok_or_else(|| error::not_found(&"podcast", podcast_id))?;
+
+            let res = mediators::account_podcast_subscriber::Mediator {
+                account: params.account,
+                conn:    params.conn,
+                podcast: &podcast,
+            }.run(log)?;
+
+            Ok(res.account_podcast)
+        }
+
+        pub fn unsubscribe<'a>(
+            log: &Logger,
+            params: &Params<'a>,
+            podcast_id: i64,
+        ) -> Result<Option<model::AccountPodcast>> {
+            let account_podcast: model::AccountPodcast = match schema::account_podcast::table
+                .filter(schema::account_podcast::account_id.eq(params.account.id))
+                .filter(schema::account_podcast::podcast_id.eq(podcast_id))
+                .first(params.conn)
+                .optional()?
+            {
+                Some(account_podcast) => account_podcast,
+                None => return Ok(None),
+            };
+
+            let res = mediators::account_podcast_unsubscriber::Mediator {
+                conn:            params.conn,
+                account_podcast: &account_podcast,
+            }.run(log)?;
+
+            Ok(Some(res.account_podcast))
+        }
+
+        //
+        // Tests
+        //
 
         #[cfg(test)]
         mod tests {
