@@ -182,6 +182,9 @@ where
         Err(e @ Error(ErrorKind::NotFound(_, _), _)) => {
             render(log, StatusCode::NOT_FOUND, format!("{}", e))
         }
+        Err(e @ Error(ErrorKind::NotFoundGeneral(_), _)) => {
+            render(log, StatusCode::NOT_FOUND, format!("{}", e))
+        }
         Err(e @ Error(ErrorKind::Unauthorized, _)) => {
             render(log, StatusCode::UNAUTHORIZED, format!("{}", e))
         }

@@ -69,6 +69,21 @@ graphql_object!(
                 }
             )?)
         }
+
+        field episode_played_update(&executor,
+            episode_id: String as "The episode's ID.",
+            played: bool as "True to set as played or false to set as not played."
+        ) -> FieldResult<resource::AccountPodcastEpisode> as "An object representing the podcast episode for this user." {
+            Ok(mutation::episode_played_update::execute(
+                &executor.context().log,
+                &mutation::episode_played_update::Params {
+                    account:    &executor.context().account,
+                    conn:       &executor.context().conn(),
+                    episode_id: &episode_id,
+                    played: played,
+                }
+            )?)
+        }
     }
 );
 
@@ -266,6 +281,217 @@ mod mutation {
             }
         }
     }
+
+    pub mod episode_played_update {
+        use graphql::operations::mutation::*;
+
+        use diesel::prelude::*;
+        use std::str::FromStr;
+
+        pub struct Params<'a> {
+            pub account:    &'a model::Account,
+            pub conn:       &'a PgConnection,
+            pub episode_id: &'a str,
+            pub played:     bool,
+        }
+
+        pub fn execute<'a>(
+            log: &Logger,
+            params: &Params<'a>,
+        ) -> Result<resource::AccountPodcastEpisode> {
+            let episode_id = i64::from_str(params.episode_id)
+                .map_err(|e| error::bad_parameter("episode_id", &e))?;
+
+            let episode: model::Episode = schema::episode::table
+                .filter(schema::episode::id.eq(episode_id))
+                .first(params.conn)
+                .optional()?
+                .ok_or_else(|| error::not_found(&"episode", episode_id))?;
+
+            let account_podcast: model::AccountPodcast = schema::account_podcast::table
+                .filter(schema::account_podcast::account_id.eq(params.account.id))
+                .filter(schema::account_podcast::podcast_id.eq(episode.podcast_id))
+                .first(params.conn)
+                .optional()?
+                .ok_or_else(|| {
+                    error::not_found_general(&format!(
+                        "Subscription for account {} on podcast {}",
+                        params.account.id, episode.podcast_id
+                    ))
+                })?;
+
+            let res = mediators::account_podcast_episode_upserter::Mediator {
+                account_podcast:  &account_podcast,
+                conn:             params.conn,
+                episode:          &episode,
+                listened_seconds: None,
+                played:           params.played,
+            }.run(log)?;
+
+            Ok(resource::AccountPodcastEpisode::from(
+                &res.account_podcast_episode,
+            ))
+        }
+
+        //
+        // Private functions
+        //
+
+        /*
+        pub fn subscribe<'a>(
+            log: &Logger,
+            params: &Params<'a>,
+            podcast_id: i64,
+        ) -> Result<model::AccountPodcast> {
+            let podcast: model::Podcast = schema::podcast::table
+                .filter(schema::podcast::id.eq(podcast_id))
+                .first(params.conn)
+                .optional()?
+                .ok_or_else(|| error::not_found(&"podcast", podcast_id))?;
+
+            let res = mediators::account_podcast_subscriber::Mediator {
+                account: params.account,
+                conn:    params.conn,
+                podcast: &podcast,
+            }.run(log)?;
+
+            Ok(res.account_podcast)
+        }
+
+        pub fn unsubscribe<'a>(
+            log: &Logger,
+            params: &Params<'a>,
+            podcast_id: i64,
+        ) -> Result<Option<model::AccountPodcast>> {
+            let account_podcast: model::AccountPodcast = match schema::account_podcast::table
+                .filter(schema::account_podcast::account_id.eq(params.account.id))
+                .filter(schema::account_podcast::podcast_id.eq(podcast_id))
+                .first(params.conn)
+                .optional()?
+            {
+                Some(account_podcast) => account_podcast,
+                None => return Ok(None),
+            };
+
+            let res = mediators::account_podcast_unsubscriber::Mediator {
+                conn:            params.conn,
+                account_podcast: &account_podcast,
+            }.run(log)?;
+
+            Ok(Some(res.account_podcast))
+        }
+*/
+
+        //
+        // Tests
+        //
+
+        /*
+        #[cfg(test)]
+        mod tests {
+            use graphql::operations::mutation::account_podcast_subscribed_update::*;
+            use test_data;
+            use test_helpers;
+
+            use r2d2::PooledConnection;
+            use r2d2_diesel::ConnectionManager;
+
+            #[test]
+            fn test_mutation_account_podcast_subscribed_update_subscribe() {
+                let bootstrap = TestBootstrap::new();
+
+                // Two `unwrap`s: once to verify successful execution, and once to verify that
+                // we were indeed handed a `model::AccountPodcast` which is
+                // always expected when subscribing.
+                let account_podcast = execute(
+                    &bootstrap.log,
+                    &Params {
+                        account:    &bootstrap.account,
+                        conn:       &*bootstrap.conn,
+                        podcast_id: &bootstrap.podcast.id.to_string(),
+                        subscribed: true,
+                    },
+                ).unwrap()
+                    .unwrap();
+                assert_ne!("0", account_podcast.id);
+                assert_eq!(bootstrap.account.id.to_string(), account_podcast.account_id);
+                assert_eq!(bootstrap.podcast.id.to_string(), account_podcast.podcast_id);
+            }
+
+            #[test]
+            fn test_mutation_account_podcast_subscribed_update_unsubscribe_subscribed() {
+                let bootstrap = TestBootstrap::new();
+
+                let account_podcast = test_data::account_podcast::insert_args(
+                    &bootstrap.log,
+                    &*bootstrap.conn,
+                    test_data::account_podcast::Args {
+                        account: Some(&bootstrap.account),
+                    },
+                );
+
+                let account_podcast_resource = execute(
+                    &bootstrap.log,
+                    &Params {
+                        account:    &bootstrap.account,
+                        conn:       &*bootstrap.conn,
+                        podcast_id: &account_podcast.podcast_id.to_string(),
+                        subscribed: false,
+                    },
+                ).unwrap()
+                    .unwrap();
+                assert_eq!(account_podcast.id.to_string(), account_podcast_resource.id);
+            }
+
+            // Unsubscribing when not subscribed is a no-op, but returns a successful
+            // response.
+            #[test]
+            fn test_mutation_account_podcast_subscribed_update_unsubscribed_not_subscribed() {
+                let bootstrap = TestBootstrap::new();
+
+                let account_podcast = execute(
+                    &bootstrap.log,
+                    &Params {
+                        account:    &bootstrap.account,
+                        conn:       &*bootstrap.conn,
+                        podcast_id: &"0",
+                        subscribed: false,
+                    },
+                ).unwrap();
+                assert!(account_podcast.is_none());
+            }
+
+            //
+            // Private types/functions
+            //
+
+            struct TestBootstrap {
+                _common: test_helpers::CommonTestBootstrap,
+                account: model::Account,
+                conn:    PooledConnection<ConnectionManager<PgConnection>>,
+                log:     Logger,
+                podcast: model::Podcast,
+            }
+
+            impl TestBootstrap {
+                fn new() -> TestBootstrap {
+                    let conn = test_helpers::connection();
+                    let log = test_helpers::log();
+
+                    TestBootstrap {
+                        _common: test_helpers::CommonTestBootstrap::new(),
+                        account: test_data::account::insert(&log, &conn),
+                        podcast: test_data::podcast::insert(&log, &conn),
+
+                        // Only move these after filling the above
+                        conn: conn,
+                        log:  log,
+                    }
+                }
+            }
+        }
+        */
+    }
 }
 
 //
@@ -343,6 +569,24 @@ mod resource {
                 id:         e.id.to_string(),
                 account_id: e.account_id.to_string(),
                 podcast_id: e.podcast_id.to_string(),
+            }
+        }
+    }
+
+    #[derive(GraphQLObject)]
+    pub struct AccountPodcastEpisode {
+        #[graphql(description = "The account podcast episode's ID.")]
+        pub id: String,
+
+        #[graphql(description = "The episode's ID.")]
+        pub episode_id: String,
+    }
+
+    impl<'a> From<&'a model::AccountPodcastEpisode> for AccountPodcastEpisode {
+        fn from(e: &model::AccountPodcastEpisode) -> Self {
+            AccountPodcastEpisode {
+                id:         e.id.to_string(),
+                episode_id: e.episode_id.to_string(),
             }
         }
     }

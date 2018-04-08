@@ -52,6 +52,12 @@ error_chain!{
             display("Not found: resource \"{}\" with ID {} was not found.", resource, id),
         }
 
+        // A more generalized "not found" that doesn't identify a specific resource.
+        NotFoundGeneral(message: String) {
+            description("Not found"),
+            display("Not found: {}", message),
+        }
+
         Unauthorized {
             description("Unauthorized"),
             display("Unauthorized: You need to present valid credentials to access this endpoint."),
@@ -96,6 +102,11 @@ pub mod error {
     #[inline]
     pub fn not_found(resource: &str, id: i64) -> Error {
         ErrorKind::NotFound(resource.to_owned(), id).into()
+    }
+
+    #[inline]
+    pub fn not_found_general(message: &str) -> Error {
+        ErrorKind::NotFoundGeneral(message.to_owned()).into()
     }
 }
 
