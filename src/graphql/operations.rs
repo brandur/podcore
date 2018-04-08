@@ -458,51 +458,6 @@ mod mutation {
                 );
             }
 
-            /*
-            #[test]
-            fn test_mutation_account_podcast_subscribed_update_unsubscribe_subscribed() {
-                let bootstrap = TestBootstrap::new();
-
-                let account_podcast = test_data::account_podcast::insert_args(
-                    &bootstrap.log,
-                    &*bootstrap.conn,
-                    test_data::account_podcast::Args {
-                        account: Some(&bootstrap.account),
-                    },
-                );
-
-                let account_podcast_resource = execute(
-                    &bootstrap.log,
-                    &Params {
-                        account:    &bootstrap.account,
-                        conn:       &*bootstrap.conn,
-                        podcast_id: &account_podcast.podcast_id.to_string(),
-                        subscribed: false,
-                    },
-                ).unwrap()
-                    .unwrap();
-                assert_eq!(account_podcast.id.to_string(), account_podcast_resource.id);
-            }
-
-            // Unsubscribing when not subscribed is a no-op, but returns a successful
-            // response.
-            #[test]
-            fn test_mutation_account_podcast_subscribed_update_unsubscribed_not_subscribed() {
-                let bootstrap = TestBootstrap::new();
-
-                let account_podcast = execute(
-                    &bootstrap.log,
-                    &Params {
-                        account:    &bootstrap.account,
-                        conn:       &*bootstrap.conn,
-                        podcast_id: &"0",
-                        subscribed: false,
-                    },
-                ).unwrap();
-                assert!(account_podcast.is_none());
-            }
-        */
-
             //
             // Private types/functions
             //
