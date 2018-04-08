@@ -399,6 +399,7 @@ mod mutation {
             use test_data;
             use test_helpers;
 
+            use diesel;
             use r2d2::PooledConnection;
             use r2d2_diesel::ConnectionManager;
 
@@ -458,16 +459,53 @@ mod mutation {
                 );
             }
 
+            #[test]
+            fn test_mutation_episode_played_update_no_account_podcast() {
+                let bootstrap = TestBootstrap::new();
+
+                // Delete the `account_podcast_episode` and `account_podcast` (subscription)
+                let num_deleted = diesel::delete(
+                    schema::account_podcast_episode::table.filter(
+                        schema::account_podcast_episode::account_podcast_id
+                            .eq(bootstrap.account_podcast.id),
+                    ),
+                ).execute(&*bootstrap.conn)
+                    .unwrap();
+                assert_eq!(1, num_deleted);
+                let num_deleted = diesel::delete(
+                    schema::account_podcast::table
+                        .filter(schema::account_podcast::id.eq(bootstrap.account_podcast.id)),
+                ).execute(&*bootstrap.conn)
+                    .unwrap();
+                assert_eq!(1, num_deleted);
+
+                let err = execute(
+                    &bootstrap.log,
+                    &*bootstrap.conn,
+                    &RawParams {
+                        account:    &bootstrap.account,
+                        episode_id: "0",
+                        played:     false,
+                    },
+                ).err()
+                    .unwrap();
+                assert_eq!(
+                    format!("{}", error::not_found("episode", 0)),
+                    format!("{}", err)
+                );
+            }
+
             //
             // Private types/functions
             //
 
             struct TestBootstrap {
-                _common: test_helpers::CommonTestBootstrap,
-                account: model::Account,
-                episode: model::Episode,
-                conn:    PooledConnection<ConnectionManager<PgConnection>>,
-                log:     Logger,
+                _common:         test_helpers::CommonTestBootstrap,
+                account:         model::Account,
+                account_podcast: model::AccountPodcast,
+                episode:         model::Episode,
+                conn:            PooledConnection<ConnectionManager<PgConnection>>,
+                log:             Logger,
             }
 
             impl TestBootstrap {
@@ -497,9 +535,10 @@ mod mutation {
                     );
 
                     TestBootstrap {
-                        _common: test_helpers::CommonTestBootstrap::new(),
-                        account: account,
-                        episode: episode,
+                        _common:         test_helpers::CommonTestBootstrap::new(),
+                        account:         account,
+                        account_podcast: account_podcast,
+                        episode:         episode,
 
                         // Only move these after filling the above
                         conn: conn,
