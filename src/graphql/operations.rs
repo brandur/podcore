@@ -76,9 +76,9 @@ graphql_object!(
         ) -> FieldResult<resource::AccountPodcastEpisode> as "An object representing the podcast episode for this user." {
             Ok(mutation::episode_played_update::execute(
                 &executor.context().log,
-                &mutation::episode_played_update::Params {
+                &executor.context().conn(),
+                &mutation::episode_played_update::RawParams {
                     account:    &executor.context().account,
-                    conn:       &executor.context().conn(),
                     episode_id: &episode_id,
                     played: played,
                 }
@@ -284,46 +284,96 @@ mod mutation {
 
     pub mod episode_played_update {
         use graphql::operations::mutation::*;
+        use time_helpers;
 
         use diesel::prelude::*;
-        use std::str::FromStr;
 
-        pub struct Params<'a> {
+        //
+        // Raw parameters
+        //
+
+        pub struct RawParams<'a> {
             pub account:    &'a model::Account,
-            pub conn:       &'a PgConnection,
             pub episode_id: &'a str,
             pub played:     bool,
         }
 
+        //
+        // Coerced parameters
+        //
+
+        pub struct CoercedParams<'a> {
+            pub account:    &'a model::Account,
+            pub episode_id: i64,
+            pub played:     bool,
+        }
+
+        impl<'a> CoercedParams<'a> {
+            fn coerce(_log: &Logger, params: &RawParams<'a>) -> Result<CoercedParams<'a>> {
+                use std::str::FromStr;
+                Ok(CoercedParams {
+                    account:    params.account,
+                    episode_id: i64::from_str(params.episode_id)
+                        .map_err(|e| error::bad_parameter("episode_id", &e))?,
+                    played:     params.played,
+                })
+            }
+        }
+
+        //
+        // Fetch
+        //
+
+        pub struct Fetches {
+            account_podcast: model::AccountPodcast,
+            episode:         model::Episode,
+        }
+
+        impl Fetches {
+            fn fetch(log: &Logger, conn: &PgConnection, params: &CoercedParams) -> Result<Self> {
+                time_helpers::log_timed(&log.new(o!("step" => "fetch")), |_log| {
+                    let episode: model::Episode = schema::episode::table
+                        .filter(schema::episode::id.eq(params.episode_id))
+                        .first(conn)
+                        .optional()?
+                        .ok_or_else(|| error::not_found(&"episode", params.episode_id))?;
+
+                    let account_podcast: model::AccountPodcast = schema::account_podcast::table
+                        .filter(schema::account_podcast::account_id.eq(params.account.id))
+                        .filter(schema::account_podcast::podcast_id.eq(episode.podcast_id))
+                        .first(conn)
+                        .optional()?
+                        .ok_or_else(|| {
+                            error::not_found_general(&format!(
+                                "Subscription for account {} on podcast {}",
+                                params.account.id, episode.podcast_id
+                            ))
+                        })?;
+
+                    Ok(Fetches {
+                        account_podcast,
+                        episode,
+                    })
+                })
+            }
+        }
+
+        //
+        // Execution
+        //
+
         pub fn execute<'a>(
             log: &Logger,
-            params: &Params<'a>,
+            conn: &PgConnection,
+            params: &RawParams<'a>,
         ) -> Result<resource::AccountPodcastEpisode> {
-            let episode_id = i64::from_str(params.episode_id)
-                .map_err(|e| error::bad_parameter("episode_id", &e))?;
-
-            let episode: model::Episode = schema::episode::table
-                .filter(schema::episode::id.eq(episode_id))
-                .first(params.conn)
-                .optional()?
-                .ok_or_else(|| error::not_found(&"episode", episode_id))?;
-
-            let account_podcast: model::AccountPodcast = schema::account_podcast::table
-                .filter(schema::account_podcast::account_id.eq(params.account.id))
-                .filter(schema::account_podcast::podcast_id.eq(episode.podcast_id))
-                .first(params.conn)
-                .optional()?
-                .ok_or_else(|| {
-                    error::not_found_general(&format!(
-                        "Subscription for account {} on podcast {}",
-                        params.account.id, episode.podcast_id
-                    ))
-                })?;
+            let coerced = CoercedParams::coerce(&log, &params)?;
+            let fetches = Fetches::fetch(&log, conn, &coerced)?;
 
             let res = mediators::account_podcast_episode_upserter::Mediator {
-                account_podcast:  &account_podcast,
-                conn:             params.conn,
-                episode:          &episode,
+                account_podcast:  &fetches.account_podcast,
+                conn:             conn,
+                episode:          &fetches.episode,
                 listened_seconds: None,
                 played:           params.played,
             }.run(log)?;
