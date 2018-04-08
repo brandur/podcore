@@ -79,15 +79,27 @@ pub mod episode_show {
     use web::views;
 
     use horrorshow::Template;
+    use horrorshow::prelude::*;
 
     pub fn render(common: &CommonViewModel, view_model: &view_model::Ok) -> Result<String> {
         views::render_layout(
             common,
             (html! {
                 h1: view_model.episode.title.as_str();
+                div(id="played-toggle") {}
                 p: view_model.episode.media_url.as_str();
                 @ if let Some(ref description) = view_model.episode.description {
                     p: description.as_str();
+                }
+                @ if view_model.account_podcast.is_some() {
+                    script : Raw(views::react_element(
+                        "EpisodePlayedToggler",
+                        "played-toggle",
+                        &json!({
+                            "episodeId": view_model.episode.id.to_string(),
+                            "played": false,
+                        }).to_string(),
+                    ));
                 }
             }).into_string()?
                 .as_str(),
@@ -109,7 +121,7 @@ pub mod podcast_show {
             common,
             (html! {
                 h1: view_model.podcast.title.as_str();
-                div(id="subscription-toggle") {}
+                div(id="subscribed-toggle") {}
                 p {
                     : "Hello! This is <html />"
                 }
@@ -124,7 +136,7 @@ pub mod podcast_show {
                 }
                 script : Raw(views::react_element(
                     "AccountPodcastSubscribedToggler",
-                    "subscription-toggle",
+                    "subscribed-toggle",
                     &json!({
                         "podcastId": view_model.podcast.id.to_string(),
                         "subscribed": view_model.subscribed,
