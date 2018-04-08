@@ -301,6 +301,13 @@ pub mod episode_show {
         }
 
         impl Ok {
+            pub fn is_episode_favorited(&self) -> bool {
+                match self.account_podcast_episode {
+                    Some(ref episode) => episode.favorite,
+                    None => false,
+                }
+            }
+
             pub fn is_episode_played(&self) -> bool {
                 match self.account_podcast_episode {
                     Some(ref episode) => episode.played,

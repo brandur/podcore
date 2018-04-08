@@ -86,12 +86,21 @@ pub mod episode_show {
             common,
             (html! {
                 h1: view_model.episode.title.as_str();
+                div(id="favorited-toggle") {}
                 div(id="played-toggle") {}
                 p: view_model.episode.media_url.as_str();
                 @ if let Some(ref description) = view_model.episode.description {
                     p: description.as_str();
                 }
                 @ if view_model.account_podcast.is_some() {
+                    script : Raw(views::react_element(
+                        "EpisodeFavoritedToggler",
+                        "favorited-toggle",
+                        &json!({
+                            "episodeId": view_model.episode.id.to_string(),
+                            "favorited": view_model.is_episode_favorited(),
+                        }).to_string(),
+                    ));
                     script : Raw(views::react_element(
                         "EpisodePlayedToggler",
                         "played-toggle",

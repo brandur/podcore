@@ -20,6 +20,46 @@
 const GRAPHQL_URL = "/graphql";
 
 //
+// EpisodeFavoritedToggler
+//
+
+class EpisodeFavoritedToggler extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+	  episodeId: props.episodeId,
+	  favorited: props.favorited
+    };
+
+    // I tried arrow functions, but couldn't get them working for a class
+    // function. Bind it is!
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  async handleClick(e) {
+    e.preventDefault();
+
+    const query = `
+mutation {
+  episodeFavoritedUpdate(episodeId: "${this.state.episodeId}", favorited: ${!this.state.favorited}) {
+    id
+  }
+}`;
+    const data = executeGraphQL(query);
+
+    this.setState(prevState => ({
+      favorited: !prevState.favorited
+    }));
+  }
+
+  render() {
+    return React.createElement('a', {href: '#', onClick: this.handleClick},
+      this.state.favorited ? 'Unfavorite' : 'Favorite'
+    );
+  }
+}
+
+//
 // EpisodePlayedToggler
 //
 
