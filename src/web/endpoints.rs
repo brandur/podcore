@@ -228,6 +228,25 @@ pub mod episode_show {
     }
 
     //
+    // Handler
+    //
+
+    fn handle_inner(_log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
+        let episode: Option<model::Episode> = schema::episode::table
+            .filter(schema::episode::id.eq(params.episode_id))
+            .filter(schema::episode::podcast_id.eq(params.podcast_id))
+            .first(conn)
+            .optional()?;
+        match episode {
+            Some(episode) => Ok(ViewModel::Ok(view_model::Ok {
+                account: params.account,
+                episode,
+            })),
+            None => Err(error::not_found("episode", params.episode_id)),
+        }
+    }
+
+    //
     // ViewModel
     //
 
@@ -260,25 +279,6 @@ pub mod episode_show {
                     endpoints::respond_200(views::episode_show::render(&common, view_model)?)
                 }
             }
-        }
-    }
-
-    //
-    // Private functions
-    //
-
-    fn handle_inner(_log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
-        let episode: Option<model::Episode> = schema::episode::table
-            .filter(schema::episode::id.eq(params.episode_id))
-            .filter(schema::episode::podcast_id.eq(params.podcast_id))
-            .first(conn)
-            .optional()?;
-        match episode {
-            Some(episode) => Ok(ViewModel::Ok(view_model::Ok {
-                account: params.account,
-                episode,
-            })),
-            None => Err(error::not_found("episode", params.episode_id)),
         }
     }
 }
@@ -322,31 +322,7 @@ pub mod directory_podcast_show {
     }
 
     //
-    // ViewModel
-    //
-
-    pub enum ViewModel {
-        Ok(model::Podcast),
-    }
-
-    impl endpoints::ViewModel for ViewModel {
-        fn render(
-            &self,
-            _log: &Logger,
-            _req: &HttpRequest<server::StateImpl>,
-        ) -> Result<HttpResponse> {
-            match *self {
-                ViewModel::Ok(ref view_model) => {
-                    Ok(HttpResponse::build(StatusCode::PERMANENT_REDIRECT)
-                        .header("Location", format!("/podcasts/{}", view_model.id).as_str())
-                        .finish())
-                }
-            }
-        }
-    }
-
-    //
-    // Private functions
+    // Handler
     //
 
     fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
@@ -375,6 +351,30 @@ pub mod directory_podcast_show {
                 "directory_podcast",
                 params.directory_podcast_id,
             )),
+        }
+    }
+
+    //
+    // ViewModel
+    //
+
+    pub enum ViewModel {
+        Ok(model::Podcast),
+    }
+
+    impl endpoints::ViewModel for ViewModel {
+        fn render(
+            &self,
+            _log: &Logger,
+            _req: &HttpRequest<server::StateImpl>,
+        ) -> Result<HttpResponse> {
+            match *self {
+                ViewModel::Ok(ref view_model) => {
+                    Ok(HttpResponse::build(StatusCode::PERMANENT_REDIRECT)
+                        .header("Location", format!("/podcasts/{}", view_model.id).as_str())
+                        .finish())
+                }
+            }
         }
     }
 }
@@ -420,6 +420,44 @@ pub mod podcast_show {
     }
 
     //
+    // Handler
+    //
+
+    fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
+        info!(log, "Looking up podcast"; "id" => params.podcast_id);
+        let podcast: Option<model::Podcast> = schema::podcast::table
+            .filter(schema::podcast::id.eq(params.podcast_id))
+            .first(&*conn)
+            .optional()?;
+        match podcast {
+            Some(podcast) => {
+                let episodes: Vec<model::Episode> = schema::episode::table
+                    .filter(schema::episode::podcast_id.eq(podcast.id))
+                    .order(schema::episode::published_at.desc())
+                    .limit(50)
+                    .load(&*conn)?;
+
+                let subscribed = match params.account {
+                    Some(ref account) => diesel::select(diesel::dsl::exists(
+                        schema::account_podcast::table
+                            .filter(schema::account_podcast::account_id.eq(account.id))
+                            .filter(schema::account_podcast::podcast_id.eq(podcast.id)),
+                    )).get_result(conn)?,
+                    None => false,
+                };
+
+                Ok(ViewModel::Ok(view_model::Ok {
+                    account: params.account,
+                    episodes,
+                    podcast,
+                    subscribed,
+                }))
+            }
+            None => Err(error::not_found("podcast", params.podcast_id)),
+        }
+    }
+
+    //
     // ViewModel
     //
 
@@ -454,44 +492,6 @@ pub mod podcast_show {
                     endpoints::respond_200(views::podcast_show::render(&common, view_model)?)
                 }
             }
-        }
-    }
-
-    //
-    // Private functions
-    //
-
-    fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
-        info!(log, "Looking up podcast"; "id" => params.podcast_id);
-        let podcast: Option<model::Podcast> = schema::podcast::table
-            .filter(schema::podcast::id.eq(params.podcast_id))
-            .first(&*conn)
-            .optional()?;
-        match podcast {
-            Some(podcast) => {
-                let episodes: Vec<model::Episode> = schema::episode::table
-                    .filter(schema::episode::podcast_id.eq(podcast.id))
-                    .order(schema::episode::published_at.desc())
-                    .limit(50)
-                    .load(&*conn)?;
-
-                let subscribed = match params.account {
-                    Some(ref account) => diesel::select(diesel::dsl::exists(
-                        schema::account_podcast::table
-                            .filter(schema::account_podcast::account_id.eq(account.id))
-                            .filter(schema::account_podcast::podcast_id.eq(podcast.id)),
-                    )).get_result(conn)?,
-                    None => false,
-                };
-
-                Ok(ViewModel::Ok(view_model::Ok {
-                    account: params.account,
-                    episodes,
-                    podcast,
-                    subscribed,
-                }))
-            }
-            None => Err(error::not_found("podcast", params.podcast_id)),
         }
     }
 }
@@ -577,6 +577,35 @@ pub mod search_show {
     }
 
     //
+    // Handler
+    //
+
+    fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
+        if params.query.is_none() {
+            return Ok(ViewModel::NoQuery);
+        }
+
+        let query = params.query.clone().unwrap();
+        if query.is_empty() {
+            return Ok(ViewModel::NoQuery);
+        }
+
+        info!(log, "Executing query"; "id" => query.as_str());
+
+        let res = directory_podcast_searcher::Mediator {
+            conn:           &*conn,
+            query:          query.to_owned(),
+            http_requester: &mut endpoints::build_requester()?,
+        }.run(log)?;
+
+        Ok(ViewModel::SearchResults(view_model::SearchResults {
+            account: params.account,
+            directory_podcasts: res.directory_podcasts,
+            query,
+        }))
+    }
+
+    //
     // ViewModel
     //
 
@@ -615,34 +644,5 @@ pub mod search_show {
                 }
             }
         }
-    }
-
-    //
-    // Private functions
-    //
-
-    fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
-        if params.query.is_none() {
-            return Ok(ViewModel::NoQuery);
-        }
-
-        let query = params.query.clone().unwrap();
-        if query.is_empty() {
-            return Ok(ViewModel::NoQuery);
-        }
-
-        info!(log, "Executing query"; "id" => query.as_str());
-
-        let res = directory_podcast_searcher::Mediator {
-            conn:           &*conn,
-            query:          query.to_owned(),
-            http_requester: &mut endpoints::build_requester()?,
-        }.run(log)?;
-
-        Ok(ViewModel::SearchResults(view_model::SearchResults {
-            account: params.account,
-            directory_podcasts: res.directory_podcasts,
-            query,
-        }))
     }
 }
