@@ -182,32 +182,33 @@ impl<'a> Mediator<'a> {
         Vec<model::DirectoryPodcast>,
         Vec<model::DirectoryPodcastDirectorySearch>,
     )> {
-        let joins = time_helpers::log_timed(&log.new(o!("step" => "select_joins")), |_log| {
-            schema::directory_podcast_directory_search::table
-                .filter(
-                    schema::directory_podcast_directory_search::directory_search_id.eq(search.id),
-                )
-                .order(schema::directory_podcast_directory_search::position)
-                .load::<model::DirectoryPodcastDirectorySearch>(self.conn)
-                .chain_err(|| "Error loading joins")
-        })?;
-
-        let directory_podcasts = time_helpers::log_timed(
+        let joined_tuples = time_helpers::log_timed(
             &log.new(o!("step" => "select_directory_podcasts")),
             |_log| {
                 schema::directory_podcast::table
+                    .left_outer_join(schema::directory_podcast_directory_search::table)
                     .filter(
-                        schema::directory_podcast::id.eq_any(
-                            joins
-                                .iter()
-                                .map(|j| j.directory_podcast_id)
-                                .collect::<Vec<i64>>(),
-                        ),
+                        schema::directory_podcast_directory_search::directory_search_id
+                            .eq(search.id),
                     )
-                    .load::<model::DirectoryPodcast>(self.conn)
+                    .order(schema::directory_podcast_directory_search::position)
+                    .load::<(
+                        model::DirectoryPodcast,
+                        Option<model::DirectoryPodcastDirectorySearch>,
+                    )>(self.conn)
                     .chain_err(|| "Error loading directory podcasts")
             },
         )?;
+
+        let mut directory_podcasts: Vec<model::DirectoryPodcast> =
+            Vec::with_capacity(joined_tuples.len());
+        let mut joins: Vec<model::DirectoryPodcastDirectorySearch> =
+            Vec::with_capacity(joined_tuples.len());
+
+        for (directory_podcast, join) in joined_tuples {
+            directory_podcasts.push(directory_podcast);
+            joins.push(join.unwrap());
+        }
 
         Ok((directory_podcasts, joins))
     }
