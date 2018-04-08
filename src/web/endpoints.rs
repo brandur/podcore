@@ -41,6 +41,7 @@ macro_rules! handler {
             // Imported so that we can use the traits, but assigned a different name to
             // avoid clashing with the module's implementations.
             use server::Params as P;
+            use web::endpoints;
             use web::endpoints::ViewModel as VM;
             use web::middleware;
 
@@ -70,6 +71,7 @@ macro_rules! handler {
                         view_model.render(log, &req)
                     })
                 })
+                .then(|res| server::transform_user_error(res, endpoints::render_user_error))
                 .responder()
         }
     };
@@ -162,14 +164,8 @@ fn build_requester() -> Result<HttpRequesterLive> {
     Ok(HttpRequesterLive { client, core })
 }
 
-pub fn handle_404() -> Result<HttpResponse> {
-    Ok(HttpResponse::build(StatusCode::NOT_FOUND)
-        .content_type("text/html; charset=utf-8")
-        .body("404!"))
-}
-
-pub fn handle_500(view_model: &CommonViewModel, error: &str) -> Result<HttpResponse> {
-    let html = views::render_500(view_model, error)?;
+pub fn render_user_error(code: StatusCode, message: String) -> Result<HttpResponse> {
+    let html = views::render_user_error(code, message)?;
     Ok(HttpResponse::build(StatusCode::OK)
         .content_type("text/html; charset=utf-8")
         .body(html))
@@ -236,7 +232,6 @@ pub mod episode_show {
     //
 
     pub enum ViewModel {
-        NotFound,
         Ok(view_model::Ok),
     }
 
@@ -256,7 +251,6 @@ pub mod episode_show {
             req: &HttpRequest<server::StateImpl>,
         ) -> Result<HttpResponse> {
             match *self {
-                ViewModel::NotFound => Ok(endpoints::handle_404()?),
                 ViewModel::Ok(ref view_model) => {
                     let common = endpoints::build_common(
                         req,
@@ -284,7 +278,7 @@ pub mod episode_show {
                 account: params.account,
                 episode,
             })),
-            None => Ok(ViewModel::NotFound),
+            None => Err(error::not_found("episode", params.episode_id)),
         }
     }
 }
@@ -332,8 +326,6 @@ pub mod directory_podcast_show {
     //
 
     pub enum ViewModel {
-        Exception(model::DirectoryPodcastException),
-        NotFound,
         Ok(model::Podcast),
     }
 
@@ -341,19 +333,14 @@ pub mod directory_podcast_show {
         fn render(
             &self,
             _log: &Logger,
-            req: &HttpRequest<server::StateImpl>,
+            _req: &HttpRequest<server::StateImpl>,
         ) -> Result<HttpResponse> {
             match *self {
-                ViewModel::Exception(ref _exception) => Ok(endpoints::handle_500(
-                    &endpoints::build_common(req, None, "Error"),
-                    "Error ingesting podcast",
-                )?),
                 ViewModel::Ok(ref view_model) => {
                     Ok(HttpResponse::build(StatusCode::PERMANENT_REDIRECT)
                         .header("Location", format!("/podcasts/{}", view_model.id).as_str())
                         .finish())
                 }
-                ViewModel::NotFound => Ok(endpoints::handle_404()?),
             }
         }
     }
@@ -378,13 +365,16 @@ pub mod directory_podcast_show {
                 };
                 let res = mediator.run(log)?;
 
-                if let Some(dir_podcast_ex) = res.dir_podcast_ex {
-                    return Ok(ViewModel::Exception(dir_podcast_ex));
+                if let Some(_dir_podcast_ex) = res.dir_podcast_ex {
+                    return Err(Error::from("Could not ingest podcast feed"));
                 }
 
                 Ok(ViewModel::Ok(res.podcast.unwrap()))
             }
-            None => Ok(ViewModel::NotFound),
+            None => Err(error::not_found(
+                "directory_podcast",
+                params.directory_podcast_id,
+            )),
         }
     }
 }
@@ -434,7 +424,6 @@ pub mod podcast_show {
     //
 
     pub enum ViewModel {
-        NotFound,
         Ok(view_model::Ok),
     }
 
@@ -456,7 +445,6 @@ pub mod podcast_show {
             req: &HttpRequest<server::StateImpl>,
         ) -> Result<HttpResponse> {
             match *self {
-                ViewModel::NotFound => Ok(endpoints::handle_404()?),
                 ViewModel::Ok(ref view_model) => {
                     let common = endpoints::build_common(
                         req,
@@ -503,7 +491,7 @@ pub mod podcast_show {
                     subscribed,
                 }))
             }
-            None => Ok(ViewModel::NotFound),
+            None => Err(error::not_found("podcast", params.podcast_id)),
         }
     }
 }

@@ -1,3 +1,4 @@
+use actix_web::http::StatusCode;
 use errors::*;
 use web::endpoints;
 
@@ -48,12 +49,20 @@ pub fn render_layout(view_model: &endpoints::CommonViewModel, content: &str) -> 
 // Errors
 //
 
-pub fn render_500(common: &endpoints::CommonViewModel, error: &str) -> Result<String> {
+pub fn render_user_error(code: StatusCode, message: String) -> Result<String> {
+    let title = format!("Error: {}", code);
     render_layout(
-        common,
+        // It's somewhat difficult to access `State` from here, so we just take advantage of the
+        // fact that assets will respond for every version. Hopefully errors aren't shown so often
+        // that some CSS staleness on error pages will be a problem.
+        &endpoints::CommonViewModel {
+            account:        None,
+            assets_version: "1".to_owned(),
+            title:          title.to_owned(),
+        },
         (html! {
-            h1: "Error";
-            p: error;
+            h1: title;
+            p: message;
         }).into_string()?
             .as_str(),
     )
