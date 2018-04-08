@@ -211,18 +211,19 @@ fn execute<F>(
 where
     F: Future<Item = Params, Error = Error> + 'static,
 {
-    // We need one `log` clone because we have two `move` closures below (and only
-    // one can take the log).
-    let log_clone = log.clone();
+    // We need `log` clones because we have multiple `move` closures below (and only
+    // one can take the original log).
+    let log2 = log.clone();
+    let log3 = log.clone();
 
     fut.and_then(move |params| {
-        let message = server::Message::new(&log_clone, params);
+        let message = server::Message::new(&log, params);
         sync_addr
             .send(message)
             .map_err(|_e| Error::from("Future canceled"))
     }).flatten()
         .and_then(move |response| {
-            time_helpers::log_timed(&log.new(o!("step" => "render_response")), |_log| {
+            time_helpers::log_timed(&log2.new(o!("step" => "render_response")), |_log| {
                 let code = if response.ok {
                     StatusCode::OK
                 } else {
@@ -233,11 +234,13 @@ where
                     .body(response.json))
             })
         })
-        .then(|res| server::transform_user_error(res, render_user_error))
+        .then(move |res| server::transform_user_error(&log3, res, render_user_error))
         .responder()
 }
 
-fn render_user_error(code: StatusCode, message: String) -> Result<HttpResponse> {
+fn render_user_error(log: &Logger, code: StatusCode, message: String) -> Result<HttpResponse> {
+    error!(log, "Rendering error";
+        "status" => format!("{}", code), "message" => message.as_str());
     let body = serde_json::to_string_pretty(&GraphQLErrors {
         errors: vec![GraphQLError { message }],
     })?;

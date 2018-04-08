@@ -162,24 +162,28 @@ pub fn account<S: State>(req: &mut HttpRequest<S>) -> Option<model::Account> {
 /// Handles a `Result` and renders an error that was intended for the user.
 /// Otherwise (on either a successful result or non-user error), passes through
 /// the normal result.
-pub fn transform_user_error<F>(res: Result<HttpResponse>, render: F) -> Result<HttpResponse>
+pub fn transform_user_error<F>(
+    log: &Logger,
+    res: Result<HttpResponse>,
+    render: F,
+) -> Result<HttpResponse>
 where
-    F: FnOnce(StatusCode, String) -> Result<HttpResponse>,
+    F: FnOnce(&Logger, StatusCode, String) -> Result<HttpResponse>,
 {
     // Note that `format!` activates the `Display` trait and shows our errors'
     // `display` definition
     match res {
         Err(e @ Error(ErrorKind::BadParameter(_, _), _)) => {
-            render(StatusCode::BAD_REQUEST, format!("{}", e))
+            render(log, StatusCode::BAD_REQUEST, format!("{}", e))
         }
         Err(e @ Error(ErrorKind::BadRequest(_), _)) => {
-            render(StatusCode::BAD_REQUEST, format!("{}", e))
+            render(log, StatusCode::BAD_REQUEST, format!("{}", e))
         }
         Err(e @ Error(ErrorKind::NotFound(_, _), _)) => {
-            render(StatusCode::NOT_FOUND, format!("{}", e))
+            render(log, StatusCode::NOT_FOUND, format!("{}", e))
         }
         Err(e @ Error(ErrorKind::Unauthorized, _)) => {
-            render(StatusCode::UNAUTHORIZED, format!("{}", e))
+            render(log, StatusCode::UNAUTHORIZED, format!("{}", e))
         }
         r => r,
     }

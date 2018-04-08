@@ -61,6 +61,10 @@ macro_rules! handler {
 
             let message = server::Message::new(&log, params);
 
+            // We need `log` clones because we have multiple `move` closures below (and only
+            // one can take the original log).
+            let log2 = log.clone();
+
             req.state()
                 .sync_addr
                 .send(message)
@@ -71,7 +75,9 @@ macro_rules! handler {
                         view_model.render(log, &req)
                     })
                 })
-                .then(|res| server::transform_user_error(res, endpoints::render_user_error))
+                .then(move |res| {
+                    server::transform_user_error(&log2, res, endpoints::render_user_error)
+                })
                 .responder()
         }
     };
@@ -164,7 +170,9 @@ fn build_requester() -> Result<HttpRequesterLive> {
     Ok(HttpRequesterLive { client, core })
 }
 
-pub fn render_user_error(code: StatusCode, message: String) -> Result<HttpResponse> {
+pub fn render_user_error(log: &Logger, code: StatusCode, message: String) -> Result<HttpResponse> {
+    error!(log, "Rendering error";
+        "status" => format!("{}", code), "message" => message.as_str());
     let html = views::render_user_error(code, message)?;
     Ok(HttpResponse::build(code)
         .content_type("text/html; charset=utf-8")

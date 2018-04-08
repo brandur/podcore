@@ -50,33 +50,22 @@ graphql_object!(
         //
         // ``` graphql
         // mutation {
-        //   accountPodcastSubscribe(podcastId: "1") {
+        //   accountPodcastSubscriptionUpdate(podcastId: "1", subscribed: true) {
         //     id
         //   }
         // }
         // ```
-        field account_podcast_subscribe(&executor,
-            podcast_id: String as "The podcast's ID."
-        ) -> FieldResult<resource::AccountPodcast> as "An object representing the subscription." {
-            Ok(mutation::account_podcast_subscribe::execute(
+        field account_podcast_subscription_update(&executor,
+            podcast_id: String as "The podcast's ID.",
+            subscribed: bool as "True to subscribe or false to unsubscribe."
+        ) -> FieldResult<Option<resource::AccountPodcast>> as "An object representing the added or removed subscription, or null if unsubscribing and the account wasn't subscribed." {
+            Ok(mutation::account_podcast_subscription_update::execute(
                 &executor.context().log,
-                &mutation::account_podcast_subscribe::Params {
+                &mutation::account_podcast_subscription_update::Params {
                     account:    &executor.context().account,
                     conn:       &executor.context().conn(),
                     podcast_id: &podcast_id,
-                }
-            )?)
-        }
-
-        field account_podcast_unsubscribe(&executor,
-            podcast_id: String as "The podcast's ID."
-        ) -> FieldResult<Option<resource::AccountPodcast>> as "An object representing the removed subscription, or null if the account wasn't subscribed." {
-            Ok(mutation::account_podcast_unsubscribe::execute(
-                &executor.context().log,
-                &mutation::account_podcast_unsubscribe::Params {
-                    account:    &executor.context().account,
-                    conn:       &executor.context().conn(),
-                    podcast_id: &podcast_id,
+                    subscribed: subscribed,
                 }
             )?)
         }
@@ -93,7 +82,7 @@ mod mutation {
     use diesel::pg::PgConnection;
     use slog::Logger;
 
-    pub mod account_podcast_subscribe {
+    pub mod account_podcast_subscription_update {
         use graphql::operations::mutation::*;
 
         use diesel::prelude::*;
@@ -103,26 +92,50 @@ mod mutation {
             pub account:    &'a model::Account,
             pub conn:       &'a PgConnection,
             pub podcast_id: &'a str,
+            pub subscribed: bool,
         }
 
-        pub fn execute<'a>(log: &Logger, params: &Params<'a>) -> Result<resource::AccountPodcast> {
+        pub fn execute<'a>(
+            log: &Logger,
+            params: &Params<'a>,
+        ) -> Result<Option<resource::AccountPodcast>> {
             let podcast_id = i64::from_str(params.podcast_id)
                 .map_err(|e| error::bad_parameter("podcast_id", &e))?;
 
-            let podcast: model::Podcast = schema::podcast::table
-                .filter(schema::podcast::id.eq(podcast_id))
-                .first(params.conn)
-                .optional()?
-                .ok_or_else(|| error::not_found(&"podcast", podcast_id))?;
+            if params.subscribed {
+                let podcast: model::Podcast = schema::podcast::table
+                    .filter(schema::podcast::id.eq(podcast_id))
+                    .first(params.conn)
+                    .optional()?
+                    .ok_or_else(|| error::not_found(&"podcast", podcast_id))?;
 
-            let account_podcast = mediators::account_podcast_subscriber::Mediator {
-                account: params.account,
-                conn:    params.conn,
-                podcast: &podcast,
-            }.run(log)?
-                .account_podcast;
+                let account_podcast = mediators::account_podcast_subscriber::Mediator {
+                    account: params.account,
+                    conn:    params.conn,
+                    podcast: &podcast,
+                }.run(log)?
+                    .account_podcast;
 
-            Ok(resource::AccountPodcast::from(&account_podcast))
+                Ok(Some(resource::AccountPodcast::from(&account_podcast)))
+            } else {
+                let account_podcast: model::AccountPodcast = match schema::account_podcast::table
+                    .filter(schema::account_podcast::account_id.eq(params.account.id))
+                    .filter(schema::account_podcast::podcast_id.eq(podcast_id))
+                    .first(params.conn)
+                    .optional()?
+                {
+                    Some(account_podcast) => account_podcast,
+                    None => return Ok(None),
+                };
+
+                let account_podcast = mediators::account_podcast_unsubscriber::Mediator {
+                    conn:            params.conn,
+                    account_podcast: &account_podcast,
+                }.run(log)?
+                    .account_podcast;
+
+                Ok(Some(resource::AccountPodcast::from(&account_podcast)))
+            }
         }
 
         #[cfg(test)]
@@ -182,6 +195,7 @@ mod mutation {
         }
     }
 
+    /*
     pub mod account_podcast_unsubscribe {
         use graphql::operations::mutation::*;
 
@@ -200,24 +214,6 @@ mod mutation {
         ) -> Result<Option<resource::AccountPodcast>> {
             let podcast_id = i64::from_str(params.podcast_id)
                 .map_err(|e| error::bad_parameter("podcast_id", &e))?;
-
-            let account_podcast: model::AccountPodcast = match schema::account_podcast::table
-                .filter(schema::account_podcast::account_id.eq(params.account.id))
-                .filter(schema::account_podcast::podcast_id.eq(podcast_id))
-                .first(params.conn)
-                .optional()?
-            {
-                Some(account_podcast) => account_podcast,
-                None => return Ok(None),
-            };
-
-            let account_podcast = mediators::account_podcast_unsubscriber::Mediator {
-                conn:            params.conn,
-                account_podcast: &account_podcast,
-            }.run(log)?
-                .account_podcast;
-
-            Ok(Some(resource::AccountPodcast::from(&account_podcast)))
         }
 
         #[cfg(test)]
@@ -298,6 +294,7 @@ mod mutation {
             }
         }
     }
+    */
 }
 
 //

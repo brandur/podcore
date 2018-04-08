@@ -40,14 +40,9 @@ class AccountPodcastSubscriptionToggler extends React.Component {
     e.preventDefault();
     //console.log(`The link was clicked for: ${this.state.podcastId} w/ state: ${this.state.subscribed}`);
 
-    const query = this.state.subscribed ? `
+    const query = `
 mutation {
-  accountPodcastUnsubscribe(podcastId: "${this.state.podcastId}") {
-    id
-  }
-}` : `
-mutation {
-  accountPodcastSubscribe(podcastId: "${this.state.podcastId}") {
+  accountPodcastSubscriptionUpdate(podcastId: "${this.state.podcastId}", subscribed: ${this.state.subscribed}) {
     id
   }
 }`;
