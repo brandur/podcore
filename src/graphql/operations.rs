@@ -46,30 +46,6 @@ graphql_object!(
 
         description: "The root mutation object of the schema."
 
-        // `juniper` does some function/parameter name mangling -- this is invoked for example as:
-        //
-        // ``` graphql
-        // mutation {
-        //   accountPodcastSubscribedUpdate(podcastId: "1", subscribed: true) {
-        //     id
-        //   }
-        // }
-        // ```
-        field account_podcast_subscribed_update(&executor,
-            podcast_id: String as "The podcast's ID.",
-            subscribed: bool as "True to subscribe or false to unsubscribe."
-        ) -> FieldResult<Option<resource::AccountPodcast>> as "An object representing the added or removed subscribed, or null if unsubscribing and the account wasn't subscribed." {
-            Ok(mutation::account_podcast_subscribed_update::execute(
-                &executor.context().log,
-                &mutation::account_podcast_subscribed_update::Params {
-                    account:    &executor.context().account,
-                    conn:       &executor.context().conn(),
-                    podcast_id: &podcast_id,
-                    subscribed: subscribed,
-                }
-            )?)
-        }
-
         field episode_played_update(&executor,
             episode_id: String as "The episode's ID.",
             played: bool as "True to set as played or false to set as not played."
@@ -81,6 +57,30 @@ graphql_object!(
                     account:    &executor.context().account,
                     episode_id: &episode_id,
                     played,
+                }
+            )?)
+        }
+
+        // `juniper` does some function/parameter name mangling -- this is invoked for example as:
+        //
+        // ``` graphql
+        // mutation {
+        //   podcastSubscribedUpdate(podcastId: "1", subscribed: true) {
+        //     id
+        //   }
+        // }
+        // ```
+        field podcast_subscribed_update(&executor,
+            podcast_id: String as "The podcast's ID.",
+            subscribed: bool as "True to subscribe or false to unsubscribe."
+        ) -> FieldResult<Option<resource::AccountPodcast>> as "An object representing the added or removed subscribed, or null if unsubscribing and the account wasn't subscribed." {
+            Ok(mutation::podcast_subscribed_update::execute(
+                &executor.context().log,
+                &mutation::podcast_subscribed_update::Params {
+                    account:    &executor.context().account,
+                    conn:       &executor.context().conn(),
+                    podcast_id: &podcast_id,
+                    subscribed: subscribed,
                 }
             )?)
         }
@@ -97,7 +97,7 @@ mod mutation {
     use diesel::pg::PgConnection;
     use slog::Logger;
 
-    pub mod account_podcast_subscribed_update {
+    pub mod podcast_subscribed_update {
         use graphql::operations::mutation::*;
 
         use diesel::prelude::*;
@@ -179,7 +179,7 @@ mod mutation {
 
         #[cfg(test)]
         mod tests {
-            use graphql::operations::mutation::account_podcast_subscribed_update::*;
+            use graphql::operations::mutation::podcast_subscribed_update::*;
             use test_data;
             use test_helpers;
 
@@ -187,7 +187,7 @@ mod mutation {
             use r2d2_diesel::ConnectionManager;
 
             #[test]
-            fn test_mutation_account_podcast_subscribed_update_subscribe() {
+            fn test_mutation_podcast_subscribed_update_subscribe() {
                 let bootstrap = TestBootstrap::new();
 
                 // Two `unwrap`s: once to verify successful execution, and once to verify that
@@ -209,7 +209,7 @@ mod mutation {
             }
 
             #[test]
-            fn test_mutation_account_podcast_subscribed_update_unsubscribe_subscribed() {
+            fn test_mutation_podcast_subscribed_update_unsubscribe_subscribed() {
                 let bootstrap = TestBootstrap::new();
 
                 let account_podcast = test_data::account_podcast::insert_args(
@@ -236,7 +236,7 @@ mod mutation {
             // Unsubscribing when not subscribed is a no-op, but returns a successful
             // response.
             #[test]
-            fn test_mutation_account_podcast_subscribed_update_unsubscribed_not_subscribed() {
+            fn test_mutation_podcast_subscribed_update_unsubscribed_not_subscribed() {
                 let bootstrap = TestBootstrap::new();
 
                 let account_podcast = execute(

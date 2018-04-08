@@ -20,47 +20,6 @@
 const GRAPHQL_URL = "/graphql";
 
 //
-// AccountPodcastSubscribedToggler
-//
-
-class AccountPodcastSubscribedToggler extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-	  podcastId: props.podcastId,
-	  subscribed: props.subscribed
-    };
-
-    // I tried arrow functions, but couldn't get them working for a class
-    // function. Bind it is!
-    this.handleClick = this.handleClick.bind(this);
-  }
-
-  async handleClick(e) {
-    e.preventDefault();
-    //console.log(`The link was clicked for: ${this.state.podcastId} w/ state: ${this.state.subscribed}`);
-
-    const query = `
-mutation {
-  accountPodcastSubscribedUpdate(podcastId: "${this.state.podcastId}", subscribed: ${!this.state.subscribed}) {
-    id
-  }
-}`;
-    const data = executeGraphQL(query);
-
-    this.setState(prevState => ({
-      subscribed: !prevState.subscribed
-    }));
-  }
-
-  render() {
-    return React.createElement('a', {href: '#', onClick: this.handleClick},
-      this.state.subscribed ? 'Unsubscribe' : 'Subscribe'
-    );
-  }
-}
-
-//
 // EpisodePlayedToggler
 //
 
@@ -96,6 +55,47 @@ mutation {
   render() {
     return React.createElement('a', {href: '#', onClick: this.handleClick},
       this.state.played ? 'Set unplayed' : 'Set played'
+    );
+  }
+}
+
+//
+// PodcastSubscribedToggler
+//
+
+class PodcastSubscribedToggler extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+	  podcastId: props.podcastId,
+	  subscribed: props.subscribed
+    };
+
+    // I tried arrow functions, but couldn't get them working for a class
+    // function. Bind it is!
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  async handleClick(e) {
+    e.preventDefault();
+    //console.log(`The link was clicked for: ${this.state.podcastId} w/ state: ${this.state.subscribed}`);
+
+    const query = `
+mutation {
+  podcastSubscribedUpdate(podcastId: "${this.state.podcastId}", subscribed: ${!this.state.subscribed}) {
+    id
+  }
+}`;
+    const data = executeGraphQL(query);
+
+    this.setState(prevState => ({
+      subscribed: !prevState.subscribed
+    }));
+  }
+
+  render() {
+    return React.createElement('a', {href: '#', onClick: this.handleClick},
+      this.state.subscribed ? 'Unsubscribe' : 'Subscribe'
     );
   }
 }
@@ -141,7 +141,7 @@ async function executeGraphQL(query) {
 Activating a React component:
 
     ReactDOM.render(
-      React.createElement(AccountPodcastSubscribedToggler, {podcastId: "1", subscribed: false}),
+      React.createElement(PodcastSubscribedToggler, {podcastId: "1", subscribed: false}),
       document.getElementById('react-container')
     );
 

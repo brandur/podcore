@@ -135,7 +135,7 @@ pub mod podcast_show {
                     }
                 }
                 script : Raw(views::react_element(
-                    "AccountPodcastSubscribedToggler",
+                    "PodcastSubscribedToggler",
                     "subscribed-toggle",
                     &json!({
                         "podcastId": view_model.podcast.id.to_string(),
