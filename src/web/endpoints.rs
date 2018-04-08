@@ -217,12 +217,12 @@ pub mod episode_show {
                     .get("id")
                     .unwrap()
                     .parse::<i64>()
-                    .chain_err(|| "Error parsing episode ID")?,
+                    .map_err(|e| error::bad_parameter("episode_id", &e))?,
                 podcast_id: req.match_info()
                     .get("podcast_id")
                     .unwrap()
                     .parse::<i64>()
-                    .chain_err(|| "Error parsing podcast ID")?,
+                    .map_err(|e| error::bad_parameter("podcast_id", &e))?,
             })
         }
     }
@@ -316,7 +316,7 @@ pub mod directory_podcast_show {
                     .get("id")
                     .unwrap()
                     .parse::<i64>()
-                    .chain_err(|| "Error parsing ID")?,
+                    .map_err(|e| error::bad_parameter("directory_podcast_id", &e))?,
             })
         }
     }
@@ -414,7 +414,7 @@ pub mod podcast_show {
                     .get("id")
                     .unwrap()
                     .parse::<i64>()
-                    .chain_err(|| "Error parsing ID")?,
+                    .map_err(|e| error::bad_parameter("podcast_id", &e))?,
             })
         }
     }
