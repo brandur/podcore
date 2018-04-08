@@ -42,11 +42,11 @@ class AccountPodcastSubscriptionToggler extends React.Component {
 
     const query = `
 mutation {
-  accountPodcastSubscriptionUpdate(podcastId: "${this.state.podcastId}", subscribed: ${this.state.subscribed}) {
+  accountPodcastSubscriptionUpdate(podcastId: "${this.state.podcastId}", subscribed: ${!this.state.subscribed}) {
     id
   }
 }`;
-    const _data = executeGraphQL(query);
+    const data = executeGraphQL(query);
 
     this.setState(prevState => ({
       subscribed: !prevState.subscribed
@@ -65,6 +65,7 @@ mutation {
 //
 
 async function executeGraphQL(query) {
+    console.log(`GraphQL query: ${query}`)
     const params = {
       query: query,
     };
@@ -82,6 +83,13 @@ async function executeGraphQL(query) {
         body: JSON.stringify(params)
     });
     const body = await resp.text();
+
+    if (!resp.ok) {
+        const message = `Request failed: ${body}`;
+        console.log(message);
+        throw message;
+    }
+
     //console.log(`Response data: ${body}`);
     return JSON.parse(body);
 }
