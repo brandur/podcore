@@ -186,7 +186,7 @@ impl<'a> Mediator<'a> {
             &log.new(o!("step" => "select_directory_podcasts")),
             |_log| {
                 schema::directory_podcast::table
-                    .left_outer_join(schema::directory_podcast_directory_search::table)
+                    .inner_join(schema::directory_podcast_directory_search::table)
                     .filter(
                         schema::directory_podcast_directory_search::directory_search_id
                             .eq(search.id),
@@ -194,7 +194,7 @@ impl<'a> Mediator<'a> {
                     .order(schema::directory_podcast_directory_search::position)
                     .load::<(
                         model::DirectoryPodcast,
-                        Option<model::DirectoryPodcastDirectorySearch>,
+                        model::DirectoryPodcastDirectorySearch,
                     )>(self.conn)
                     .chain_err(|| "Error loading directory podcasts")
             },
@@ -207,7 +207,7 @@ impl<'a> Mediator<'a> {
 
         for (directory_podcast, join) in joined_tuples {
             directory_podcasts.push(directory_podcast);
-            joins.push(join.unwrap());
+            joins.push(join);
         }
 
         Ok((directory_podcasts, joins))
