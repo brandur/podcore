@@ -139,7 +139,7 @@ pub mod podcast_show {
                     "subscribed-toggle",
                     &json!({
                         "podcastId": view_model.podcast.id.to_string(),
-                        "subscribed": view_model.subscribed,
+                        "subscribed": view_model.is_subscribed(),
                     }).to_string(),
                 ));
             }).into_string()?

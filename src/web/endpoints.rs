@@ -522,6 +522,15 @@ pub mod podcast_show {
             pub podcast:    model::Podcast,
             pub subscribed: bool,
         }
+
+        impl Ok {
+            // The likelihood is that we'll want a `account_podcast` relation at some
+            // point, so this helper exists partly for forward compatibility,
+            // and partly to help establish convention for this kind of pattern.
+            pub fn is_subscribed(&self) -> bool {
+                self.subscribed
+            }
+        }
     }
 
     impl endpoints::ViewModel for ViewModel {
