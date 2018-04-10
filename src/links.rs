@@ -49,6 +49,10 @@ fn slug(s: &str) -> String {
         let sanitized_part = part.to_lowercase()
             .replace(|c| !char::is_alphanumeric(c), "");
 
+        if sanitized_part.len() < 1 {
+            continue;
+        }
+
         let new_slug = if let Some(current) = slug {
             // Handles the case of a long string. To avoid abrupt slug truncation we try to
             // break along the previous part boundary instead, so if adding the
@@ -132,6 +136,7 @@ mod test {
             slug("Flow My Tears, the Policeman Said").as_str()
         );
         assert_eq!("alices-adventures", slug("Alice's Adventures").as_str());
+        assert_eq!("many-spaces", slug("many     spaces").as_str());
 
         // Long string with a break. We'll end up just taking the first couple tokens
         // and discarding the long one at the end.
@@ -144,6 +149,12 @@ mod test {
             .take(SLUG_MAX_LENGTH + 10)
             .collect::<String>();
         assert_eq!(SLUG_MAX_LENGTH, slug(&unbroken_long_str).len());
+
+        /*
+        let real_long_str =
+            "Crazy Family Adventure | Stories about RV living, family travel, and working from the road";
+        assert_eq!("crazy-family-adventure", slug(&real_long_str).as_str());
+        */
     }
 
     #[test]
