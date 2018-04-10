@@ -57,9 +57,7 @@ macro_rules! handler {
             let params = match params_res {
                 Ok(params) => params,
                 Err(e) => {
-                    // TODO: `transform_user_error` should take an error instead of a result
-                    let res =
-                        server::transform_user_error(&log, Err(e), endpoints::render_user_error);
+                    let res = server::transform_user_error(&log, e, endpoints::render_user_error);
                     return Box::new(future::result(res));
                 }
             };
@@ -80,8 +78,9 @@ macro_rules! handler {
                         view_model.render(log, &req)
                     })
                 })
-                .then(move |res| {
-                    server::transform_user_error(&log2, res, endpoints::render_user_error)
+                .then(move |res| match res {
+                    Err(e) => server::transform_user_error(&log2, e, endpoints::render_user_error),
+                    r => r,
                 })
                 .responder()
         }

@@ -162,33 +162,29 @@ pub fn account<S: State>(req: &mut HttpRequest<S>) -> Option<model::Account> {
 /// Handles a `Result` and renders an error that was intended for the user.
 /// Otherwise (on either a successful result or non-user error), passes through
 /// the normal result.
-pub fn transform_user_error<F>(
-    log: &Logger,
-    res: Result<HttpResponse>,
-    render: F,
-) -> Result<HttpResponse>
+pub fn transform_user_error<F>(log: &Logger, e: Error, render: F) -> Result<HttpResponse>
 where
     F: FnOnce(&Logger, StatusCode, String) -> Result<HttpResponse>,
 {
     // Note that `format!` activates the `Display` trait and shows our errors'
     // `display` definition
-    match res {
-        Err(e @ Error(ErrorKind::BadParameter(_, _), _)) => {
+    match e {
+        e @ Error(ErrorKind::BadParameter(_, _), _) => {
             render(log, StatusCode::BAD_REQUEST, format!("{}", e))
         }
-        Err(e @ Error(ErrorKind::BadRequest(_), _)) => {
+        e @ Error(ErrorKind::BadRequest(_), _) => {
             render(log, StatusCode::BAD_REQUEST, format!("{}", e))
         }
-        Err(e @ Error(ErrorKind::NotFound(_, _), _)) => {
+        e @ Error(ErrorKind::NotFound(_, _), _) => {
             render(log, StatusCode::NOT_FOUND, format!("{}", e))
         }
-        Err(e @ Error(ErrorKind::NotFoundGeneral(_), _)) => {
+        e @ Error(ErrorKind::NotFoundGeneral(_), _) => {
             render(log, StatusCode::NOT_FOUND, format!("{}", e))
         }
-        Err(e @ Error(ErrorKind::Unauthorized, _)) => {
+        e @ Error(ErrorKind::Unauthorized, _) => {
             render(log, StatusCode::UNAUTHORIZED, format!("{}", e))
         }
-        Err(e) => {
+        e => {
             // This is an internal error, so print it out
             error!(log, "Encountered internal error: {}", e);
 
@@ -196,6 +192,5 @@ where
             // send to down to `actix-web`.
             Err(e)
         }
-        r => r,
     }
 }

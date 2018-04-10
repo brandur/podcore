@@ -234,7 +234,10 @@ where
                     .body(response.json))
             })
         })
-        .then(move |res| server::transform_user_error(&log3, res, render_user_error))
+        .then(move |res| match res {
+            Err(e) => server::transform_user_error(&log3, e, render_user_error),
+            r => r,
+        })
         .responder()
 }
 
