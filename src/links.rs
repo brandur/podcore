@@ -77,11 +77,8 @@ mod test {
 
         // Long string with a break. We'll end up just taking the first couple tokens
         // and discarding the long one at the end.
-        let long_str = "hello world ".to_owned()
-            + std::iter::repeat("x")
-                .take(SLUG_MAX_LENGTH + 10)
-                .collect::<String>()
-                .as_str();
+        let long_str =
+            "hello world xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
         assert_eq!("hello-world", slug(&long_str).as_str());
 
         // Long string without a break
