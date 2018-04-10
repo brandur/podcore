@@ -338,6 +338,7 @@ pub mod episode_show {
 
 pub mod directory_podcast_show {
     use errors::*;
+    use links;
     use mediators::directory_podcast_updater;
     use model;
     use schema;
@@ -365,10 +366,7 @@ pub mod directory_podcast_show {
     impl server::Params for Params {
         fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
             Ok(Self {
-                directory_podcast_id: req.match_info()
-                    .get("id")
-                    .unwrap()
-                    .parse::<i64>()
+                directory_podcast_id: links::unslug_id(req.match_info().get("id").unwrap())
                     .map_err(|e| error::bad_parameter("directory_podcast_id", &e))?,
             })
         }
@@ -424,7 +422,7 @@ pub mod directory_podcast_show {
             match *self {
                 ViewModel::Ok(ref view_model) => {
                     Ok(HttpResponse::build(StatusCode::PERMANENT_REDIRECT)
-                        .header("Location", format!("/podcasts/{}", view_model.id).as_str())
+                        .header("Location", links::link_podcast(view_model).as_str())
                         .finish())
                 }
             }

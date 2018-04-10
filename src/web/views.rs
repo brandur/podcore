@@ -208,7 +208,7 @@ pub mod search_show {
                                     : dir_podcast.title.as_str()
                                 }
                             } else {
-                                a(href=format_args!("/directory-podcasts/{}", dir_podcast.id)) {
+                                a(href=links::link_directory_podcast(dir_podcast)) {
                                     : dir_podcast.title.as_str()
                                 }
                             }

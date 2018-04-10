@@ -1,6 +1,13 @@
 use errors::*;
 use model;
 
+pub fn link_directory_podcast(dir_podcast: &model::DirectoryPodcast) -> String {
+    format!(
+        "/directory-podcasts/{}",
+        slug_id(dir_podcast.id, &dir_podcast.title)
+    ).to_owned()
+}
+
 pub fn link_episode(podcast: &model::Podcast, episode: &model::Episode) -> String {
     format!(
         "/podcasts/{}/episodes/{}",
@@ -115,6 +122,19 @@ mod test {
     use r2d2_diesel::ConnectionManager;
     use slog::Logger;
     use std;
+
+    #[test]
+    fn test_links_link_directory_podcast() {
+        let bootstrap = TestBootstrap::new();
+        let dir_podcast = test_data::directory_podcast::insert(&bootstrap.log, &*bootstrap.conn);
+        assert_eq!(
+            format!(
+                "/directory-podcasts/{}",
+                slug_id(dir_podcast.id, &dir_podcast.title)
+            ),
+            link_directory_podcast(&dir_podcast).as_str()
+        );
+    }
 
     #[test]
     fn test_links_link_episode() {
