@@ -9,15 +9,27 @@ fn slug(s: &str) -> String {
             .replace(|c| !char::is_alphanumeric(c), "");
 
         let new_slug = if let Some(current) = slug {
+            // Handles the case of a long string. To avoid abrupt slug truncation we try to
+            // break along the previous part boundary instead, so if adding the
+            // new part would bring us over maximum length, just return what we
+            // have now.
+            if current.len() + 1 + sanitized_part.len() > SLUG_MAX_LENGTH {
+                return current;
+            }
+
             current + SLUG_SEPARATOR + sanitized_part.as_str()
         } else {
+            // Handles the case of a single long string token that was not broken by any
+            // whitespace. In this case we should flat out truncate it.
+            if sanitized_part.len() >= SLUG_MAX_LENGTH {
+                return sanitized_part
+                    .chars()
+                    .take(SLUG_MAX_LENGTH)
+                    .collect::<String>();
+            }
+
             sanitized_part
         };
-
-        if new_slug.len() >= SLUG_MAX_LENGTH {
-            return new_slug.chars().take(SLUG_MAX_LENGTH).collect::<String>();
-        }
-
         slug = Some(new_slug);
     }
     return slug.unwrap();
@@ -63,10 +75,20 @@ mod test {
         );
         assert_eq!("alices-adventures", slug("Alice's Adventures").as_str());
 
-        let long_str = std::iter::repeat("x")
+        // Long string with a break. We'll end up just taking the first couple tokens
+        // and discarding the long one at the end.
+        let long_str = "hello world ".to_owned()
+            + std::iter::repeat("x")
+                .take(SLUG_MAX_LENGTH + 10)
+                .collect::<String>()
+                .as_str();
+        assert_eq!("hello-world", slug(&long_str).as_str());
+
+        // Long string without a break
+        let unbroken_long_str = std::iter::repeat("x")
             .take(SLUG_MAX_LENGTH + 10)
             .collect::<String>();
-        assert_eq!(SLUG_MAX_LENGTH, slug(long_str.as_str()).len());
+        assert_eq!(SLUG_MAX_LENGTH, slug(&unbroken_long_str).len());
     }
 
     #[test]
