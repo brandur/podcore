@@ -41,7 +41,7 @@ static SLUG_SEPARATOR: &str = "-";
 // Private functions
 //
 
-fn slug(s: &str) -> String {
+fn slug(s: &str) -> Option<String> {
     let parts: Vec<&str> = s.split(char::is_whitespace).collect();
 
     let mut slug: Option<String> = None;
@@ -59,7 +59,7 @@ fn slug(s: &str) -> String {
             // new part would bring us over maximum length, just return what we
             // have now.
             if current.len() + 1 + sanitized_part.len() > SLUG_MAX_LENGTH {
-                return current;
+                return Some(current);
             }
 
             current + SLUG_SEPARATOR + sanitized_part.as_str()
@@ -67,17 +67,20 @@ fn slug(s: &str) -> String {
             // Handles the case of a single long string token that was not broken by any
             // whitespace. In this case we should flat out truncate it.
             if sanitized_part.len() >= SLUG_MAX_LENGTH {
-                return sanitized_part
-                    .chars()
-                    .take(SLUG_MAX_LENGTH)
-                    .collect::<String>();
+                return Some(
+                    sanitized_part
+                        .chars()
+                        .take(SLUG_MAX_LENGTH)
+                        .collect::<String>(),
+                );
             }
 
             sanitized_part
         };
         slug = Some(new_slug);
     }
-    return slug.unwrap();
+
+    return slug;
 }
 
 /// Produces a URL-safe "slugged" identifier for a resource which combines its
@@ -87,7 +90,10 @@ fn slug(s: &str) -> String {
 /// and the rest of the string is discarded. Using this style of parameter is
 /// for aesthetics alone.
 fn slug_id(id: i64, title: &str) -> String {
-    return id.to_string() + SLUG_SEPARATOR + &slug(title);
+    match slug(title) {
+        Some(slug) => id.to_string() + SLUG_SEPARATOR + &slug,
+        None => id.to_string(),
+    }
 }
 
 #[cfg(test)]
@@ -129,26 +135,36 @@ mod test {
 
     #[test]
     fn test_links_slug() {
-        assert_eq!("hello-world", slug("hello, world").as_str());
-        assert_eq!("martian-timeslip", slug("Martian Time-Slip").as_str());
+        assert_eq!("hello-world", slug("hello, world").unwrap().as_str());
+        assert_eq!(
+            "martian-timeslip",
+            slug("Martian Time-Slip").unwrap().as_str()
+        );
         assert_eq!(
             "flow-my-tears-the-policeman-said",
-            slug("Flow My Tears, the Policeman Said").as_str()
+            slug("Flow My Tears, the Policeman Said").unwrap().as_str()
         );
-        assert_eq!("alices-adventures", slug("Alice's Adventures").as_str());
-        assert_eq!("many-spaces", slug("many     spaces").as_str());
+        assert_eq!(
+            "alices-adventures",
+            slug("Alice's Adventures").unwrap().as_str()
+        );
+        assert_eq!("many-spaces", slug("many     spaces").unwrap().as_str());
+
+        // In some cases there may be nothing usable in the string at all
+        assert!(slug("").is_none());
+        assert!(slug("    ").is_none());
 
         // Long string with a break. We'll end up just taking the first couple tokens
         // and discarding the long one at the end.
         let long_str =
             "hello world xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-        assert_eq!("hello-world", slug(&long_str).as_str());
+        assert_eq!("hello-world", slug(&long_str).unwrap().as_str());
 
         // Long string without a break
         let unbroken_long_str = std::iter::repeat("x")
             .take(SLUG_MAX_LENGTH + 10)
             .collect::<String>();
-        assert_eq!(SLUG_MAX_LENGTH, slug(&unbroken_long_str).len());
+        assert_eq!(SLUG_MAX_LENGTH, slug(&unbroken_long_str).unwrap().len());
 
         /*
         let real_long_str =
@@ -160,6 +176,7 @@ mod test {
     #[test]
     fn test_links_slug_id() {
         assert_eq!("123-hello-world", slug_id(123, "hello, world").as_str());
+        assert_eq!("123", slug_id(123, "   ").as_str());
     }
 
     #[test]
