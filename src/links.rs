@@ -48,6 +48,16 @@ static SLUG_SEPARATOR: &str = "-";
 // Private functions
 //
 
+#[inline]
+fn is_subtitle_seperator(part: &str) -> bool {
+    match part {
+        "|" => true,
+        ":" => true,
+        "//" => true,
+        _ => false,
+    }
+}
+
 fn slug(s: &str) -> Option<String> {
     let parts: Vec<&str> = s.split(char::is_whitespace).collect();
 
@@ -57,7 +67,7 @@ fn slug(s: &str) -> Option<String> {
         // title we assume that it separates a title from a subtitle and just
         // return the first section up to the pipe. That is, unless the token
         // starts off the string, in which case we continue normally.
-        if (part == "|" || part == ":" || part == "//") && slug.is_some() {
+        if is_subtitle_seperator(part) && slug.is_some() {
             return slug;
         }
 
