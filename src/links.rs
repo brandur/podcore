@@ -1,5 +1,43 @@
 use errors::*;
 
+/// Produces a URL-safe "slugged" identifier for a resource which combines its
+/// ID along with some descriptive text about it.
+///
+/// When decoding the parameter on the other side, only the prefixed ID is used
+/// and the rest of the string is discarded. Using this style of parameter is
+/// for aesthetics alone.
+pub fn slug_id(id: i64, title: &str) -> String {
+    return id.to_string() + SLUG_SEPARATOR + &slug(title);
+}
+
+/// "Unslugs" an ID by extracting any digits found in the beginning of a string
+/// and discarding the rest.
+///
+/// This is useful because for aesthetic reasons many resources are given
+/// "pretty IDs" that are used in the URL, but most of which has no true
+/// functional meaning to the system underneath. For example, in an ID like
+/// `123-road-work`, the entirety of `-road-work` could be discarded and
+/// just `123` used for lookup.
+pub fn unslug_id(s: &str) -> Result<i64> {
+    s.chars()
+        .take_while(|c| c.is_numeric())
+        // TODO: Try to make just &str
+        .collect::<String>()
+        .parse::<i64>()
+        .chain_err(|| "Error parsing ID")
+}
+
+//
+// Private constants
+//
+
+static SLUG_MAX_LENGTH: usize = 40;
+static SLUG_SEPARATOR: &str = "-";
+
+//
+// Private functions
+//
+
 fn slug(s: &str) -> String {
     let parts: Vec<&str> = s.split(char::is_whitespace).collect();
 
@@ -35,30 +73,6 @@ fn slug(s: &str) -> String {
     return slug.unwrap();
 }
 
-/// "Unslugs" an ID by extracting any digits found in the beginning of a string
-/// and discarding the rest.
-///
-/// This is useful because for aesthetic reasons many resources are given
-/// "pretty IDs" that are used in the URL, but most of which has no true
-/// functional meaning to the system underneath. For example, in an ID like
-/// `123-road-work`, the entirety of `-road-work` could be discarded and
-/// just `123` used for lookup.
-pub fn unslug_id(s: &str) -> Result<i64> {
-    s.chars()
-        .take_while(|c| c.is_numeric())
-        // TODO: Try to make just &str
-        .collect::<String>()
-        .parse::<i64>()
-        .chain_err(|| "Error parsing ID")
-}
-
-//
-// Private constants
-//
-
-static SLUG_MAX_LENGTH: usize = 40;
-static SLUG_SEPARATOR: &str = "-";
-
 #[cfg(test)]
 mod test {
     use links::*;
@@ -86,6 +100,11 @@ mod test {
             .take(SLUG_MAX_LENGTH + 10)
             .collect::<String>();
         assert_eq!(SLUG_MAX_LENGTH, slug(&unbroken_long_str).len());
+    }
+
+    #[test]
+    fn test_links_slug_id() {
+        assert_eq!("123-hello-world", slug_id(123, "hello, world").as_str());
     }
 
     #[test]
