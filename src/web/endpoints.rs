@@ -662,22 +662,12 @@ pub mod search_show {
             http_requester: &mut endpoints::build_requester()?,
         }.run(log)?;
 
-        let tuples = schema::directory_podcast_directory_search::table
-            .inner_join(schema::directory_podcast::table.left_outer_join(schema::podcast::table))
-            .filter(
-                schema::directory_podcast_directory_search::directory_search_id
-                    .eq(res.directory_search.id),
-            )
-            .order(schema::directory_podcast_directory_search::position)
-            .load::<(
-                model::DirectoryPodcastDirectorySearch,
-                (model::DirectoryPodcast, Option<model::Podcast>),
-            )>(&*conn)
-            .chain_err(|| "Error loading directory search/podcast tuples")?;
-        let directory_podcasts_and_podcasts: Vec<(
-            model::DirectoryPodcast,
-            Option<model::Podcast>,
-        )> = tuples.into_iter().map(|t| t.1).collect();
+        // This uses a join to get us the podcast records along with the directory
+        // podcast records (the former being an `Option`). We might want to
+        // move this back into the searcher mediator because we're kind of
+        // duplicating work by having this out here.
+        let directory_podcasts_and_podcasts =
+            load_directory_podcasts_and_podcasts(log, &*conn, &res.directory_search)?;
 
         Ok(ViewModel::SearchResults(view_model::SearchResults {
             account: params.account,
@@ -726,5 +716,36 @@ pub mod search_show {
                 }
             }
         }
+    }
+
+    //
+    // Private functions
+    //
+
+    fn load_directory_podcasts_and_podcasts(
+        log: &Logger,
+        conn: &PgConnection,
+        directory_search: &model::DirectorySearch,
+    ) -> Result<Vec<(model::DirectoryPodcast, Option<model::Podcast>)>> {
+        let tuples = time_helpers::log_timed(
+            &log.new(o!("step" => "load_directory_podcasts_and_podcasts")),
+            |_log| {
+                schema::directory_podcast_directory_search::table
+                    .inner_join(
+                        schema::directory_podcast::table.left_outer_join(schema::podcast::table),
+                    )
+                    .filter(
+                        schema::directory_podcast_directory_search::directory_search_id
+                            .eq(directory_search.id),
+                    )
+                    .order(schema::directory_podcast_directory_search::position)
+                    .load::<(
+                        model::DirectoryPodcastDirectorySearch,
+                        (model::DirectoryPodcast, Option<model::Podcast>),
+                    )>(&*conn)
+                    .chain_err(|| "Error loading directory search/podcast tuples")
+            },
+        )?;
+        Ok(tuples.into_iter().map(|t| t.1).collect())
     }
 }
