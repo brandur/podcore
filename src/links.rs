@@ -1,6 +1,14 @@
 use errors::*;
 use model;
 
+pub fn link_episode(podcast: &model::Podcast, episode: &model::Episode) -> String {
+    format!(
+        "/podcasts/{}/episodes/{}",
+        slug_id(podcast.id, &podcast.title),
+        slug_id(episode.id, &episode.title)
+    ).to_owned()
+}
+
 pub fn link_podcast(podcast: &model::Podcast) -> String {
     format!("/podcasts/{}", slug_id(podcast.id, &podcast.title)).to_owned()
 }
@@ -89,6 +97,21 @@ mod test {
     use r2d2_diesel::ConnectionManager;
     use slog::Logger;
     use std;
+
+    #[test]
+    fn test_links_link_episode() {
+        let bootstrap = TestBootstrap::new();
+        let podcast = test_data::podcast::insert(&bootstrap.log, &*bootstrap.conn);
+        let episode = test_data::episode::first(&bootstrap.log, &*bootstrap.conn, &podcast);
+        assert_eq!(
+            format!(
+                "/podcasts/{}/episodes/{}",
+                slug_id(podcast.id, &podcast.title),
+                slug_id(episode.id, &episode.title)
+            ),
+            link_episode(&podcast, &episode).as_str()
+        );
+    }
 
     #[test]
     fn test_links_link_podcast() {

@@ -173,6 +173,23 @@ pub mod directory_podcast {
     }
 }
 
+pub mod episode {
+    use test_data::*;
+
+    use diesel::prelude::*;
+
+    // `test_data` to get an episode is different because episodes are normally
+    // created as a podcast feed is ingested from an XML file. We therefore
+    // require here that a podcast is passed and we'll simply select the first
+    // episode for it.
+    pub fn first(_log: &Logger, conn: &PgConnection, podcast: &model::Podcast) -> model::Episode {
+        schema::episode::table
+            .filter(schema::episode::podcast_id.eq(podcast.id))
+            .first(conn)
+            .unwrap()
+    }
+}
+
 pub mod key {
     use mediators::key_creator;
     use test_data::*;
