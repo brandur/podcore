@@ -53,11 +53,11 @@ fn slug(s: &str) -> Option<String> {
 
     let mut slug: Option<String> = None;
     for part in parts {
-        // This is a special case: If we see a pipe in the title we assume that it
-        // separates a title from a subtitle and just return the first section
-        // up to the pipe. That is, unless the pipe starts off the string, in
-        // which case we continue normally.
-        if part == "|" && slug.is_some() {
+        // This is a special case: If we see a pipe or colon (or a few others) in the
+        // title we assume that it separates a title from a subtitle and just
+        // return the first section up to the pipe. That is, unless the token
+        // starts off the string, in which case we continue normally.
+        if (part == "|" || part == ":" || part == "//") && slug.is_some() {
             return slug;
         }
 
@@ -178,18 +178,14 @@ mod test {
         );
         assert_eq!("many-spaces", slug("many     spaces").unwrap().as_str());
 
-        // Special cased piped operator which may separate a title from subtitle
-        // (unless it starts the string)
-        assert_eq!(
-            "crazy-adventure",
-            slug("Crazy Adventure | Stories about travel")
-                .unwrap()
-                .as_str()
-        );
-        assert_eq!(
-            "stories-about-travel",
-            slug("| Stories about travel").unwrap().as_str()
-        );
+        // Special cased tokens which may separate a title from subtitle (unless they
+        // starts the string)
+        assert_eq!("adventure", slug("Adventure | Travel").unwrap().as_str());
+        assert_eq!("adventure", slug("Adventure : Travel").unwrap().as_str());
+        assert_eq!("adventure", slug("Adventure // Travel").unwrap().as_str());
+        assert_eq!("travel", slug("| Travel").unwrap().as_str());
+        assert_eq!("travel", slug(": Travel").unwrap().as_str());
+        assert_eq!("travel", slug("// Travel").unwrap().as_str());
 
         // In some cases there may be nothing usable in the string at all
         assert!(slug("").is_none());
