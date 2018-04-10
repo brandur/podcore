@@ -183,6 +183,7 @@ pub mod search_new_show {
 
 pub mod search_show {
     use errors::*;
+    use links;
     use web::endpoints::CommonViewModel;
     use web::endpoints::search_show::view_model;
     use web::views;
@@ -200,10 +201,10 @@ pub mod search_show {
                     : format_args!("Query: {}", view_model.query);
                 }
                 ul {
-                    @ for dir_podcast in &view_model.directory_podcasts {
+                    @ for &(ref dir_podcast, ref podcast) in &view_model.directory_podcasts_and_podcasts {
                         li {
-                            @ if let Some(podcast_id) = dir_podcast.podcast_id {
-                                a(href=format_args!("/podcasts/{}", podcast_id)) {
+                            @ if let &Some(ref podcast) = podcast {
+                                a(href=links::link_podcast(podcast)) {
                                     : dir_podcast.title.as_str()
                                 }
                             } else {

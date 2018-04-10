@@ -188,6 +188,14 @@ where
         Err(e @ Error(ErrorKind::Unauthorized, _)) => {
             render(log, StatusCode::UNAUTHORIZED, format!("{}", e))
         }
+        Err(e) => {
+            // This is an internal error, so print it out
+            error!(log, "Encountered internal error: {}", e);
+
+            // This should probably get custom handling at some point too, but for now just
+            // send to down to `actix-web`.
+            Err(e)
+        }
         r => r,
     }
 }

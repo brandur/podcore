@@ -56,7 +56,12 @@ macro_rules! handler {
             );
             let params = match params_res {
                 Ok(params) => params,
-                Err(e) => return Box::new(future::err(e)),
+                Err(e) => {
+                    // TODO: `transform_user_error` should take an error instead of a result
+                    let res =
+                        server::transform_user_error(&log, Err(e), endpoints::render_user_error);
+                    return Box::new(future::result(res));
+                }
             };
 
             let message = server::Message::new(&log, params);
@@ -430,6 +435,7 @@ pub mod directory_podcast_show {
 
 pub mod podcast_show {
     use errors::*;
+    use links;
     use model;
     use schema;
     use server;
@@ -459,10 +465,7 @@ pub mod podcast_show {
         fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
             Ok(Self {
                 account:    server::account(req),
-                podcast_id: req.match_info()
-                    .get("id")
-                    .unwrap()
-                    .parse::<i64>()
+                podcast_id: links::unslug_id(req.match_info().get("id").unwrap())
                     .map_err(|e| error::bad_parameter("podcast_id", &e))?,
             })
         }
@@ -604,6 +607,7 @@ pub mod search_show {
     use errors::*;
     use mediators::directory_podcast_searcher;
     use model;
+    use schema;
     use server;
     use time_helpers;
     use web::endpoints;
@@ -612,6 +616,7 @@ pub mod search_show {
     use actix_web::http::StatusCode;
     use actix_web::{HttpRequest, HttpResponse};
     use diesel::pg::PgConnection;
+    use diesel::prelude::*;
     use futures::future::Future;
     use slog::Logger;
 
@@ -657,9 +662,26 @@ pub mod search_show {
             http_requester: &mut endpoints::build_requester()?,
         }.run(log)?;
 
+        let tuples = schema::directory_podcast_directory_search::table
+            .inner_join(schema::directory_podcast::table.left_outer_join(schema::podcast::table))
+            .filter(
+                schema::directory_podcast_directory_search::directory_search_id
+                    .eq(res.directory_search.id),
+            )
+            .order(schema::directory_podcast_directory_search::position)
+            .load::<(
+                model::DirectoryPodcastDirectorySearch,
+                (model::DirectoryPodcast, Option<model::Podcast>),
+            )>(&*conn)
+            .chain_err(|| "Error loading directory search/podcast tuples")?;
+        let directory_podcasts_and_podcasts: Vec<(
+            model::DirectoryPodcast,
+            Option<model::Podcast>,
+        )> = tuples.into_iter().map(|t| t.1).collect();
+
         Ok(ViewModel::SearchResults(view_model::SearchResults {
             account: params.account,
-            directory_podcasts: res.directory_podcasts,
+            directory_podcasts_and_podcasts,
             query,
         }))
     }
@@ -677,9 +699,10 @@ pub mod search_show {
         use model;
 
         pub struct SearchResults {
-            pub account:            Option<model::Account>,
-            pub directory_podcasts: Vec<model::DirectoryPodcast>,
-            pub query:              String,
+            pub account: Option<model::Account>,
+            pub directory_podcasts_and_podcasts:
+                Vec<(model::DirectoryPodcast, Option<model::Podcast>)>,
+            pub query: String,
         }
     }
 
