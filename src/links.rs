@@ -1,13 +1,8 @@
 use errors::*;
+use model;
 
-/// Produces a URL-safe "slugged" identifier for a resource which combines its
-/// ID along with some descriptive text about it.
-///
-/// When decoding the parameter on the other side, only the prefixed ID is used
-/// and the rest of the string is discarded. Using this style of parameter is
-/// for aesthetics alone.
-pub fn slug_id(id: i64, title: &str) -> String {
-    return id.to_string() + SLUG_SEPARATOR + &slug(title);
+pub fn link_podcast(podcast: &model::Podcast) -> String {
+    format!("/podcasts/{}", slug_id(podcast.id, &podcast.title)).to_owned()
 }
 
 /// "Unslugs" an ID by extracting any digits found in the beginning of a string
@@ -73,11 +68,37 @@ fn slug(s: &str) -> String {
     return slug.unwrap();
 }
 
+/// Produces a URL-safe "slugged" identifier for a resource which combines its
+/// ID along with some descriptive text about it.
+///
+/// When decoding the parameter on the other side, only the prefixed ID is used
+/// and the rest of the string is discarded. Using this style of parameter is
+/// for aesthetics alone.
+fn slug_id(id: i64, title: &str) -> String {
+    return id.to_string() + SLUG_SEPARATOR + &slug(title);
+}
+
 #[cfg(test)]
 mod test {
     use links::*;
+    use test_data;
+    use test_helpers;
 
+    use diesel::pg::PgConnection;
+    use r2d2::PooledConnection;
+    use r2d2_diesel::ConnectionManager;
+    use slog::Logger;
     use std;
+
+    #[test]
+    fn test_links_link_podcast() {
+        let bootstrap = TestBootstrap::new();
+        let podcast = test_data::podcast::insert(&bootstrap.log, &*bootstrap.conn);
+        assert_eq!(
+            format!("/podcasts/{}", slug_id(podcast.id, &podcast.title)),
+            link_podcast(&podcast).as_str()
+        );
+    }
 
     #[test]
     fn test_links_slug() {
@@ -118,5 +139,25 @@ mod test {
         // Errors
         assert!(unslug_id("hello-123").is_err());
         assert!(unslug_id("").is_err());
+    }
+
+    //
+    // Private types/functions
+    //
+
+    struct TestBootstrap {
+        _common: test_helpers::CommonTestBootstrap,
+        conn:    PooledConnection<ConnectionManager<PgConnection>>,
+        log:     Logger,
+    }
+
+    impl TestBootstrap {
+        fn new() -> TestBootstrap {
+            TestBootstrap {
+                _common: test_helpers::CommonTestBootstrap::new(),
+                conn:    test_helpers::connection(),
+                log:     test_helpers::log(),
+            }
+        }
     }
 }
