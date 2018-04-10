@@ -46,10 +46,18 @@ fn slug(s: &str) -> Option<String> {
 
     let mut slug: Option<String> = None;
     for part in parts {
+        // This is a special case: If we see a pipe in the title we assume that it
+        // separates a title from a subtitle and just return the first section
+        // up to the pipe. That is, unless the pipe starts off the string, in
+        // which case we continue normally.
+        if part == "|" && slug.is_some() {
+            return slug;
+        }
+
         let sanitized_part = part.to_lowercase()
             .replace(|c| !char::is_alphanumeric(c), "");
 
-        if sanitized_part.len() < 1 {
+        if sanitized_part.is_empty() {
             continue;
         }
 
@@ -150,6 +158,19 @@ mod test {
         );
         assert_eq!("many-spaces", slug("many     spaces").unwrap().as_str());
 
+        // Special cased piped operator which may separate a title from subtitle
+        // (unless it starts the string)
+        assert_eq!(
+            "crazy-adventure",
+            slug("Crazy Adventure | Stories about travel")
+                .unwrap()
+                .as_str()
+        );
+        assert_eq!(
+            "stories-about-travel",
+            slug("| Stories about travel").unwrap().as_str()
+        );
+
         // In some cases there may be nothing usable in the string at all
         assert!(slug("").is_none());
         assert!(slug("    ").is_none());
@@ -165,12 +186,6 @@ mod test {
             .take(SLUG_MAX_LENGTH + 10)
             .collect::<String>();
         assert_eq!(SLUG_MAX_LENGTH, slug(&unbroken_long_str).unwrap().len());
-
-        /*
-        let real_long_str =
-            "Crazy Family Adventure | Stories about RV living, family travel, and working from the road";
-        assert_eq!("crazy-family-adventure", slug(&real_long_str).as_str());
-        */
     }
 
     #[test]
