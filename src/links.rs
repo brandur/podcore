@@ -7,11 +7,18 @@ fn slug(s: &str) -> String {
     for part in parts {
         let sanitized_part = part.to_lowercase()
             .replace(|c| !char::is_alphanumeric(c), "");
-        if let Some(current) = slug {
-            slug = Some(current + SLUG_SEPARATOR + sanitized_part.as_str());
+
+        let new_slug = if let Some(current) = slug {
+            current + SLUG_SEPARATOR + sanitized_part.as_str()
         } else {
-            slug = Some(sanitized_part);
+            sanitized_part
+        };
+
+        if new_slug.len() >= SLUG_MAX_LENGTH {
+            return new_slug.chars().take(SLUG_MAX_LENGTH).collect::<String>();
         }
+
+        slug = Some(new_slug);
     }
     return slug.unwrap();
 }
@@ -37,11 +44,14 @@ pub fn unslug_id(s: &str) -> Result<i64> {
 // Private constants
 //
 
+static SLUG_MAX_LENGTH: usize = 40;
 static SLUG_SEPARATOR: &str = "-";
 
 #[cfg(test)]
 mod test {
     use links::*;
+
+    use std;
 
     #[test]
     fn test_links_slug() {
@@ -52,6 +62,11 @@ mod test {
             slug("Flow My Tears, the Policeman Said").as_str()
         );
         assert_eq!("alices-adventures", slug("Alice's Adventures").as_str());
+
+        let long_str = std::iter::repeat("x")
+            .take(SLUG_MAX_LENGTH + 10)
+            .collect::<String>();
+        assert_eq!(SLUG_MAX_LENGTH, slug(long_str.as_str()).len());
     }
 
     #[test]
