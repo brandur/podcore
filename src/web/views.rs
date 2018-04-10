@@ -118,6 +118,7 @@ pub mod episode_show {
 
 pub mod podcast_show {
     use errors::*;
+    use links;
     use web::endpoints::CommonViewModel;
     use web::endpoints::podcast_show::view_model;
     use web::views;
@@ -137,7 +138,7 @@ pub mod podcast_show {
                 ul {
                     @ for episode in &view_model.episodes {
                         li {
-                            a(href=format_args!("/podcasts/{}/episodes/{}", episode.podcast_id, episode.id)) {
+                            a(href=links::link_episode(&view_model.podcast, &episode)) {
                                 : episode.title.as_str()
                             }
                         }

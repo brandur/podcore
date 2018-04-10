@@ -192,6 +192,7 @@ pub fn respond_200(body: String) -> Result<HttpResponse> {
 
 pub mod episode_show {
     use errors::*;
+    use links;
     use model;
     use schema;
     use server;
@@ -221,15 +222,9 @@ pub mod episode_show {
         fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
             Ok(Self {
                 account:    server::account(req),
-                episode_id: req.match_info()
-                    .get("id")
-                    .unwrap()
-                    .parse::<i64>()
+                episode_id: links::unslug_id(req.match_info().get("id").unwrap())
                     .map_err(|e| error::bad_parameter("episode_id", &e))?,
-                podcast_id: req.match_info()
-                    .get("podcast_id")
-                    .unwrap()
-                    .parse::<i64>()
+                podcast_id: links::unslug_id(req.match_info().get("podcast_id").unwrap())
                     .map_err(|e| error::bad_parameter("podcast_id", &e))?,
             })
         }
