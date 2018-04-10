@@ -703,7 +703,7 @@ pub mod search_show {
         ) -> Result<HttpResponse> {
             match *self {
                 ViewModel::NoQuery => Ok(HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
-                    .header("Location", "/search-home")
+                    .header("Location", "/search/new")
                     .finish()),
                 ViewModel::SearchResults(ref view_model) => {
                     let common = endpoints::build_common(
