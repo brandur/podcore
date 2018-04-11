@@ -113,6 +113,11 @@ pub mod error {
     pub fn not_found_general(message: &str) -> Error {
         ErrorKind::NotFoundGeneral(message.to_owned()).into()
     }
+
+    #[inline]
+    pub fn unauthorized() -> Error {
+        ErrorKind::Unauthorized.into()
+    }
 }
 
 //
