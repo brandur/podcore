@@ -63,7 +63,7 @@ impl Params {
         let variables: Option<InputValue> = match req.query().get("variables") {
             Some(v) => match serde_json::from_str::<InputValue>(v) {
                 Ok(v) => Some(v),
-                Err(e) => bail!(ErrorKind::BadRequest(format!(
+                Err(e) => bail!(error::bad_request(format!(
                     "Malformed variables JSON: {}",
                     e
                 ))),
@@ -93,7 +93,7 @@ impl Params {
                 account,
                 graphql_req,
             }),
-            Err(e) => bail!(ErrorKind::BadRequest(format!(
+            Err(e) => bail!(error::bad_request(format!(
                 "Error deserializing request body: {}",
                 e
             ))),

@@ -166,7 +166,7 @@ mod mutation {
                         .filter(schema::episode::id.eq(params.episode_id))
                         .first(conn)
                         .optional()?
-                        .ok_or_else(|| error::not_found(&"episode", params.episode_id))?;
+                        .ok_or_else(|| error::not_found("episode", params.episode_id))?;
 
                     let account_podcast: model::AccountPodcast = schema::account_podcast::table
                         .filter(schema::account_podcast::account_id.eq(params.account.id))
@@ -174,7 +174,7 @@ mod mutation {
                         .first(conn)
                         .optional()?
                         .ok_or_else(|| {
-                            error::not_found_general(&format!(
+                            error::not_found_general(format!(
                                 "Subscription for account {} on podcast {}",
                                 params.account.id, episode.podcast_id
                             ))
@@ -428,7 +428,7 @@ mod mutation {
                         .filter(schema::episode::id.eq(params.episode_id))
                         .first(conn)
                         .optional()?
-                        .ok_or_else(|| error::not_found(&"episode", params.episode_id))?;
+                        .ok_or_else(|| error::not_found("episode", params.episode_id))?;
 
                     let account_podcast: model::AccountPodcast = schema::account_podcast::table
                         .filter(schema::account_podcast::account_id.eq(params.account.id))
@@ -436,7 +436,7 @@ mod mutation {
                         .first(conn)
                         .optional()?
                         .ok_or_else(|| {
-                            error::not_found_general(&format!(
+                            error::not_found_general(format!(
                                 "Subscription for account {} on podcast {}",
                                 params.account.id, episode.podcast_id
                             ))
@@ -683,7 +683,7 @@ mod mutation {
                 .filter(schema::podcast::id.eq(podcast_id))
                 .first(params.conn)
                 .optional()?
-                .ok_or_else(|| error::not_found(&"podcast", podcast_id))?;
+                .ok_or_else(|| error::not_found("podcast", podcast_id))?;
 
             let res = mediators::account_podcast_subscriber::Mediator {
                 account: params.account,

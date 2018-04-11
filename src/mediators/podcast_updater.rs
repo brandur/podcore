@@ -264,7 +264,7 @@ impl<'a> Mediator<'a> {
                     "That podcast doesn't seem to exist on the host's servers (404)."
                 ));
             } else {
-                bail!(error::bad_request(&format!(
+                bail!(error::bad_request(format!(
                     "Error fetching podcast feed. Host responded with status: {}",
                     status
                 )));

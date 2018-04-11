@@ -94,24 +94,24 @@ pub mod error {
     use errors::*;
 
     #[inline]
-    pub fn bad_parameter<E: ::std::error::Error>(name: &str, e: &E) -> Error {
+    pub fn bad_parameter<E: ::std::error::Error, S: Into<String>>(name: S, e: &E) -> Error {
         // `format!` invokes the error's `Display` trait implementation
-        ErrorKind::BadParameter(name.to_owned(), format!("{}", e).to_owned()).into()
+        ErrorKind::BadParameter(name.into(), format!("{}", e).to_owned()).into()
     }
 
     #[inline]
-    pub fn bad_request(message: &str) -> Error {
-        ErrorKind::BadRequest(message.to_owned()).into()
+    pub fn bad_request<S: Into<String>>(message: S) -> Error {
+        ErrorKind::BadRequest(message.into()).into()
     }
 
     #[inline]
-    pub fn not_found(resource: &str, id: i64) -> Error {
-        ErrorKind::NotFound(resource.to_owned(), id).into()
+    pub fn not_found<S: Into<String>>(resource: S, id: i64) -> Error {
+        ErrorKind::NotFound(resource.into(), id).into()
     }
 
     #[inline]
-    pub fn not_found_general(message: &str) -> Error {
-        ErrorKind::NotFoundGeneral(message.to_owned()).into()
+    pub fn not_found_general<S: Into<String>>(message: S) -> Error {
+        ErrorKind::NotFoundGeneral(message.into()).into()
     }
 
     #[inline]
