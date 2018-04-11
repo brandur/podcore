@@ -28,9 +28,7 @@ pub struct Mediator<'a> {
 impl<'a> Mediator<'a> {
     pub fn run(&mut self, log: &Logger) -> Result<RunResult> {
         time_helpers::log_timed(&log.new(o!("step" => file!())), |log| {
-            self.conn
-                .transaction::<_, Error, _>(|| self.run_inner(log))
-                .chain_err(|| "Error in database transaction")
+            self.conn.transaction::<_, Error, _>(|| self.run_inner(log))
         })
     }
 

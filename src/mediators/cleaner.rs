@@ -240,8 +240,7 @@ fn work(
 
     let mut num_cleaned = 0;
     loop {
-        let res = conn.transaction::<_, Error, _>(|| batch_delete_func(log, &*conn))
-            .chain_err(|| "Error in database transaction")?;
+        let res = conn.transaction::<_, Error, _>(|| batch_delete_func(log, &*conn))?;
         num_cleaned += res.count;
         info!(log, "Cleaned batch"; "num_cleaned" => num_cleaned);
 
