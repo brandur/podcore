@@ -51,6 +51,8 @@ static SLUG_SEPARATOR: &str = "-";
 #[inline]
 fn is_subtitle_seperator(part: &str) -> bool {
     match part {
+        "-" => true,
+        "—" => true, // emdash
         "|" => true,
         ":" => true,
         "//" => true,
@@ -59,6 +61,7 @@ fn is_subtitle_seperator(part: &str) -> bool {
 }
 
 fn slug(s: &str) -> Option<String> {
+    let mut last_loop = false;
     let parts: Vec<&str> = s.split(char::is_whitespace).collect();
 
     let mut slug: Option<String> = None;
@@ -69,6 +72,13 @@ fn slug(s: &str) -> Option<String> {
         // starts off the string, in which case we continue normally.
         if is_subtitle_seperator(part) && slug.is_some() {
             return slug;
+        }
+
+        // Similar case to the above except that a colon is usually appended onto the
+        // end of a word, so it's not its own part. We have a special case here
+        // to handle that.
+        if part.ends_with(":") {
+            last_loop = true;
         }
 
         let sanitized_part = part.to_lowercase()
@@ -103,6 +113,10 @@ fn slug(s: &str) -> Option<String> {
             sanitized_part
         };
         slug = Some(new_slug);
+
+        if last_loop {
+            break;
+        }
     }
 
     return slug;
@@ -196,6 +210,10 @@ mod test {
         assert_eq!("travel", slug("| Travel").unwrap().as_str());
         assert_eq!("travel", slug(": Travel").unwrap().as_str());
         assert_eq!("travel", slug("// Travel").unwrap().as_str());
+
+        // Similar to the above, but uses a slightly different codepath because the
+        // colon is part of its preceeding part
+        assert_eq!("adventure", slug("Adventure: Travel").unwrap().as_str());
 
         // In some cases there may be nothing usable in the string at all
         assert!(slug("").is_none());
