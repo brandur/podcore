@@ -54,7 +54,7 @@ impl<'a> Mediator<'a> {
                     self.run_recovery(log, &e);
 
                     // Return the original error because it's going to be more useful.
-                    Err(e.chain_err(|| "Error in database transaction"))
+                    Err(e)
                 }
             }
         })
@@ -256,8 +256,19 @@ impl<'a> Mediator<'a> {
         common::log_body_sample(log, status, &body);
         if status != StatusCode::Ok {
             let string = String::from_utf8_lossy(body.as_slice()).replace("\n", "");
-            info!(log, "Body of errored request"; "body" => string.as_str());
-            bail!("Unexpected status while fetching feed: {}", status);
+            info!(log, "Body of errored request";
+                "body" => string.as_str(), "status" => format!("{}", status));
+
+            if status == StatusCode::NotFound {
+                bail!(error::bad_request(
+                    "That podcast doesn't seem to exist on the host's servers (404)."
+                ));
+            } else {
+                bail!(error::bad_request(&format!(
+                    "Error fetching podcast feed. Host responded with status: {}",
+                    status
+                )));
+            }
         }
         Ok((body, final_url))
     }
@@ -285,7 +296,7 @@ impl<'a> Mediator<'a> {
                 buf.clear();
             }
 
-            Err("No rss tag found".into())
+            Err("No <rss> tag found".into())
         })
     }
 
@@ -1176,10 +1187,6 @@ mod tests {
         let mut err_iter = err.iter();
 
         assert_eq!(
-            "Error in database transaction",
-            err_iter.next().unwrap().to_string()
-        );
-        assert_eq!(
             "Unexpected EOF while parsing <channel> tag",
             err_iter.next().unwrap().to_string()
         );
@@ -1196,11 +1203,7 @@ mod tests {
         let err = res.err().unwrap();
         let mut err_iter = err.iter();
 
-        assert_eq!(
-            "Error in database transaction",
-            err_iter.next().unwrap().to_string()
-        );
-        assert_eq!("No rss tag found", err_iter.next().unwrap().to_string());
+        assert_eq!("No <rss> tag found", err_iter.next().unwrap().to_string());
         assert_eq!(true, err_iter.next().is_none());
     }
 

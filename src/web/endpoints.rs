@@ -391,12 +391,7 @@ pub mod directory_podcast_show {
                     http_requester: &mut endpoints::build_requester()?,
                 };
                 let res = mediator.run(log)?;
-
-                if let Some(_dir_podcast_ex) = res.dir_podcast_ex {
-                    return Err(Error::from("Could not ingest podcast feed"));
-                }
-
-                Ok(ViewModel::Ok(res.podcast.unwrap()))
+                Ok(ViewModel::Ok(res.podcast))
             }
             None => Err(error::not_found(
                 "directory_podcast",

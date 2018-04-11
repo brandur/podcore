@@ -100,6 +100,11 @@ pub mod error {
     }
 
     #[inline]
+    pub fn bad_request(message: &str) -> Error {
+        ErrorKind::BadRequest(message.to_owned()).into()
+    }
+
+    #[inline]
     pub fn not_found(resource: &str, id: i64) -> Error {
         ErrorKind::NotFound(resource.to_owned(), id).into()
     }
