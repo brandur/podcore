@@ -6,7 +6,7 @@ use html5ever::parse_document;
 use html5ever::rcdom::{Handle, NodeData, RcDom};
 use html5ever::tendril::TendrilSink;
 
-pub fn sanitize_html(s: &str) -> String {
+pub fn sanitize(s: &str) -> String {
     let mut buf = BufReader::new(s.as_bytes());
     let mut out = String::new();
 
@@ -140,68 +140,59 @@ mod tests {
     use html::*;
 
     #[test]
-    fn test_sanitize_html() {
+    fn test_sanitize() {
         // No HTML
-        assert_eq!("x", sanitize_html("x").as_str());
+        assert_eq!("x", sanitize("x").as_str());
 
         // With newlines. We get a double slash produced on the left, which I'm not
         // entirely sure is right. If not and it's a problem, I'll fix it later.
-        assert_eq!("x\\n\\ny", sanitize_html("x\n\ny").as_str());
+        assert_eq!("x\\n\\ny", sanitize("x\n\ny").as_str());
 
         // Allowed elements
-        assert_eq!("<code>x</code>", sanitize_html("<code>x</code>").as_str());
-        assert_eq!("<em>x</em>", sanitize_html("<em>x</em>").as_str());
+        assert_eq!("<code>x</code>", sanitize("<code>x</code>").as_str());
+        assert_eq!("<em>x</em>", sanitize("<em>x</em>").as_str());
         assert_eq!(
             "<ol><li>x</li></ol>",
-            sanitize_html("<ol><li>x</li></ol>").as_str()
+            sanitize("<ol><li>x</li></ol>").as_str()
         );
-        assert_eq!("<p>x</p>", sanitize_html("<p>x</p>").as_str());
-        assert_eq!("<sub>x</sub>", sanitize_html("<sub>x</sub>").as_str());
-        assert_eq!("<sup>x</sup>", sanitize_html("<sup>x</sup>").as_str());
+        assert_eq!("<p>x</p>", sanitize("<p>x</p>").as_str());
+        assert_eq!("<sub>x</sub>", sanitize("<sub>x</sub>").as_str());
+        assert_eq!("<sup>x</sup>", sanitize("<sup>x</sup>").as_str());
         assert_eq!(
             "<strong>x</strong>",
-            sanitize_html("<strong>x</strong>").as_str()
+            sanitize("<strong>x</strong>").as_str()
         );
         assert_eq!(
             "<ul><li>x</li></ul>",
-            sanitize_html("<ul><li>x</li></ul>").as_str()
+            sanitize("<ul><li>x</li></ul>").as_str()
         );
 
         // Allowed element with attributes stripped
-        assert_eq!(
-            "<em>x</em>",
-            sanitize_html("<em class=\"y\">x</em>").as_str()
-        );
+        assert_eq!("<em>x</em>", sanitize("<em class=\"y\">x</em>").as_str());
 
         // Elements converted to more semantically correct elements
-        assert_eq!("<em>x</em>", sanitize_html("<i>x</i>").as_str());
-        assert_eq!(
-            "<strong>x</strong>",
-            sanitize_html("<bold>x</bold>").as_str()
-        );
+        assert_eq!("<em>x</em>", sanitize("<i>x</i>").as_str());
+        assert_eq!("<strong>x</strong>", sanitize("<bold>x</bold>").as_str());
 
         // Link
         assert_eq!(
             "<a href=\"https://example.com\" rel=\"nofollow\">x</a>",
-            sanitize_html("<a href=\"https://example.com\" attr=\"other\">x</a>").as_str()
+            sanitize("<a href=\"https://example.com\" attr=\"other\">x</a>").as_str()
         );
 
         // Link without href
-        assert_eq!("x", sanitize_html("<a>x</a>").as_str());
+        assert_eq!("x", sanitize("<a>x</a>").as_str());
 
         // Multiple elements
         assert_eq!(
             "<code>x</code> hello <em><strong>x</strong></em>",
-            sanitize_html("<code>x</code> hello <em><strong>x</strong></em>").as_str()
+            sanitize("<code>x</code> hello <em><strong>x</strong></em>").as_str()
         );
 
         // Disallowed element
-        assert_eq!(
-            "foo ",
-            sanitize_html("foo <img src=\"tracker.png\">").as_str()
-        );
+        assert_eq!("foo ", sanitize("foo <img src=\"tracker.png\">").as_str());
 
         // Unclosed element (just so we know the behavior here)
-        assert_eq!("<em>x</em>", sanitize_html("<em>x").as_str());
+        assert_eq!("<em>x</em>", sanitize("<em>x").as_str());
     }
 }
