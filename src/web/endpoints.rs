@@ -416,7 +416,10 @@ pub mod directory_podcast_show {
         ) -> Result<HttpResponse> {
             match *self {
                 ViewModel::Ok(ref view_model) => {
-                    Ok(HttpResponse::build(StatusCode::PERMANENT_REDIRECT)
+                    // This could really be a permanent redirect, but just to make debugging
+                    // easier, I have it set as a temporary redirect so that I can reuse it across
+                    // database cleans without the browser caching a result that's since invalid.
+                    Ok(HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
                         .header("Location", links::link_podcast(view_model).as_str())
                         .finish())
                 }
