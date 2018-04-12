@@ -20,15 +20,15 @@
 const GRAPHQL_URL = "/graphql";
 
 //
-// EpisodeFavoritedToggler
+// AccountPodcastEpisodeFavoritedToggler
 //
 
-class EpisodeFavoritedToggler extends React.Component {
+class AccountPodcastEpisodeFavoritedToggler extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-	  episodeId: props.episodeId,
-	  favorited: props.favorited
+      episodeId: props.episodeId,
+      favorited: props.favorited
     };
 
     // I tried arrow functions, but couldn't get them working for a class
@@ -41,7 +41,7 @@ class EpisodeFavoritedToggler extends React.Component {
 
     const query = `
 mutation {
-  episodeFavoritedUpdate(episodeId: "${this.state.episodeId}", favorited: ${!this.state.favorited}) {
+  accountPodcastEpisodeFavoritedUpdate(episodeId: "${this.state.episodeId}", favorited: ${!this.state.favorited}) {
     id
   }
 }`;
@@ -60,15 +60,15 @@ mutation {
 }
 
 //
-// EpisodePlayedToggler
+// AccountPodcastEpisodePlayedToggler
 //
 
-class EpisodePlayedToggler extends React.Component {
+class AccountPodcastEpisodePlayedToggler extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-	  episodeId: props.episodeId,
-	  played: props.played
+      episodeId: props.episodeId,
+      played: props.played
     };
 
     // I tried arrow functions, but couldn't get them working for a class
@@ -81,7 +81,7 @@ class EpisodePlayedToggler extends React.Component {
 
     const query = `
 mutation {
-  episodePlayedUpdate(episodeId: "${this.state.episodeId}", played: ${!this.state.played}) {
+  accountPodcastEpisodePlayedUpdate(episodeId: "${this.state.episodeId}", played: ${!this.state.played}) {
     id
   }
 }`;
@@ -100,10 +100,10 @@ mutation {
 }
 
 //
-// PodcastSubscribedToggler
+// AccountPodcastSubscribedToggler
 //
 
-class PodcastSubscribedToggler extends React.Component {
+class AccountPodcastSubscribedToggler extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -122,7 +122,7 @@ class PodcastSubscribedToggler extends React.Component {
 
     const query = `
 mutation {
-  podcastSubscribedUpdate(podcastId: "${this.state.podcastId}", subscribed: ${!this.state.subscribed}) {
+  accountPodcastUpdate(podcastId: "${this.state.podcastId}", subscribed: ${!this.state.subscribed}) {
     id
   }
 }`;
@@ -181,7 +181,7 @@ async function executeGraphQL(query) {
 Activating a React component:
 
     ReactDOM.render(
-      React.createElement(PodcastSubscribedToggler, {podcastId: "1", subscribed: false}),
+      React.createElement(AccountPodcastSubscribedToggler, {podcastId: "1", subscribed: false}),
       document.getElementById('react-container')
     );
 

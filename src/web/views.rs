@@ -94,7 +94,7 @@ pub mod episode_show {
                 }
                 @ if view_model.account_podcast.is_some() {
                     script : Raw(views::react_element(
-                        "EpisodeFavoritedToggler",
+                        "AccountPodcastEpisodeFavoritedToggler",
                         "favorited-toggle",
                         &json!({
                             "episodeId": view_model.episode.id.to_string(),
@@ -102,7 +102,7 @@ pub mod episode_show {
                         }).to_string(),
                     ));
                     script : Raw(views::react_element(
-                        "EpisodePlayedToggler",
+                        "AccountPodcastEpisodePlayedToggler",
                         "played-toggle",
                         &json!({
                             "episodeId": view_model.episode.id.to_string(),
@@ -145,7 +145,7 @@ pub mod podcast_show {
                     }
                 }
                 script : Raw(views::react_element(
-                    "PodcastSubscribedToggler",
+                    "AccountPodcastSubscribedToggler",
                     "subscribed-toggle",
                     &json!({
                         "podcastId": view_model.podcast.id.to_string(),

@@ -46,7 +46,7 @@ graphql_object!(
 
         description: "The root mutation object of the schema."
 
-        field episode_favorited_update(&executor,
+        field account_podcast_episode_favorited_update(&executor,
             episode_id: String as "The episode's ID.",
             favorited: bool as "True to set as favorited or false to set as not favorited."
         ) -> FieldResult<resource::AccountPodcastEpisode> as "An object representing the podcast episode for this user." {
@@ -61,7 +61,7 @@ graphql_object!(
             )?)
         }
 
-        field episode_played_update(&executor,
+        field account_podcast_episode_played_update(&executor,
             episode_id: String as "The episode's ID.",
             played: bool as "True to set as played or false to set as not played."
         ) -> FieldResult<resource::AccountPodcastEpisode> as "An object representing the podcast episode for this user." {
@@ -80,18 +80,18 @@ graphql_object!(
         //
         // ``` graphql
         // mutation {
-        //   podcastSubscribedUpdate(podcastId: "1", subscribed: true) {
+        //   accountPodcastUpdate(podcastId: "1", subscribed: true) {
         //     id
         //   }
         // }
         // ```
-        field podcast_subscribed_update(&executor,
+        field account_podcast_update(&executor,
             podcast_id: String as "The podcast's ID.",
-            subscribed: bool as "True to subscribe or false to unsubscribe."
+            subscribed: Option<bool> as "True to subscribe or false to unsubscribe."
         ) -> FieldResult<Option<resource::AccountPodcast>> as "An object representing the added or removed subscribed, or null if unsubscribing and the account wasn't subscribed." {
-            Ok(mutation::podcast_subscribed_update::execute(
+            Ok(mutation::account_podcast_update::execute(
                 &executor.context().log,
-                &mutation::podcast_subscribed_update::Params {
+                &mutation::account_podcast_update::Params {
                     account:    &executor.context().account,
                     conn:       &executor.context().conn(),
                     podcast_id: &podcast_id,
@@ -641,7 +641,7 @@ mod mutation {
         }
     }
 
-    pub mod podcast_subscribed_update {
+    pub mod account_podcast_update {
         use graphql::operations::mutation::*;
 
         use diesel::prelude::*;
@@ -651,7 +651,7 @@ mod mutation {
             pub account:    &'a model::Account,
             pub conn:       &'a PgConnection,
             pub podcast_id: &'a str,
-            pub subscribed: bool,
+            pub subscribed: Option<bool>,
         }
 
         pub fn execute<'a>(
@@ -661,11 +661,15 @@ mod mutation {
             let podcast_id = i64::from_str(params.podcast_id)
                 .map_err(|e| error::bad_parameter("podcast_id", &e))?;
 
-            let account_podcast = if params.subscribed {
-                // Subscription always produces an `AccountPodcast`
-                Some(subscribe(log, params, podcast_id)?)
+            let account_podcast = if let Some(subscribed) = params.subscribed {
+                if subscribed {
+                    // Subscription always produces an `AccountPodcast`
+                    Some(subscribe(log, params, podcast_id)?)
+                } else {
+                    unsubscribe(log, params, podcast_id)?
+                }
             } else {
-                unsubscribe(log, params, podcast_id)?
+                None
             };
             Ok(account_podcast.map(|ref ap| resource::AccountPodcast::from(ap)))
         }
@@ -723,7 +727,7 @@ mod mutation {
 
         #[cfg(test)]
         mod tests {
-            use graphql::operations::mutation::podcast_subscribed_update::*;
+            use graphql::operations::mutation::account_podcast_update::*;
             use test_data;
             use test_helpers;
 
@@ -731,7 +735,7 @@ mod mutation {
             use r2d2_diesel::ConnectionManager;
 
             #[test]
-            fn test_mutation_podcast_subscribed_update_subscribe() {
+            fn test_mutation_account_podcast_update_subscribe() {
                 let bootstrap = TestBootstrap::new();
 
                 // Two `unwrap`s: once to verify successful execution, and once to verify that
@@ -743,7 +747,7 @@ mod mutation {
                         account:    &bootstrap.account,
                         conn:       &*bootstrap.conn,
                         podcast_id: &bootstrap.podcast.id.to_string(),
-                        subscribed: true,
+                        subscribed: Some(true),
                     },
                 ).unwrap()
                     .unwrap();
@@ -753,7 +757,7 @@ mod mutation {
             }
 
             #[test]
-            fn test_mutation_podcast_subscribed_update_unsubscribe_subscribed() {
+            fn test_mutation_account_podcast_update_unsubscribe_subscribed() {
                 let bootstrap = TestBootstrap::new();
 
                 let account_podcast = test_data::account_podcast::insert_args(
@@ -770,7 +774,7 @@ mod mutation {
                         account:    &bootstrap.account,
                         conn:       &*bootstrap.conn,
                         podcast_id: &account_podcast.podcast_id.to_string(),
-                        subscribed: false,
+                        subscribed: Some(false),
                     },
                 ).unwrap()
                     .unwrap();
@@ -780,7 +784,7 @@ mod mutation {
             // Unsubscribing when not subscribed is a no-op, but returns a successful
             // response.
             #[test]
-            fn test_mutation_podcast_subscribed_update_unsubscribed_not_subscribed() {
+            fn test_mutation_account_podcast_update_unsubscribed_not_subscribed() {
                 let bootstrap = TestBootstrap::new();
 
                 let account_podcast = execute(
@@ -789,7 +793,24 @@ mod mutation {
                         account:    &bootstrap.account,
                         conn:       &*bootstrap.conn,
                         podcast_id: &"0",
-                        subscribed: false,
+                        subscribed: Some(false),
+                    },
+                ).unwrap();
+                assert!(account_podcast.is_none());
+            }
+
+            // No updates passed.
+            #[test]
+            fn test_mutation_account_podcast_update_no_options() {
+                let bootstrap = TestBootstrap::new();
+
+                let account_podcast = execute(
+                    &bootstrap.log,
+                    &Params {
+                        account:    &bootstrap.account,
+                        conn:       &*bootstrap.conn,
+                        podcast_id: &bootstrap.podcast.id.to_string(),
+                        subscribed: None,
                     },
                 ).unwrap();
                 assert!(account_podcast.is_none());
