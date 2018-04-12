@@ -53,6 +53,28 @@ fn walk(handle: Handle, out: &mut String) {
         } => {
             if name.ns == ns!(html) {
                 match name.local.as_ref() {
+                    // Allow links, but discard any attribute except `href` and add
+                    // `rel="nofollow"`.
+                    "a" => {
+                        let mut href: Option<String> = None;
+
+                        for attr in attrs.borrow().iter() {
+                            if attr.name.ns != ns!() {
+                                continue;
+                            }
+
+                            if attr.name.local.as_ref() == "href" {
+                                href = Some(attr.value.as_ref().to_owned());
+                            }
+                        }
+
+                        if let Some(href) = href {
+                            out.push_str(&format!("<a href=\"{}\" rel=\"nofollow\">", href));
+                            close_tag = Some("</a>".to_owned());
+                        }
+                    }
+
+                    // All these elements are allowed (but their attributes are stripped)
                     tag @ "code"
                     | tag @ "em"
                     | tag @ "li"
@@ -159,8 +181,13 @@ mod tests {
         );
 
         // Link
+        assert_eq!(
+            "<a href=\"https://example.com\" rel=\"nofollow\">x</a>",
+            sanitize_html("<a href=\"https://example.com\" attr=\"other\">x</a>").as_str()
+        );
 
         // Link without href
+        assert_eq!("x", sanitize_html("<a>x</a>").as_str());
 
         // Multiple elements
         assert_eq!(
