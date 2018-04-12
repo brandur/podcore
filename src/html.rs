@@ -26,11 +26,6 @@ pub fn sanitize(s: &str) -> String {
 // Private functions
 //
 
-// FIXME: Copy of str::escape_default from std, which is currently unstable
-fn escape_default(s: &str) -> String {
-    s.chars().flat_map(|c| c.escape_default()).collect()
-}
-
 fn walk(handle: Handle, out: &mut String) {
     let node = handle;
     let mut close_tag: Option<String> = None;
@@ -104,24 +99,13 @@ fn walk(handle: Handle, out: &mut String) {
                     _ => (),
                 }
             }
-
-            /*
-
-            assert!(name.ns == ns!(html));
-            print!("<{}", name.local);
-            for attr in attrs.borrow().iter() {
-                assert!(attr.name.ns == ns!());
-                print!(" {}=\"{}\"", attr.name.local, attr.value);
-            }
-            println!(">");
-            */
         }
 
         NodeData::ProcessingInstruction { .. } => unreachable!(),
 
         // Push through standard content.
         NodeData::Text { ref contents } => {
-            out.push_str(&escape_default(&contents.borrow()));
+            out.push_str(&contents.borrow());
         }
     }
 
@@ -149,7 +133,13 @@ mod tests {
 
         // With newlines. We get a double slash produced on the left, which I'm not
         // entirely sure is right. If not and it's a problem, I'll fix it later.
-        assert_eq!("x\\n\\ny", sanitize("x\n\ny").as_str());
+        assert_eq!("x\n\ny", sanitize("x\n\ny").as_str());
+
+        // Unicode
+        assert_eq!(
+            "It wasn&#8217;t three-appropriate.",
+            sanitize("It wasn&amp;#8217;t three-appropriate.").as_str()
+        );
 
         // Allowed elements
         assert_eq!("<code>x</code>", sanitize("<code>x</code>").as_str());
