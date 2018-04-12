@@ -53,7 +53,15 @@ fn walk(handle: Handle, out: &mut String) {
         } => {
             if name.ns == ns!(html) {
                 match name.local.as_ref() {
-                    tag @ "code" | tag @ "em" | tag @ "strong" => {
+                    tag @ "code"
+                    | tag @ "em"
+                    | tag @ "li"
+                    | tag @ "ol"
+                    | tag @ "p"
+                    | tag @ "strong"
+                    | tag @ "sub"
+                    | tag @ "sup"
+                    | tag @ "ul" => {
                         out.push_str(&format!("<{}>", tag));
                         close_tag = Some(format!("</{}>", tag));
                     }
@@ -121,8 +129,19 @@ mod tests {
         assert_eq!("<code>x</code>", sanitize_html("<code>x</code>").as_str());
         assert_eq!("<em>x</em>", sanitize_html("<em>x</em>").as_str());
         assert_eq!(
+            "<ol><li>x</li></ol>",
+            sanitize_html("<ol><li>x</li></ol>").as_str()
+        );
+        assert_eq!("<p>x</p>", sanitize_html("<p>x</p>").as_str());
+        assert_eq!("<sub>x</sub>", sanitize_html("<sub>x</sub>").as_str());
+        assert_eq!("<sup>x</sup>", sanitize_html("<sup>x</sup>").as_str());
+        assert_eq!(
             "<strong>x</strong>",
             sanitize_html("<strong>x</strong>").as_str()
+        );
+        assert_eq!(
+            "<ul><li>x</li></ul>",
+            sanitize_html("<ul><li>x</li></ul>").as_str()
         );
 
         // Allowed element with attributes stripped
@@ -143,11 +162,18 @@ mod tests {
         // Link without href
 
         // Multiple elements
+        assert_eq!(
+            "<code>x</code> hello <em><strong>x</strong></em>",
+            sanitize_html("<code>x</code> hello <em><strong>x</strong></em>").as_str()
+        );
 
         // Disallowed element
         assert_eq!(
             "foo ",
             sanitize_html("foo <img src=\"tracker.png\">").as_str()
         );
+
+        // Unclosed element (just so we know the behavior here)
+        assert_eq!("<em>x</em>", sanitize_html("<em>x").as_str());
     }
 }
