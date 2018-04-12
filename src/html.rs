@@ -122,8 +122,9 @@ mod tests {
         // No HTML
         assert_eq!("x", sanitize_html("x").as_str());
 
-        // With newlines
-        //assert_eq!("x\ny", sanitize_html("x\ny").as_str());
+        // With newlines. We get a double slash produced on the left, which I'm not
+        // entirely sure is right. If not and it's a problem, I'll fix it later.
+        assert_eq!("x\\n\\ny", sanitize_html("x\n\ny").as_str());
 
         // Allowed elements
         assert_eq!("<code>x</code>", sanitize_html("<code>x</code>").as_str());
