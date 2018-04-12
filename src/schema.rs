@@ -47,6 +47,7 @@ table! {
         podcast_id -> Nullable<Int8>,
         title -> Text,
         vendor_id -> Text,
+        image_url -> Nullable<Text>,
     }
 }
 
@@ -110,6 +111,7 @@ table! {
         last_retrieved_at -> Timestamptz,
         link_url -> Nullable<Text>,
         title -> Text,
+        description -> Nullable<Text>,
     }
 }
 

@@ -252,6 +252,7 @@ impl<'a> Mediator<'a> {
             .map(|p| insertable::DirectoryPodcast {
                 directory_id: directory.id,
                 feed_url:     p.feed_url.clone().unwrap(),
+                image_url:    Some(p.artwork_url_600.clone()),
                 podcast_id:   None,
                 title:        p.collection_name.clone(),
                 vendor_id:    p.collection_id.to_string(),
@@ -289,6 +290,8 @@ impl<'a> Mediator<'a> {
                     .set((
                         schema::directory_podcast::feed_url
                             .eq(excluded(schema::directory_podcast::feed_url)),
+                        schema::directory_podcast::image_url
+                            .eq(excluded(schema::directory_podcast::image_url)),
                         schema::directory_podcast::title
                             .eq(excluded(schema::directory_podcast::title)),
                     ))
@@ -313,7 +316,7 @@ pub struct RunResult {
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct SearchResult {
-    artwork_url_100: String,
+    artwork_url_600: String,
     collection_id:   u32,
     collection_name: String,
 
@@ -348,7 +351,7 @@ mod tests {
     use std::sync::Arc;
 
     #[test]
-    fn test_new_search() {
+    fn test_directory_podcast_search_new() {
         let mut bootstrap = TestBootstrap::new(DIRECTORY_SEARCH_RESULTS);
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
@@ -359,6 +362,10 @@ mod tests {
         assert_eq!(1, res.directory_podcasts.len());
         let directory_podcast = &res.directory_podcasts[0];
         assert_eq!("https://example.com/feed.xml", directory_podcast.feed_url);
+        assert_eq!(
+            "https://example.com/artwork_600x600.jpg",
+            directory_podcast.image_url.as_ref().unwrap()
+        );
         assert_eq!("Example Podcast", directory_podcast.title);
         assert_eq!("123", directory_podcast.vendor_id);
 
@@ -373,7 +380,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cached_search_fresh() {
+    fn test_directory_podcast_search_cached_fresh() {
         let mut bootstrap = TestBootstrap::new(DIRECTORY_SEARCH_RESULTS);
 
         // First run (inserts original results)
@@ -390,7 +397,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cached_search_stale() {
+    fn test_directory_podcast_search_cached_stale() {
         // First run (inserts original results)
         {
             let mut bootstrap = TestBootstrap::new(DIRECTORY_SEARCH_RESULTS);
@@ -437,7 +444,7 @@ mod tests {
     }
 
     #[test]
-    fn test_results_deserialization() {
+    fn test_directory_podcast_search_results_deserialization() {
         let encoded = include_bytes!("../test_documents/itunes_search.json");
         let decoded: SearchResultWrapper = serde_json::from_slice(encoded).unwrap();
         assert_ne!(0, decoded.result_count);
@@ -453,7 +460,7 @@ mod tests {
   "resultCount": 1,
   "results": [
     {
-      "artworkUrl100": "https://example.com/artwork_100x100.jpg",
+      "artworkUrl600": "https://example.com/artwork_600x600.jpg",
       "collectionId": 123,
       "collectionName": "Example Podcast",
       "kind": "podcast",
@@ -466,7 +473,7 @@ mod tests {
   "resultCount": 1,
   "results": [
     {
-      "artworkUrl100": "https://example.com/artwork_100x100.jpg",
+      "artworkUrl600": "https://example.com/artwork_600x600.jpg",
       "collectionId": 124,
       "collectionName": "Alternate Podcast",
       "kind": "podcast",

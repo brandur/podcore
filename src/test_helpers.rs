@@ -35,6 +35,7 @@ pub const IDEAL_FEED: &[u8] = br#"
 <?xml version="1.0" encoding="UTF-8"?>
 <rss>
   <channel>
+    <description>Description</description>
     <language>en-US</language>
     <link>https://example.com/podcast</link>
     <media:thumbnail url="https://example.com/podcast-image-url.jpg"/>

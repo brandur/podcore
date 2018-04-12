@@ -158,6 +158,7 @@ pub mod directory_podcast {
         let dir_podcast_ins = insertable::DirectoryPodcast {
             directory_id: directory.id,
             feed_url:     "https://example.com/feed.xml".to_owned(),
+            image_url:    Some("https://example.com/image.jpg".to_owned()),
             podcast_id:   args.podcast.map(|p| p.id),
             title:        "Example Podcast".to_owned(),
             vendor_id:    iter::repeat(())

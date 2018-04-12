@@ -208,6 +208,7 @@ mod tests {
             let dir_podcast_ins = insertable::DirectoryPodcast {
                 directory_id: itunes.id,
                 feed_url:     url.to_owned(),
+                image_url:    Some("https://example.com/image.jpg".to_owned()),
                 podcast_id:   None,
                 title:        "Example Podcast".to_owned(),
                 vendor_id:    "471418144".to_owned(),

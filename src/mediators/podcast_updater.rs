@@ -623,19 +623,21 @@ mod raw {
 
     #[derive(Debug)]
     pub struct Podcast {
-        pub image_url: Option<String>,
-        pub language:  Option<String>,
-        pub link_url:  Option<String>,
-        pub title:     Option<String>,
+        pub description: Option<String>,
+        pub image_url:   Option<String>,
+        pub language:    Option<String>,
+        pub link_url:    Option<String>,
+        pub title:       Option<String>,
     }
 
     impl Podcast {
         pub fn new() -> Podcast {
             Podcast {
-                image_url: None,
-                language:  None,
-                link_url:  None,
-                title:     None,
+                description: None,
+                image_url:   None,
+                language:    None,
+                link_url:    None,
+                title:       None,
             }
         }
     }
@@ -711,6 +713,7 @@ fn parse_channel<R: BufRead>(
     loop {
         match reader.read_event(&mut buf) {
             Ok(Event::Start(ref e)) => match e.name() {
+                b"description" => podcast.description = Some(element_text(log, reader)?),
                 b"item" => episodes.push(parse_item(log, reader)?),
                 b"language" => podcast.language = Some(element_text(log, reader)?),
                 b"link" => podcast.link_url = Some(element_text(log, reader)?),
@@ -815,6 +818,7 @@ fn parse_item<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<raw::E
             Ok(Event::Start(ref e)) => match e.name() {
                 b"description" => {
                     episode.description = Some(html::sanitize(&element_text(log, reader)?))
+                    //episode.description = Some(element_text(log, reader)?)
                 }
                 b"enclosure" | b"media:content" => {
                     for attr in e.attributes().with_checks(false) {
@@ -913,6 +917,7 @@ fn validate_podcast(raw: &raw::Podcast) -> Result<PodcastOrInvalid> {
     require_podcast_field!(raw.title, "title");
 
     Ok(PodcastOrInvalid::Valid(insertable::Podcast {
+        description:       raw.description.clone(),
         image_url:         raw.image_url.clone(),
         language:          raw.language.clone(),
         last_retrieved_at: Utc::now(),
@@ -940,7 +945,7 @@ mod tests {
     use time::Duration;
 
     #[test]
-    fn test_feed_ideal() {
+    fn test_podcast_update_feed_ideal() {
         let mut bootstrap = TestBootstrap::new(test_helpers::IDEAL_FEED);
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
@@ -949,6 +954,7 @@ mod tests {
         //
 
         assert_ne!(0, res.podcast.id);
+        assert_eq!(Some("Description".to_owned()), res.podcast.description);
         assert_eq!(
             Some("https://example.com/podcast-image-url.jpg".to_owned()),
             res.podcast.image_url
@@ -1002,11 +1008,12 @@ mod tests {
     }
 
     #[test]
-    fn test_feed_minimal() {
+    fn test_podcast_update_feed_minimal() {
         let mut bootstrap = TestBootstrap::new(test_helpers::MINIMAL_FEED);
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
 
+        assert!(res.podcast.description.is_none());
         assert_eq!("Title", res.podcast.title);
 
         let episodes = res.episodes.unwrap();
@@ -1023,7 +1030,7 @@ mod tests {
     }
 
     #[test]
-    fn test_idempotency_with_shortcut() {
+    fn test_podcast_update_idempotency_with_shortcut() {
         let mut bootstrap = TestBootstrap::new(test_helpers::MINIMAL_FEED);
 
         {
@@ -1056,7 +1063,7 @@ mod tests {
     }
 
     #[test]
-    fn test_idempotency_without_shortcut() {
+    fn test_podcast_update_idempotency_without_shortcut() {
         let mut bootstrap = TestBootstrap::new(test_helpers::MINIMAL_FEED);
 
         {
@@ -1095,7 +1102,7 @@ mod tests {
     }
 
     #[test]
-    fn test_prefer_latest_url() {
+    fn test_podcast_update_prefer_latest_url() {
         // Establish one connection with an open transaction for which data will live
         // across this whole test.
         let conn = test_helpers::connection();
@@ -1142,7 +1149,7 @@ mod tests {
     }
 
     #[test]
-    fn test_feed_duplicated_guids() {
+    fn test_podcast_update_feed_duplicated_guids() {
         let mut bootstrap = TestBootstrap::new(
             br#"
 <?xml version="1.0" encoding="UTF-8"?>
@@ -1174,7 +1181,7 @@ mod tests {
     }
 
     #[test]
-    fn test_feed_truncated() {
+    fn test_podcast_update_feed_truncated() {
         let mut bootstrap = TestBootstrap::new(
             br#"
 <?xml version="1.0" encoding="UTF-8"?>
@@ -1197,7 +1204,7 @@ mod tests {
     }
 
     #[test]
-    fn test_feed_invalid() {
+    fn test_podcast_update_feed_invalid() {
         let mut bootstrap = TestBootstrap::new(b"not a feed");
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log);
@@ -1211,7 +1218,7 @@ mod tests {
     }
 
     #[test]
-    fn test_podcast_exception_creation() {
+    fn test_podcast_update_exception_creation() {
         // Establish one connection with an open transaction for which data will live
         // across this whole test.
         let conn = test_helpers::connection();
@@ -1240,7 +1247,7 @@ mod tests {
     }
 
     #[test]
-    fn test_podcast_exception_removal() {
+    fn test_podcast_update_exception_removal() {
         // Establish one connection with an open transaction for which data will live
         // across this whole test.
         let conn = test_helpers::connection();
@@ -1280,7 +1287,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_date_time() {
+    fn test_podcast_update_parse_date_time() {
         // Valid RFC 2822
         assert_eq!(
             Utc.ymd(2017, 12, 24).and_hms(21, 37, 32),
@@ -1316,7 +1323,7 @@ mod tests {
     }
 
     #[test]
-    fn test_real_feed() {
+    fn test_podcast_update_real_feed() {
         {
             let mut bootstrap =
                 TestBootstrap::new(include_bytes!("../test_documents/feed_8_4_play.xml"));
@@ -1465,9 +1472,10 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_episode() {
+    fn test_podcast_update_validate_episode() {
         let podcast = model::Podcast {
             id:                1,
+            description:       Some("Description".to_owned()),
             image_url:         None,
             language:          None,
             last_retrieved_at: Utc::now(),
@@ -1556,7 +1564,7 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_podcast() {
+    fn test_podcast_update_validate_podcast() {
         {
             let raw = valid_raw_podcast();
             match validate_podcast(&raw).unwrap() {

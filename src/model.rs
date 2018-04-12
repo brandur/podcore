@@ -110,6 +110,7 @@ pub struct DirectoryPodcast {
     pub podcast_id:   Option<i64>,
     pub title:        String,
     pub vendor_id:    String,
+    pub image_url:    Option<String>,
 }
 
 #[derive(Queryable)]
@@ -167,6 +168,7 @@ pub struct Podcast {
     pub last_retrieved_at: DateTime<Utc>,
     pub link_url:          Option<String>,
     pub title:             String,
+    pub description:       Option<String>,
 }
 
 #[allow(dead_code)]
@@ -258,6 +260,7 @@ pub mod insertable {
         pub podcast_id:   Option<i64>,
         pub title:        String,
         pub vendor_id:    String,
+        pub image_url:    Option<String>,
     }
 
     #[derive(Insertable)]
@@ -315,6 +318,7 @@ pub mod insertable {
         pub last_retrieved_at: DateTime<Utc>,
         pub link_url:          Option<String>,
         pub title:             String,
+        pub description:       Option<String>,
     }
 
     #[derive(Insertable)]
