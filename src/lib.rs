@@ -3,26 +3,41 @@
 extern crate actix;
 extern crate actix_web;
 extern crate bytes;
+
 #[macro_use]
 extern crate chan;
+
 extern crate chrono;
 extern crate crypto;
+
 #[macro_use]
 extern crate diesel;
+
 #[macro_use]
 extern crate error_chain;
+
 extern crate flate2;
 extern crate futures;
+
 #[macro_use]
 extern crate horrorshow;
+
+#[macro_use]
+extern crate html5ever;
+
 extern crate http;
+
 #[macro_use]
 extern crate hyper;
+
 extern crate hyper_tls;
+
 #[macro_use]
 extern crate juniper;
+
 #[macro_use]
 extern crate lazy_static;
+
 extern crate native_tls;
 extern crate percent_encoding;
 extern crate quick_xml;
@@ -30,6 +45,7 @@ extern crate r2d2;
 extern crate r2d2_diesel;
 extern crate rand;
 extern crate regex;
+
 #[macro_use]
 extern crate serde_derive;
 
@@ -55,6 +71,8 @@ pub mod errors;
 #[allow(unused_parens)]
 #[cfg_attr(feature = "cargo-clippy", allow(double_parens, op_ref))]
 pub mod graphql;
+
+mod html;
 
 #[cfg(test)]
 #[macro_use]
