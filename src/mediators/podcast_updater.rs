@@ -594,7 +594,7 @@ enum PodcastOrInvalid {
 /// set of functions attempts to coerce these data types into insertable rows
 /// and indicate that the data source is invalid if it's not possible.
 mod raw {
-    #[derive(Debug)]
+    #[derive(Debug, Default)]
     pub struct Episode {
         pub description:  Option<String>,
         pub explicit:     Option<bool>,
@@ -606,40 +606,13 @@ mod raw {
         pub title:        Option<String>,
     }
 
-    impl Episode {
-        pub fn new() -> Episode {
-            Episode {
-                description:  None,
-                explicit:     None,
-                media_type:   None,
-                media_url:    None,
-                guid:         None,
-                link_url:     None,
-                published_at: None,
-                title:        None,
-            }
-        }
-    }
-
-    #[derive(Debug)]
+    #[derive(Debug, Default)]
     pub struct Podcast {
         pub description: Option<String>,
         pub image_url:   Option<String>,
         pub language:    Option<String>,
         pub link_url:    Option<String>,
         pub title:       Option<String>,
-    }
-
-    impl Podcast {
-        pub fn new() -> Podcast {
-            Podcast {
-                description: None,
-                image_url:   None,
-                language:    None,
-                link_url:    None,
-                title:       None,
-            }
-        }
     }
 }
 
@@ -707,7 +680,7 @@ fn parse_channel<R: BufRead>(
 ) -> Result<(raw::Podcast, Vec<raw::Episode>)> {
     let mut buf = Vec::new();
     let mut episodes: Vec<raw::Episode> = Vec::new();
-    let mut podcast = raw::Podcast::new();
+    let mut podcast = raw::Podcast::default();
     let mut skip_buf = Vec::new();
 
     loop {
@@ -810,7 +783,7 @@ fn parse_rss<R: BufRead>(
 
 fn parse_item<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<raw::Episode> {
     let mut buf = Vec::new();
-    let mut episode = raw::Episode::new();
+    let mut episode = raw::Episode::default();
     let mut skip_buf = Vec::new();
 
     loop {
@@ -1665,7 +1638,7 @@ mod tests {
     }
 
     fn valid_raw_episode() -> raw::Episode {
-        let mut raw = raw::Episode::new();
+        let mut raw = raw::Episode::default();
         raw.guid = Some("unique-guid".to_owned());
         raw.media_url = Some("https://example.com/podcast-url".to_owned());
         raw.published_at = Some("Sun, 24 Dec 2017 21:37:32 +0000".to_owned());
@@ -1674,7 +1647,7 @@ mod tests {
     }
 
     fn valid_raw_podcast() -> raw::Podcast {
-        let mut raw = raw::Podcast::new();
+        let mut raw = raw::Podcast::default();
         raw.title = Some("Title".to_owned());
         raw
     }
