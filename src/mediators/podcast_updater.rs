@@ -1,5 +1,6 @@
 use error_helpers;
 use errors::*;
+use html;
 use http_requester::HttpRequester;
 use mediators::common;
 use model;
@@ -812,7 +813,9 @@ fn parse_item<R: BufRead>(log: &Logger, reader: &mut Reader<R>) -> Result<raw::E
     loop {
         match reader.read_event(&mut buf) {
             Ok(Event::Start(ref e)) => match e.name() {
-                b"description" => episode.description = Some(element_text(log, reader)?),
+                b"description" => {
+                    episode.description = Some(html::sanitize(&element_text(log, reader)?))
+                }
                 b"enclosure" | b"media:content" => {
                     for attr in e.attributes().with_checks(false) {
                         if let Ok(attr) = attr {
