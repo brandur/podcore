@@ -90,6 +90,8 @@ pub mod episode_show {
                 div(id="played-toggle") {}
                 p: view_model.episode.media_url.as_str();
                 @ if let Some(ref description) = view_model.episode.description {
+                    : Raw(description.as_str());
+                    hr;
                     p: description.as_str();
                 }
                 @ if view_model.account_podcast.is_some() {
