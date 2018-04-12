@@ -88,6 +88,9 @@ fn walk(handle: Handle, out: &mut String) {
                         close_tag = Some(format!("</{}>", tag));
                     }
 
+                    // <hr> is special because we don't bother with an end tag
+                    "hr" => out.push_str("<hr>"),
+
                     // Convert these to elements that are more semantically correct
                     "bold" => {
                         out.push_str("<strong>");
@@ -172,6 +175,7 @@ mod tests {
 
         // Elements converted to more semantically correct elements
         assert_eq!("<em>x</em>", sanitize("<i>x</i>").as_str());
+        assert_eq!("<hr>", sanitize("<hr>").as_str());
         assert_eq!("<strong>x</strong>", sanitize("<bold>x</bold>").as_str());
 
         // Link
