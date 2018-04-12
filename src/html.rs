@@ -16,12 +16,8 @@ pub fn sanitize_html(s: &str) -> String {
         .unwrap();
     walk(dom.document, &mut out);
 
-    if !dom.errors.is_empty() {
-        println!("\nParse errors:");
-        for err in dom.errors.into_iter() {
-            println!("    {}", err);
-        }
-    }
+    // Errors are accessible with `dom.errors`, but it's very likely that the right
+    // choice there is to just throw everything out.
 
     out
 }
@@ -57,10 +53,21 @@ fn walk(handle: Handle, out: &mut String) {
         } => {
             if name.ns == ns!(html) {
                 match name.local.as_ref() {
-                    "em" => {
+                    tag @ "code" | tag @ "em" | tag @ "strong" => {
+                        out.push_str(&format!("<{}>", tag));
+                        close_tag = Some(format!("</{}>", tag));
+                    }
+
+                    // Convert these to elements that are more semantically correct
+                    "bold" => {
+                        out.push_str("<strong>");
+                        close_tag = Some("</strong>".to_owned());
+                    }
+                    "i" => {
                         out.push_str("<em>");
                         close_tag = Some("</em>".to_owned());
                     }
+
                     _ => (),
                 }
             }
@@ -104,9 +111,43 @@ mod tests {
 
     #[test]
     fn test_sanitize_html() {
+        // No HTML
+        assert_eq!("x", sanitize_html("x").as_str());
+
+        // With newlines
+        //assert_eq!("x\ny", sanitize_html("x\ny").as_str());
+
+        // Allowed elements
+        assert_eq!("<code>x</code>", sanitize_html("<code>x</code>").as_str());
+        assert_eq!("<em>x</em>", sanitize_html("<em>x</em>").as_str());
         assert_eq!(
-            "<em>emphasized</em>",
-            sanitize_html("<em>emphasized</em>").as_str()
+            "<strong>x</strong>",
+            sanitize_html("<strong>x</strong>").as_str()
+        );
+
+        // Allowed element with attributes stripped
+        assert_eq!(
+            "<em>x</em>",
+            sanitize_html("<em class=\"y\">x</em>").as_str()
+        );
+
+        // Elements converted to more semantically correct elements
+        assert_eq!("<em>x</em>", sanitize_html("<i>x</i>").as_str());
+        assert_eq!(
+            "<strong>x</strong>",
+            sanitize_html("<bold>x</bold>").as_str()
+        );
+
+        // Link
+
+        // Link without href
+
+        // Multiple elements
+
+        // Disallowed element
+        assert_eq!(
+            "foo ",
+            sanitize_html("foo <img src=\"tracker.png\">").as_str()
         );
     }
 }
