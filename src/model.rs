@@ -31,7 +31,7 @@ pub struct Account {
     pub mobile:       bool,
 }
 
-#[derive(Queryable)]
+#[derive(Default, Queryable)]
 pub struct AccountPodcast {
     pub id:              i64,
     pub account_id:      i64,
@@ -212,13 +212,7 @@ mod tests {
 
     #[test]
     fn test_podcast_is_subscribed() {
-        let mut account_podcast = AccountPodcast {
-            id:              0,
-            account_id:      0,
-            podcast_id:      0,
-            subscribed_at:   None,
-            unsubscribed_at: None,
-        };
+        let mut account_podcast = AccountPodcast::default();
         assert!(!account_podcast.is_subscribed());
 
         account_podcast.subscribed_at = Some(Utc::now());
