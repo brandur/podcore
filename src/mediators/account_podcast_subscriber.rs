@@ -26,17 +26,17 @@ impl<'a> Mediator<'a> {
     }
 
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
-        // Shotcut so that we can skip inserting a row in the case where an unsubscribe
-        // was requested, but the account was not subscribed in the first place.
-        if !self.subscribed && !self.account_podcast_exists(log)? {
-            return Ok(RunResult {
-                account_podcast: None,
-            });
-        }
-
         let account_podcast = if self.subscribed {
             self.upsert_account_podcast_subscribed(log)?
         } else {
+            // Shotcut so that we can skip inserting a row in the case where an unsubscribe
+            // was requested, but the account was not subscribed in the first place.
+            if !self.account_podcast_exists(log)? {
+                return Ok(RunResult {
+                    account_podcast: None,
+                });
+            }
+
             self.upsert_account_podcast_unsubscribed(log)?
         };
 
