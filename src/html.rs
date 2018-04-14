@@ -70,7 +70,8 @@ fn walk(handle: Handle, out: &mut String) {
                     }
 
                     // All these elements are allowed (but their attributes are stripped)
-                    tag @ "code"
+                    tag @ "blockquote"
+                    | tag @ "code"
                     | tag @ "em"
                     | tag @ "li"
                     | tag @ "ol"
@@ -142,6 +143,10 @@ mod tests {
         );
 
         // Allowed elements
+        assert_eq!(
+            "<blockquote>x</blockquote>",
+            sanitize("<blockquote>x</blockquote>").as_str()
+        );
         assert_eq!("<code>x</code>", sanitize("<code>x</code>").as_str());
         assert_eq!("<em>x</em>", sanitize("<em>x</em>").as_str());
         assert_eq!(
