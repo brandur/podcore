@@ -724,7 +724,7 @@ mod mutation {
                     &Params {
                         account:    &bootstrap.account,
                         conn:       &*bootstrap.conn,
-                        podcast_id: &"0",
+                        podcast_id: &bootstrap.podcast.id.to_string(),
                         subscribed: Some(false),
                     },
                 ).unwrap();
