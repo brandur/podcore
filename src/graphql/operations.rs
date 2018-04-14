@@ -328,6 +328,7 @@ mod mutation {
                         &*conn,
                         test_data::account_podcast::Args {
                             account: Some(&account),
+                            podcast: None,
                         },
                     );
                     let episode: model::Episode = schema::episode::table
@@ -338,8 +339,8 @@ mod mutation {
                         &log,
                         &*conn,
                         test_data::account_podcast_episode::Args {
-                            account_podcast: Some(&account_podcast),
-                            episode:         Some(&episode),
+                            account: Some(&account),
+                            episode: Some(&episode),
                         },
                     );
 
@@ -579,6 +580,7 @@ mod mutation {
                         &*conn,
                         test_data::account_podcast::Args {
                             account: Some(&account),
+                            podcast: None,
                         },
                     );
                     let episode: model::Episode = schema::episode::table
@@ -589,8 +591,8 @@ mod mutation {
                         &log,
                         &*conn,
                         test_data::account_podcast_episode::Args {
-                            account_podcast: Some(&account_podcast),
-                            episode:         Some(&episode),
+                            account: Some(&account),
+                            episode: Some(&episode),
                         },
                     );
 
@@ -733,6 +735,7 @@ mod mutation {
                     &*bootstrap.conn,
                     test_data::account_podcast::Args {
                         account: Some(&bootstrap.account),
+                        podcast: None,
                     },
                 );
 

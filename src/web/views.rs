@@ -94,24 +94,22 @@ pub mod episode_show {
                     hr;
                     p: description.as_str();
                 }
-                @ if view_model.account_podcast.is_some() {
-                    script : Raw(views::react_element(
-                        "AccountPodcastEpisodeFavoritedToggler",
-                        "favorited-toggle",
-                        &json!({
-                            "episodeId": view_model.episode.id.to_string(),
-                            "favorited": view_model.is_episode_favorited(),
-                        }).to_string(),
-                    ));
-                    script : Raw(views::react_element(
-                        "AccountPodcastEpisodePlayedToggler",
-                        "played-toggle",
-                        &json!({
-                            "episodeId": view_model.episode.id.to_string(),
-                            "played": view_model.is_episode_played(),
-                        }).to_string(),
-                    ));
-                }
+                script : Raw(views::react_element(
+                    "AccountPodcastEpisodeFavoritedToggler",
+                    "favorited-toggle",
+                    &json!({
+                        "episodeId": view_model.episode.id.to_string(),
+                        "favorited": view_model.is_episode_favorited(),
+                    }).to_string(),
+                ));
+                script : Raw(views::react_element(
+                    "AccountPodcastEpisodePlayedToggler",
+                    "played-toggle",
+                    &json!({
+                        "episodeId": view_model.episode.id.to_string(),
+                        "played": view_model.is_episode_played(),
+                    }).to_string(),
+                ));
             }).into_string()?
                 .as_str(),
         )

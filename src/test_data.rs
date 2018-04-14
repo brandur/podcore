@@ -56,6 +56,7 @@ pub mod account_podcast {
     #[derive(Default)]
     pub struct Args<'a> {
         pub account: Option<&'a model::Account>,
+        pub podcast: Option<&'a model::Podcast>,
     }
 
     pub fn insert(log: &Logger, conn: &PgConnection) -> model::AccountPodcast {
@@ -69,10 +70,16 @@ pub mod account_podcast {
             None
         };
 
+        let podcast = if args.podcast.is_none() {
+            Some(super::podcast::insert(log, conn))
+        } else {
+            None
+        };
+
         account_podcast_subscriber::Mediator {
             account: args.account.unwrap_or_else(|| account.as_ref().unwrap()),
             conn,
-            podcast: &super::podcast::insert(log, conn),
+            podcast: args.podcast.unwrap_or_else(|| podcast.as_ref().unwrap()),
         }.run(log)
             .unwrap()
             .account_podcast
@@ -83,12 +90,10 @@ pub mod account_podcast_episode {
     use mediators::account_podcast_episode_upserter;
     use test_data::*;
 
-    use diesel::prelude::*;
-
     #[derive(Default)]
     pub struct Args<'a> {
-        pub account_podcast: Option<&'a model::AccountPodcast>,
-        pub episode:         Option<&'a model::Episode>,
+        pub account: Option<&'a model::Account>,
+        pub episode: Option<&'a model::Episode>,
     }
 
     #[allow(dead_code)]
@@ -101,30 +106,23 @@ pub mod account_podcast_episode {
         conn: &PgConnection,
         args: Args,
     ) -> model::AccountPodcastEpisode {
-        let account_podcast = if args.account_podcast.is_none() {
-            Some(super::account_podcast::insert(log, conn))
+        let account = if args.account.is_none() {
+            Some(super::account::insert(log, conn))
         } else {
             None
         };
-
-        let account_podcast_ref = args.account_podcast
-            .unwrap_or_else(|| account_podcast.as_ref().unwrap());
+        let account_ref = args.account.unwrap_or_else(|| account.as_ref().unwrap());
 
         let episode: Option<model::Episode> = if args.episode.is_none() {
-            Some(
-                schema::episode::table
-                    .filter(schema::episode::podcast_id.eq(account_podcast_ref.podcast_id))
-                    .first(conn)
-                    .unwrap(),
-            )
+            let podcast = super::podcast::insert(log, conn);
+            Some(super::episode::first(log, conn, &podcast))
         } else {
             None
         };
-
         let episode_ref = args.episode.unwrap_or_else(|| episode.as_ref().unwrap());
 
         account_podcast_episode_upserter::Mediator {
-            account_podcast: account_podcast_ref,
+            account: account_ref,
             conn,
             episode: episode_ref,
             listened_seconds: None,

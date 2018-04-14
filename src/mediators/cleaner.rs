@@ -287,20 +287,13 @@ mod tests {
             .execute(&*bootstrap.conn)
             .unwrap();
 
-        let account_podcast = test_data::account_podcast::insert_args(
-            &bootstrap.log,
-            &bootstrap.conn,
-            test_data::account_podcast::Args {
-                account: Some(&account),
-            },
-        );
-
+        // This also has the effect of inserting an `account_podcast` row.
         test_data::account_podcast_episode::insert_args(
             &bootstrap.log,
             &bootstrap.conn,
             test_data::account_podcast_episode::Args {
-                account_podcast: Some(&account_podcast),
-                episode:         None,
+                account: Some(&account),
+                episode: None,
             },
         );
 

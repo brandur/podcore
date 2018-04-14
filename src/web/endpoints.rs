@@ -238,7 +238,7 @@ pub mod episode_show {
     // Handler
     //
 
-    fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
+    fn handle_inner(_log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
         let episode: Option<model::Episode> = schema::episode::table
             .filter(schema::episode::id.eq(params.episode_id))
             .filter(schema::episode::podcast_id.eq(params.podcast_id))
@@ -246,34 +246,23 @@ pub mod episode_show {
             .optional()?;
         match episode {
             Some(episode) => {
-                let account_podcast: Option<model::AccountPodcast> = match params.account {
-                    Some(ref account) => schema::account_podcast::table
+                let tuple: Option<(
+                    model::AccountPodcastEpisode,
+                    model::AccountPodcast,
+                )> = match params.account {
+                    Some(ref account) => schema::account_podcast_episode::table
+                        .inner_join(schema::account_podcast::table)
                         .filter(schema::account_podcast::account_id.eq(account.id))
                         .filter(schema::account_podcast::podcast_id.eq(episode.podcast_id))
+                        .filter(schema::account_podcast_episode::episode_id.eq(episode.id))
                         .first(conn)
                         .optional()?,
                     None => None,
                 };
-                debug!(log, "Is subscribed"; "subscribed" => account_podcast.is_some());
-
-                let account_podcast_episode: Option<model::AccountPodcastEpisode> =
-                    if let Some(ref account_podcast) = account_podcast {
-                        schema::account_podcast_episode::table
-                            .filter(
-                                schema::account_podcast_episode::account_podcast_id
-                                    .eq(account_podcast.id),
-                            )
-                            .filter(schema::account_podcast_episode::episode_id.eq(episode.id))
-                            .first(conn)
-                            .optional()?
-                    } else {
-                        None
-                    };
 
                 Ok(ViewModel::Ok(view_model::Ok {
                     account: params.account,
-                    account_podcast,
-                    account_podcast_episode,
+                    account_podcast_episode: tuple.map(|t| t.0),
                     episode,
                 }))
             }
@@ -294,7 +283,6 @@ pub mod episode_show {
 
         pub struct Ok {
             pub account:                 Option<model::Account>,
-            pub account_podcast:         Option<model::AccountPodcast>,
             pub account_podcast_episode: Option<model::AccountPodcastEpisode>,
             pub episode:                 model::Episode,
         }

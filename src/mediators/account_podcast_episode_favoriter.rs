@@ -45,16 +45,34 @@ impl<'a> Mediator<'a> {
             unsubscribed_at: None,
         };
 
-        time_helpers::log_timed(&log.new(o!("step" => "upsert_account_podcast")), |_log| {
-            diesel::insert_into(schema::account_podcast::table)
-                .values(&ins_account_podcast)
-                .on_conflict((
-                    schema::account_podcast::account_id,
-                    schema::account_podcast::podcast_id,
-                ))
-                .do_nothing()
+        let account_podcast: Option<model::AccountPodcast> =
+            time_helpers::log_timed(&log.new(o!("step" => "upsert_account_podcast")), |_log| {
+                diesel::insert_into(schema::account_podcast::table)
+                    .values(&ins_account_podcast)
+                    .on_conflict((
+                        schema::account_podcast::account_id,
+                        schema::account_podcast::podcast_id,
+                    ))
+                    .do_nothing()
+                    .get_result(self.conn)
+                    .optional()
+                    .chain_err(|| "Error upserting account podcast")
+            })?;
+
+        // One slightly unfortunate quirk of upsert is that on a conflict, `DO NOTHING`
+        // won't return you the row that's already in there, even if you tack
+        // on a `RETURNING *`, so we have to select the existing one in another
+        // query. Ask Peter about this later.
+        if account_podcast.is_some() {
+            return Ok(account_podcast.unwrap());
+        }
+
+        time_helpers::log_timed(&log.new(o!("step" => "select_account_podcast")), |_log| {
+            schema::account_podcast::table
+                .filter(schema::account_podcast::account_id.eq(self.account.id))
+                .filter(schema::account_podcast::podcast_id.eq(self.episode.podcast_id))
                 .get_result(self.conn)
-                .chain_err(|| "Error upserting account podcast")
+                .chain_err(|| "Error selecting account podcast")
         })
     }
 
@@ -151,7 +169,7 @@ mod tests {
     }
 
     #[test]
-    fn test_account_podcast_episode_unfavorite_new() {
+    fn test_account_podcast_episode_favorite_unfavorite_new() {
         let mut bootstrap = TestBootstrap::new(Args { favorited: false });
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
@@ -161,7 +179,7 @@ mod tests {
     }
 
     #[test]
-    fn test_account_podcast_episode_unfavorite_existing() {
+    fn test_account_podcast_episode_favorite_unfavorite_existing() {
         let mut bootstrap = TestBootstrap::new(Args { favorited: true });
 
         // Insert a new record so that upsert operates on that
@@ -198,12 +216,12 @@ mod tests {
     }
 
     struct TestBootstrap {
-        _common:         test_helpers::CommonTestBootstrap,
-        account_podcast: model::AccountPodcast,
-        args:            Args,
-        episode:         model::Episode,
-        conn:            PooledConnection<ConnectionManager<PgConnection>>,
-        log:             Logger,
+        _common: test_helpers::CommonTestBootstrap,
+        account: model::Account,
+        args:    Args,
+        conn:    PooledConnection<ConnectionManager<PgConnection>>,
+        episode: model::Episode,
+        log:     Logger,
     }
 
     impl TestBootstrap {
@@ -211,16 +229,13 @@ mod tests {
             let conn = test_helpers::connection();
             let log = test_helpers::log();
 
-            let account_podcast = test_data::account_podcast::insert(&log, &*conn);
-            let episode: model::Episode = schema::episode::table
-                .filter(schema::episode::podcast_id.eq(account_podcast.podcast_id))
-                .limit(1)
-                .get_result(&*conn)
-                .unwrap();
+            let account = test_data::account::insert(&log, &*conn);
+            let podcast = test_data::podcast::insert(&log, &*conn);
+            let episode = test_data::episode::first(&log, &*conn, &podcast);
 
             TestBootstrap {
                 _common: test_helpers::CommonTestBootstrap::new(),
-                account_podcast,
+                account,
                 args,
                 conn,
                 episode,
@@ -231,10 +246,10 @@ mod tests {
         fn mediator(&mut self) -> (Mediator, Logger) {
             (
                 Mediator {
-                    account_podcast: &self.account_podcast,
-                    conn:            &*self.conn,
-                    episode:         &self.episode,
-                    favorited:       self.args.favorited,
+                    account:   &self.account,
+                    conn:      &*self.conn,
+                    episode:   &self.episode,
+                    favorited: self.args.favorited,
                 },
                 self.log.clone(),
             )
@@ -246,8 +261,8 @@ mod tests {
             &bootstrap.log,
             &bootstrap.conn,
             test_data::account_podcast_episode::Args {
-                account_podcast: Some(&bootstrap.account_podcast),
-                episode:         Some(&bootstrap.episode),
+                account: Some(&bootstrap.account),
+                episode: Some(&bootstrap.episode),
             },
         )
     }
