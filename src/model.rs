@@ -40,6 +40,12 @@ pub struct AccountPodcast {
     pub unsubscribed_at: Option<DateTime<Utc>>,
 }
 
+impl AccountPodcast {
+    fn is_subscribed(&self) -> bool {
+        self.subscribed_at.is_some() && self.unsubscribed_at.is_none()
+    }
+}
+
 #[derive(Queryable)]
 pub struct AccountPodcastEpisode {
     pub id:                 i64,
@@ -198,6 +204,29 @@ pub struct PodcastFeedLocation {
     pub feed_url:           String,
     pub last_retrieved_at:  DateTime<Utc>,
     pub podcast_id:         i64,
+}
+
+#[cfg(test)]
+mod tests {
+    use model::*;
+
+    #[test]
+    fn test_podcast_is_subscribed() {
+        let mut account_podcast = AccountPodcast {
+            id:              0,
+            account_id:      0,
+            podcast_id:      0,
+            subscribed_at:   None,
+            unsubscribed_at: None,
+        };
+        assert!(!account_podcast.is_subscribed());
+
+        account_podcast.subscribed_at = Some(Utc::now());
+        assert!(account_podcast.is_subscribed());
+
+        account_podcast.unsubscribed_at = Some(Utc::now());
+        assert!(!account_podcast.is_subscribed());
+    }
 }
 
 pub mod insertable {
