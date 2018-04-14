@@ -515,10 +515,7 @@ pub mod podcast_show {
             // and partly to help establish convention for this kind of pattern.
             pub fn is_subscribed(&self) -> bool {
                 match self.account_podcast {
-                    Some(ref account_podcast) => {
-                        account_podcast.subscribed_at.is_some()
-                            && account_podcast.unsubscribed_at.is_none()
-                    }
+                    Some(ref account_podcast) => account_podcast.is_subscribed(),
                     None => false,
                 }
             }

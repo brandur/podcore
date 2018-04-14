@@ -1,3 +1,15 @@
+//! The application's data layer containing models that will be queried from
+//! and inserted into the database.
+//!
+//! Simple helper functions are allowed, but they should be kept extremely
+//! simple, with preference for any and all domain logic to be offloaded to a
+//! mediator.
+//!
+//! Insertable models are found in the `Insertable` module. These are distinct
+//! from queryable models so that we can take advantage of default values
+//! provided by the database (the best example being ID sequences, but applies
+//! to any field with a `DEFAULT`).
+
 use errors::*;
 use schema;
 use schema::directory_podcast;
@@ -9,16 +21,6 @@ use diesel::pg::PgConnection;
 use diesel::pg::upsert::excluded;
 use diesel::prelude::*;
 use slog::Logger;
-
-// Database models for the application.
-//
-// Note that models are separately into `Queryable` and `Insertable` versions
-// (with the latter located in the `insertable` module) so that we can insert
-// rows with default values like we'd want to for an autoincrementing primary
-// key. See here for details:
-//
-// https://github.com/diesel-rs/diesel/issues/1440
-//
 
 #[derive(Clone, Debug, Queryable)]
 pub struct Account {
@@ -41,7 +43,7 @@ pub struct AccountPodcast {
 }
 
 impl AccountPodcast {
-    fn is_subscribed(&self) -> bool {
+    pub fn is_subscribed(&self) -> bool {
         self.subscribed_at.is_some() && self.unsubscribed_at.is_none()
     }
 }
