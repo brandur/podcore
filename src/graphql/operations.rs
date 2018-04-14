@@ -631,64 +631,25 @@ mod mutation {
             let podcast_id = i64::from_str(params.podcast_id)
                 .map_err(|e| error::bad_parameter("podcast_id", &e))?;
 
-            let account_podcast = if let Some(subscribed) = params.subscribed {
-                if subscribed {
-                    // Subscription always produces an `AccountPodcast`
-                    Some(subscribe(log, params, podcast_id)?)
-                } else {
-                    unsubscribe(log, params, podcast_id)?
-                }
-            } else {
-                None
-            };
-            Ok(account_podcast.map(|ref ap| resource::AccountPodcast::from(ap)))
-        }
-
-        //
-        // Private functions
-        //
-
-        pub fn subscribe<'a>(
-            log: &Logger,
-            params: &Params<'a>,
-            podcast_id: i64,
-        ) -> Result<model::AccountPodcast> {
+            // TODO: move to a fetch?
             let podcast: model::Podcast = schema::podcast::table
                 .filter(schema::podcast::id.eq(podcast_id))
                 .first(params.conn)
                 .optional()?
                 .ok_or_else(|| error::not_found("podcast", podcast_id))?;
 
-            let res = mediators::account_podcast_subscriber::Mediator {
-                account: params.account,
-                conn:    params.conn,
-                podcast: &podcast,
-            }.run(log)?;
-
-            Ok(res.account_podcast)
-        }
-
-        pub fn unsubscribe<'a>(
-            log: &Logger,
-            params: &Params<'a>,
-            podcast_id: i64,
-        ) -> Result<Option<model::AccountPodcast>> {
-            let account_podcast: model::AccountPodcast = match schema::account_podcast::table
-                .filter(schema::account_podcast::account_id.eq(params.account.id))
-                .filter(schema::account_podcast::podcast_id.eq(podcast_id))
-                .first(params.conn)
-                .optional()?
-            {
-                Some(account_podcast) => account_podcast,
-                None => return Ok(None),
+            let account_podcast = if let Some(subscribed) = params.subscribed {
+                let res = mediators::account_podcast_subscriber::Mediator {
+                    account:    params.account,
+                    conn:       params.conn,
+                    podcast:    &podcast,
+                    subscribed: subscribed,
+                }.run(log)?;
+                res.account_podcast
+            } else {
+                None
             };
-
-            let res = mediators::account_podcast_unsubscriber::Mediator {
-                conn:            params.conn,
-                account_podcast: &account_podcast,
-            }.run(log)?;
-
-            Ok(Some(res.account_podcast))
+            Ok(account_podcast.map(|ref ap| resource::AccountPodcast::from(ap)))
         }
 
         //

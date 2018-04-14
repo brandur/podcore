@@ -12,9 +12,10 @@ use diesel::prelude::*;
 use slog::Logger;
 
 pub struct Mediator<'a> {
-    pub account: &'a model::Account,
-    pub conn:    &'a PgConnection,
-    pub podcast: &'a model::Podcast,
+    pub account:    &'a model::Account,
+    pub conn:       &'a PgConnection,
+    pub podcast:    &'a model::Podcast,
+    pub subscribed: bool,
 }
 
 impl<'a> Mediator<'a> {
@@ -25,15 +26,42 @@ impl<'a> Mediator<'a> {
     }
 
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
-        let account_podcast = self.upsert_account_podcast(log)?;
-        Ok(RunResult { account_podcast })
+        // Shotcut so that we can skip inserting a row in the case where an unsubscribe
+        // was requested, but the account was not subscribed in the first place.
+        if !self.subscribed && !self.account_podcast_exists(log)? {
+            return Ok(RunResult {
+                account_podcast: None,
+            });
+        }
+
+        let account_podcast = if self.subscribed {
+            self.upsert_account_podcast_subscribed(log)?
+        } else {
+            self.upsert_account_podcast_unsubscribed(log)?
+        };
+
+        Ok(RunResult {
+            account_podcast: Some(account_podcast),
+        })
     }
 
     //
     // Steps
     //
 
-    fn upsert_account_podcast(&mut self, log: &Logger) -> Result<model::AccountPodcast> {
+    fn account_podcast_exists(&mut self, log: &Logger) -> Result<bool> {
+        // TODO: time_helpers
+        time_helpers::log_timed(&log.new(o!("step" => "check_account_podcast")), |_log| {
+            diesel::select(diesel::dsl::exists(
+                schema::account_podcast::table
+                    .filter(schema::account_podcast::account_id.eq(self.account.id))
+                    .filter(schema::account_podcast::podcast_id.eq(self.podcast.id)),
+            )).get_result(self.conn)
+                .chain_err(|| "Error checking account podcast existence")
+        })
+    }
+
+    fn upsert_account_podcast_subscribed(&mut self, log: &Logger) -> Result<model::AccountPodcast> {
         let ins_account_podcast = insertable::AccountPodcast {
             account_id:      self.account.id,
             podcast_id:      self.podcast.id,
@@ -56,13 +84,42 @@ impl<'a> Mediator<'a> {
                         .eq(excluded(schema::account_podcast::unsubscribed_at)),
                 ))
                 .get_result(self.conn)
-                .chain_err(|| "Error upserting account_podcast")
+                .chain_err(|| "Error upserting account podcast")
+        })
+    }
+
+    fn upsert_account_podcast_unsubscribed(
+        &mut self,
+        log: &Logger,
+    ) -> Result<model::AccountPodcast> {
+        let ins_account_podcast = insertable::AccountPodcast {
+            account_id:      self.account.id,
+            podcast_id:      self.podcast.id,
+            subscribed_at:   None,
+            unsubscribed_at: Some(Utc::now()),
+        };
+
+        time_helpers::log_timed(&log.new(o!("step" => "upsert_account_podcast")), |_log| {
+            diesel::insert_into(schema::account_podcast::table)
+                .values(&ins_account_podcast)
+                .on_conflict((
+                    schema::account_podcast::account_id,
+                    schema::account_podcast::podcast_id,
+                ))
+                .do_update()
+                .set((
+                    // Don't set `subscribed_at` here -- we want to leave its existing value
+                    schema::account_podcast::unsubscribed_at
+                        .eq(excluded(schema::account_podcast::unsubscribed_at)),
+                ))
+                .get_result(self.conn)
+                .chain_err(|| "Error upserting account podcast")
         })
     }
 }
 
 pub struct RunResult {
-    pub account_podcast: model::AccountPodcast,
+    pub account_podcast: Option<model::AccountPodcast>,
 }
 
 //
