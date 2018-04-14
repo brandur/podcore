@@ -159,10 +159,12 @@ pub fn account<S: State>(req: &mut HttpRequest<S>) -> Option<model::Account> {
     None
 }
 
-/// Handles a `Result` and renders an error that was intended for the user.
-/// Otherwise (on either a successful result or non-user error), passes through
-/// the normal result.
-pub fn transform_user_error<FInternal, FUser>(
+/// Handles a `Result` and renders an error that was intended for the user by
+/// invoking the given `render_user` function.
+///
+/// If `render_user` fails or the user wasn't intended to be user-facing,
+/// `render_internal` is invoked instead.
+pub fn render_error<FInternal, FUser>(
     log: &Logger,
     e: Error,
     render_internal: FInternal,

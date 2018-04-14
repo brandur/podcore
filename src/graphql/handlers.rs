@@ -235,25 +235,20 @@ where
             })
         })
         .then(move |res| match res {
-            Err(e) => Ok(server::transform_user_error(
-                &log3,
-                e,
-                render_internal_error,
-                render_user_error,
-            )),
+            Err(e) => Ok(server::render_error(&log3, e, error_internal, error_user)),
             r => r,
         })
         .responder()
 }
 
-fn render_internal_error(log: &Logger, code: StatusCode, message: String) -> HttpResponse {
+fn error_internal(log: &Logger, code: StatusCode, message: String) -> HttpResponse {
     // For the time being, we're just reusing the same view as the one for user
     // errors. We might want to change this at some point to hide the various
     // reasons for failure.
-    render_user_error(log, code, message).unwrap()
+    error_user(log, code, message).unwrap()
 }
 
-fn render_user_error(log: &Logger, code: StatusCode, message: String) -> Result<HttpResponse> {
+fn error_user(log: &Logger, code: StatusCode, message: String) -> Result<HttpResponse> {
     error!(log, "Rendering error";
         "status" => format!("{}", code), "message" => message.as_str());
     let body = serde_json::to_string_pretty(&GraphQLErrors {
