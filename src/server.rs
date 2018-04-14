@@ -162,35 +162,46 @@ pub fn account<S: State>(req: &mut HttpRequest<S>) -> Option<model::Account> {
 /// Handles a `Result` and renders an error that was intended for the user.
 /// Otherwise (on either a successful result or non-user error), passes through
 /// the normal result.
-pub fn transform_user_error<F>(log: &Logger, e: Error, render: F) -> Result<HttpResponse>
+pub fn transform_user_error<FInternal, FUser>(
+    log: &Logger,
+    e: Error,
+    render_internal: FInternal,
+    render_user: FUser,
+) -> HttpResponse
 where
-    F: FnOnce(&Logger, StatusCode, String) -> Result<HttpResponse>,
+    FInternal: FnOnce(&Logger, StatusCode, String) -> HttpResponse,
+    FUser: FnOnce(&Logger, StatusCode, String) -> Result<HttpResponse>,
 {
     // Note that `format!` activates the `Display` trait and shows our errors'
     // `display` definition
-    match e {
+    let res = match e {
         e @ Error(ErrorKind::BadParameter(_, _), _) => {
-            render(log, StatusCode::BAD_REQUEST, format!("{}", e))
+            render_user(log, StatusCode::BAD_REQUEST, format!("{}", e))
         }
         e @ Error(ErrorKind::BadRequest(_), _) => {
-            render(log, StatusCode::BAD_REQUEST, format!("{}", e))
+            render_user(log, StatusCode::BAD_REQUEST, format!("{}", e))
         }
         e @ Error(ErrorKind::NotFound(_, _), _) => {
-            render(log, StatusCode::NOT_FOUND, format!("{}", e))
+            render_user(log, StatusCode::NOT_FOUND, format!("{}", e))
         }
         e @ Error(ErrorKind::NotFoundGeneral(_), _) => {
-            render(log, StatusCode::NOT_FOUND, format!("{}", e))
+            render_user(log, StatusCode::NOT_FOUND, format!("{}", e))
         }
         e @ Error(ErrorKind::Unauthorized, _) => {
-            render(log, StatusCode::UNAUTHORIZED, format!("{}", e))
+            render_user(log, StatusCode::UNAUTHORIZED, format!("{}", e))
         }
-        e => {
+        e => Err(e),
+    };
+
+    // Non-user errors will fall through to `render_internal`, but also errors that
+    // occurred while trying to render one of the user errors above.
+    match res {
+        Ok(response) => response,
+        Err(e) => {
             // This is an internal error, so print it out
             error!(log, "Encountered internal error: {}", e);
 
-            // This should probably get custom handling at some point too, but for now just
-            // send to down to `actix-web`.
-            Err(e)
+            render_internal(log, StatusCode::UNAUTHORIZED, format!("{}", e))
         }
     }
 }

@@ -57,8 +57,13 @@ macro_rules! handler {
             let params = match params_res {
                 Ok(params) => params,
                 Err(e) => {
-                    let res = server::transform_user_error(&log, e, endpoints::render_user_error);
-                    return Box::new(future::result(res));
+                    let response = server::transform_user_error(
+                        &log,
+                        e,
+                        endpoints::render_internal_error,
+                        endpoints::render_user_error,
+                    );
+                    return Box::new(future::ok(response));
                 }
             };
 
@@ -79,7 +84,12 @@ macro_rules! handler {
                     })
                 })
                 .then(move |res| match res {
-                    Err(e) => server::transform_user_error(&log2, e, endpoints::render_user_error),
+                    Err(e) => Ok(server::transform_user_error(
+                        &log2,
+                        e,
+                        endpoints::render_internal_error,
+                        endpoints::render_user_error,
+                    )),
                     r => r,
                 })
                 .responder()
@@ -174,6 +184,18 @@ fn build_requester() -> Result<HttpRequesterLive> {
     Ok(HttpRequesterLive { client, core })
 }
 
+/// Renders an internal error to a human compatible HTML form.
+///
+/// This function is not allowed to throw an error because it also renders our
+/// 500 status page. Use `unwrap`s and make sure that it works.
+pub fn render_internal_error(log: &Logger, code: StatusCode, message: String) -> HttpResponse {
+    // For the time being, we're just reusing the same view as the one for user
+    // errors. We might want to change this at some point to hide the various
+    // reasons for failure.
+    render_user_error(log, code, message).unwrap()
+}
+
+/// Renders a user error to a human compatible HTML form.
 pub fn render_user_error(log: &Logger, code: StatusCode, message: String) -> Result<HttpResponse> {
     error!(log, "Rendering error";
         "status" => format!("{}", code), "message" => message.as_str());
