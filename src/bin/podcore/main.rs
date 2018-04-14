@@ -347,6 +347,11 @@ fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
     if cookie_secret.len() < 32 {
         bail!("COOKIE_SECRET must be at least 32 characters long");
     }
+
+    if env::var("COOKIE_SECRET").is_err() {
+        // This is okay because it will be compiled out in a release build
+        debug!(log, "Generated cookie secret"; "secret" => cookie_secret.as_str());
+    }
     if cookie_secure {
         debug!(log, "Using secured cookies; they'll only work over HTTPS");
     }
