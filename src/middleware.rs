@@ -284,7 +284,7 @@ pub mod web {
         use time_helpers;
 
         use actix_web;
-        use actix_web::http::StatusCode;
+        use actix_web::http::{Method, StatusCode};
         use actix_web::middleware::RequestSession;
         use actix_web::middleware::Started;
         use actix_web::{HttpRequest, HttpResponse};
@@ -345,7 +345,7 @@ pub mod web {
                     .then(move |res| match res {
                         Ok(view_model) => {
                             match view_model {
-                                ViewModel::Bot => {
+                                ViewModel::NoAccount => {
                                     set_request_account(&log, &mut req, None);
                                 }
                                 ViewModel::ExistingAccount(account) => {
@@ -393,6 +393,7 @@ pub mod web {
         //
 
         struct Params {
+            is_get:     bool,
             last_ip:    String,
             secret:     Option<String>,
             user_agent: Option<String>,
@@ -402,6 +403,7 @@ pub mod web {
             fn build<S: server::State>(log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
                 use actix_web::HttpMessage;
                 Ok(Params {
+                    is_get:     *req.method() == Method::GET,
                     last_ip:    req.connection_info().host().to_owned(),
                     secret:     req.session()
                         .get::<String>(COOKIE_KEY_SECRET)
@@ -432,9 +434,9 @@ pub mod web {
 
         #[derive(Debug)]
         enum ViewModel {
-            Bot,
             ExistingAccount(model::Account),
             NewAccount(model::Account, model::Key),
+            NoAccount,
         }
 
         //
@@ -518,8 +520,18 @@ pub mod web {
                 }
             }
 
+            // Don't create an account if a user is performing only `GET` (readonly)
+            // requests. Instead, we wait until they perform some kind of
+            // mutation (identified by a `POST`), then lazily create an account
+            // for them.
+            if params.is_get {
+                debug!(log, "Request method is GET -- not creating account");
+                return Ok(ViewModel::NoAccount);
+            }
+
             if is_bot(&params) {
-                return Ok(ViewModel::Bot);
+                debug!(log, "User-Agent is bot -- not creating account");
+                return Ok(ViewModel::NoAccount);
             }
 
             let account = mediators::account_creator::Mediator {
@@ -616,9 +628,29 @@ pub mod web {
                         .handler(|_req| HttpResponse::Ok())
                 });
 
-                let req = server.client(Method::GET, "/").finish().unwrap();
+                let req = server.client(Method::POST, "/").finish().unwrap();
                 let resp = server.execute(req.send()).unwrap();
                 assert_eq!(StatusCode::OK, resp.status());
+            }
+
+            // We don't create accounts on `GET` requests and instead wait until the agent
+            // performs a mutation before making one more them.
+            #[test]
+            fn test_middleware_web_authenticator_is_get() {
+                let bootstrap = TestBootstrap::new();
+
+                let params = Params {
+                    is_get:     true,
+                    last_ip:    "1.2.3.4".to_owned(),
+                    secret:     None,
+                    user_agent: Some("Chrome".to_owned()),
+                };
+
+                let view_model = handle_inner(&bootstrap.log, &bootstrap.conn, params).unwrap();
+                match view_model {
+                    ViewModel::NoAccount => (),
+                    _ => panic!("Unexpected view model: {:?}", view_model),
+                }
             }
 
             #[test]
@@ -626,6 +658,7 @@ pub mod web {
                 let bootstrap = TestBootstrap::new();
 
                 let params = Params {
+                    is_get:     false,
                     last_ip:    "1.2.3.4".to_owned(),
                     secret:     None,
                     user_agent: Some("Googlebot/2.1; Some Other Stuff".to_owned()),
@@ -633,7 +666,7 @@ pub mod web {
 
                 let view_model = handle_inner(&bootstrap.log, &bootstrap.conn, params).unwrap();
                 match view_model {
-                    ViewModel::Bot => (),
+                    ViewModel::NoAccount => (),
                     _ => panic!("Unexpected view model: {:?}", view_model),
                 }
             }
@@ -643,6 +676,7 @@ pub mod web {
                 let bootstrap = TestBootstrap::new();
 
                 let params = Params {
+                    is_get:     false,
                     last_ip:    "1.2.3.4".to_owned(),
                     secret:     None,
                     user_agent: None,
@@ -650,7 +684,7 @@ pub mod web {
 
                 let view_model = handle_inner(&bootstrap.log, &bootstrap.conn, params).unwrap();
                 match view_model {
-                    ViewModel::Bot => (),
+                    ViewModel::NoAccount => (),
                     _ => panic!("Unexpected view model: {:?}", view_model),
                 }
             }
@@ -670,6 +704,7 @@ pub mod web {
                 );
 
                 let params = Params {
+                    is_get:     false,
                     last_ip:    "1.2.3.4".to_owned(),
                     secret:     Some(key.secret.clone()),
                     user_agent: Some("Chrome".to_owned()),
@@ -689,6 +724,7 @@ pub mod web {
                 let bootstrap = TestBootstrap::new();
 
                 let params = Params {
+                    is_get:     false,
                     last_ip:    "1.2.3.4".to_owned(),
                     secret:     None,
                     user_agent: Some("Chrome".to_owned()),
