@@ -2,7 +2,6 @@ use errors::*;
 use http_requester::HttpRequesterLive;
 use model;
 use server;
-use web::views;
 
 use actix_web::http::StatusCode;
 use actix_web::{HttpRequest, HttpResponse};
@@ -41,7 +40,7 @@ macro_rules! handler {
             // Imported so that we can use the traits, but assigned a different name to
             // avoid clashing with the module's implementations.
             use server::Params as P;
-            use web::endpoints;
+            use web;
             use web::endpoints::ViewModel as VM;
             use web::middleware;
 
@@ -60,8 +59,8 @@ macro_rules! handler {
                     let response = server::render_error(
                         &log,
                         e,
-                        endpoints::error_internal,
-                        endpoints::error_user,
+                        web::errors::error_internal,
+                        web::errors::error_user,
                     );
                     return Box::new(future::ok(response));
                 }
@@ -87,8 +86,8 @@ macro_rules! handler {
                     Err(e) => Ok(server::render_error(
                         &log2,
                         e,
-                        endpoints::error_internal,
-                        endpoints::error_user,
+                        web::errors::error_internal,
+                        web::errors::error_user,
                     )),
                     r => r,
                 })
@@ -182,27 +181,6 @@ fn build_requester() -> Result<HttpRequesterLive> {
         .connector(HttpsConnector::new(4, &core.handle()).map_err(Error::from)?)
         .build(&core.handle());
     Ok(HttpRequesterLive { client, core })
-}
-
-/// Renders an internal error to a human compatible HTML form.
-///
-/// This function is not allowed to throw an error because it also renders our
-/// 500 status page. Use `unwrap`s and make sure that it works.
-pub fn error_internal(log: &Logger, code: StatusCode, message: String) -> HttpResponse {
-    // For the time being, we're just reusing the same view as the one for user
-    // errors. We might want to change this at some point to hide the various
-    // reasons for failure.
-    error_user(log, code, message).unwrap()
-}
-
-/// Renders a user error to a human compatible HTML form.
-pub fn error_user(log: &Logger, code: StatusCode, message: String) -> Result<HttpResponse> {
-    error!(log, "Rendering error";
-        "status" => format!("{}", code), "message" => message.as_str());
-    let html = views::render_user_error(code, message)?;
-    Ok(HttpResponse::build(code)
-        .content_type("text/html; charset=utf-8")
-        .body(html))
 }
 
 /// Shortcut for a basic 200 response with standard HTML body content.

@@ -273,6 +273,10 @@ pub mod test {
 }
 
 /// Holds web-specific (as opposed to for the API) middleware.
+///
+/// This probably makes more sense as part of the actual `web` module. That
+/// way, `web` wouldn't have to export `errors` so that this module could use
+/// the functions therein.
 pub mod web {
     pub mod authenticator {
         use errors::*;
@@ -282,12 +286,13 @@ pub mod web {
         use server;
         use server::Params as P;
         use time_helpers;
+        use web;
 
         use actix_web;
-        use actix_web::http::{Method, StatusCode};
+        use actix_web::HttpRequest;
+        use actix_web::http::Method;
         use actix_web::middleware::RequestSession;
         use actix_web::middleware::Started;
-        use actix_web::{HttpRequest, HttpResponse};
         use diesel::pg::PgConnection;
         use futures::future;
         use slog::Logger;
@@ -324,13 +329,12 @@ pub mod web {
                 let params = match params_res {
                     Ok(params) => params,
                     Err(e) => {
-                        // TODO: More cohesive error handling strategy
-                        error!(log, "Middleware error: {}", e);
-                        return Ok(Started::Response(
-                            HttpResponse::build(StatusCode::INTERNAL_SERVER_ERROR)
-                                .content_type("text/html; charset=utf-8")
-                                .body("Error getting session information"),
-                        ));
+                        return Ok(Started::Response(server::render_error(
+                            &log,
+                            e,
+                            web::errors::error_internal,
+                            web::errors::error_user,
+                        )));
                     }
                 };
 

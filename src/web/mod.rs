@@ -1,4 +1,5 @@
 mod endpoints;
+pub mod errors;
 mod views;
 
 use errors::*;
