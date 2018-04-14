@@ -37,7 +37,7 @@ impl<'a> Mediator<'a> {
                 });
             }
 
-            self.upsert_account_podcast_unsubscribed(log)?
+            self.update_account_podcast_unsubscribed(log)?
         };
 
         Ok(RunResult {
@@ -88,40 +88,19 @@ impl<'a> Mediator<'a> {
         })
     }
 
-    fn upsert_account_podcast_unsubscribed(
+    fn update_account_podcast_unsubscribed(
         &mut self,
         log: &Logger,
     ) -> Result<model::AccountPodcast> {
-        /*
-        diesel::update(schema::account_podcast::table)
-            .filter(schema::account_podcast::id.eq(id))
-            .set(schema::account_podcast::unsubscribed_at.eq(Some(Utc::now())))
-            .execute(&*bootstrap.conn)
-            .unwrap();
-        */
-
-        let ins_account_podcast = insertable::AccountPodcast {
-            account_id:      self.account.id,
-            podcast_id:      self.podcast.id,
-            subscribed_at:   None,
-            unsubscribed_at: Some(Utc::now()),
-        };
-
-        time_helpers::log_timed(&log.new(o!("step" => "upsert_account_podcast")), |_log| {
-            diesel::insert_into(schema::account_podcast::table)
-                .values(&ins_account_podcast)
-                .on_conflict((
-                    schema::account_podcast::account_id,
-                    schema::account_podcast::podcast_id,
-                ))
-                .do_update()
-                .set((
-                    // Don't set `subscribed_at` here -- we want to leave its existing value
-                    schema::account_podcast::unsubscribed_at
-                        .eq(excluded(schema::account_podcast::unsubscribed_at)),
-                ))
+        // We've previously checked the row for existence, so it's safe to update it
+        // here and expect a result (we're also in a transaction).
+        time_helpers::log_timed(&log.new(o!("step" => "update_account_podcast")), |_log| {
+            diesel::update(schema::account_podcast::table)
+                .filter(schema::account_podcast::account_id.eq(self.account.id))
+                .filter(schema::account_podcast::podcast_id.eq(self.podcast.id))
+                .set(schema::account_podcast::unsubscribed_at.eq(Some(Utc::now())))
                 .get_result(self.conn)
-                .chain_err(|| "Error upserting account podcast")
+                .chain_err(|| "Error updating account podcast")
         })
     }
 }
