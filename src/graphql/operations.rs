@@ -204,11 +204,9 @@ mod mutation {
         mod tests {
             use graphql::operations::mutation::episode_favorited_update::*;
             use model;
-            use schema;
             use test_data;
             use test_helpers;
 
-            use diesel;
             use r2d2::PooledConnection;
             use r2d2_diesel::ConnectionManager;
 
@@ -268,53 +266,16 @@ mod mutation {
                 );
             }
 
-            #[test]
-            fn test_mutation_episode_favorited_update_no_account_podcast() {
-                let bootstrap = TestBootstrap::new();
-
-                // Delete the `account_podcast_episode` and `account_podcast` (subscription)
-                let num_deleted = diesel::delete(
-                    schema::account_podcast_episode::table.filter(
-                        schema::account_podcast_episode::account_podcast_id
-                            .eq(bootstrap.account_podcast.id),
-                    ),
-                ).execute(&*bootstrap.conn)
-                    .unwrap();
-                assert_eq!(1, num_deleted);
-                let num_deleted = diesel::delete(
-                    schema::account_podcast::table
-                        .filter(schema::account_podcast::id.eq(bootstrap.account_podcast.id)),
-                ).execute(&*bootstrap.conn)
-                    .unwrap();
-                assert_eq!(1, num_deleted);
-
-                let err = execute(
-                    &bootstrap.log,
-                    &*bootstrap.conn,
-                    &RawParams {
-                        account:    &bootstrap.account,
-                        episode_id: "0",
-                        favorited:  false,
-                    },
-                ).err()
-                    .unwrap();
-                assert_eq!(
-                    format!("{}", error::not_found("episode", 0)),
-                    format!("{}", err)
-                );
-            }
-
             //
             // Private types/functions
             //
 
             struct TestBootstrap {
-                _common:         test_helpers::CommonTestBootstrap,
-                account:         model::Account,
-                account_podcast: model::AccountPodcast,
-                episode:         model::Episode,
-                conn:            PooledConnection<ConnectionManager<PgConnection>>,
-                log:             Logger,
+                _common: test_helpers::CommonTestBootstrap,
+                account: model::Account,
+                episode: model::Episode,
+                conn:    PooledConnection<ConnectionManager<PgConnection>>,
+                log:     Logger,
             }
 
             impl TestBootstrap {
@@ -323,18 +284,8 @@ mod mutation {
                     let log = test_helpers::log();
 
                     let account = test_data::account::insert(&log, &conn);
-                    let account_podcast = test_data::account_podcast::insert_args(
-                        &log,
-                        &*conn,
-                        test_data::account_podcast::Args {
-                            account: Some(&account),
-                            podcast: None,
-                        },
-                    );
-                    let episode: model::Episode = schema::episode::table
-                        .filter(schema::episode::podcast_id.eq(account_podcast.podcast_id))
-                        .first(&*conn)
-                        .unwrap();
+                    let podcast = test_data::podcast::insert(&log, &conn);
+                    let episode = test_data::episode::first(&log, &conn, &podcast);
                     let _account_podcast_episode = test_data::account_podcast_episode::insert_args(
                         &log,
                         &*conn,
@@ -345,14 +296,11 @@ mod mutation {
                     );
 
                     TestBootstrap {
-                        _common:         test_helpers::CommonTestBootstrap::new(),
-                        account:         account,
-                        account_podcast: account_podcast,
-                        episode:         episode,
-
-                        // Only move these after filling the above
-                        conn: conn,
-                        log:  log,
+                        _common: test_helpers::CommonTestBootstrap::new(),
+                        account: account,
+                        conn:    conn,
+                        episode: episode,
+                        log:     log,
                     }
                 }
             }
@@ -456,11 +404,9 @@ mod mutation {
         mod tests {
             use graphql::operations::mutation::episode_played_update::*;
             use model;
-            use schema;
             use test_data;
             use test_helpers;
 
-            use diesel;
             use r2d2::PooledConnection;
             use r2d2_diesel::ConnectionManager;
 
@@ -520,53 +466,16 @@ mod mutation {
                 );
             }
 
-            #[test]
-            fn test_mutation_episode_played_update_no_account_podcast() {
-                let bootstrap = TestBootstrap::new();
-
-                // Delete the `account_podcast_episode` and `account_podcast` (subscription)
-                let num_deleted = diesel::delete(
-                    schema::account_podcast_episode::table.filter(
-                        schema::account_podcast_episode::account_podcast_id
-                            .eq(bootstrap.account_podcast.id),
-                    ),
-                ).execute(&*bootstrap.conn)
-                    .unwrap();
-                assert_eq!(1, num_deleted);
-                let num_deleted = diesel::delete(
-                    schema::account_podcast::table
-                        .filter(schema::account_podcast::id.eq(bootstrap.account_podcast.id)),
-                ).execute(&*bootstrap.conn)
-                    .unwrap();
-                assert_eq!(1, num_deleted);
-
-                let err = execute(
-                    &bootstrap.log,
-                    &*bootstrap.conn,
-                    &RawParams {
-                        account:    &bootstrap.account,
-                        episode_id: "0",
-                        played:     false,
-                    },
-                ).err()
-                    .unwrap();
-                assert_eq!(
-                    format!("{}", error::not_found("episode", 0)),
-                    format!("{}", err)
-                );
-            }
-
             //
             // Private types/functions
             //
 
             struct TestBootstrap {
-                _common:         test_helpers::CommonTestBootstrap,
-                account:         model::Account,
-                account_podcast: model::AccountPodcast,
-                episode:         model::Episode,
-                conn:            PooledConnection<ConnectionManager<PgConnection>>,
-                log:             Logger,
+                _common: test_helpers::CommonTestBootstrap,
+                account: model::Account,
+                episode: model::Episode,
+                conn:    PooledConnection<ConnectionManager<PgConnection>>,
+                log:     Logger,
             }
 
             impl TestBootstrap {
@@ -575,18 +484,8 @@ mod mutation {
                     let log = test_helpers::log();
 
                     let account = test_data::account::insert(&log, &conn);
-                    let account_podcast = test_data::account_podcast::insert_args(
-                        &log,
-                        &*conn,
-                        test_data::account_podcast::Args {
-                            account: Some(&account),
-                            podcast: None,
-                        },
-                    );
-                    let episode: model::Episode = schema::episode::table
-                        .filter(schema::episode::podcast_id.eq(account_podcast.podcast_id))
-                        .first(&*conn)
-                        .unwrap();
+                    let podcast = test_data::podcast::insert(&log, &conn);
+                    let episode = test_data::episode::first(&log, &conn, &podcast);
                     let _account_podcast_episode = test_data::account_podcast_episode::insert_args(
                         &log,
                         &*conn,
@@ -597,14 +496,11 @@ mod mutation {
                     );
 
                     TestBootstrap {
-                        _common:         test_helpers::CommonTestBootstrap::new(),
-                        account:         account,
-                        account_podcast: account_podcast,
-                        episode:         episode,
-
-                        // Only move these after filling the above
-                        conn: conn,
-                        log:  log,
+                        _common: test_helpers::CommonTestBootstrap::new(),
+                        account,
+                        conn,
+                        episode,
+                        log,
                     }
                 }
             }
