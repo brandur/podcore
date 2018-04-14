@@ -12,7 +12,7 @@ use diesel::prelude::*;
 use slog::Logger;
 
 pub struct Mediator<'a> {
-    pub account_podcast:  &'a model::AccountPodcast,
+    pub account:          &'a model::Account,
     pub conn:             &'a PgConnection,
     pub episode:          &'a model::Episode,
     pub listened_seconds: Option<i64>,
@@ -27,7 +27,8 @@ impl<'a> Mediator<'a> {
     }
 
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
-        let account_podcast_episode = self.upsert_account_podcast_episode(log)?;
+        let account_podcast = self.upsert_account_podcast(log)?;
+        let account_podcast_episode = self.upsert_account_podcast_episode(log, &account_podcast)?;
         Ok(RunResult {
             account_podcast_episode,
         })
@@ -37,12 +38,34 @@ impl<'a> Mediator<'a> {
     // Steps
     //
 
+    fn upsert_account_podcast(&mut self, log: &Logger) -> Result<model::AccountPodcast> {
+        let ins_account_podcast = insertable::AccountPodcast {
+            account_id:      self.account.id,
+            podcast_id:      self.episode.podcast_id,
+            subscribed_at:   None,
+            unsubscribed_at: None,
+        };
+
+        time_helpers::log_timed(&log.new(o!("step" => "upsert_account_podcast")), |_log| {
+            diesel::insert_into(schema::account_podcast::table)
+                .values(&ins_account_podcast)
+                .on_conflict((
+                    schema::account_podcast::account_id,
+                    schema::account_podcast::podcast_id,
+                ))
+                .do_nothing()
+                .get_result(self.conn)
+                .chain_err(|| "Error upserting account podcast")
+        })
+    }
+
     fn upsert_account_podcast_episode(
         &mut self,
         log: &Logger,
+        account_podcast: &model::AccountPodcast,
     ) -> Result<model::AccountPodcastEpisode> {
         let ins_episode = insertable::AccountPodcastEpisode {
-            account_podcast_id: self.account_podcast.id,
+            account_podcast_id: account_podcast.id,
             episode_id:         self.episode.id,
             listened_seconds:   self.listened_seconds,
             played:             self.played,

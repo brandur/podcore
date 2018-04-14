@@ -36,7 +36,7 @@ pub struct AccountPodcast {
     pub id:              i64,
     pub account_id:      i64,
     pub podcast_id:      i64,
-    pub subscribed_at:   DateTime<Utc>,
+    pub subscribed_at:   Option<DateTime<Utc>>,
     pub unsubscribed_at: Option<DateTime<Utc>>,
 }
 
@@ -222,7 +222,7 @@ pub mod insertable {
     pub struct AccountPodcast {
         pub account_id:      i64,
         pub podcast_id:      i64,
-        pub subscribed_at:   DateTime<Utc>,
+        pub subscribed_at:   Option<DateTime<Utc>>,
         pub unsubscribed_at: Option<DateTime<Utc>>,
     }
 

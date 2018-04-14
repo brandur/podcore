@@ -37,7 +37,7 @@ impl<'a> Mediator<'a> {
         let ins_account_podcast = insertable::AccountPodcast {
             account_id:      self.account.id,
             podcast_id:      self.podcast.id,
-            subscribed_at:   Utc::now(),
+            subscribed_at:   Some(Utc::now()),
             unsubscribed_at: None,
         };
 

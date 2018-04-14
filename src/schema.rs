@@ -15,7 +15,7 @@ table! {
         id -> Int8,
         account_id -> Int8,
         podcast_id -> Int8,
-        subscribed_at -> Timestamptz,
+        subscribed_at -> Nullable<Timestamptz>,
         unsubscribed_at -> Nullable<Timestamptz>,
     }
 }

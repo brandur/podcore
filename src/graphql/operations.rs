@@ -155,8 +155,7 @@ mod mutation {
         //
 
         pub struct Fetches {
-            account_podcast: model::AccountPodcast,
-            episode:         model::Episode,
+            episode: model::Episode,
         }
 
         impl Fetches {
@@ -168,22 +167,7 @@ mod mutation {
                         .optional()?
                         .ok_or_else(|| error::not_found("episode", params.episode_id))?;
 
-                    let account_podcast: model::AccountPodcast = schema::account_podcast::table
-                        .filter(schema::account_podcast::account_id.eq(params.account.id))
-                        .filter(schema::account_podcast::podcast_id.eq(episode.podcast_id))
-                        .first(conn)
-                        .optional()?
-                        .ok_or_else(|| {
-                            error::not_found_general(format!(
-                                "Subscription for account {} on podcast {}",
-                                params.account.id, episode.podcast_id
-                            ))
-                        })?;
-
-                    Ok(Fetches {
-                        account_podcast,
-                        episode,
-                    })
+                    Ok(Fetches { episode })
                 })
             }
         }
@@ -201,10 +185,10 @@ mod mutation {
             let fetches = Fetches::fetch(&log, conn, &coerced)?;
 
             let res = mediators::account_podcast_episode_favoriter::Mediator {
-                account_podcast: &fetches.account_podcast,
-                conn:            conn,
-                episode:         &fetches.episode,
-                favorited:       params.favorited,
+                account:   &coerced.account,
+                conn:      conn,
+                episode:   &fetches.episode,
+                favorited: params.favorited,
             }.run(log)?;
 
             Ok(resource::AccountPodcastEpisode::from(
@@ -417,8 +401,7 @@ mod mutation {
         //
 
         pub struct Fetches {
-            account_podcast: model::AccountPodcast,
-            episode:         model::Episode,
+            episode: model::Episode,
         }
 
         impl Fetches {
@@ -430,22 +413,7 @@ mod mutation {
                         .optional()?
                         .ok_or_else(|| error::not_found("episode", params.episode_id))?;
 
-                    let account_podcast: model::AccountPodcast = schema::account_podcast::table
-                        .filter(schema::account_podcast::account_id.eq(params.account.id))
-                        .filter(schema::account_podcast::podcast_id.eq(episode.podcast_id))
-                        .first(conn)
-                        .optional()?
-                        .ok_or_else(|| {
-                            error::not_found_general(format!(
-                                "Subscription for account {} on podcast {}",
-                                params.account.id, episode.podcast_id
-                            ))
-                        })?;
-
-                    Ok(Fetches {
-                        account_podcast,
-                        episode,
-                    })
+                    Ok(Fetches { episode })
                 })
             }
         }
@@ -467,7 +435,7 @@ mod mutation {
             let listened_seconds = if params.played { None } else { Some(0) };
 
             let res = mediators::account_podcast_episode_upserter::Mediator {
-                account_podcast:  &fetches.account_podcast,
+                account:          &coerced.account,
                 conn:             conn,
                 episode:          &fetches.episode,
                 listened_seconds: listened_seconds,

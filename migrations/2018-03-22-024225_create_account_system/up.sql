@@ -43,7 +43,7 @@ CREATE TABLE account_podcast (
     podcast_id BIGINT NOT NULL
         REFERENCES podcast (id) ON DELETE RESTRICT,
 
-    subscribed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    subscribed_at TIMESTAMPTZ,
 
     -- This is the equivalent of removing a subscription. We never delete these
     -- records so that in case a user resubscribes, they get to keep all the
