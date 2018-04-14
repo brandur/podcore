@@ -427,7 +427,6 @@ pub mod podcast_show {
     use web::views;
 
     use actix_web::{HttpRequest, HttpResponse};
-    use diesel;
     use diesel::prelude::*;
     use futures::future::Future;
     use slog::Logger;
@@ -472,21 +471,20 @@ pub mod podcast_show {
                     .limit(50)
                     .load(&*conn)?;
 
-                let subscribed = match params.account {
-                    Some(ref account) => diesel::select(diesel::dsl::exists(
-                        schema::account_podcast::table
-                            .filter(schema::account_podcast::account_id.eq(account.id))
-                            .filter(schema::account_podcast::podcast_id.eq(podcast.id)),
-                    )).get_result(conn)?,
-                    None => false,
+                let account_podcast = match params.account {
+                    Some(ref account) => schema::account_podcast::table
+                        .filter(schema::account_podcast::account_id.eq(account.id))
+                        .filter(schema::account_podcast::podcast_id.eq(podcast.id))
+                        .get_result(conn)
+                        .optional()?,
+                    None => None,
                 };
-                debug!(log, "Is subscribed"; "subscribed" => subscribed);
 
                 Ok(ViewModel::Ok(view_model::Ok {
+                    account_podcast,
                     account: params.account,
                     episodes,
                     podcast,
-                    subscribed,
                 }))
             }
             None => Err(error::not_found("podcast", params.podcast_id)),
@@ -505,10 +503,10 @@ pub mod podcast_show {
         use model;
 
         pub struct Ok {
-            pub account:    Option<model::Account>,
-            pub episodes:   Vec<model::Episode>,
-            pub podcast:    model::Podcast,
-            pub subscribed: bool,
+            pub account:         Option<model::Account>,
+            pub account_podcast: Option<model::AccountPodcast>,
+            pub episodes:        Vec<model::Episode>,
+            pub podcast:         model::Podcast,
         }
 
         impl Ok {
@@ -516,7 +514,13 @@ pub mod podcast_show {
             // point, so this helper exists partly for forward compatibility,
             // and partly to help establish convention for this kind of pattern.
             pub fn is_subscribed(&self) -> bool {
-                self.subscribed
+                match self.account_podcast {
+                    Some(ref account_podcast) => {
+                        account_podcast.subscribed_at.is_some()
+                            && account_podcast.unsubscribed_at.is_none()
+                    }
+                    None => false,
+                }
             }
         }
     }
