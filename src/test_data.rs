@@ -59,6 +59,7 @@ pub mod account_podcast {
         pub podcast: Option<&'a model::Podcast>,
     }
 
+    #[allow(dead_code)]
     pub fn insert(log: &Logger, conn: &PgConnection) -> model::AccountPodcast {
         insert_args(log, conn, Args::default())
     }
@@ -80,9 +81,11 @@ pub mod account_podcast {
             account: args.account.unwrap_or_else(|| account.as_ref().unwrap()),
             conn,
             podcast: args.podcast.unwrap_or_else(|| podcast.as_ref().unwrap()),
+            subscribed: true,
         }.run(log)
             .unwrap()
             .account_podcast
+            .unwrap()
     }
 }
 

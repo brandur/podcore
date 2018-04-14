@@ -136,44 +136,48 @@ mod tests {
     use r2d2_diesel::ConnectionManager;
 
     #[test]
-    fn test_podcast_subscribe() {
+    fn test_podcast_subscriber_subscribe() {
         let mut bootstrap = TestBootstrap::new();
-        let (mut mediator, log) = bootstrap.mediator();
+        let (mut mediator, log) = bootstrap.mediator(true);
         let res = mediator.run(&log).unwrap();
 
-        assert_ne!(0, res.account_podcast.id);
+        let account_podcast = res.account_podcast.unwrap();
+        assert_ne!(0, account_podcast.id);
     }
 
     #[test]
-    fn test_podcast_subscribe_again() {
+    fn test_podcast_subscriber_subscribe_again() {
         let mut bootstrap = TestBootstrap::new();
 
         let id = {
-            let (mut mediator, log) = bootstrap.mediator();
+            let (mut mediator, log) = bootstrap.mediator(true);
             let res = mediator.run(&log).unwrap();
-            assert_ne!(0, res.account_podcast.id);
-            res.account_podcast.id
+            let account_podcast = res.account_podcast.unwrap();
+            assert_ne!(0, account_podcast.id);
+            account_podcast.id
         };
 
         let next_id = {
-            let (mut mediator, log) = bootstrap.mediator();
+            let (mut mediator, log) = bootstrap.mediator(true);
             let res = mediator.run(&log).unwrap();
-            assert_ne!(0, res.account_podcast.id);
-            res.account_podcast.id
+            let account_podcast = res.account_podcast.unwrap();
+            assert_ne!(0, account_podcast.id);
+            account_podcast.id
         };
 
         assert_eq!(id, next_id);
     }
 
     #[test]
-    fn test_podcast_subscribe_again_after_unsubscribe() {
+    fn test_podcast_subscriber_subscribe_after_unsubscribe() {
         let mut bootstrap = TestBootstrap::new();
 
         let id = {
-            let (mut mediator, log) = bootstrap.mediator();
+            let (mut mediator, log) = bootstrap.mediator(true);
             let res = mediator.run(&log).unwrap();
-            assert_ne!(0, res.account_podcast.id);
-            res.account_podcast.id
+            let account_podcast = res.account_podcast.unwrap();
+            assert_ne!(0, account_podcast.id);
+            account_podcast.id
         };
 
         // Unsubscribe
@@ -184,10 +188,11 @@ mod tests {
             .unwrap();
 
         let next_id = {
-            let (mut mediator, log) = bootstrap.mediator();
+            let (mut mediator, log) = bootstrap.mediator(true);
             let res = mediator.run(&log).unwrap();
-            assert_ne!(0, res.account_podcast.id);
-            res.account_podcast.id
+            let account_podcast = res.account_podcast.unwrap();
+            assert_ne!(0, account_podcast.id);
+            account_podcast.id
         };
 
         assert_eq!(id, next_id);
@@ -221,12 +226,13 @@ mod tests {
             }
         }
 
-        fn mediator(&mut self) -> (Mediator, Logger) {
+        fn mediator(&mut self, subscribed: bool) -> (Mediator, Logger) {
             (
                 Mediator {
                     account: &self.account,
-                    conn:    &*self.conn,
+                    conn: &*self.conn,
                     podcast: &self.podcast,
+                    subscribed,
                 },
                 self.log.clone(),
             )
