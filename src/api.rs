@@ -36,7 +36,7 @@ impl Server {
             server::SyncExecutor { pool: pool.clone() }
         });
 
-        let server = actix_web::HttpServer::new(move || {
+        let server = actix_web::server::new(move || {
             actix_web::App::with_state(server::StateImpl {
                 assets_version: "".to_owned(),
                 log:            log.clone(),

@@ -14,6 +14,7 @@ use diesel::pg::PgConnection;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use slog::Logger;
+use time::Duration;
 
 pub struct Server {
     pub assets_version: String,
@@ -54,16 +55,18 @@ impl Server {
             server::SyncExecutor { pool: pool.clone() }
         });
 
-        let server = actix_web::HttpServer::new(move || {
+        let server = actix_web::server::new(move || {
             actix_web::App::with_state(server::StateImpl {
                 assets_version: assets_version.clone(),
                 log:            log.clone(),
                 sync_addr:      sync_addr.clone(),
             }).middleware(actix_web::middleware::SessionStorage::new(
-                actix_web::middleware::CookieSessionBackend::build(cookie_secret.as_bytes())
+                actix_web::middleware::CookieSessionBackend::signed(cookie_secret.as_bytes())
                     .name("podcore-session")
-                    .secure(cookie_secure)
-                    .finish(),
+                    // Podcasts aren't generally considered to be a super security-sensitive
+                    // business (and cookies are secure), so set a lengthy maximum age.
+                    .max_age(Duration::days(365))
+                    .secure(cookie_secure),
             ))
                 .middleware(middleware::log_initializer::Middleware)
                 .middleware(middleware::request_id::Middleware)
@@ -100,7 +103,7 @@ impl Server {
                 })
                 .handler(
                     format!("/assets/{}/", assets_version.as_str()).as_str(),
-                    actix_web::fs::StaticFiles::new("./assets/", false),
+                    actix_web::fs::StaticFiles::new("./assets/"),
                 )
                 .default_resource(|r| r.h(actix_web::http::NormalizePath::default()))
         });
