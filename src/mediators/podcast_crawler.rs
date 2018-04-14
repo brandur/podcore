@@ -45,9 +45,7 @@ impl Mediator {
 
                 workers.push(thread::Builder::new()
                     .name(thread_name)
-                    .spawn(move || {
-                        work(&log, &pool_clone, &*factory_clone, &work_recv_clone);
-                    })
+                    .spawn(move || work(&log, &pool_clone, &*factory_clone, &work_recv_clone))
                     .map_err(Error::from)?);
             }
 
@@ -191,17 +189,9 @@ fn work(
     pool: &Pool<ConnectionManager<PgConnection>>,
     http_requester_factory: &HttpRequesterFactory,
     work_recv: &Receiver<PodcastTuple>,
-) {
-    let conn = match pool.try_get() {
-        Some(conn) => conn,
-        None => {
-            error!(
-                log,
-                "Error acquiring connection from connection pool (is num_workers misconfigured?)"
-            );
-            return;
-        }
-    };
+) -> Result<()> {
+    debug!(log, "Thread waiting for a connection");
+    let conn = pool.get()?;
     debug!(log, "Thread acquired a connection");
     let mut http_requester = http_requester_factory.create();
 
@@ -237,6 +227,7 @@ fn work(
             },
         }
     }
+    Ok(())
 }
 
 #[cfg(test)]
