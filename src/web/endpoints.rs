@@ -287,7 +287,17 @@ pub mod episode_show {
             pub episode:                 model::Episode,
         }
 
+        static MEDIA_TYPE_DEFAULT: &'static str = "audio/mpeg";
+
         impl Ok {
+            pub fn episode_media_type_or_default(&self) -> &str {
+                self.episode
+                    .media_type
+                    .as_ref()
+                    .map(|s| s.as_str())
+                    .unwrap_or(MEDIA_TYPE_DEFAULT)
+            }
+
             pub fn is_episode_favorited(&self) -> bool {
                 match self.account_podcast_episode {
                     Some(ref episode) => episode.favorited,

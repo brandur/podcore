@@ -89,6 +89,12 @@ pub mod episode_show {
                 div(id="favorited-toggle") {}
                 div(id="played-toggle") {}
                 p: view_model.episode.media_url.as_str();
+                audio(controls) {
+                    source(
+                        src=view_model.episode.media_url.as_str(),
+                        type=view_model.episode_media_type_or_default()
+                    );
+                }
                 @ if let Some(ref description) = view_model.episode.description {
                     : Raw(description.as_str());
                     hr;
