@@ -92,6 +92,14 @@ impl<'a> Mediator<'a> {
         &mut self,
         log: &Logger,
     ) -> Result<model::AccountPodcast> {
+        /*
+        diesel::update(schema::account_podcast::table)
+            .filter(schema::account_podcast::id.eq(id))
+            .set(schema::account_podcast::unsubscribed_at.eq(Some(Utc::now())))
+            .execute(&*bootstrap.conn)
+            .unwrap();
+        */
+
         let ins_account_podcast = insertable::AccountPodcast {
             account_id:      self.account.id,
             podcast_id:      self.podcast.id,
@@ -136,7 +144,7 @@ mod tests {
     use r2d2_diesel::ConnectionManager;
 
     #[test]
-    fn test_podcast_subscriber_subscribe() {
+    fn test_podcast_subscriber_subscribe_first() {
         let mut bootstrap = TestBootstrap::new();
         let (mut mediator, log) = bootstrap.mediator(true);
         let res = mediator.run(&log).unwrap();
@@ -169,7 +177,7 @@ mod tests {
     }
 
     #[test]
-    fn test_podcast_subscriber_subscribe_after_unsubscribe() {
+    fn test_podcast_subscriber_unsubscribe_first() {
         let mut bootstrap = TestBootstrap::new();
 
         let id = {
@@ -181,12 +189,51 @@ mod tests {
         };
 
         // Unsubscribe
-        diesel::update(schema::account_podcast::table)
-            .filter(schema::account_podcast::id.eq(id))
-            .set(schema::account_podcast::unsubscribed_at.eq(Some(Utc::now())))
-            .execute(&*bootstrap.conn)
-            .unwrap();
+        let unsubscribed_id = {
+            // Notice the `false` passed to the mediator
+            let (mut mediator, log) = bootstrap.mediator(false);
+            let res = mediator.run(&log).unwrap();
+            let account_podcast = res.account_podcast.unwrap();
+            assert_ne!(0, account_podcast.id);
+            account_podcast.id
+        };
+        assert_eq!(id, unsubscribed_id);
+    }
 
+    // Unsubscribes when there is a no subscription row -- so it just falls through
+    // as a no-op.
+    #[test]
+    fn test_podcast_subscriber_unsubscribe_noop() {
+        let mut bootstrap = TestBootstrap::new();
+        let (mut mediator, log) = bootstrap.mediator(false);
+        let res = mediator.run(&log).unwrap();
+        assert!(res.account_podcast.is_none());
+    }
+
+    #[test]
+    fn test_podcast_subscriber_resubscribe_after_unsubscribe() {
+        let mut bootstrap = TestBootstrap::new();
+
+        let id = {
+            let (mut mediator, log) = bootstrap.mediator(true);
+            let res = mediator.run(&log).unwrap();
+            let account_podcast = res.account_podcast.unwrap();
+            assert_ne!(0, account_podcast.id);
+            account_podcast.id
+        };
+
+        // Unsubscribe
+        let unsubscribed_id = {
+            // Notice the `false` passed to the mediator
+            let (mut mediator, log) = bootstrap.mediator(false);
+            let res = mediator.run(&log).unwrap();
+            let account_podcast = res.account_podcast.unwrap();
+            assert_ne!(0, account_podcast.id);
+            account_podcast.id
+        };
+        assert_eq!(id, unsubscribed_id);
+
+        // Resubscribe
         let next_id = {
             let (mut mediator, log) = bootstrap.mediator(true);
             let res = mediator.run(&log).unwrap();
