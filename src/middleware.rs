@@ -363,8 +363,13 @@ pub mod web {
                             future::ok(None)
                         }
                         Err(e) => {
-                            error!(log, "Middleware error: {}", e);
-                            future::ok(None)
+                            let response = server::render_error(
+                                &log,
+                                e,
+                                web::errors::error_internal,
+                                web::errors::error_user,
+                            );
+                            future::ok(Some(response))
                         }
                     });
                 Ok(Started::Future(Box::new(fut)))
@@ -619,7 +624,8 @@ pub mod web {
             use test_helpers;
             use test_helpers::IntegrationTestBootstrap;
 
-            use actix_web::http::Method;
+            use actix_web::HttpResponse;
+            use actix_web::http::{Method, StatusCode};
             use r2d2::PooledConnection;
             use r2d2_diesel::ConnectionManager;
 
