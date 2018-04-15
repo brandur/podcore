@@ -73,6 +73,13 @@ pub const MINIMAL_FEED: &[u8] = br#"
   </channel>
 </rss>"#;
 
+// This is a trival work factor that should never be used in real life.
+// However, to keep things in tests fast, we inject a low work factor that
+// allows the CPU to produce these very quickly.
+//
+// This blog post on the subject is good: https://blog.filippo.io/the-scrypt-parameters/
+pub const SCRYPT_LOG_N: u8 = 4;
+
 //
 // Public types
 //

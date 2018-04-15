@@ -554,7 +554,8 @@ pub mod web {
                 // we're doing here.
                 mobile: false,
 
-                password: None,
+                password:     None,
+                scrypt_log_n: None,
             }.run(log)?
                 .account;
             let key = mediators::key_creator::Mediator {

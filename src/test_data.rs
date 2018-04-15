@@ -47,6 +47,7 @@ pub mod account {
                 Some(_) => Some("password123"),
                 None => None,
             },
+            scrypt_log_n: Some(test_helpers::SCRYPT_LOG_N),
         }.run(log)
             .unwrap()
             .account

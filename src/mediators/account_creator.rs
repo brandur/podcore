@@ -4,18 +4,20 @@ use model::insertable;
 use schema;
 use time_helpers;
 
+use crypto::scrypt;
 use diesel;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use slog::Logger;
 
 pub struct Mediator<'a> {
-    pub conn:      &'a PgConnection,
-    pub email:     Option<&'a str>,
-    pub ephemeral: bool,
-    pub mobile:    bool,
-    pub last_ip:   &'a str,
-    pub password:  Option<&'a str>,
+    pub conn:         &'a PgConnection,
+    pub email:        Option<&'a str>,
+    pub ephemeral:    bool,
+    pub mobile:       bool,
+    pub last_ip:      &'a str,
+    pub password:     Option<&'a str>,
+    pub scrypt_log_n: Option<u8>,
 }
 
 impl<'a> Mediator<'a> {
@@ -26,6 +28,17 @@ impl<'a> Mediator<'a> {
     }
 
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
+        // Produce good errors if these weren't provided. They'd otherwise also blow up
+        // later.
+        if !self.ephemeral {
+            if self.password.is_none() {
+                bail!("password is required to create non-ephemeral accounts");
+            }
+            if self.scrypt_log_n.is_none() {
+                bail!("scrypt_log_n is required to create non-ephemeral accounts");
+            }
+        }
+
         let account = self.insert_account(log)?;
         Ok(RunResult { account })
     }
@@ -43,11 +56,24 @@ impl<'a> Mediator<'a> {
                     ephemeral:       self.ephemeral,
                     last_ip:         self.last_ip.to_owned(),
                     mobile:          self.mobile,
-                    password_scrypt: self.password.map(|p| p.to_owned()),
+                    password_scrypt: self.password.map(|p| self.scrypt_password(p)),
                 })
                 .get_result(self.conn)
                 .chain_err(|| "Error inserting account")
         })
+    }
+
+    //
+    // Private functions
+    //
+
+    fn scrypt_password(&self, password: &str) -> String {
+        // We use some unwraps here with the logic that if something is wrong with our
+        // scrypt generation, let's just blow up and find out about it.
+        scrypt::scrypt_simple(
+            password,
+            &scrypt::ScryptParams::new(self.scrypt_log_n.clone().unwrap(), 8, 1),
+        ).unwrap()
     }
 }
 
@@ -118,7 +144,10 @@ mod tests {
         let res = mediator.run(&log);
         assert!(res.is_err());
         let e = res.err().unwrap();
-        assert_eq!("Error inserting account", e.description());
+        assert_eq!(
+            "password is required to create non-ephemeral accounts",
+            e.description()
+        );
     }
 
     //
@@ -151,12 +180,13 @@ mod tests {
         fn mediator(&mut self) -> (Mediator, Logger) {
             (
                 Mediator {
-                    conn:      &*self.conn,
-                    email:     self.args.email,
-                    ephemeral: self.args.ephemeral,
-                    last_ip:   "1.2.3.4",
-                    mobile:    false,
-                    password:  self.args.password,
+                    conn:         &*self.conn,
+                    email:        self.args.email,
+                    ephemeral:    self.args.ephemeral,
+                    last_ip:      "1.2.3.4",
+                    mobile:       false,
+                    password:     self.args.password,
+                    scrypt_log_n: Some(test_helpers::SCRYPT_LOG_N),
                 },
                 self.log.clone(),
             )
