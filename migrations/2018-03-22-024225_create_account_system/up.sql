@@ -2,9 +2,11 @@
 -- account
 --
 
+
 CREATE TABLE account (
     id BIGSERIAL PRIMARY KEY,
 
+    activated BOOLEAN,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     email TEXT,
     ephemeral BOOLEAN NOT NULL,
@@ -20,6 +22,12 @@ CREATE TABLE account (
         (ephemeral AND email IS NULL)
         OR
         (NOT ephemeral AND email IS NOT NULL)
+    ),
+
+    CHECK (
+        (ephemeral AND activated IS NULL)
+        OR
+        (NOT ephemeral AND activated IS NOT NULL)
     )
 );
 

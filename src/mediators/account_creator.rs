@@ -37,6 +37,7 @@ impl<'a> Mediator<'a> {
         time_helpers::log_timed(&log.new(o!("step" => "insert_account")), |_log| {
             diesel::insert_into(schema::account::table)
                 .values(&insertable::Account {
+                    activated: if self.ephemeral { None } else { Some(false) },
                     email:     self.email.clone(),
                     ephemeral: self.ephemeral,
                     last_ip:   self.last_ip.to_owned(),

@@ -1,6 +1,7 @@
 table! {
     account (id) {
         id -> Int8,
+        activated -> Nullable<Bool>,
         created_at -> Timestamptz,
         email -> Nullable<Text>,
         ephemeral -> Bool,
