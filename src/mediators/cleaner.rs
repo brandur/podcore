@@ -326,7 +326,7 @@ mod tests {
             &bootstrap.log,
             &*bootstrap.conn,
             test_data::account::Args {
-                email:     Some("foo@example.com".to_owned()),
+                email:     Some("foo@example.com"),
                 ephemeral: false,
                 mobile:    false,
             },

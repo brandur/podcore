@@ -18,8 +18,8 @@ pub mod account {
     use mediators::account_creator;
     use test_data::*;
 
-    pub struct Args {
-        pub email:     Option<String>,
+    pub struct Args<'a> {
+        pub email:     Option<&'a str>,
         pub ephemeral: bool,
         pub mobile:    bool,
     }
@@ -43,6 +43,10 @@ pub mod account {
             ephemeral: args.ephemeral,
             last_ip: "1.2.3.4",
             mobile: args.mobile,
+            password: match args.email {
+                Some(_) => Some("password123"),
+                None => None,
+            },
         }.run(log)
             .unwrap()
             .account

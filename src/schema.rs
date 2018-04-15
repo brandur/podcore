@@ -8,6 +8,7 @@ table! {
         last_ip -> Text,
         last_seen_at -> Timestamptz,
         mobile -> Bool,
+        password_scrypt -> Nullable<Text>,
     }
 }
 

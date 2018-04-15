@@ -18,6 +18,15 @@ CREATE TABLE account (
     -- Indicates that this account was created for a mobile user.
     mobile BOOLEAN NOT NULL,
 
+    password_scrypt TEXT
+        CHECK (char_length(last_ip) <= 200),
+
+    CHECK (
+        (ephemeral AND activated IS NULL)
+        OR
+        (NOT ephemeral AND activated IS NOT NULL)
+    ),
+
     CHECK (
         (ephemeral AND email IS NULL)
         OR
@@ -25,9 +34,9 @@ CREATE TABLE account (
     ),
 
     CHECK (
-        (ephemeral AND activated IS NULL)
+        (ephemeral AND password_scrypt IS NULL)
         OR
-        (NOT ephemeral AND activated IS NOT NULL)
+        (NOT ephemeral AND password_scrypt IS NOT NULL)
     )
 );
 

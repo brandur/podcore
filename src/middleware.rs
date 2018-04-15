@@ -553,6 +553,8 @@ pub mod web {
                 // Mobile clients will create an account explicitly instead of automatically like
                 // we're doing here.
                 mobile: false,
+
+                password: None,
             }.run(log)?
                 .account;
             let key = mediators::key_creator::Mediator {

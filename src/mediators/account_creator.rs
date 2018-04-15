@@ -11,10 +11,11 @@ use slog::Logger;
 
 pub struct Mediator<'a> {
     pub conn:      &'a PgConnection,
-    pub email:     Option<String>,
+    pub email:     Option<&'a str>,
     pub ephemeral: bool,
     pub mobile:    bool,
     pub last_ip:   &'a str,
+    pub password:  Option<&'a str>,
 }
 
 impl<'a> Mediator<'a> {
@@ -37,11 +38,12 @@ impl<'a> Mediator<'a> {
         time_helpers::log_timed(&log.new(o!("step" => "insert_account")), |_log| {
             diesel::insert_into(schema::account::table)
                 .values(&insertable::Account {
-                    activated: if self.ephemeral { None } else { Some(false) },
-                    email:     self.email.clone(),
-                    ephemeral: self.ephemeral,
-                    last_ip:   self.last_ip.to_owned(),
-                    mobile:    self.mobile,
+                    activated:       if self.ephemeral { None } else { Some(false) },
+                    email:           self.email.map(|e| e.to_owned()),
+                    ephemeral:       self.ephemeral,
+                    last_ip:         self.last_ip.to_owned(),
+                    mobile:          self.mobile,
+                    password_scrypt: self.password.map(|p| p.to_owned()),
                 })
                 .get_result(self.conn)
                 .chain_err(|| "Error inserting account")
@@ -70,6 +72,7 @@ mod tests {
         let mut bootstrap = TestBootstrap::new(Args {
             email:     None,
             ephemeral: true,
+            password:  None,
         });
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
@@ -80,8 +83,9 @@ mod tests {
     #[test]
     fn test_account_create_permanent() {
         let mut bootstrap = TestBootstrap::new(Args {
-            email:     Some("foo@example.com".to_owned()),
+            email:     Some("foo@example.com"),
             ephemeral: false,
+            password:  Some("my-password"),
         });
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
@@ -92,8 +96,9 @@ mod tests {
     #[test]
     fn test_account_create_invalid_ephemeral_with_email() {
         let mut bootstrap = TestBootstrap::new(Args {
-            email:     Some("foo@example.com".to_owned()),
+            email:     Some("foo@example.com"),
             ephemeral: true,
+            password:  None,
         });
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log);
@@ -107,6 +112,7 @@ mod tests {
         let mut bootstrap = TestBootstrap::new(Args {
             email:     None,
             ephemeral: false,
+            password:  None,
         });
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log);
@@ -119,19 +125,20 @@ mod tests {
     // Private types/functions
     //
 
-    struct Args {
-        email:     Option<String>,
+    struct Args<'a> {
+        email:     Option<&'a str>,
         ephemeral: bool,
+        password:  Option<&'a str>,
     }
 
-    struct TestBootstrap {
+    struct TestBootstrap<'a> {
         _common: test_helpers::CommonTestBootstrap,
-        args:    Args,
+        args:    Args<'a>,
         conn:    PooledConnection<ConnectionManager<PgConnection>>,
         log:     Logger,
     }
 
-    impl TestBootstrap {
+    impl<'a> TestBootstrap<'a> {
         fn new(args: Args) -> TestBootstrap {
             TestBootstrap {
                 _common: test_helpers::CommonTestBootstrap::new(),
@@ -145,10 +152,11 @@ mod tests {
             (
                 Mediator {
                     conn:      &*self.conn,
-                    email:     self.args.email.clone(),
+                    email:     self.args.email,
                     ephemeral: self.args.ephemeral,
                     last_ip:   "1.2.3.4",
                     mobile:    false,
+                    password:  self.args.password,
                 },
                 self.log.clone(),
             )
