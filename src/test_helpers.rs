@@ -124,6 +124,7 @@ impl IntegrationTestBootstrap {
             server::StateImpl {
                 assets_version: "".to_owned(),
                 log:            log_clone.clone(),
+                scrypt_log_n:   SCRYPT_LOG_N,
                 sync_addr:      actix::SyncArbiter::start(1, move || server::SyncExecutor {
                     pool: pool_clone.clone(),
                 }),

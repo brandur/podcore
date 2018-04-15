@@ -155,6 +155,10 @@ fn main() {
 fn subcommand_api(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("api").unwrap();
 
+    let scrypt_log_n = env::var("SCRYPT_LOG_N")
+        .map(|s| s.parse::<u8>().unwrap())
+        .unwrap_or(SCRYPT_LOG_N);
+
     let pool = pool(log, options)?;
 
     let server = api::Server {
@@ -162,6 +166,7 @@ fn subcommand_api(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
         num_sync_executors: options.num_connections,
         pool,
         port: server_port(matches),
+        scrypt_log_n,
     };
     server.run()?;
     Ok(())
@@ -343,6 +348,9 @@ fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
     let cookie_secure = env::var("COOKIE_SECURE")
         .map(|s| s.parse::<bool>().unwrap())
         .unwrap_or(true);
+    let scrypt_log_n = env::var("SCRYPT_LOG_N")
+        .map(|s| s.parse::<u8>().unwrap())
+        .unwrap_or(SCRYPT_LOG_N);
 
     if cookie_secret.len() < 32 {
         bail!("COOKIE_SECRET must be at least 32 characters long");
@@ -366,6 +374,7 @@ fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
         num_sync_executors: options.num_connections,
         pool,
         port: server_port(matches),
+        scrypt_log_n,
     };
     server.run()?;
     Ok(())
@@ -384,6 +393,15 @@ const NUM_CONNECTIONS: u32 = 50;
 // Default timeout for blocking on the database pool waiting for a connections.
 // In seconds.
 const POOL_TIMEOUT: u64 = 10;
+
+// A work factor for generating Scrypt hashes, which should in theory be
+// updated as the general availability of processing power moves forward. Go's
+// current recommendation is 2^15, and I've chosen 2^14 for now given that the
+// incentives for state level attackers to attack me are so low (this should
+// still be ~unbreakable).
+//
+// A good article on the subject: https://blog.filippo.io/the-scrypt-parameters/
+const SCRYPT_LOG_N: u8 = 14;
 
 // Default port to start servers on.
 const SERVER_PORT: &str = "8080";

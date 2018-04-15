@@ -102,7 +102,11 @@ pub struct StateImpl {
     // Note that this is only used by `web::Server`.
     pub assets_version: String,
 
-    pub log:       Logger,
+    pub log: Logger,
+
+    // A work factor for generating Scrypt hashes.
+    pub scrypt_log_n: u8,
+
     pub sync_addr: actix::prelude::Addr<actix::prelude::Syn, SyncExecutor>,
 }
 

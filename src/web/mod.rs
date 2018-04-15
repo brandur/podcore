@@ -32,6 +32,7 @@ pub struct Server {
     pub num_sync_executors: u32,
     pub pool:               Pool<ConnectionManager<PgConnection>>,
     pub port:               String,
+    pub scrypt_log_n:       u8,
 }
 
 impl Server {
@@ -43,6 +44,7 @@ impl Server {
         let cookie_secure = self.cookie_secure;
         let log = self.log.clone();
         let pool = self.pool.clone();
+        let scrypt_log_n = self.scrypt_log_n;
 
         // Must appear up here because we're going to move `log` into server closure.
         let host = format!("0.0.0.0:{}", self.port.as_str());
@@ -60,6 +62,7 @@ impl Server {
             actix_web::App::with_state(server::StateImpl {
                 assets_version: assets_version.clone(),
                 log:            log.clone(),
+                scrypt_log_n:   scrypt_log_n,
                 sync_addr:      sync_addr.clone(),
             }).middleware(actix_web::middleware::SessionStorage::new(
                 actix_web::middleware::CookieSessionBackend::signed(cookie_secret.as_bytes())
