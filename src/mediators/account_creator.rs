@@ -51,12 +51,12 @@ impl<'a> Mediator<'a> {
         time_helpers::log_timed(&log.new(o!("step" => "insert_account")), |_log| {
             diesel::insert_into(schema::account::table)
                 .values(&insertable::Account {
-                    activated:       if self.ephemeral { None } else { Some(false) },
                     email:           self.email.map(|e| e.to_owned()),
                     ephemeral:       self.ephemeral,
                     last_ip:         self.last_ip.to_owned(),
                     mobile:          self.mobile,
                     password_scrypt: self.password.map(|p| self.scrypt_password(p)),
+                    verified:        if self.ephemeral { None } else { Some(false) },
                 })
                 .get_result(self.conn)
                 .chain_err(|| "Error inserting account")

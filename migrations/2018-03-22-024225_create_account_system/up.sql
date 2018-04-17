@@ -6,7 +6,6 @@
 CREATE TABLE account (
     id BIGSERIAL PRIMARY KEY,
 
-    activated BOOLEAN,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     email TEXT,
     ephemeral BOOLEAN NOT NULL,
@@ -20,11 +19,12 @@ CREATE TABLE account (
 
     password_scrypt TEXT
         CHECK (char_length(last_ip) <= 200),
+    verified BOOLEAN,
 
     CHECK (
-        (ephemeral AND activated IS NULL)
+        (ephemeral AND verified IS NULL)
         OR
-        (NOT ephemeral AND activated IS NOT NULL)
+        (NOT ephemeral AND verified IS NOT NULL)
     ),
 
     CHECK (

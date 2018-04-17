@@ -25,7 +25,6 @@ use slog::Logger;
 #[derive(Clone, Debug, Queryable)]
 pub struct Account {
     pub id:              i64,
-    pub activated:       Option<bool>,
     pub created_at:      DateTime<Utc>,
     pub email:           Option<String>,
     pub ephemeral:       bool,
@@ -33,6 +32,7 @@ pub struct Account {
     pub last_seen_at:    DateTime<Utc>,
     pub mobile:          bool,
     pub password_scrypt: Option<String>,
+    pub verified:        Option<bool>,
 }
 
 #[derive(Default, Queryable)]
@@ -238,12 +238,12 @@ pub mod insertable {
     #[derive(Insertable)]
     #[table_name = "account"]
     pub struct Account {
-        pub activated:       Option<bool>,
         pub email:           Option<String>,
         pub ephemeral:       bool,
         pub last_ip:         String,
         pub mobile:          bool,
         pub password_scrypt: Option<String>,
+        pub verified:        Option<bool>,
     }
 
     #[derive(Insertable)]
