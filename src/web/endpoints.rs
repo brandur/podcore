@@ -273,8 +273,7 @@ pub mod episode_show {
     use futures::future::Future;
     use slog::Logger;
 
-    // TODO: Change this back to normal handler.
-    handler_post!();
+    handler!();
     message_handler!();
 
     //
