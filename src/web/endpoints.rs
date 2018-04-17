@@ -113,27 +113,8 @@ macro_rules! handler_post {
 
             let log = middleware::log_initializer::log(&mut req);
 
-/*
-            let params_res = time_helpers::log_timed(
-                &log.new(o!("step" => "build_params")),
-                |log| Params::build(log, &mut req),
-            );
-            let params = match params_res {
-                Ok(params) => params,
-                Err(e) => {
-                    let response = server::render_error(
-                        &log,
-                        e,
-                        web::errors::error_internal,
-                        web::errors::error_user,
-                    );
-                    return Box::new(future::ok(response));
-                }
-            };
-*/
-
-            // We need `log` clones because we have multiple `move` closures below (and only
-            // one can take the original log).
+            // We need `log` and `req` clones because we have multiple `move` closures below (and
+            // only one can take the original log).
             let log2 = log.clone();
             let log3 = log.clone();
             let log4 = log.clone();
