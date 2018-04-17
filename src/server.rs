@@ -69,7 +69,7 @@ pub trait Params: Sized {
 
 pub trait State {
     fn log(&self) -> &Logger;
-
+    fn scrypt_log_n(&self) -> u8;
     fn sync_addr(&self) -> &actix::prelude::Addr<actix::prelude::Syn, SyncExecutor>;
 }
 
@@ -119,6 +119,10 @@ pub struct StateImpl {
 impl State for StateImpl {
     fn log(&self) -> &Logger {
         &self.log
+    }
+
+    fn scrypt_log_n(&self) -> u8 {
+        self.scrypt_log_n
     }
 
     fn sync_addr(&self) -> &actix::prelude::Addr<actix::prelude::Syn, SyncExecutor> {

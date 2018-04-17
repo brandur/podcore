@@ -826,6 +826,9 @@ pub mod signup_post {
         email:            String,
         password:         String,
         password_confirm: String,
+
+        #[serde(skip_deserializing)]
+        scrypt_log_n: u8,
     }
 
     impl server::Params for Params {
@@ -837,6 +840,7 @@ pub mod signup_post {
             let mut params = serde_urlencoded::from_bytes::<Self>(data.unwrap())
                 .map_err(|e| error::bad_request(format!("{:?}", e)))?;
             params.account = server::account(req);
+            params.scrypt_log_n = req.state().scrypt_log_n();
             Ok(params)
         }
     }
