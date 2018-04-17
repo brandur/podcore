@@ -47,6 +47,11 @@ error_chain!{
             display("Bad request: {}", message),
         }
 
+        MissingParameter(parameter: String) {
+            description("Bad parameter"),
+            display("Bad request: Missing parameter \"{}\"", parameter),
+        }
+
         NotFound(resource: String, id: i64) {
             description("Not found"),
             display("Not found: resource \"{}\" with ID {} was not found.", resource, id),
@@ -102,6 +107,11 @@ pub mod error {
     #[inline]
     pub fn bad_request<S: Into<String>>(message: S) -> Error {
         ErrorKind::BadRequest(message.into()).into()
+    }
+
+    #[inline]
+    pub fn missing_parameter<S: Into<String>>(message: S) -> Error {
+        ErrorKind::MissingParameter(message.into()).into()
     }
 
     #[inline]

@@ -187,6 +187,9 @@ where
         e @ Error(ErrorKind::BadRequest(_), _) => {
             render_user(log, StatusCode::BAD_REQUEST, format!("{}", e))
         }
+        e @ Error(ErrorKind::MissingParameter(_), _) => {
+            render_user(log, StatusCode::BAD_REQUEST, format!("{}", e))
+        }
         e @ Error(ErrorKind::NotFound(_, _), _) => {
             render_user(log, StatusCode::NOT_FOUND, format!("{}", e))
         }

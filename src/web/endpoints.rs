@@ -702,6 +702,172 @@ pub mod search_show {
     }
 }
 
+/*
+fn param_or_missing<S: server::State>(req: &mut HttpRequest<S>, name: &str) -> Result<String> {
+    match req.query().get(name) {
+        Some(val) => Ok(val.to_owned()),
+        None => Err(error::missing_parameter(name)),
+    }
+}
+
+pub mod signup_post {
+    use errors::*;
+    use mediators::directory_podcast_searcher;
+    use model;
+    use schema;
+    use server;
+    use time_helpers;
+    use web::endpoints;
+    use web::views;
+
+    use actix_web::{HttpRequest, HttpResponse};
+    use diesel::pg::PgConnection;
+    use diesel::prelude::*;
+    use futures::future::Future;
+    use slog::Logger;
+
+    handler!();
+    message_handler!();
+
+    //
+    // Params
+    //
+
+    /// Gets the value for the given parameter name or returns a "parameter
+    /// missing" error.
+
+    struct Params {
+        account:          Option<model::Account>,
+        email:            String,
+        password:         String,
+        password_confirm: String,
+    }
+    impl server::Params for Params {
+        fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
+            Ok(Self {
+                account:          server::account(req),
+                email:            param_or_missing(req, "email")?,
+                password:         param_or_missing(req, "password")?,
+                password_confirm: param_or_missing(req, "password_confirm")?,
+            })
+        }
+    }
+
+    //
+    // Handler
+    //
+
+    fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
+        if params.query.is_none() || params.query.as_ref().unwrap().is_empty() {
+            return Ok(ViewModel::Ok(view_model::Ok {
+                account: params.account,
+                directory_podcasts_and_podcasts: None,
+                query: None,
+                title: "Search".to_owned(),
+            }));
+        }
+
+        let query = params.query.clone().unwrap();
+        info!(log, "Executing query"; "id" => query.as_str());
+
+        let res = directory_podcast_searcher::Mediator {
+            conn:           &*conn,
+            query:          query.to_owned(),
+            http_requester: &mut endpoints::build_requester()?,
+        }.run(log)?;
+
+        // This uses a join to get us the podcast records along with the directory
+        // podcast records (the former being an `Option`). We might want to
+        // move this back into the searcher mediator because we're kind of
+        // duplicating work by having this out here.
+        let directory_podcasts_and_podcasts = Some(load_directory_podcasts_and_podcasts(
+            log,
+            &*conn,
+            &res.directory_search,
+        )?);
+
+        Ok(ViewModel::Ok(view_model::Ok {
+            account: params.account,
+            directory_podcasts_and_podcasts,
+            title: format!("Search: {}", query.as_str()),
+
+            // Moves into the struct, so set after setting `title`.
+            query: Some(query),
+        }))
+    }
+
+    //
+    // ViewModel
+    //
+
+    enum ViewModel {
+        Ok(view_model::Ok),
+    }
+
+    pub mod view_model {
+        use model;
+
+        pub struct Ok {
+            pub account: Option<model::Account>,
+            pub directory_podcasts_and_podcasts:
+                Option<Vec<(model::DirectoryPodcast, Option<model::Podcast>)>>,
+            pub query: Option<String>,
+            pub title: String,
+        }
+    }
+
+    impl endpoints::ViewModel for ViewModel {
+        fn render(
+            &self,
+            _log: &Logger,
+            req: &HttpRequest<server::StateImpl>,
+        ) -> Result<HttpResponse> {
+            match *self {
+                ViewModel::Ok(ref view_model) => {
+                    let common = endpoints::build_common(
+                        req,
+                        view_model.account.as_ref(),
+                        view_model.title.as_str(),
+                    );
+                    endpoints::respond_200(views::search_show::render(&common, view_model)?)
+                }
+            }
+        }
+    }
+
+    //
+    // Private functions
+    //
+
+    fn load_directory_podcasts_and_podcasts(
+        log: &Logger,
+        conn: &PgConnection,
+        directory_search: &model::DirectorySearch,
+    ) -> Result<Vec<(model::DirectoryPodcast, Option<model::Podcast>)>> {
+        let tuples = time_helpers::log_timed(
+            &log.new(o!("step" => "load_directory_podcasts_and_podcasts")),
+            |_log| {
+                schema::directory_podcast_directory_search::table
+                    .inner_join(
+                        schema::directory_podcast::table.left_outer_join(schema::podcast::table),
+                    )
+                    .filter(
+                        schema::directory_podcast_directory_search::directory_search_id
+                            .eq(directory_search.id),
+                    )
+                    .order(schema::directory_podcast_directory_search::position)
+                    .load::<(
+                        model::DirectoryPodcastDirectorySearch,
+                        (model::DirectoryPodcast, Option<model::Podcast>),
+                    )>(&*conn)
+                    .chain_err(|| "Error loading directory search/podcast tuples")
+            },
+        )?;
+        Ok(tuples.into_iter().map(|t| t.1).collect())
+    }
+}
+*/
+
 pub mod signup_show {
     use errors::*;
     use server;
