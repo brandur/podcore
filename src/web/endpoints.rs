@@ -744,7 +744,7 @@ pub mod search_show {
     }
 }
 
-pub mod signup_new_show {
+pub mod signup_show {
     use errors::*;
     use server;
     use web::endpoints;
@@ -782,7 +782,7 @@ pub mod signup_new_show {
                 ViewModel::Ok(ref view_model) => {
                     let common =
                         endpoints::build_common(req, view_model.account.as_ref(), "Signup");
-                    endpoints::respond_200(views::signup_new_show::render(&common, self)?)
+                    endpoints::respond_200(views::signup_show::render(&common, self)?)
                 }
             }
         }

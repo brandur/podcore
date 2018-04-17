@@ -110,7 +110,7 @@ impl Server {
                 })
                 .resource("/signup", |r| {
                     r.name(names::SIGNUP);
-                    r.method(Method::GET).a(endpoints::signup_new_show::handler);
+                    r.method(Method::GET).a(endpoints::signup_show::handler);
                 })
                 .resource("/podcasts/{id}", |r| {
                     r.method(Method::GET).a(endpoints::podcast_show::handler)

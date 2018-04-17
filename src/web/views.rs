@@ -227,10 +227,10 @@ pub mod search_show {
     }
 }
 
-pub mod signup_new_show {
+pub mod signup_show {
     use errors::*;
     use web::endpoints::CommonViewModel;
-    use web::endpoints::signup_new_show::ViewModel;
+    use web::endpoints::signup_show::ViewModel;
     use web::views;
 
     use horrorshow::Template;
