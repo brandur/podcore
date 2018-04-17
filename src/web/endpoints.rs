@@ -36,7 +36,6 @@ macro_rules! handler {
         pub fn handler(
             mut req: HttpRequest<server::StateImpl>,
         ) -> Box<Future<Item = HttpResponse, Error = Error>> {
-            use time_helpers;
             // Imported so that we can use the traits, but assigned a different name to
             // avoid clashing with the module's implementations.
             use server::Params as P;
@@ -85,6 +84,88 @@ macro_rules! handler {
                 .then(move |res| match res {
                     Err(e) => Ok(server::render_error(
                         &log2,
+                        e,
+                        web::errors::error_internal,
+                        web::errors::error_user,
+                    )),
+                    r => r,
+                })
+                .responder()
+        }
+    };
+}
+
+macro_rules! handler_post {
+    () => {
+        pub fn handler(
+            mut req: HttpRequest<server::StateImpl>,
+        ) -> Box<Future<Item = HttpResponse, Error = Error>> {
+            // Imported so that we can use the traits, but assigned a different name to
+            // avoid clashing with the module's implementations.
+            use server::Params as P;
+            use web;
+            use web::endpoints::ViewModel as VM;
+            use web::middleware;
+
+            use actix_web::AsyncResponder;
+            use actix_web::HttpMessage;
+            use bytes::Bytes;
+
+            let log = middleware::log_initializer::log(&mut req);
+
+/*
+            let params_res = time_helpers::log_timed(
+                &log.new(o!("step" => "build_params")),
+                |log| Params::build(log, &mut req),
+            );
+            let params = match params_res {
+                Ok(params) => params,
+                Err(e) => {
+                    let response = server::render_error(
+                        &log,
+                        e,
+                        web::errors::error_internal,
+                        web::errors::error_user,
+                    );
+                    return Box::new(future::ok(response));
+                }
+            };
+*/
+
+            // We need `log` clones because we have multiple `move` closures below (and only
+            // one can take the original log).
+            let log2 = log.clone();
+            let log3 = log.clone();
+            let log4 = log.clone();
+            let mut req2 = req.clone();
+            let req3 = req.clone();
+            let sync_addr = req.state().sync_addr.clone();
+
+            req.body()
+                // `map_err` is used here instead of `chain_err` because `PayloadError` doesn't
+                // implement the `Error` trait and I was unable to put it in the error chain.
+                .map_err(|_e| Error::from("Error reading request body"))
+                .and_then(move |_bytes: Bytes| {
+                    time_helpers::log_timed(&log.new(o!("step" => "build_params")), |log| {
+                        //Params::build_from_post(log, &mut req_clone, bytes.as_ref())
+                        Params::build(log, &mut req2)
+                    })
+                })
+                .and_then(move |params| {
+                    let message = server::Message::new(&log2, params);
+                    sync_addr
+                        .send(message)
+                        .map_err(|_e| Error::from("Future canceled"))
+                })
+                .flatten()
+                .and_then(move |view_model| {
+                    time_helpers::log_timed(&log3.new(o!("step" => "render_view_model")), |log| {
+                        view_model.render(log, &req3)
+                    })
+                })
+                .then(move |res| match res {
+                    Err(e) => Ok(server::render_error(
+                        &log4,
                         e,
                         web::errors::error_internal,
                         web::errors::error_user,
@@ -209,7 +290,8 @@ pub mod episode_show {
     use futures::future::Future;
     use slog::Logger;
 
-    handler!();
+    // TODO: Change this back to normal handler.
+    handler_post!();
     message_handler!();
 
     //
