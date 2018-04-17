@@ -3,6 +3,7 @@ use graphql;
 use middleware;
 use model;
 use server;
+use server::Params as P;
 use time_helpers;
 
 use actix;
@@ -31,72 +32,59 @@ struct Params {
     graphql_req: GraphQLRequest,
 }
 
-impl Params {
-    /// Builds `Params` from a `GET` request.
-    fn build_from_get(_log: &Logger, req: &mut HttpRequest<server::StateImpl>) -> Result<Self> {
-        let account = match server::account(req) {
-            Some(account) => account,
-            None => bail!(error::unauthorized()),
-        };
-
-        let input_query = match req.query().get("query") {
-            Some(q) => q.to_owned(),
-            None => bail!(error::bad_request("No query provided")),
-        };
-
-        let operation_name = req.query().get("operationName").map(|n| n.to_owned());
-
-        let variables: Option<InputValue> = match req.query().get("variables") {
-            Some(v) => match serde_json::from_str::<InputValue>(v) {
-                Ok(v) => Some(v),
-                Err(e) => bail!(error::bad_request(format!(
-                    "Malformed variables JSON: {}",
-                    e
-                ))),
-            },
-            None => None,
-        };
-
-        Ok(Self {
-            account,
-            graphql_req: GraphQLRequest::new(input_query, operation_name, variables),
-        })
-    }
-
-    /// Builds `Params` from a `POST` request.
-    fn build_from_post(
-        _log: &Logger,
-        req: &mut HttpRequest<server::StateImpl>,
-        data: &[u8],
-    ) -> Result<Self> {
-        let account = match server::account(req) {
-            Some(account) => account,
-            None => bail!(error::unauthorized()),
-        };
-
-        match serde_json::from_slice::<GraphQLRequest>(data) {
-            Ok(graphql_req) => Ok(Params {
-                account,
-                graphql_req,
-            }),
-            Err(e) => bail!(error::bad_request(format!(
-                "Error deserializing request body: {}",
-                e
-            ))),
-        }
-    }
-}
-
 impl server::Params for Params {
     // Only exists as a symbolic target to let us implement `Params` because this
     // parameter type can be implemented in multiple ways. See `build_from_get`
     // and `build_from_post` instead.
     fn build<S: server::State>(
         _log: &Logger,
-        _req: &mut HttpRequest<S>,
-        _data: Option<&[u8]>,
+        req: &mut HttpRequest<S>,
+        data: Option<&[u8]>,
     ) -> Result<Self> {
-        unimplemented!()
+        let account = match server::account(req) {
+            Some(account) => account,
+            None => bail!(error::unauthorized()),
+        };
+
+        match data {
+            // Build from `POST` request
+            Some(data) => match serde_json::from_slice::<GraphQLRequest>(data) {
+                Ok(graphql_req) => Ok(Params {
+                    account,
+                    graphql_req,
+                }),
+                Err(e) => bail!(error::bad_request(format!(
+                    "Error deserializing request body: {}",
+                    e
+                ))),
+            },
+
+            // Build from `GET` request
+            None => {
+                let input_query = match req.query().get("query") {
+                    Some(q) => q.to_owned(),
+                    None => bail!(error::bad_request("No query provided")),
+                };
+
+                let operation_name = req.query().get("operationName").map(|n| n.to_owned());
+
+                let variables: Option<InputValue> = match req.query().get("variables") {
+                    Some(v) => match serde_json::from_str::<InputValue>(v) {
+                        Ok(v) => Some(v),
+                        Err(e) => bail!(error::bad_request(format!(
+                            "Malformed variables JSON: {}",
+                            e
+                        ))),
+                    },
+                    None => None,
+                };
+
+                Ok(Self {
+                    account,
+                    graphql_req: GraphQLRequest::new(input_query, operation_name, variables),
+                })
+            }
+        }
     }
 }
 
@@ -120,7 +108,7 @@ pub fn graphql_post(
         .map_err(|_e| Error::from("Error reading request body"))
         .and_then(move |bytes: Bytes| {
             time_helpers::log_timed(&log_clone.new(o!("step" => "build_params")), |log| {
-                Params::build_from_post(log, &mut req_clone, bytes.as_ref())
+                Params::build(log, &mut req_clone, Some(bytes.as_ref()))
             })
         })
         .from_err();
@@ -134,7 +122,7 @@ pub fn graphql_get(
     let log = middleware::log_initializer::log(&mut req);
 
     let params_res = time_helpers::log_timed(&log.new(o!("step" => "build_params")), |log| {
-        Params::build_from_get(log, &mut req)
+        Params::build(log, &mut req, None)
     });
 
     execute(
