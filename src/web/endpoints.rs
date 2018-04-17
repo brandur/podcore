@@ -789,6 +789,7 @@ fn param_or_missing<S: server::State>(req: &mut HttpRequest<S>, name: &str) -> R
         None => Err(error::missing_parameter(name)),
     }
 }
+*/
 
 pub mod signup_post {
     use errors::*;
@@ -804,9 +805,10 @@ pub mod signup_post {
     use diesel::pg::PgConnection;
     use diesel::prelude::*;
     use futures::future::Future;
+    use serde_urlencoded;
     use slog::Logger;
 
-    handler!();
+    handler_post!();
     message_handler!();
 
     //
@@ -816,20 +818,26 @@ pub mod signup_post {
     /// Gets the value for the given parameter name or returns a "parameter
     /// missing" error.
 
+    #[derive(Debug, Deserialize)]
     struct Params {
-        account:          Option<model::Account>,
+        #[serde(skip_deserializing)]
+        account: Option<model::Account>,
+
         email:            String,
         password:         String,
         password_confirm: String,
     }
+
     impl server::Params for Params {
-        fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>, _data: Option<&[u8]>) -> Result<Self> {
-            Ok(Self {
-                account:          server::account(req),
-                email:            param_or_missing(req, "email")?,
-                password:         param_or_missing(req, "password")?,
-                password_confirm: param_or_missing(req, "password_confirm")?,
-            })
+        fn build<S: server::State>(
+            _log: &Logger,
+            req: &mut HttpRequest<S>,
+            data: Option<&[u8]>,
+        ) -> Result<Self> {
+            let mut params = serde_urlencoded::from_bytes::<Self>(data.unwrap())
+                .map_err(|e| error::bad_request(format!("{:?}", e)))?;
+            params.account = server::account(req);
+            Ok(params)
         }
     }
 
@@ -838,6 +846,7 @@ pub mod signup_post {
     //
 
     fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
+        /*
         if params.query.is_none() || params.query.as_ref().unwrap().is_empty() {
             return Ok(ViewModel::Ok(view_model::Ok {
                 account: params.account,
@@ -874,6 +883,11 @@ pub mod signup_post {
             // Moves into the struct, so set after setting `title`.
             query: Some(query),
         }))
+        */
+
+        Ok(ViewModel::Ok(view_model::Ok {
+            account: params.account,
+        }))
     }
 
     //
@@ -889,10 +903,12 @@ pub mod signup_post {
 
         pub struct Ok {
             pub account: Option<model::Account>,
+            /*
             pub directory_podcasts_and_podcasts:
                 Option<Vec<(model::DirectoryPodcast, Option<model::Podcast>)>>,
             pub query: Option<String>,
             pub title: String,
+        */
         }
     }
 
@@ -904,49 +920,15 @@ pub mod signup_post {
         ) -> Result<HttpResponse> {
             match *self {
                 ViewModel::Ok(ref view_model) => {
-                    let common = endpoints::build_common(
-                        req,
-                        view_model.account.as_ref(),
-                        view_model.title.as_str(),
-                    );
-                    endpoints::respond_200(views::search_show::render(&common, view_model)?)
+                    //let common = endpoints::build_common(req, view_model.account.as_ref(),
+                    // "Title"); endpoints::respond_200(views::search_show::
+                    // render(&common, view_model)?)
+                    endpoints::respond_200("Hello".to_owned())
                 }
             }
         }
     }
-
-    //
-    // Private functions
-    //
-
-    fn load_directory_podcasts_and_podcasts(
-        log: &Logger,
-        conn: &PgConnection,
-        directory_search: &model::DirectorySearch,
-    ) -> Result<Vec<(model::DirectoryPodcast, Option<model::Podcast>)>> {
-        let tuples = time_helpers::log_timed(
-            &log.new(o!("step" => "load_directory_podcasts_and_podcasts")),
-            |_log| {
-                schema::directory_podcast_directory_search::table
-                    .inner_join(
-                        schema::directory_podcast::table.left_outer_join(schema::podcast::table),
-                    )
-                    .filter(
-                        schema::directory_podcast_directory_search::directory_search_id
-                            .eq(directory_search.id),
-                    )
-                    .order(schema::directory_podcast_directory_search::position)
-                    .load::<(
-                        model::DirectoryPodcastDirectorySearch,
-                        (model::DirectoryPodcast, Option<model::Podcast>),
-                    )>(&*conn)
-                    .chain_err(|| "Error loading directory search/podcast tuples")
-            },
-        )?;
-        Ok(tuples.into_iter().map(|t| t.1).collect())
-    }
 }
-*/
 
 pub mod signup_show {
     use errors::*;

@@ -63,6 +63,7 @@ rust-crypto = "^0.2"
 serde = { version = "1.0.24" }
 serde_derive = "*"
 serde_json = { version = "1.0.8" }
+serde_urlencoded = "*"
 slog = "*"
 slog-async = "*"
 slog-term = "*"
