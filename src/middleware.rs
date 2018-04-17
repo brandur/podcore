@@ -358,7 +358,7 @@ pub mod web {
                                 }
                                 ViewModel::NewAccount(account, key) => {
                                     set_request_account(&log, &mut req, Some(account));
-                                    set_session_secret(&log, &mut req, &key.secret);
+                                    set_session_key(&log, &mut req, &key);
                                 }
                             };
                             future::ok(None)
@@ -396,6 +396,22 @@ pub mod web {
             req.extensions()
                 .get::<Extension>()
                 .and_then(|e| e.account.as_ref())
+        }
+
+        /// Sets a secret to a client's session/cookie. Logs an error if there
+        /// was a problem doing so.
+        pub fn set_session_key<S: server::State>(
+            log: &Logger,
+            req: &mut HttpRequest<S>,
+            key: &model::Key,
+        ) {
+            // Don't actually log secrets. We rely on this being a `debug!` statement and
+            // being compiled out on any release build.
+            debug!(log, "Setting session secret"; "secret" => key.secret.as_str());
+
+            req.session()
+                .set(COOKIE_KEY_SECRET, key.secret.as_str())
+                .unwrap_or_else(|e| error!(log, "Error setting session: {}", e));
         }
 
         //
@@ -613,22 +629,6 @@ pub mod web {
             }
 
             req.extensions().insert(Extension { account });
-        }
-
-        /// Sets a secret to a client's session/cookie. Logs an error if there
-        /// was a problem doing so.
-        fn set_session_secret<S: server::State>(
-            log: &Logger,
-            req: &mut HttpRequest<S>,
-            secret: &str,
-        ) {
-            // Don't actually log secrets. We rely on this being a `debug!` statement and
-            // being compiled out on any release build.
-            debug!(log, "Setting session secret"; "secret" => secret);
-
-            req.session()
-                .set(COOKIE_KEY_SECRET, secret)
-                .unwrap_or_else(|e| error!(log, "Error setting session: {}", e));
         }
 
         //

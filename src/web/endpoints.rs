@@ -78,7 +78,7 @@ macro_rules! handler {
                 .flatten()
                 .and_then(move |view_model| {
                     time_helpers::log_timed(&log.new(o!("step" => "render_view_model")), |log| {
-                        view_model.render(log, &req)
+                        view_model.render(log, &mut req)
                     })
                 })
                 .then(move |res| match res {
@@ -121,17 +121,17 @@ macro_rules! handler_post {
             let log2 = log.clone();
             let log3 = log.clone();
             let log4 = log.clone();
-            let mut req2 = req.clone();
-            let req3 = req.clone();
+            let req2 = req.clone();
+            let mut req3 = req.clone();
             let sync_addr = req.state().sync_addr.clone();
 
-            req.body()
+            req2.body()
                 // `map_err` is used here instead of `chain_err` because `PayloadError` doesn't
                 // implement the `Error` trait and I was unable to put it in the error chain.
                 .map_err(|_e| Error::from("Error reading request body"))
                 .and_then(move |bytes: Bytes| {
                     time_helpers::log_timed(&log.new(o!("step" => "build_params")), |log| {
-                        Params::build(log, &mut req2, Some(bytes.as_ref()))
+                        Params::build(log, &mut req3, Some(bytes.as_ref()))
                     })
                 })
                 .and_then(move |params| {
@@ -143,7 +143,11 @@ macro_rules! handler_post {
                 .flatten()
                 .and_then(move |view_model| {
                     time_helpers::log_timed(&log3.new(o!("step" => "render_view_model")), |log| {
-                        view_model.render(log, &req3)
+                        // We use the *original* request here because this function might set a
+                        // cookie and I'm worried that this won't work on a cloned copy (it'd be
+                        // good to verify this one way or the other with some investigation
+                        // though).
+                        view_model.render(log, &mut req)
                     })
                 })
                 .then(move |res| match res {
@@ -185,7 +189,7 @@ macro_rules! handler_noop {
             );
             let response_res = time_helpers::log_timed(
                 &log.new(o!("step" => "render_view_model")),
-                |log| view_model.render(log, &req),
+                |log| view_model.render(log, &mut req),
             );
             let response = match response_res {
                 Ok(response) => response,
@@ -209,7 +213,11 @@ pub trait ViewModel {
     /// Renders a `ViewModel` implementation to an HTTP response. This could be
     /// a standard HTML page, but could also be any arbitrary response like
     /// a redirect.
-    fn render(&self, log: &Logger, req: &HttpRequest<server::StateImpl>) -> Result<HttpResponse>;
+    fn render(
+        &self,
+        log: &Logger,
+        req: &mut HttpRequest<server::StateImpl>,
+    ) -> Result<HttpResponse>;
 }
 
 //
@@ -387,7 +395,7 @@ pub mod episode_show {
         fn render(
             &self,
             _log: &Logger,
-            req: &HttpRequest<server::StateImpl>,
+            req: &mut HttpRequest<server::StateImpl>,
         ) -> Result<HttpResponse> {
             match *self {
                 ViewModel::Ok(ref view_model) => {
@@ -483,7 +491,7 @@ pub mod directory_podcast_show {
         fn render(
             &self,
             _log: &Logger,
-            _req: &HttpRequest<server::StateImpl>,
+            _req: &mut HttpRequest<server::StateImpl>,
         ) -> Result<HttpResponse> {
             match *self {
                 ViewModel::Ok(ref view_model) => {
@@ -613,7 +621,7 @@ pub mod podcast_show {
         fn render(
             &self,
             _log: &Logger,
-            req: &HttpRequest<server::StateImpl>,
+            req: &mut HttpRequest<server::StateImpl>,
         ) -> Result<HttpResponse> {
             match *self {
                 ViewModel::Ok(ref view_model) => {
@@ -736,7 +744,7 @@ pub mod search_show {
         fn render(
             &self,
             _log: &Logger,
-            req: &HttpRequest<server::StateImpl>,
+            req: &mut HttpRequest<server::StateImpl>,
         ) -> Result<HttpResponse> {
             match *self {
                 ViewModel::Ok(ref view_model) => {
@@ -795,6 +803,7 @@ fn param_or_missing<S: server::State>(req: &mut HttpRequest<S>, name: &str) -> R
 pub mod signup_post {
     use errors::*;
     use mediators;
+    use middleware;
     use model;
     use server;
     use time_helpers;
@@ -895,7 +904,14 @@ pub mod signup_post {
         }.run(log)?
             .account;
 
-        Ok(ViewModel::Ok(view_model::Ok { account }))
+        let key = mediators::key_creator::Mediator {
+            account: &account,
+            conn,
+            expire_at: None,
+        }.run(log)?
+            .key;
+
+        Ok(ViewModel::Ok(view_model::Ok { account, key }))
     }
 
     //
@@ -912,14 +928,15 @@ pub mod signup_post {
 
         pub struct Ok {
             pub account: model::Account,
+            pub key:     model::Key,
         }
     }
 
     impl endpoints::ViewModel for ViewModel {
         fn render(
             &self,
-            _log: &Logger,
-            req: &HttpRequest<server::StateImpl>,
+            log: &Logger,
+            req: &mut HttpRequest<server::StateImpl>,
         ) -> Result<HttpResponse> {
             match *self {
                 ViewModel::MissingParam(ref view_model) => {
@@ -927,8 +944,12 @@ pub mod signup_post {
                         endpoints::build_common(req, view_model.account.as_ref(), "Signup");
                     endpoints::respond_200(views::signup_show::render(&common, view_model)?)
                 }
-                ViewModel::Ok(ref _view_model) => {
-                    // TODO: Set account into session
+                ViewModel::Ok(ref view_model) => {
+                    // Note that we don't set the account state for *this* request because we're
+                    // just redirecting right away. If that ever changes, we should set account
+                    // state.
+                    middleware::web::authenticator::set_session_key(log, req, &view_model.key);
+
                     Ok(HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
                         .header("Location", "/account")
                         .finish())
@@ -993,7 +1014,7 @@ pub mod signup_show {
         fn render(
             &self,
             _log: &Logger,
-            req: &HttpRequest<server::StateImpl>,
+            req: &mut HttpRequest<server::StateImpl>,
         ) -> Result<HttpResponse> {
             match *self {
                 ViewModel::Ok(ref view_model) => {
