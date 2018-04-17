@@ -95,6 +95,9 @@ macro_rules! handler {
     };
 }
 
+/// Identical to `handler!` except that it also waits on the future to receive
+/// request body data. This will be usually need to be used instead of
+/// `handler!` for handling `POST` requests.
 macro_rules! handler_post {
     () => {
         pub fn handler(
