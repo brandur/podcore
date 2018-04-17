@@ -179,9 +179,10 @@ macro_rules! handler_noop {
 
             let log = middleware::log_initializer::log(&mut req);
 
-            let view_model = ViewModel::Ok(view_model::Ok {
-                account: server::account(&mut req),
-            });
+            let view_model = time_helpers::log_timed(
+                &log.new(o!("step" => "build_view_model")),
+                |log| ViewModel::build(log, &mut req),
+            );
             let response_res = time_helpers::log_timed(
                 &log.new(o!("step" => "render_view_model")),
                 |log| view_model.render(log, &req),
@@ -850,6 +851,15 @@ pub mod signup_post {
     //
 
     fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
+        if params.email.is_empty() {
+            return Ok(ViewModel::MissingParam(
+                endpoints::signup_show::view_model::Ok {
+                    account: params.account,
+                    message: Some("Please specify an email.".to_owned()),
+                },
+            ));
+        }
+
         /*
         if params.query.is_none() || params.query.as_ref().unwrap().is_empty() {
             return Ok(ViewModel::Ok(view_model::Ok {
@@ -899,6 +909,7 @@ pub mod signup_post {
     //
 
     enum ViewModel {
+        MissingParam(endpoints::signup_show::view_model::Ok),
         Ok(view_model::Ok),
     }
 
@@ -923,6 +934,11 @@ pub mod signup_post {
             req: &HttpRequest<server::StateImpl>,
         ) -> Result<HttpResponse> {
             match *self {
+                ViewModel::MissingParam(ref view_model) => {
+                    let common =
+                        endpoints::build_common(req, view_model.account.as_ref(), "Signup");
+                    endpoints::respond_200(views::signup_show::render(&common, view_model)?)
+                }
                 ViewModel::Ok(ref view_model) => {
                     //let common = endpoints::build_common(req, view_model.account.as_ref(),
                     // "Title"); endpoints::respond_200(views::search_show::
@@ -959,6 +975,16 @@ pub mod signup_show {
 
         pub struct Ok {
             pub account: Option<model::Account>,
+            pub message: Option<String>,
+        }
+    }
+
+    impl ViewModel {
+        fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>) -> ViewModel {
+            ViewModel::Ok(view_model::Ok {
+                account: server::account(req),
+                message: None,
+            })
         }
     }
 
@@ -972,7 +998,7 @@ pub mod signup_show {
                 ViewModel::Ok(ref view_model) => {
                     let common =
                         endpoints::build_common(req, view_model.account.as_ref(), "Signup");
-                    endpoints::respond_200(views::signup_show::render(&common, self)?)
+                    endpoints::respond_200(views::signup_show::render(&common, view_model)?)
                 }
             }
         }

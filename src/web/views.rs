@@ -213,12 +213,12 @@ pub mod search_show {
 pub mod signup_show {
     use errors::*;
     use web::endpoints::CommonViewModel;
-    use web::endpoints::signup_show::ViewModel;
+    use web::endpoints::signup_show::view_model;
     use web::views;
 
     use horrorshow::Template;
 
-    pub fn render(common: &CommonViewModel, _view_model: &ViewModel) -> Result<String> {
+    pub fn render(common: &CommonViewModel, _view_model: &view_model::Ok) -> Result<String> {
         views::render_layout(
             common,
             (html! {
