@@ -607,7 +607,6 @@ pub mod search_show {
     use web::endpoints;
     use web::views;
 
-    use actix_web::http::StatusCode;
     use actix_web::{HttpRequest, HttpResponse};
     use diesel::pg::PgConnection;
     use diesel::prelude::*;
@@ -639,15 +638,16 @@ pub mod search_show {
     //
 
     fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
-        if params.query.is_none() {
-            return Ok(ViewModel::NoQuery);
+        if params.query.is_none() || params.query.as_ref().unwrap().is_empty() {
+            return Ok(ViewModel::Ok(view_model::Ok {
+                account: params.account,
+                directory_podcasts_and_podcasts: None,
+                query: None,
+                title: "Search".to_owned(),
+            }));
         }
 
         let query = params.query.clone().unwrap();
-        if query.is_empty() {
-            return Ok(ViewModel::NoQuery);
-        }
-
         info!(log, "Executing query"; "id" => query.as_str());
 
         let res = directory_podcast_searcher::Mediator {
@@ -660,13 +660,19 @@ pub mod search_show {
         // podcast records (the former being an `Option`). We might want to
         // move this back into the searcher mediator because we're kind of
         // duplicating work by having this out here.
-        let directory_podcasts_and_podcasts =
-            load_directory_podcasts_and_podcasts(log, &*conn, &res.directory_search)?;
+        let directory_podcasts_and_podcasts = Some(load_directory_podcasts_and_podcasts(
+            log,
+            &*conn,
+            &res.directory_search,
+        )?);
 
-        Ok(ViewModel::SearchResults(view_model::SearchResults {
+        Ok(ViewModel::Ok(view_model::Ok {
             account: params.account,
             directory_podcasts_and_podcasts,
-            query,
+            title: format!("Search: {}", query.as_str()),
+
+            // Moves into the struct, so set after setting `title`.
+            query: Some(query),
         }))
     }
 
@@ -675,18 +681,18 @@ pub mod search_show {
     //
 
     enum ViewModel {
-        NoQuery,
-        SearchResults(view_model::SearchResults),
+        Ok(view_model::Ok),
     }
 
     pub mod view_model {
         use model;
 
-        pub struct SearchResults {
+        pub struct Ok {
             pub account: Option<model::Account>,
             pub directory_podcasts_and_podcasts:
-                Vec<(model::DirectoryPodcast, Option<model::Podcast>)>,
-            pub query: String,
+                Option<Vec<(model::DirectoryPodcast, Option<model::Podcast>)>>,
+            pub query: Option<String>,
+            pub title: String,
         }
     }
 
@@ -697,14 +703,11 @@ pub mod search_show {
             req: &HttpRequest<server::StateImpl>,
         ) -> Result<HttpResponse> {
             match *self {
-                ViewModel::NoQuery => Ok(HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
-                    .header("Location", "/search/new")
-                    .finish()),
-                ViewModel::SearchResults(ref view_model) => {
+                ViewModel::Ok(ref view_model) => {
                     let common = endpoints::build_common(
                         req,
                         view_model.account.as_ref(),
-                        &format!("Search: {}", view_model.query.as_str()),
+                        view_model.title.as_str(),
                     );
                     endpoints::respond_200(views::search_show::render(&common, view_model)?)
                 }

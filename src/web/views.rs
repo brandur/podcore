@@ -196,26 +196,32 @@ pub mod search_show {
 
     use horrorshow::Template;
 
-    pub fn render(
-        common: &CommonViewModel,
-        view_model: &view_model::SearchResults,
-    ) -> Result<String> {
+    pub fn render(common: &CommonViewModel, view_model: &view_model::Ok) -> Result<String> {
         views::render_layout(
             common,
             (html! {
-                p {
-                    : format_args!("Query: {}", view_model.query);
+                h1: "Search";
+                form(action="/search", method="get") {
+                    input(type="text", name="q");
+                    input(type="submit", value="Submit");
                 }
-                ul {
-                    @ for &(ref dir_podcast, ref podcast) in &view_model.directory_podcasts_and_podcasts {
-                        li {
-                            @ if let &Some(ref podcast) = podcast {
-                                a(href=links::link_podcast(podcast)) {
-                                    : dir_podcast.title.as_str()
-                                }
-                            } else {
-                                a(href=links::link_directory_podcast(dir_podcast)) {
-                                    : dir_podcast.title.as_str()
+                @ if let Some(ref query) = view_model.query {
+                    p {
+                        : format_args!("Query: {}", query.as_str());
+                    }
+                }
+                @ if let Some(ref tuples) = view_model.directory_podcasts_and_podcasts {
+                    ul {
+                        @ for &(ref dir_podcast, ref podcast) in tuples {
+                            li {
+                                @ if let &Some(ref podcast) = podcast {
+                                    a(href=links::link_podcast(podcast)) {
+                                        : dir_podcast.title.as_str()
+                                    }
+                                } else {
+                                    a(href=links::link_directory_podcast(dir_podcast)) {
+                                        : dir_podcast.title.as_str()
+                                    }
                                 }
                             }
                         }
