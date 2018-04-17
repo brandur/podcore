@@ -743,3 +743,48 @@ pub mod search_show {
         Ok(tuples.into_iter().map(|t| t.1).collect())
     }
 }
+
+pub mod signup_new_show {
+    use errors::*;
+    use server;
+    use web::endpoints;
+    use web::views;
+
+    use actix_web::{HttpRequest, HttpResponse};
+    use futures::future::Future;
+    use slog::Logger;
+
+    handler_noop!();
+
+    //
+    // ViewModel
+    //
+
+    pub enum ViewModel {
+        Ok(view_model::Ok),
+    }
+
+    pub mod view_model {
+        use model;
+
+        pub struct Ok {
+            pub account: Option<model::Account>,
+        }
+    }
+
+    impl endpoints::ViewModel for ViewModel {
+        fn render(
+            &self,
+            _log: &Logger,
+            req: &HttpRequest<server::StateImpl>,
+        ) -> Result<HttpResponse> {
+            match *self {
+                ViewModel::Ok(ref view_model) => {
+                    let common =
+                        endpoints::build_common(req, view_model.account.as_ref(), "Signup");
+                    endpoints::respond_200(views::signup_new_show::render(&common, self)?)
+                }
+            }
+        }
+    }
+}

@@ -227,6 +227,31 @@ pub mod search_show {
     }
 }
 
+pub mod signup_new_show {
+    use errors::*;
+    use web::endpoints::CommonViewModel;
+    use web::endpoints::signup_new_show::ViewModel;
+    use web::views;
+
+    use horrorshow::Template;
+
+    pub fn render(common: &CommonViewModel, _view_model: &ViewModel) -> Result<String> {
+        views::render_layout(
+            common,
+            (html! {
+                h1: "Signup";
+                form(action="/signup", method="post") {
+                    input(type="email", name="email", placeholder="Email");
+                    input(type="password", name="password", placeholder="Password");
+                    input(type="password", name="password_confirm", placeholder="Confirm password");
+                    input(type="submit", value="Create account");
+                }
+            }).into_string()?
+                .as_str(),
+        )
+    }
+}
+
 //
 // Other helpers
 //
