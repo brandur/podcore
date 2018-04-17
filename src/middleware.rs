@@ -285,6 +285,7 @@ pub mod web {
         use model;
         use server;
         use server::Params as P;
+        use std::iter;
         use time_helpers;
         use web;
 
@@ -403,6 +404,7 @@ pub mod web {
 
         struct Params {
             is_get:     bool,
+            is_signup:  bool,
             last_ip:    String,
             secret:     Option<String>,
             user_agent: Option<String>,
@@ -413,6 +415,10 @@ pub mod web {
                 use actix_web::HttpMessage;
                 Ok(Params {
                     is_get:     *req.method() == Method::GET,
+                    is_signup:  req.path()
+                        == req.url_for(web::names::SIGNUP, iter::empty::<&str>())
+                            .unwrap()
+                            .as_str(),
                     last_ip:    req.connection_info().host().to_owned(),
                     secret:     req.session()
                         .get::<String>(COOKIE_KEY_SECRET)
@@ -538,6 +544,12 @@ pub mod web {
                 return Ok(ViewModel::NoAccount);
             }
 
+            // Don't create an account if the user is in the process of creating an account.
+            if params.is_signup {
+                debug!(log, "Request is for signup -- not creating account");
+                return Ok(ViewModel::NoAccount);
+            }
+
             if is_bot(&params) {
                 debug!(log, "User-Agent is bot -- not creating account");
                 return Ok(ViewModel::NoAccount);
@@ -638,6 +650,13 @@ pub mod web {
                 let mut server = bootstrap.server_builder.start(|app| {
                     app.middleware(middleware::log_initializer::Middleware)
                         .middleware(Middleware)
+                        .resource("/signup", |r| {
+                            // We rely on actix-web's URL generation scheme to create a URL for us.
+                            // Since we're not using the actual web server, we need to create a
+                            // fake target for our signup page.
+                            r.name(web::names::SIGNUP);
+                            r.method(Method::POST).h(|_req| HttpResponse::Ok());
+                        })
                         .handler(|_req| HttpResponse::Ok())
                 });
 
@@ -654,6 +673,26 @@ pub mod web {
 
                 let params = Params {
                     is_get:     true,
+                    is_signup:  false,
+                    last_ip:    "1.2.3.4".to_owned(),
+                    secret:     None,
+                    user_agent: Some("Chrome".to_owned()),
+                };
+
+                let view_model = handle_inner(&bootstrap.log, &bootstrap.conn, params).unwrap();
+                match view_model {
+                    ViewModel::NoAccount => (),
+                    _ => panic!("Unexpected view model: {:?}", view_model),
+                }
+            }
+
+            #[test]
+            fn test_middleware_web_authenticator_is_signup() {
+                let bootstrap = TestBootstrap::new();
+
+                let params = Params {
+                    is_get:     false,
+                    is_signup:  true,
                     last_ip:    "1.2.3.4".to_owned(),
                     secret:     None,
                     user_agent: Some("Chrome".to_owned()),
@@ -672,6 +711,7 @@ pub mod web {
 
                 let params = Params {
                     is_get:     false,
+                    is_signup:  false,
                     last_ip:    "1.2.3.4".to_owned(),
                     secret:     None,
                     user_agent: Some("Googlebot/2.1; Some Other Stuff".to_owned()),
@@ -690,6 +730,7 @@ pub mod web {
 
                 let params = Params {
                     is_get:     false,
+                    is_signup:  false,
                     last_ip:    "1.2.3.4".to_owned(),
                     secret:     None,
                     user_agent: None,
@@ -718,6 +759,7 @@ pub mod web {
 
                 let params = Params {
                     is_get:     false,
+                    is_signup:  false,
                     last_ip:    "1.2.3.4".to_owned(),
                     secret:     Some(key.secret.clone()),
                     user_agent: Some("Chrome".to_owned()),
@@ -738,6 +780,7 @@ pub mod web {
 
                 let params = Params {
                     is_get:     false,
+                    is_signup:  false,
                     last_ip:    "1.2.3.4".to_owned(),
                     secret:     None,
                     user_agent: Some("Chrome".to_owned()),

@@ -17,6 +17,15 @@ use r2d2_diesel::ConnectionManager;
 use slog::Logger;
 use time::Duration;
 
+/// Contains names for resource URLs so that we don't have to stringly type them
+/// to the same extent.
+///
+/// Please always use this for resource URL names, and for resource URL names
+/// *only*.
+pub mod names {
+    pub static SIGNUP: &str = "signup";
+}
+
 pub struct Server {
     pub assets_version: String,
 
@@ -100,7 +109,8 @@ impl Server {
                     r.method(Method::GET).a(endpoints::search_new_show::handler)
                 })
                 .resource("/signup", |r| {
-                    r.method(Method::GET).a(endpoints::signup_new_show::handler)
+                    r.name(names::SIGNUP);
+                    r.method(Method::GET).a(endpoints::signup_new_show::handler);
                 })
                 .resource("/podcasts/{id}", |r| {
                     r.method(Method::GET).a(endpoints::podcast_show::handler)
