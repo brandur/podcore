@@ -105,9 +105,6 @@ impl Server {
                 .resource("/search", |r| {
                     r.method(Method::GET).a(endpoints::search_show::handler)
                 })
-                .resource("/search/new", |r| {
-                    r.method(Method::GET).a(endpoints::search_new_show::handler)
-                })
                 .resource("/signup", |r| {
                     r.name(names::SIGNUP);
                     r.method(Method::GET).a(endpoints::signup_show::handler);

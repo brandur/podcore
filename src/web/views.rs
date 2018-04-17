@@ -164,29 +164,6 @@ pub mod podcast_show {
     }
 }
 
-pub mod search_new_show {
-    use errors::*;
-    use web::endpoints::CommonViewModel;
-    use web::endpoints::search_new_show::ViewModel;
-    use web::views;
-
-    use horrorshow::Template;
-
-    pub fn render(common: &CommonViewModel, _view_model: &ViewModel) -> Result<String> {
-        views::render_layout(
-            common,
-            (html! {
-                h1: "Search";
-                form(action="/search", method="get") {
-                    input(type="text", name="q");
-                    input(type="submit", value="Submit");
-                }
-            }).into_string()?
-                .as_str(),
-        )
-    }
-}
-
 pub mod search_show {
     use errors::*;
     use links;

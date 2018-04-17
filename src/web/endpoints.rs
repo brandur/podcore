@@ -552,51 +552,6 @@ pub mod podcast_show {
     }
 }
 
-pub mod search_new_show {
-    use errors::*;
-    use server;
-    use web::endpoints;
-    use web::views;
-
-    use actix_web::{HttpRequest, HttpResponse};
-    use futures::future::Future;
-    use slog::Logger;
-
-    handler_noop!();
-
-    //
-    // ViewModel
-    //
-
-    pub enum ViewModel {
-        Ok(view_model::Ok),
-    }
-
-    pub mod view_model {
-        use model;
-
-        pub struct Ok {
-            pub account: Option<model::Account>,
-        }
-    }
-
-    impl endpoints::ViewModel for ViewModel {
-        fn render(
-            &self,
-            _log: &Logger,
-            req: &HttpRequest<server::StateImpl>,
-        ) -> Result<HttpResponse> {
-            match *self {
-                ViewModel::Ok(ref view_model) => {
-                    let common =
-                        endpoints::build_common(req, view_model.account.as_ref(), "Search");
-                    endpoints::respond_200(views::search_new_show::render(&common, self)?)
-                }
-            }
-        }
-    }
-}
-
 pub mod search_show {
     use errors::*;
     use mediators::directory_podcast_searcher;
