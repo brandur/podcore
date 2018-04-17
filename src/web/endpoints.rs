@@ -794,17 +794,16 @@ fn param_or_missing<S: server::State>(req: &mut HttpRequest<S>, name: &str) -> R
 
 pub mod signup_post {
     use errors::*;
-    use mediators::directory_podcast_searcher;
+    use mediators;
     use model;
-    use schema;
     use server;
     use time_helpers;
     use web::endpoints;
     use web::views;
 
+    use actix_web::http::StatusCode;
     use actix_web::{HttpRequest, HttpResponse};
     use diesel::pg::PgConnection;
-    use diesel::prelude::*;
     use futures::future::Future;
     use serde_urlencoded;
     use slog::Logger;
@@ -824,7 +823,11 @@ pub mod signup_post {
         #[serde(skip_deserializing)]
         account: Option<model::Account>,
 
-        email:            String,
+        email: String,
+
+        #[serde(skip_deserializing)]
+        last_ip: String,
+
         password:         String,
         password_confirm: String,
 
@@ -841,6 +844,7 @@ pub mod signup_post {
             let mut params = serde_urlencoded::from_bytes::<Self>(data.unwrap())
                 .map_err(|e| error::bad_request(format!("{:?}", e)))?;
             params.account = server::account(req);
+            params.last_ip = req.connection_info().host().to_owned();
             params.scrypt_log_n = req.state().scrypt_log_n();
             Ok(params)
         }
@@ -852,56 +856,46 @@ pub mod signup_post {
 
     fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
         if params.email.is_empty() {
-            return Ok(ViewModel::MissingParam(
-                endpoints::signup_show::view_model::Ok {
-                    account: params.account,
-                    message: Some("Please specify an email.".to_owned()),
-                },
-            ));
+            return message_invalid(params.account, "Please specify an email.");
+        }
+        if params.password.is_empty() {
+            return message_invalid(params.account, "Please specify a password.");
+        }
+        if params.password_confirm.is_empty() {
+            return message_invalid(
+                params.account,
+                "Please type your password again in the confirmation box.",
+            );
         }
 
-        /*
-        if params.query.is_none() || params.query.as_ref().unwrap().is_empty() {
-            return Ok(ViewModel::Ok(view_model::Ok {
-                account: params.account,
-                directory_podcasts_and_podcasts: None,
-                query: None,
-                title: "Search".to_owned(),
-            }));
+        // Obviously we want to put in more sophisticated rules around password
+        // complexity ...
+        if params.password.len() < 8 {
+            return message_invalid(
+                params.account,
+                "Password must be at least 8 characters long.",
+            );
+        }
+        if params.password != params.password_confirm {
+            return message_invalid(
+                params.account,
+                "Password and password confirmation didn't match.",
+            );
         }
 
-        let query = params.query.clone().unwrap();
-        info!(log, "Executing query"; "id" => query.as_str());
+        // TODO: Should take existing account for merge.
+        let account = mediators::account_creator::Mediator {
+            conn,
+            email: Some(params.email.as_str()),
+            ephemeral: false,
+            last_ip: params.last_ip.as_str(),
+            mobile: false,
+            password: Some(params.password.as_str()),
+            scrypt_log_n: Some(params.scrypt_log_n),
+        }.run(log)?
+            .account;
 
-        let res = directory_podcast_searcher::Mediator {
-            conn:           &*conn,
-            query:          query.to_owned(),
-            http_requester: &mut endpoints::build_requester()?,
-        }.run(log)?;
-
-        // This uses a join to get us the podcast records along with the directory
-        // podcast records (the former being an `Option`). We might want to
-        // move this back into the searcher mediator because we're kind of
-        // duplicating work by having this out here.
-        let directory_podcasts_and_podcasts = Some(load_directory_podcasts_and_podcasts(
-            log,
-            &*conn,
-            &res.directory_search,
-        )?);
-
-        Ok(ViewModel::Ok(view_model::Ok {
-            account: params.account,
-            directory_podcasts_and_podcasts,
-            title: format!("Search: {}", query.as_str()),
-
-            // Moves into the struct, so set after setting `title`.
-            query: Some(query),
-        }))
-        */
-
-        Ok(ViewModel::Ok(view_model::Ok {
-            account: params.account,
-        }))
+        Ok(ViewModel::Ok(view_model::Ok { account }))
     }
 
     //
@@ -917,13 +911,7 @@ pub mod signup_post {
         use model;
 
         pub struct Ok {
-            pub account: Option<model::Account>,
-            /*
-            pub directory_podcasts_and_podcasts:
-                Option<Vec<(model::DirectoryPodcast, Option<model::Podcast>)>>,
-            pub query: Option<String>,
-            pub title: String,
-        */
+            pub account: model::Account,
         }
     }
 
@@ -939,14 +927,27 @@ pub mod signup_post {
                         endpoints::build_common(req, view_model.account.as_ref(), "Signup");
                     endpoints::respond_200(views::signup_show::render(&common, view_model)?)
                 }
-                ViewModel::Ok(ref view_model) => {
-                    //let common = endpoints::build_common(req, view_model.account.as_ref(),
-                    // "Title"); endpoints::respond_200(views::search_show::
-                    // render(&common, view_model)?)
-                    endpoints::respond_200("Hello".to_owned())
+                ViewModel::Ok(ref _view_model) => {
+                    // TODO: Set account into session
+                    Ok(HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
+                        .header("Location", "/account")
+                        .finish())
                 }
             }
         }
+    }
+
+    //
+    // Private functions
+    //
+
+    fn message_invalid(account: Option<model::Account>, message: &str) -> Result<ViewModel> {
+        Ok(ViewModel::MissingParam(
+            endpoints::signup_show::view_model::Ok {
+                account: account,
+                message: Some(message.to_owned()),
+            },
+        ))
     }
 }
 
