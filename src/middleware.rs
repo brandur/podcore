@@ -325,7 +325,7 @@ pub mod web {
 
                 let params_res = time_helpers::log_timed(
                     &log.new(o!("step" => "build_params")),
-                    |log| Params::build(log, req),
+                    |log| Params::build(log, req, None),
                 );
                 let params = match params_res {
                     Ok(params) => params,
@@ -411,7 +411,11 @@ pub mod web {
         }
 
         impl server::Params for Params {
-            fn build<S: server::State>(log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
+            fn build<S: server::State>(
+                log: &Logger,
+                req: &mut HttpRequest<S>,
+                _data: Option<&[u8]>,
+            ) -> Result<Self> {
                 use actix_web::HttpMessage;
                 Ok(Params {
                     is_get:     *req.method() == Method::GET,

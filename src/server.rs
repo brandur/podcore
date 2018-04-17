@@ -58,7 +58,13 @@ pub trait Params: Sized {
     ///
     /// `HttpRequest` is mutable because we're allowed to reach into a session
     /// to build parameters.
-    fn build<S: State>(log: &Logger, req: &mut HttpRequest<S>) -> Result<Self>;
+    ///
+    /// `data` is only available if a server endpoint is using an appropriate
+    /// handler that waits on the request's body future for that data to
+    /// become available (see `handler_post` in `endpoints` for example).
+    /// Otherwise, it will always be `None`.
+    fn build<S: State>(log: &Logger, req: &mut HttpRequest<S>, data: Option<&[u8]>)
+        -> Result<Self>;
 }
 
 pub trait State {

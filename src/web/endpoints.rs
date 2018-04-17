@@ -50,7 +50,7 @@ macro_rules! handler {
 
             let params_res = time_helpers::log_timed(
                 &log.new(o!("step" => "build_params")),
-                |log| Params::build(log, &mut req),
+                |log| Params::build(log, &mut req, None),
             );
             let params = match params_res {
                 Ok(params) => params,
@@ -114,7 +114,7 @@ macro_rules! handler_post {
             let log = middleware::log_initializer::log(&mut req);
 
             // We need `log` and `req` clones because we have multiple `move` closures below (and
-            // only one can take the original log).
+            // only one can take the original of each object).
             let log2 = log.clone();
             let log3 = log.clone();
             let log4 = log.clone();
@@ -126,10 +126,9 @@ macro_rules! handler_post {
                 // `map_err` is used here instead of `chain_err` because `PayloadError` doesn't
                 // implement the `Error` trait and I was unable to put it in the error chain.
                 .map_err(|_e| Error::from("Error reading request body"))
-                .and_then(move |_bytes: Bytes| {
+                .and_then(move |bytes: Bytes| {
                     time_helpers::log_timed(&log.new(o!("step" => "build_params")), |log| {
-                        //Params::build_from_post(log, &mut req_clone, bytes.as_ref())
-                        Params::build(log, &mut req2)
+                        Params::build(log, &mut req2, Some(bytes.as_ref()))
                     })
                 })
                 .and_then(move |params| {
@@ -286,7 +285,11 @@ pub mod episode_show {
     }
 
     impl server::Params for Params {
-        fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
+        fn build<S: server::State>(
+            _log: &Logger,
+            req: &mut HttpRequest<S>,
+            _data: Option<&[u8]>,
+        ) -> Result<Self> {
             Ok(Self {
                 account:    server::account(req),
                 episode_id: links::unslug_id(req.match_info().get("id").unwrap())
@@ -425,7 +428,11 @@ pub mod directory_podcast_show {
     }
 
     impl server::Params for Params {
-        fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
+        fn build<S: server::State>(
+            _log: &Logger,
+            req: &mut HttpRequest<S>,
+            _data: Option<&[u8]>,
+        ) -> Result<Self> {
             Ok(Self {
                 directory_podcast_id: links::unslug_id(req.match_info().get("id").unwrap())
                     .map_err(|e| error::bad_parameter("directory_podcast_id", &e))?,
@@ -517,7 +524,11 @@ pub mod podcast_show {
     }
 
     impl server::Params for Params {
-        fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
+        fn build<S: server::State>(
+            _log: &Logger,
+            req: &mut HttpRequest<S>,
+            _data: Option<&[u8]>,
+        ) -> Result<Self> {
             Ok(Self {
                 account:    server::account(req),
                 podcast_id: links::unslug_id(req.match_info().get("id").unwrap())
@@ -643,7 +654,11 @@ pub mod search_show {
         query:   Option<String>,
     }
     impl server::Params for Params {
-        fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
+        fn build<S: server::State>(
+            _log: &Logger,
+            req: &mut HttpRequest<S>,
+            _data: Option<&[u8]>,
+        ) -> Result<Self> {
             Ok(Self {
                 account: server::account(req),
                 query:   req.query().get("q").map(|q| q.to_owned()),
@@ -806,7 +821,7 @@ pub mod signup_post {
         password_confirm: String,
     }
     impl server::Params for Params {
-        fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>) -> Result<Self> {
+        fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>, _data: Option<&[u8]>) -> Result<Self> {
             Ok(Self {
                 account:          server::account(req),
                 email:            param_or_missing(req, "email")?,
