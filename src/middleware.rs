@@ -343,7 +343,7 @@ pub mod web {
                 let mut req = req.clone();
 
                 let fut = req.state()
-                    .sync_addr()
+                    .sync_addr_ref()
                     .send(message)
                     .map_err(|_e| Error::from("Error from SyncExecutor"))
                     .flatten()

@@ -80,6 +80,10 @@ pub const MINIMAL_FEED: &[u8] = br#"
 // This blog post on the subject is good: https://blog.filippo.io/the-scrypt-parameters/
 pub const SCRYPT_LOG_N: u8 = 4;
 
+// This is the host that we expect test requests to originate from. It's a
+// constant just in case Actix changes its default implementation.
+pub const REQUEST_HOST: &str = "localhost:8080";
+
 //
 // Public types
 //
@@ -118,17 +122,7 @@ impl IntegrationTestBootstrap {
         let pool_clone = pool.clone();
 
         let server_builder = actix_web::test::TestServer::build_with_state(move || {
-            // This is fucking disgusting. Ladies and gentlemen, I give you Rust.
-            let pool_clone = pool_clone.clone();
-
-            server::StateImpl {
-                assets_version: "".to_owned(),
-                log:            log_clone.clone(),
-                scrypt_log_n:   SCRYPT_LOG_N,
-                sync_addr:      actix::SyncArbiter::start(1, move || server::SyncExecutor {
-                    pool: pool_clone.clone(),
-                }),
-            }
+            server_state_with_sync_executor(&log_clone, Some(pool_clone.clone()))
         });
 
         IntegrationTestBootstrap {
@@ -235,6 +229,30 @@ pub fn read_body_json(resp: actix_web::client::ClientResponse) -> serde_json::Va
 
     let bytes: Bytes = resp.body().wait().unwrap();
     serde_json::from_slice(bytes.as_ref()).unwrap()
+}
+
+pub fn server_state(log: &Logger) -> server::StateImpl {
+    server_state_with_sync_executor(log, None)
+}
+
+// TODO: Maybe make this a reference to a pool and do the cloning ourselves.
+pub fn server_state_with_sync_executor(
+    log: &Logger,
+    pool: Option<Pool<ConnectionManager<PgConnection>>>,
+) -> server::StateImpl {
+    let sync_addr = match pool {
+        Some(pool) => Some(actix::SyncArbiter::start(1, move || server::SyncExecutor {
+            pool: pool.clone(),
+        })),
+        None => None,
+    };
+
+    server::StateImpl {
+        assets_version: "".to_owned(),
+        log:            log.clone(),
+        scrypt_log_n:   SCRYPT_LOG_N,
+        sync_addr:      sync_addr,
+    }
 }
 
 pub fn url_encode(bytes: &[u8]) -> PercentEncode<DEFAULT_ENCODE_SET> {

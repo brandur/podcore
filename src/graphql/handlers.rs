@@ -4,6 +4,7 @@ use middleware;
 use model;
 use server;
 use server::Params as P;
+use server::State;
 use time_helpers;
 
 use actix;
@@ -100,7 +101,7 @@ pub fn graphql_post(
     let log = middleware::log_initializer::log(&mut req);
     let log_clone = log.clone();
     let mut req_clone = req.clone();
-    let sync_addr = req.state().sync_addr.clone();
+    let sync_addr = req.state().sync_addr_ref().clone();
 
     let fut = req.body()
         // `map_err` is used here instead of `chain_err` because `PayloadError` doesn't implement
@@ -128,7 +129,7 @@ pub fn graphql_get(
     execute(
         log,
         Box::new(future::result(params_res)),
-        req.state().sync_addr.clone(),
+        req.state().sync_addr_ref().clone(),
     )
 }
 

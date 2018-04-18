@@ -39,6 +39,7 @@ macro_rules! handler {
             // Imported so that we can use the traits, but assigned a different name to
             // avoid clashing with the module's implementations.
             use server::Params as P;
+            use server::State;
             use web;
             use web::endpoints::ViewModel as VM;
             use web::middleware;
@@ -72,7 +73,7 @@ macro_rules! handler {
             let log2 = log.clone();
 
             req.state()
-                .sync_addr
+                .sync_addr_ref()
                 .send(message)
                 .map_err(|_e| Error::from("Error from SyncExecutor"))
                 .flatten()
@@ -106,6 +107,7 @@ macro_rules! handler_post {
             // Imported so that we can use the traits, but assigned a different name to
             // avoid clashing with the module's implementations.
             use server::Params as P;
+            use server::State;
             use web;
             use web::endpoints::ViewModel as VM;
             use web::middleware;
@@ -123,7 +125,7 @@ macro_rules! handler_post {
             let log4 = log.clone();
             let req2 = req.clone();
             let mut req3 = req.clone();
-            let sync_addr = req.state().sync_addr.clone();
+            let sync_addr = req.state().sync_addr_ref().clone();
 
             req2.body()
                 // `map_err` is used here instead of `chain_err` because `PayloadError` doesn't
@@ -981,7 +983,28 @@ pub mod signup_post {
 
     #[cfg(test)]
     mod tests {
-        fn test_signup_post_params() {}
+        use server::Params as P;
+        use test_helpers;
+        use web::endpoints::signup_post::*;
+
+        use actix_web::test::TestRequest;
+
+        #[test]
+        fn test_signup_post_params() {
+            let log = test_helpers::log();
+            let mut req = TestRequest::with_state(test_helpers::server_state(&log)).finish();
+            let params = Params::build(
+                &log,
+                &mut req,
+                Some(b"email=foo@example.com&password=my-password&password_confirm=my-password"),
+            ).unwrap();
+            assert!(params.account.is_none());
+            assert_eq!("foo@example.com", params.email);
+            assert_eq!(test_helpers::REQUEST_HOST, params.last_ip);
+            assert_eq!("my-password", params.password);
+            assert_eq!("my-password", params.password_confirm);
+            assert_eq!(test_helpers::SCRYPT_LOG_N, params.scrypt_log_n);
+        }
     }
 }
 

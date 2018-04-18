@@ -70,7 +70,7 @@ pub trait Params: Sized {
 pub trait State {
     fn log(&self) -> &Logger;
     fn scrypt_log_n(&self) -> u8;
-    fn sync_addr(&self) -> &actix::prelude::Addr<actix::prelude::Syn, SyncExecutor>;
+    fn sync_addr_ref(&self) -> &actix::prelude::Addr<actix::prelude::Syn, SyncExecutor>;
 }
 
 //
@@ -102,31 +102,45 @@ impl<P: Params> Message<P> {
 }
 
 pub struct StateImpl {
-    // Assets are versioned so that they can be expired immediately without worrying about any kind
-    // of client-side caching. This is a version represented as a string.
-    //
-    // Note that this is only used by `web::Server`.
+    /// Assets are versioned so that they can be expired immediately without
+    /// worrying about any kind of client-side caching. This is a version
+    /// represented as a string.
+    ///
+    /// Note that this is only used by `web::Server`.
     pub assets_version: String,
 
     pub log: Logger,
 
-    // A work factor for generating Scrypt hashes.
+    /// A work factor for generating Scrypt hashes.
     pub scrypt_log_n: u8,
 
-    pub sync_addr: actix::prelude::Addr<actix::prelude::Syn, SyncExecutor>,
+    /// An address that can be used to pass messages to the synchronous
+    /// executors (which are used to make database operations and the like).
+    ///
+    /// Note that although this is an `Option<_>`, we expect it to have a value
+    /// in the context of all normal server operations. The only time it
+    /// doesn't is in the test environment, where we assign it a `None`
+    /// value to avoid the avoid the overhead of spinning up Actix and a thread
+    /// pool when all we want is a synthetic request (which happens to embed a
+    /// `StateImpl`). Use the `sync_addr()` function to bypass the need to
+    /// check `Option<_>`.
+    pub sync_addr: Option<actix::prelude::Addr<actix::prelude::Syn, SyncExecutor>>,
 }
 
 impl State for StateImpl {
+    #[inline]
     fn log(&self) -> &Logger {
         &self.log
     }
 
+    #[inline]
     fn scrypt_log_n(&self) -> u8 {
         self.scrypt_log_n
     }
 
-    fn sync_addr(&self) -> &actix::prelude::Addr<actix::prelude::Syn, SyncExecutor> {
-        &self.sync_addr
+    #[inline]
+    fn sync_addr_ref(&self) -> &actix::prelude::Addr<actix::prelude::Syn, SyncExecutor> {
+        &self.sync_addr.as_ref().unwrap()
     }
 }
 
