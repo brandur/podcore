@@ -864,16 +864,8 @@ pub mod signup_post {
     //
 
     fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
-        //
-        // Validations
-        //
-
-        if params.email.is_empty() {
-            return message_invalid(params.account, "Please specify an email.");
-        }
-        if params.password.is_empty() {
-            return message_invalid(params.account, "Please specify a password.");
-        }
+        // Most validations happen within the mediator, but we do a few of them here
+        // for fields that are not available there.
         if params.password_confirm.is_empty() {
             return message_invalid(
                 params.account,
@@ -886,10 +878,6 @@ pub mod signup_post {
                 "Password and password confirmation didn't match.",
             );
         }
-
-        //
-        // Account and key creation
-        //
 
         // TODO: Should take existing account for merge.
         let res = mediators::account_creator::Mediator {

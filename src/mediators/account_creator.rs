@@ -29,7 +29,8 @@ impl<'a> Mediator<'a> {
     }
 
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
-        self.validate_request()?;
+        self.params_check()?;
+        self.params_validate()?;
         let account = self.insert_account(log)?;
         Ok(RunResult { account })
     }
@@ -67,14 +68,11 @@ impl<'a> Mediator<'a> {
         ).unwrap()
     }
 
-    fn validate_request(&mut self) -> Result<()> {
+    /// Performs general checks on parameters. Not intended to be user-facing.
+    fn params_check(&mut self) -> Result<()> {
         if self.ephemeral {
             return Ok(());
         }
-
-        //
-        // General checks (not intended to be user-facing)
-        //
 
         if self.password.is_none() {
             bail!("`password` is required to create non-ephemeral accounts.");
@@ -84,9 +82,14 @@ impl<'a> Mediator<'a> {
             bail!("`scrypt_log_n` is required to create non-ephemeral accounts.");
         }
 
-        //
-        // User-facing validations
-        //
+        return Ok(());
+    }
+
+    /// Performs validations on parameters. These are user facing.
+    fn params_validate(&mut self) -> Result<()> {
+        if self.ephemeral {
+            return Ok(());
+        }
 
         lazy_static! {
             // See: https://www.w3.org/TR/html51/sec-forms.html#valid-e-mail-address
@@ -94,12 +97,20 @@ impl<'a> Mediator<'a> {
         }
 
         if let Some(email) = self.email {
+            if email.is_empty() {
+                bail!(error::validation("Please specify an email address."))
+            }
+
             if !EMAIL_REGEX.is_match(email) {
                 bail!(error::validation("Please specify a valid email address."))
             }
         }
 
         if let Some(password) = self.password {
+            if password.is_empty() {
+                bail!(error::validation("Please specify a password."))
+            }
+
             // Obviously we want to put in more sophisticated rules around password
             // complexity ...
             if password.len() < 8 {
@@ -187,6 +198,23 @@ mod tests {
     }
 
     #[test]
+    fn test_account_create_invalid_permanent_empty_email() {
+        let mut bootstrap = TestBootstrap::new(Args {
+            email:     Some(""),
+            ephemeral: false,
+            password:  Some("my-password"),
+        });
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log);
+        assert!(res.is_err());
+        let e = res.err().unwrap();
+        assert_eq!(
+            "Validation failed: Please specify an email address.",
+            format!("{}", e).as_str()
+        );
+    }
+
+    #[test]
     fn test_account_create_invalid_permanent_bad_email() {
         let mut bootstrap = TestBootstrap::new(Args {
             email:     Some("foo"),
@@ -199,6 +227,23 @@ mod tests {
         let e = res.err().unwrap();
         assert_eq!(
             "Validation failed: Please specify a valid email address.",
+            format!("{}", e).as_str()
+        );
+    }
+
+    #[test]
+    fn test_account_create_invalid_permanent_empty_password() {
+        let mut bootstrap = TestBootstrap::new(Args {
+            email:     Some("foo@example.com"),
+            ephemeral: false,
+            password:  Some(""),
+        });
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log);
+        assert!(res.is_err());
+        let e = res.err().unwrap();
+        assert_eq!(
+            "Validation failed: Please specify a password.",
             format!("{}", e).as_str()
         );
     }
