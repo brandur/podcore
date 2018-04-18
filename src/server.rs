@@ -209,6 +209,9 @@ where
         e @ Error(ErrorKind::Unauthorized, _) => {
             render_user(log, StatusCode::UNAUTHORIZED, format!("{}", e))
         }
+        e @ Error(ErrorKind::Validation(_), _) => {
+            render_user(log, StatusCode::UNPROCESSABLE_ENTITY, format!("{}", e))
+        }
         e => Err(e),
     };
 

@@ -880,15 +880,6 @@ pub mod signup_post {
                 "Please type your password again in the confirmation box.",
             );
         }
-
-        // Obviously we want to put in more sophisticated rules around password
-        // complexity ...
-        if params.password.len() < 8 {
-            return message_invalid(
-                params.account,
-                "Password must be at least 8 characters long.",
-            );
-        }
         if params.password != params.password_confirm {
             return message_invalid(
                 params.account,
@@ -901,7 +892,7 @@ pub mod signup_post {
         //
 
         // TODO: Should take existing account for merge.
-        let account = mediators::account_creator::Mediator {
+        let res = mediators::account_creator::Mediator {
             conn,
             email: Some(params.email.as_str()),
             ephemeral: false,
@@ -909,8 +900,13 @@ pub mod signup_post {
             mobile: false,
             password: Some(params.password.as_str()),
             scrypt_log_n: Some(params.scrypt_log_n),
-        }.run(log)?
-            .account;
+        }.run(log);
+
+        if let Err(Error(ErrorKind::Validation(message), _)) = res {
+            return message_invalid(params.account, message.as_str());
+        }
+
+        let account = res?.account;
 
         let key = mediators::key_creator::Mediator {
             account: &account,

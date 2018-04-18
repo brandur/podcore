@@ -67,6 +67,11 @@ error_chain!{
             description("Unauthorized"),
             display("Unauthorized: You need to present valid credentials to access this endpoint."),
         }
+
+        Validation(message: String) {
+            description("Validation error"),
+            display("Validation failed: {}", message),
+        }
     }
 }
 
@@ -127,6 +132,11 @@ pub mod error {
     #[inline]
     pub fn unauthorized() -> Error {
         ErrorKind::Unauthorized.into()
+    }
+
+    #[inline]
+    pub fn validation<S: Into<String>>(message: S) -> Error {
+        ErrorKind::Validation(message.into()).into()
     }
 }
 

@@ -28,17 +28,7 @@ impl<'a> Mediator<'a> {
     }
 
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
-        // Produce good errors if these weren't provided. They'd otherwise also blow up
-        // later.
-        if !self.ephemeral {
-            if self.password.is_none() {
-                bail!("password is required to create non-ephemeral accounts");
-            }
-            if self.scrypt_log_n.is_none() {
-                bail!("scrypt_log_n is required to create non-ephemeral accounts");
-            }
-        }
-
+        self.validate_request()?;
         let account = self.insert_account(log)?;
         Ok(RunResult { account })
     }
@@ -74,6 +64,40 @@ impl<'a> Mediator<'a> {
             password,
             &scrypt::ScryptParams::new(self.scrypt_log_n.clone().unwrap(), 8, 1),
         ).unwrap()
+    }
+
+    fn validate_request(&mut self) -> Result<()> {
+        if self.ephemeral {
+            return Ok(());
+        }
+
+        //
+        // General checks (not intended to be user-facing)
+        //
+
+        if self.password.is_none() {
+            bail!("password is required to create non-ephemeral accounts");
+        }
+
+        if self.scrypt_log_n.is_none() {
+            bail!("scrypt_log_n is required to create non-ephemeral accounts");
+        }
+
+        //
+        // User-facing validations
+        //
+
+        if let Some(password) = self.password {
+            // Obviously we want to put in more sophisticated rules around password
+            // complexity ...
+            if password.len() < 8 {
+                bail!(error::validation(
+                    "Password must be at least 8 characters long."
+                ))
+            }
+        }
+
+        return Ok(());
     }
 }
 
@@ -147,6 +171,23 @@ mod tests {
         assert_eq!(
             "password is required to create non-ephemeral accounts",
             e.description()
+        );
+    }
+
+    #[test]
+    fn test_account_create_invalid_permanent_short_password() {
+        let mut bootstrap = TestBootstrap::new(Args {
+            email:     Some("foo@example.com"),
+            ephemeral: false,
+            password:  Some("123"),
+        });
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log);
+        assert!(res.is_err());
+        let e = res.err().unwrap();
+        assert_eq!(
+            "Validation failed: Password must be at least 8 characters long.",
+            format!("{}", e).as_str()
         );
     }
 
