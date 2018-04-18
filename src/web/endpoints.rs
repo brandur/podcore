@@ -827,21 +827,13 @@ pub mod signup_post {
     /// Gets the value for the given parameter name or returns a "parameter
     /// missing" error.
 
-    #[derive(Debug, Deserialize)]
     struct Params {
-        #[serde(skip_deserializing)]
-        account: Option<model::Account>,
-
-        email: String,
-
-        #[serde(skip_deserializing)]
-        last_ip: String,
-
+        account:          Option<model::Account>,
+        email:            String,
+        last_ip:          String,
         password:         String,
         password_confirm: String,
-
-        #[serde(skip_deserializing)]
-        scrypt_log_n: u8,
+        scrypt_log_n:     u8,
     }
 
     impl server::Params for Params {
@@ -850,13 +842,33 @@ pub mod signup_post {
             req: &mut HttpRequest<S>,
             data: Option<&[u8]>,
         ) -> Result<Self> {
-            let mut params = serde_urlencoded::from_bytes::<Self>(data.unwrap())
-                .map_err(|e| error::bad_request(format!("{:?}", e)))?;
-            params.account = server::account(req);
-            params.last_ip = req.connection_info().host().to_owned();
-            params.scrypt_log_n = req.state().scrypt_log_n();
-            Ok(params)
+            let form = serde_urlencoded::from_bytes::<ParamsForm>(data.unwrap())
+                .map_err(|e| error::bad_request(format!("{}", e)))?;
+
+            // The missing parameter errors are "hard" errors that usually the user will
+            // not see because even empty fields will be submitted with an HTML
+            // form. There's also validations in the mediator that check each
+            // value for content which will pass a more digestible error back
+            // to the user.
+            Ok(Params {
+                account:          server::account(req),
+                email:            form.email.ok_or_else(|| error::missing_parameter("email"))?,
+                last_ip:          req.connection_info().host().to_owned(),
+                password:         form.password
+                    .ok_or_else(|| error::missing_parameter("password"))?,
+                password_confirm: form.password_confirm
+                    .ok_or_else(|| error::missing_parameter("password_confirm"))?,
+                scrypt_log_n:     req.state().scrypt_log_n(),
+            })
         }
+    }
+
+    /// A parameters struct solely intended to be a target for form decoding.
+    #[derive(Debug, Deserialize)]
+    struct ParamsForm {
+        email:            Option<String>,
+        password:         Option<String>,
+        password_confirm: Option<String>,
     }
 
     //
@@ -961,6 +973,15 @@ pub mod signup_post {
                 message: Some(message.to_owned()),
             },
         ))
+    }
+
+    //
+    // Tests
+    //
+
+    #[cfg(test)]
+    mod tests {
+        fn test_signup_post_params() {}
     }
 }
 
