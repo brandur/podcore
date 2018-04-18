@@ -8,6 +8,7 @@ use crypto::scrypt;
 use diesel;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
+use regex::Regex;
 use slog::Logger;
 
 pub struct Mediator<'a> {
@@ -76,16 +77,27 @@ impl<'a> Mediator<'a> {
         //
 
         if self.password.is_none() {
-            bail!("password is required to create non-ephemeral accounts");
+            bail!("`password` is required to create non-ephemeral accounts.");
         }
 
         if self.scrypt_log_n.is_none() {
-            bail!("scrypt_log_n is required to create non-ephemeral accounts");
+            bail!("`scrypt_log_n` is required to create non-ephemeral accounts.");
         }
 
         //
         // User-facing validations
         //
+
+        lazy_static! {
+            // See: https://www.w3.org/TR/html51/sec-forms.html#valid-e-mail-address
+            static ref EMAIL_REGEX: Regex = Regex::new("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$").unwrap();
+        }
+
+        if let Some(email) = self.email {
+            if !EMAIL_REGEX.is_match(email) {
+                bail!(error::validation("Please specify a valid email address."))
+            }
+        }
 
         if let Some(password) = self.password {
             // Obviously we want to put in more sophisticated rules around password
@@ -169,8 +181,25 @@ mod tests {
         assert!(res.is_err());
         let e = res.err().unwrap();
         assert_eq!(
-            "password is required to create non-ephemeral accounts",
+            "`password` is required to create non-ephemeral accounts.",
             e.description()
+        );
+    }
+
+    #[test]
+    fn test_account_create_invalid_permanent_bad_email() {
+        let mut bootstrap = TestBootstrap::new(Args {
+            email:     Some("foo"),
+            ephemeral: false,
+            password:  Some("my-password"),
+        });
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log);
+        assert!(res.is_err());
+        let e = res.err().unwrap();
+        assert_eq!(
+            "Validation failed: Please specify a valid email address.",
+            format!("{}", e).as_str()
         );
     }
 
