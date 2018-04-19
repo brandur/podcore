@@ -575,11 +575,12 @@ pub mod web {
                 return Ok(ViewModel::NoAccount);
             }
 
-            let account = mediators::account_creator::Mediator {
-                conn:      conn,
-                email:     None,
-                ephemeral: true,
-                last_ip:   params.last_ip.as_str(),
+            let res = mediators::account_creator::Mediator {
+                conn:       conn,
+                create_key: true,
+                email:      None,
+                ephemeral:  true,
+                last_ip:    params.last_ip.as_str(),
 
                 // This is very much a middleware only for use on the web, so `mobile` is false.
                 // Mobile clients will create an account explicitly instead of automatically like
@@ -588,16 +589,9 @@ pub mod web {
 
                 password:     None,
                 scrypt_log_n: None,
-            }.run(log)?
-                .account;
-            let key = mediators::key_creator::Mediator {
-                account: &account,
-                conn,
-                expire_at: None,
-            }.run(log)?
-                .key;
+            }.run(log)?;
 
-            return Ok(ViewModel::NewAccount(account, key));
+            return Ok(ViewModel::NewAccount(res.account, res.key.unwrap()));
         }
 
         fn is_bot(params: &Params) -> bool {

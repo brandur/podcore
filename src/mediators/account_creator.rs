@@ -1,4 +1,5 @@
 use errors::*;
+use mediators;
 use model;
 use model::insertable;
 use schema;
@@ -13,6 +14,7 @@ use slog::Logger;
 
 pub struct Mediator<'a> {
     pub conn:         &'a PgConnection,
+    pub create_key:   bool,
     pub email:        Option<&'a str>,
     pub ephemeral:    bool,
     pub mobile:       bool,
@@ -32,12 +34,26 @@ impl<'a> Mediator<'a> {
         self.params_check()?;
         self.params_validate()?;
         let account = self.insert_account(log)?;
-        Ok(RunResult { account })
+        let key = self.create_key(log, &account)?;
+        Ok(RunResult { account, key })
     }
 
     //
     // Steps
     //
+
+    fn create_key(&mut self, log: &Logger, account: &model::Account) -> Result<Option<model::Key>> {
+        if !self.create_key {
+            return Ok(None);
+        }
+
+        let res = mediators::key_creator::Mediator {
+            account:   account,
+            conn:      self.conn,
+            expire_at: None,
+        }.run(log)?;
+        Ok(Some(res.key))
+    }
 
     fn insert_account(&mut self, log: &Logger) -> Result<model::Account> {
         time_helpers::log_timed(&log.new(o!("step" => "insert_account")), |_log| {
@@ -126,6 +142,10 @@ impl<'a> Mediator<'a> {
 
 pub struct RunResult {
     pub account: model::Account,
+
+    /// A newly minted key for the account. A key is only created if the
+    /// `create_key` parameter was set to `true`.
+    pub key: Option<model::Key>,
 }
 
 //
@@ -143,35 +163,56 @@ mod tests {
     #[test]
     fn test_account_create_ephemeral() {
         let mut bootstrap = TestBootstrap::new(Args {
-            email:     None,
-            ephemeral: true,
-            password:  None,
+            create_key: false,
+            email:      None,
+            ephemeral:  true,
+            password:   None,
         });
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
 
         assert_ne!(0, res.account.id);
+        assert!(res.key.is_none());
     }
 
     #[test]
     fn test_account_create_permanent() {
         let mut bootstrap = TestBootstrap::new(Args {
-            email:     Some("foo@example.com"),
-            ephemeral: false,
-            password:  Some("my-password"),
+            create_key: false,
+            email:      Some("foo@example.com"),
+            ephemeral:  false,
+            password:   Some("my-password"),
         });
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
 
         assert_ne!(0, res.account.id);
+        assert!(res.key.is_none());
+    }
+
+    #[test]
+    fn test_account_create_with_key() {
+        let mut bootstrap = TestBootstrap::new(Args {
+            create_key: true,
+            email:      None,
+            ephemeral:  true,
+            password:   None,
+        });
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log).unwrap();
+
+        assert_ne!(0, res.account.id);
+        assert!(res.key.is_some());
+        assert_ne!(0, res.key.unwrap().id);
     }
 
     #[test]
     fn test_account_create_invalid_ephemeral_with_email() {
         let mut bootstrap = TestBootstrap::new(Args {
-            email:     Some("foo@example.com"),
-            ephemeral: true,
-            password:  None,
+            create_key: false,
+            email:      Some("foo@example.com"),
+            ephemeral:  true,
+            password:   None,
         });
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log);
@@ -183,9 +224,10 @@ mod tests {
     #[test]
     fn test_account_create_invalid_permanent_without_email() {
         let mut bootstrap = TestBootstrap::new(Args {
-            email:     None,
-            ephemeral: false,
-            password:  None,
+            create_key: false,
+            email:      None,
+            ephemeral:  false,
+            password:   None,
         });
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log);
@@ -200,9 +242,10 @@ mod tests {
     #[test]
     fn test_account_create_invalid_permanent_empty_email() {
         let mut bootstrap = TestBootstrap::new(Args {
-            email:     Some(""),
-            ephemeral: false,
-            password:  Some("my-password"),
+            create_key: false,
+            email:      Some(""),
+            ephemeral:  false,
+            password:   Some("my-password"),
         });
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log);
@@ -217,9 +260,10 @@ mod tests {
     #[test]
     fn test_account_create_invalid_permanent_bad_email() {
         let mut bootstrap = TestBootstrap::new(Args {
-            email:     Some("foo"),
-            ephemeral: false,
-            password:  Some("my-password"),
+            create_key: false,
+            email:      Some("foo"),
+            ephemeral:  false,
+            password:   Some("my-password"),
         });
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log);
@@ -234,9 +278,10 @@ mod tests {
     #[test]
     fn test_account_create_invalid_permanent_empty_password() {
         let mut bootstrap = TestBootstrap::new(Args {
-            email:     Some("foo@example.com"),
-            ephemeral: false,
-            password:  Some(""),
+            create_key: false,
+            email:      Some("foo@example.com"),
+            ephemeral:  false,
+            password:   Some(""),
         });
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log);
@@ -251,9 +296,10 @@ mod tests {
     #[test]
     fn test_account_create_invalid_permanent_short_password() {
         let mut bootstrap = TestBootstrap::new(Args {
-            email:     Some("foo@example.com"),
-            ephemeral: false,
-            password:  Some("123"),
+            create_key: false,
+            email:      Some("foo@example.com"),
+            ephemeral:  false,
+            password:   Some("123"),
         });
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log);
@@ -270,9 +316,10 @@ mod tests {
     //
 
     struct Args<'a> {
-        email:     Option<&'a str>,
-        ephemeral: bool,
-        password:  Option<&'a str>,
+        create_key: bool,
+        email:      Option<&'a str>,
+        ephemeral:  bool,
+        password:   Option<&'a str>,
     }
 
     struct TestBootstrap<'a> {
@@ -296,6 +343,7 @@ mod tests {
             (
                 Mediator {
                     conn:         &*self.conn,
+                    create_key:   self.args.create_key,
                     email:        self.args.email,
                     ephemeral:    self.args.ephemeral,
                     last_ip:      "1.2.3.4",

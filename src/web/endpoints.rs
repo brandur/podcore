@@ -896,6 +896,7 @@ pub mod signup_post {
         // TODO: Should take existing account for merge.
         let res = mediators::account_creator::Mediator {
             conn,
+            create_key: true,
             email: Some(params.email.as_str()),
             ephemeral: false,
             last_ip: params.last_ip.as_str(),
@@ -908,16 +909,11 @@ pub mod signup_post {
             return message_invalid(params.account, message.as_str());
         }
 
-        let account = res?.account;
-
-        let key = mediators::key_creator::Mediator {
-            account: &account,
-            conn,
-            expire_at: None,
-        }.run(log)?
-            .key;
-
-        Ok(ViewModel::Ok(view_model::Ok { account, key }))
+        let res = res?;
+        Ok(ViewModel::Ok(view_model::Ok {
+            account: res.account,
+            key:     res.key.unwrap(),
+        }))
     }
 
     //
