@@ -88,7 +88,7 @@ impl Server {
                 .resource("/", |r| r.method(Method::GET).f(|_req| HttpResponse::Ok()))
                 .resource("/directory-podcasts/{id}", |r| {
                     r.method(Method::GET)
-                        .a(endpoints::directory_podcast_show::handler)
+                        .a(endpoints::directory_podcast_get::handler)
                 })
                 .resource("/graphiql", |r| {
                     r.method(Method::GET).f(graphql::handlers::graphiql_get);
@@ -103,18 +103,18 @@ impl Server {
                     r.method(Method::GET).f(|_req| HttpResponse::Ok())
                 })
                 .resource("/search", |r| {
-                    r.method(Method::GET).a(endpoints::search_show::handler)
+                    r.method(Method::GET).a(endpoints::search_get::handler)
                 })
                 .resource("/signup", |r| {
                     r.name(names::SIGNUP);
-                    r.method(Method::GET).a(endpoints::signup_show::handler);
+                    r.method(Method::GET).a(endpoints::signup_get::handler);
                     r.method(Method::POST).a(endpoints::signup_post::handler);
                 })
                 .resource("/podcasts/{id}", |r| {
-                    r.method(Method::GET).a(endpoints::podcast_show::handler)
+                    r.method(Method::GET).a(endpoints::podcast_get::handler)
                 })
                 .resource("/podcasts/{podcast_id}/episodes/{id}", |r| {
-                    r.method(Method::GET).a(endpoints::episode_show::handler)
+                    r.method(Method::GET).a(endpoints::episode_get::handler)
                 })
                 .handler(
                     format!("/assets/{}/", assets_version.as_str()).as_str(),

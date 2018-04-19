@@ -269,7 +269,7 @@ pub fn respond_200(body: String) -> Result<HttpResponse> {
 // Endpoints
 //
 
-pub mod episode_show {
+pub mod episode_get {
     use errors::*;
     use links;
     use model;
@@ -406,14 +406,14 @@ pub mod episode_show {
                         view_model.account.as_ref(),
                         &format!("Episode: {}", view_model.episode.title.as_str()),
                     );
-                    endpoints::respond_200(views::episode_show::render(&common, view_model)?)
+                    endpoints::respond_200(views::episode_get::render(&common, view_model)?)
                 }
             }
         }
     }
 }
 
-pub mod directory_podcast_show {
+pub mod directory_podcast_get {
     use errors::*;
     use links;
     use mediators::directory_podcast_updater;
@@ -509,7 +509,7 @@ pub mod directory_podcast_show {
     }
 }
 
-pub mod podcast_show {
+pub mod podcast_get {
     use errors::*;
     use links;
     use model;
@@ -632,14 +632,14 @@ pub mod podcast_show {
                         view_model.account.as_ref(),
                         &format!("Podcast: {}", view_model.podcast.title.as_str()),
                     );
-                    endpoints::respond_200(views::podcast_show::render(&common, view_model)?)
+                    endpoints::respond_200(views::podcast_get::render(&common, view_model)?)
                 }
             }
         }
     }
 }
 
-pub mod search_show {
+pub mod search_get {
     use errors::*;
     use mediators::directory_podcast_searcher;
     use model;
@@ -755,7 +755,7 @@ pub mod search_show {
                         view_model.account.as_ref(),
                         view_model.title.as_str(),
                     );
-                    endpoints::respond_200(views::search_show::render(&common, view_model)?)
+                    endpoints::respond_200(views::search_get::render(&common, view_model)?)
                 }
             }
         }
@@ -922,7 +922,7 @@ pub mod signup_post {
 
     #[derive(Debug)]
     enum ViewModel {
-        Invalid(endpoints::signup_show::view_model::Ok),
+        Invalid(endpoints::signup_get::view_model::Ok),
         Ok(view_model::Ok),
     }
 
@@ -946,7 +946,7 @@ pub mod signup_post {
                 ViewModel::Invalid(ref view_model) => {
                     let common =
                         endpoints::build_common(req, view_model.account.as_ref(), "Signup");
-                    endpoints::respond_200(views::signup_show::render(&common, view_model)?)
+                    endpoints::respond_200(views::signup_get::render(&common, view_model)?)
                 }
                 ViewModel::Ok(ref view_model) => {
                     // Note that we don't set the account state for *this* request because we're
@@ -967,7 +967,7 @@ pub mod signup_post {
     //
 
     fn message_invalid(account: Option<model::Account>, message: &str) -> Result<ViewModel> {
-        Ok(ViewModel::Invalid(endpoints::signup_show::view_model::Ok {
+        Ok(ViewModel::Invalid(endpoints::signup_get::view_model::Ok {
             account: account,
             message: Some(message.to_owned()),
         }))
@@ -1040,7 +1040,7 @@ pub mod signup_post {
             let view_model = handle_inner(&bootstrap.log, &*bootstrap.conn, params).unwrap();
 
             match view_model {
-                ViewModel::Invalid(endpoints::signup_show::view_model::Ok {
+                ViewModel::Invalid(endpoints::signup_get::view_model::Ok {
                     account: _,
                     message: Some(message),
                 }) => {
@@ -1063,7 +1063,7 @@ pub mod signup_post {
             let view_model = handle_inner(&bootstrap.log, &*bootstrap.conn, params).unwrap();
 
             match view_model {
-                ViewModel::Invalid(endpoints::signup_show::view_model::Ok {
+                ViewModel::Invalid(endpoints::signup_get::view_model::Ok {
                     account: _,
                     message: Some(message),
                 }) => {
@@ -1083,7 +1083,7 @@ pub mod signup_post {
             let mut req =
                 TestRequest::with_state(test_helpers::server_state(&bootstrap.log)).finish();
 
-            let view_model = ViewModel::Invalid(endpoints::signup_show::view_model::Ok {
+            let view_model = ViewModel::Invalid(endpoints::signup_get::view_model::Ok {
                 account: None,
                 message: Some("Invalid action.".to_owned()),
             });
@@ -1143,7 +1143,7 @@ pub mod signup_post {
     }
 }
 
-pub mod signup_show {
+pub mod signup_get {
     use errors::*;
     use server;
     use web::endpoints;
@@ -1193,7 +1193,7 @@ pub mod signup_show {
                 ViewModel::Ok(ref view_model) => {
                     let common =
                         endpoints::build_common(req, view_model.account.as_ref(), "Signup");
-                    endpoints::respond_200(views::signup_show::render(&common, view_model)?)
+                    endpoints::respond_200(views::signup_get::render(&common, view_model)?)
                 }
             }
         }

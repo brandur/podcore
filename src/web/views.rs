@@ -72,10 +72,10 @@ pub fn render_user_error(code: StatusCode, message: String) -> Result<String> {
 // Views
 //
 
-pub mod episode_show {
+pub mod episode_get {
     use errors::*;
     use web::endpoints::CommonViewModel;
-    use web::endpoints::episode_show::view_model;
+    use web::endpoints::episode_get::view_model;
     use web::views;
 
     use horrorshow::Template;
@@ -122,11 +122,11 @@ pub mod episode_show {
     }
 }
 
-pub mod podcast_show {
+pub mod podcast_get {
     use errors::*;
     use links;
     use web::endpoints::CommonViewModel;
-    use web::endpoints::podcast_show::view_model;
+    use web::endpoints::podcast_get::view_model;
     use web::views;
 
     use horrorshow::Template;
@@ -164,11 +164,11 @@ pub mod podcast_show {
     }
 }
 
-pub mod search_show {
+pub mod search_get {
     use errors::*;
     use links;
     use web::endpoints::CommonViewModel;
-    use web::endpoints::search_show::view_model;
+    use web::endpoints::search_get::view_model;
     use web::views;
 
     use horrorshow::Template;
@@ -210,10 +210,10 @@ pub mod search_show {
     }
 }
 
-pub mod signup_show {
+pub mod signup_get {
     use errors::*;
     use web::endpoints::CommonViewModel;
-    use web::endpoints::signup_show::view_model;
+    use web::endpoints::signup_get::view_model;
     use web::views;
 
     use horrorshow::Template;
