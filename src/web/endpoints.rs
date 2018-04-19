@@ -73,7 +73,7 @@ macro_rules! handler {
             let log2 = log.clone();
 
             req.state()
-                .sync_addr_ref()
+                .get_sync_addr()
                 .send(message)
                 .map_err(|_e| Error::from("Error from SyncExecutor"))
                 .flatten()
@@ -125,7 +125,7 @@ macro_rules! handler_post {
             let log4 = log.clone();
             let req2 = req.clone();
             let mut req3 = req.clone();
-            let sync_addr = req.state().sync_addr_ref().clone();
+            let sync_addr = req.state().get_sync_addr().clone();
 
             req2.body()
                 // `map_err` is used here instead of `chain_err` because `PayloadError` doesn't
@@ -860,7 +860,7 @@ pub mod signup_post {
                     .ok_or_else(|| error::missing_parameter("password"))?,
                 password_confirm: form.password_confirm
                     .ok_or_else(|| error::missing_parameter("password_confirm"))?,
-                scrypt_log_n:     req.state().scrypt_log_n(),
+                scrypt_log_n:     req.state().get_scrypt_log_n(),
             })
         }
     }

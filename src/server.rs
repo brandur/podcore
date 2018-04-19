@@ -67,10 +67,14 @@ pub trait Params: Sized {
         -> Result<Self>;
 }
 
+// A trait that's implemented by the server's state (see `StateImpl`).
+//
+// Accessors are all prefixed with `get_` in this case because `StateImpl` has
+// public fields of the same name.
 pub trait State {
-    fn log(&self) -> &Logger;
-    fn scrypt_log_n(&self) -> u8;
-    fn sync_addr_ref(&self) -> &actix::prelude::Addr<actix::prelude::Syn, SyncExecutor>;
+    fn get_log(&self) -> &Logger;
+    fn get_scrypt_log_n(&self) -> u8;
+    fn get_sync_addr(&self) -> &actix::prelude::Addr<actix::prelude::Syn, SyncExecutor>;
 }
 
 //
@@ -129,17 +133,17 @@ pub struct StateImpl {
 
 impl State for StateImpl {
     #[inline]
-    fn log(&self) -> &Logger {
+    fn get_log(&self) -> &Logger {
         &self.log
     }
 
     #[inline]
-    fn scrypt_log_n(&self) -> u8 {
+    fn get_scrypt_log_n(&self) -> u8 {
         self.scrypt_log_n
     }
 
     #[inline]
-    fn sync_addr_ref(&self) -> &actix::prelude::Addr<actix::prelude::Syn, SyncExecutor> {
+    fn get_sync_addr(&self) -> &actix::prelude::Addr<actix::prelude::Syn, SyncExecutor> {
         &self.sync_addr.as_ref().unwrap()
     }
 }

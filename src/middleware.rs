@@ -12,7 +12,7 @@ pub mod log_initializer {
 
     impl<S: server::State> actix_web::middleware::Middleware<S> for Middleware {
         fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
-            let log = req.state().log().clone();
+            let log = req.state().get_log().clone();
             req.extensions().insert(Extension(log));
             Ok(Started::Done)
         }
@@ -343,7 +343,7 @@ pub mod web {
                 let mut req = req.clone();
 
                 let fut = req.state()
-                    .sync_addr_ref()
+                    .get_sync_addr()
                     .send(message)
                     .map_err(|_e| Error::from("Error from SyncExecutor"))
                     .flatten()

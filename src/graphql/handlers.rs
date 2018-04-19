@@ -101,7 +101,7 @@ pub fn graphql_post(
     let log = middleware::log_initializer::log(&mut req);
     let log_clone = log.clone();
     let mut req_clone = req.clone();
-    let sync_addr = req.state().sync_addr_ref().clone();
+    let sync_addr = req.state().get_sync_addr().clone();
 
     let fut = req.body()
         // `map_err` is used here instead of `chain_err` because `PayloadError` doesn't implement
@@ -129,7 +129,7 @@ pub fn graphql_get(
     execute(
         log,
         Box::new(future::result(params_res)),
-        req.state().sync_addr_ref().clone(),
+        req.state().get_sync_addr().clone(),
     )
 }
 
