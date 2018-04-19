@@ -1078,7 +1078,7 @@ pub mod signup_post {
         //
 
         #[test]
-        fn test_signup_post_view_model_invalid() {
+        fn test_signup_post_view_model_render_invalid() {
             let bootstrap = TestBootstrap::new();
             let mut req =
                 TestRequest::with_state(test_helpers::server_state(&bootstrap.log)).finish();
@@ -1091,7 +1091,7 @@ pub mod signup_post {
         }
 
         #[test]
-        fn test_signup_post_view_model_ok() {
+        fn test_signup_post_view_model_render_ok() {
             let bootstrap = TestBootstrap::new();
             let mut req =
                 TestRequest::with_state(test_helpers::server_state(&bootstrap.log)).finish();
@@ -1194,6 +1194,70 @@ pub mod signup_get {
                     let common =
                         endpoints::build_common(req, view_model.account.as_ref(), "Signup");
                     endpoints::respond_200(views::signup_get::render(&common, view_model)?)
+                }
+            }
+        }
+    }
+
+    //
+    // Tests
+    //
+
+    #[cfg(test)]
+    mod tests {
+        use test_helpers;
+        use web::endpoints::ViewModel as VM;
+        use web::endpoints::signup_get::*;
+
+        use actix_web::test::TestRequest;
+
+        //
+        // ViewModel tests
+        //
+
+        #[test]
+        fn test_signup_get_view_model_build() {
+            let bootstrap = TestBootstrap::new();
+            let mut req =
+                TestRequest::with_state(test_helpers::server_state(&bootstrap.log)).finish();
+            let view_model = ViewModel::build(&bootstrap.log, &mut req);
+
+            match view_model {
+                ViewModel::Ok(endpoints::signup_get::view_model::Ok {
+                    account: None,
+                    message: None,
+                }) => (),
+                _ => panic!("Unexpected view model: {:?}", view_model),
+            };
+        }
+
+        #[test]
+        fn test_signup_get_view_model_render_ok() {
+            let bootstrap = TestBootstrap::new();
+            let mut req =
+                TestRequest::with_state(test_helpers::server_state(&bootstrap.log)).finish();
+
+            let view_model = ViewModel::Ok(view_model::Ok {
+                account: None,
+                message: Some("Hello, world.".to_owned()),
+            });
+            let _response = view_model.render(&bootstrap.log, &mut req).unwrap();
+        }
+
+        //
+        // Private types/functions
+        //
+
+        struct TestBootstrap {
+            _common: test_helpers::CommonTestBootstrap,
+            log:     Logger,
+        }
+
+        impl TestBootstrap {
+            fn new() -> TestBootstrap {
+                TestBootstrap {
+                    _common: test_helpers::CommonTestBootstrap::new(),
+                    log:     test_helpers::log(),
                 }
             }
         }
