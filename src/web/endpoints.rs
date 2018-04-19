@@ -984,19 +984,26 @@ pub mod signup_post {
     #[cfg(test)]
     mod tests {
         use server::Params as P;
+        use test_data;
         use test_helpers;
+        use web::endpoints::ViewModel as VM;
         use web::endpoints::signup_post::*;
 
         use actix_web::test::TestRequest;
         use r2d2::PooledConnection;
         use r2d2_diesel::ConnectionManager;
 
+        //
+        // Params tests
+        //
+
         #[test]
         fn test_signup_post_params() {
-            let log = test_helpers::log();
-            let mut req = TestRequest::with_state(test_helpers::server_state(&log)).finish();
+            let bootstrap = TestBootstrap::new();
+            let mut req =
+                TestRequest::with_state(test_helpers::server_state(&bootstrap.log)).finish();
             let params = Params::build(
-                &log,
+                &bootstrap.log,
                 &mut req,
                 Some(b"email=foo@example.com&password=my-password&password_confirm=my-password"),
             ).unwrap();
@@ -1007,6 +1014,10 @@ pub mod signup_post {
             assert_eq!("my-password", params.password_confirm);
             assert_eq!(test_helpers::SCRYPT_LOG_N, params.scrypt_log_n);
         }
+
+        //
+        // Handler tests
+        //
 
         #[test]
         fn test_signup_post_handler_success() {
@@ -1064,6 +1075,43 @@ pub mod signup_post {
                 }
                 _ => panic!("Unexpected view model: {:?}", view_model),
             };
+        }
+
+        //
+        // ViewModel tests
+        //
+
+        #[test]
+        fn test_signup_post_view_model_invalid() {
+            let bootstrap = TestBootstrap::new();
+            let mut req =
+                TestRequest::with_state(test_helpers::server_state(&bootstrap.log)).finish();
+
+            let view_model = ViewModel::Invalid(endpoints::signup_show::view_model::Ok {
+                account: None,
+                message: Some("Invalid action.".to_owned()),
+            });
+            let _response = view_model.render(&bootstrap.log, &mut req).unwrap();
+        }
+
+        #[test]
+        fn test_signup_post_view_model_ok() {
+            let bootstrap = TestBootstrap::new();
+            let mut req =
+                TestRequest::with_state(test_helpers::server_state(&bootstrap.log)).finish();
+
+            let account = test_data::account::insert(&bootstrap.log, &*bootstrap.conn);
+            let key = test_data::key::insert_args(
+                &bootstrap.log,
+                &*bootstrap.conn,
+                test_data::key::Args {
+                    account:   Some(&account),
+                    expire_at: None,
+                },
+            );
+
+            let view_model = ViewModel::Ok(view_model::Ok { account, key });
+            let _response = view_model.render(&bootstrap.log, &mut req).unwrap();
         }
 
         //
