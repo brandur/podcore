@@ -45,7 +45,7 @@ pub mod account {
             last_ip: "1.2.3.4",
             mobile: args.mobile,
             password: match args.email {
-                Some(_) => Some("password123"),
+                Some(_) => Some(test_helpers::PASSWORD),
                 None => None,
             },
             scrypt_log_n: Some(test_helpers::SCRYPT_LOG_N),

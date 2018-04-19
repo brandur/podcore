@@ -73,6 +73,9 @@ pub const MINIMAL_FEED: &[u8] = br#"
   </channel>
 </rss>"#;
 
+// The password that test accounts (non-ephemeral ones) are created with.
+pub const PASSWORD: &str = "password123";
+
 // This is a trival work factor that should never be used in real life.
 // However, to keep things in tests fast, we inject a low work factor that
 // allows the CPU to produce these very quickly.

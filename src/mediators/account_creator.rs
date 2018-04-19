@@ -98,7 +98,7 @@ impl<'a> Mediator<'a> {
             bail!("`scrypt_log_n` is required to create non-ephemeral accounts.");
         }
 
-        return Ok(());
+        Ok(())
     }
 
     /// Performs validations on parameters. These are user facing.
@@ -136,7 +136,7 @@ impl<'a> Mediator<'a> {
             }
         }
 
-        return Ok(());
+        Ok(())
     }
 }
 

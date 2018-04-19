@@ -101,7 +101,7 @@ mod tests {
     use time::Duration;
 
     #[test]
-    fn test_account_authenticate_no_expiry() {
+    fn test_account_authenticator_no_expiry() {
         let mut bootstrap = TestBootstrap::new(Args {
             key_expire_at: None,
         });
@@ -115,7 +115,7 @@ mod tests {
     }
 
     #[test]
-    fn test_account_authenticate_with_expiry() {
+    fn test_account_authenticator_with_expiry() {
         let mut bootstrap = TestBootstrap::new(Args {
             key_expire_at: Some(Utc::now() + Duration::days(1)),
         });
@@ -129,7 +129,7 @@ mod tests {
     }
 
     #[test]
-    fn test_account_authenticate_invalid_deleted() {
+    fn test_account_authenticator_invalid_deleted() {
         let mut bootstrap = TestBootstrap::new(Args {
             key_expire_at: None,
         });
@@ -146,7 +146,7 @@ mod tests {
     }
 
     #[test]
-    fn test_account_authenticate_invalid_expired() {
+    fn test_account_authenticator_invalid_expired() {
         let mut bootstrap = TestBootstrap::new(Args {
             key_expire_at: Some(Utc::now() - Duration::days(1)),
         });
@@ -188,10 +188,8 @@ mod tests {
 
             TestBootstrap {
                 _common: test_helpers::CommonTestBootstrap::new(),
-                key,
-
-                // Only move these after filling the above
                 conn: conn,
+                key,
                 log: log,
             }
         }
