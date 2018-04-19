@@ -924,6 +924,7 @@ pub mod signup_post {
     // ViewModel
     //
 
+    #[derive(Debug)]
     enum ViewModel {
         MissingParam(endpoints::signup_show::view_model::Ok),
         Ok(view_model::Ok),
@@ -932,6 +933,7 @@ pub mod signup_post {
     pub mod view_model {
         use model;
 
+        #[derive(Debug)]
         pub struct Ok {
             pub account: model::Account,
             pub key:     model::Key,
@@ -988,6 +990,8 @@ pub mod signup_post {
         use web::endpoints::signup_post::*;
 
         use actix_web::test::TestRequest;
+        use r2d2::PooledConnection;
+        use r2d2_diesel::ConnectionManager;
 
         #[test]
         fn test_signup_post_params() {
@@ -1004,6 +1008,50 @@ pub mod signup_post {
             assert_eq!("my-password", params.password);
             assert_eq!("my-password", params.password_confirm);
             assert_eq!(test_helpers::SCRYPT_LOG_N, params.scrypt_log_n);
+        }
+
+        #[test]
+        fn test_signup_post_handler_success() {
+            let bootstrap = TestBootstrap::new();
+
+            let view_model =
+                handle_inner(&bootstrap.log, &*bootstrap.conn, valid_params()).unwrap();
+
+            match view_model {
+                ViewModel::Ok(_) => (),
+                _ => panic!("Unexpected view model: {:?}", view_model),
+            };
+        }
+
+        //
+        // Private types/functions
+        //
+
+        struct TestBootstrap {
+            _common: test_helpers::CommonTestBootstrap,
+            conn:    PooledConnection<ConnectionManager<PgConnection>>,
+            log:     Logger,
+        }
+
+        impl TestBootstrap {
+            fn new() -> TestBootstrap {
+                TestBootstrap {
+                    _common: test_helpers::CommonTestBootstrap::new(),
+                    conn:    test_helpers::connection(),
+                    log:     test_helpers::log(),
+                }
+            }
+        }
+
+        fn valid_params() -> Params {
+            Params {
+                account:          None,
+                email:            "foo@example.com".to_owned(),
+                last_ip:          test_helpers::REQUEST_IP.to_owned(),
+                password:         "my-password".to_owned(),
+                password_confirm: "my-password".to_owned(),
+                scrypt_log_n:     test_helpers::SCRYPT_LOG_N,
+            }
         }
     }
 }
@@ -1024,6 +1072,7 @@ pub mod signup_show {
     // ViewModel
     //
 
+    #[derive(Debug)]
     pub enum ViewModel {
         Ok(view_model::Ok),
     }
@@ -1031,6 +1080,7 @@ pub mod signup_show {
     pub mod view_model {
         use model;
 
+        #[derive(Debug)]
         pub struct Ok {
             pub account: Option<model::Account>,
             pub message: Option<String>,
