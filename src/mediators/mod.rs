@@ -1,3 +1,5 @@
+mod common;
+
 pub mod account_creator;
 pub mod account_destroyer;
 pub mod account_key_authenticator;
@@ -6,7 +8,6 @@ pub mod account_podcast_episode_favoriter;
 pub mod account_podcast_episode_upserter;
 pub mod account_podcast_subscriber;
 pub mod cleaner;
-mod common;
 pub mod directory_podcast_searcher;
 pub mod directory_podcast_updater;
 pub mod error_reporter;
