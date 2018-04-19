@@ -439,7 +439,7 @@ pub mod web {
                         == req.url_for(web::names::SIGNUP, iter::empty::<&str>())
                             .unwrap()
                             .as_str(),
-                    last_ip:    req.connection_info().host().to_owned(),
+                    last_ip:    server::ip_for_request(req).to_owned(),
                     secret:     req.session()
                         .get::<String>(COOKIE_KEY_SECRET)
                         .map_err(|_| Error::from("Error reading from session"))

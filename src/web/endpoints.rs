@@ -855,7 +855,7 @@ pub mod signup_post {
             Ok(Params {
                 account:          server::account(req),
                 email:            form.email.ok_or_else(|| error::missing_parameter("email"))?,
-                last_ip:          req.connection_info().host().to_owned(),
+                last_ip:          server::ip_for_request(req).to_owned(),
                 password:         form.password
                     .ok_or_else(|| error::missing_parameter("password"))?,
                 password_confirm: form.password_confirm
@@ -1000,7 +1000,7 @@ pub mod signup_post {
             ).unwrap();
             assert!(params.account.is_none());
             assert_eq!("foo@example.com", params.email);
-            assert_eq!(test_helpers::REQUEST_HOST, params.last_ip);
+            assert_eq!(test_helpers::REQUEST_IP, params.last_ip);
             assert_eq!("my-password", params.password);
             assert_eq!("my-password", params.password_confirm);
             assert_eq!(test_helpers::SCRYPT_LOG_N, params.scrypt_log_n);

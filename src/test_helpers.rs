@@ -80,9 +80,9 @@ pub const MINIMAL_FEED: &[u8] = br#"
 // This blog post on the subject is good: https://blog.filippo.io/the-scrypt-parameters/
 pub const SCRYPT_LOG_N: u8 = 4;
 
-// This is the host that we expect test requests to originate from. It's a
+// This is the IP that we expect test requests to originate from. It's a
 // constant just in case Actix changes its default implementation.
-pub const REQUEST_HOST: &str = "localhost:8080";
+pub const REQUEST_IP: &str = "<no IP>";
 
 //
 // Public types

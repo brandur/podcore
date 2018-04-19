@@ -187,6 +187,18 @@ pub fn account<S: State>(req: &mut HttpRequest<S>) -> Option<model::Account> {
     None
 }
 
+/// Gets the IP for a given request.
+///
+/// I've put this in a function because `remote()` is specified as an
+/// `Option<_>`, but it probably is one that's never `None`. For now, we return
+/// a dud string when we do encounter a `None`. Somewhere down the road, it'll
+/// be worth searching the database for this and if there are no results just
+/// changing this to a straight out `unwrap()`. If there are results, we should
+/// make the `last_ip` column nullable.
+pub fn ip_for_request<S: State>(req: &HttpRequest<S>) -> &str {
+    req.connection_info().remote().unwrap_or("<no IP>")
+}
+
 /// Handles a `Result` and renders an error that was intended for the user by
 /// invoking the given `render_user` function.
 ///
