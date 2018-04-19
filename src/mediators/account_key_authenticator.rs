@@ -91,7 +91,7 @@ pub struct RunResult {
 
 #[cfg(test)]
 mod tests {
-    use mediators::account_authenticator::*;
+    use mediators::account_key_authenticator::*;
     use test_data;
     use test_helpers;
 
@@ -101,7 +101,7 @@ mod tests {
     use time::Duration;
 
     #[test]
-    fn test_account_authenticator_no_expiry() {
+    fn test_account_key_authenticator_no_expiry() {
         let mut bootstrap = TestBootstrap::new(Args {
             key_expire_at: None,
         });
@@ -115,7 +115,7 @@ mod tests {
     }
 
     #[test]
-    fn test_account_authenticator_with_expiry() {
+    fn test_account_key_authenticator_with_expiry() {
         let mut bootstrap = TestBootstrap::new(Args {
             key_expire_at: Some(Utc::now() + Duration::days(1)),
         });
@@ -129,7 +129,7 @@ mod tests {
     }
 
     #[test]
-    fn test_account_authenticator_invalid_deleted() {
+    fn test_account_key_authenticator_invalid_deleted() {
         let mut bootstrap = TestBootstrap::new(Args {
             key_expire_at: None,
         });
@@ -146,7 +146,7 @@ mod tests {
     }
 
     #[test]
-    fn test_account_authenticator_invalid_expired() {
+    fn test_account_key_authenticator_invalid_expired() {
         let mut bootstrap = TestBootstrap::new(Args {
             key_expire_at: Some(Utc::now() - Duration::days(1)),
         });

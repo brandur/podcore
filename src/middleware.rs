@@ -541,7 +541,7 @@ pub mod web {
 
         fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
             if params.secret.is_some() {
-                let account = mediators::account_authenticator::Mediator {
+                let account = mediators::account_key_authenticator::Mediator {
                     conn:    conn,
                     last_ip: params.last_ip.as_str(),
                     secret:  params.secret.as_ref().unwrap().as_str(),
