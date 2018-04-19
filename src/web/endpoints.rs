@@ -926,7 +926,7 @@ pub mod signup_post {
 
     #[derive(Debug)]
     enum ViewModel {
-        MissingParam(endpoints::signup_show::view_model::Ok),
+        Invalid(endpoints::signup_show::view_model::Ok),
         Ok(view_model::Ok),
     }
 
@@ -947,7 +947,7 @@ pub mod signup_post {
             req: &mut HttpRequest<server::StateImpl>,
         ) -> Result<HttpResponse> {
             match *self {
-                ViewModel::MissingParam(ref view_model) => {
+                ViewModel::Invalid(ref view_model) => {
                     let common =
                         endpoints::build_common(req, view_model.account.as_ref(), "Signup");
                     endpoints::respond_200(views::signup_show::render(&common, view_model)?)
@@ -971,12 +971,10 @@ pub mod signup_post {
     //
 
     fn message_invalid(account: Option<model::Account>, message: &str) -> Result<ViewModel> {
-        Ok(ViewModel::MissingParam(
-            endpoints::signup_show::view_model::Ok {
-                account: account,
-                message: Some(message.to_owned()),
-            },
-        ))
+        Ok(ViewModel::Invalid(endpoints::signup_show::view_model::Ok {
+            account: account,
+            message: Some(message.to_owned()),
+        }))
     }
 
     //
@@ -1019,6 +1017,51 @@ pub mod signup_post {
 
             match view_model {
                 ViewModel::Ok(_) => (),
+                _ => panic!("Unexpected view model: {:?}", view_model),
+            };
+        }
+
+        // Notably, we don't test *all* validations because most of them are already
+        // tested in the mediator's suite.
+        #[test]
+        fn test_signup_post_handler_missing_password_confirm() {
+            let bootstrap = TestBootstrap::new();
+
+            let mut params = valid_params();
+            params.password_confirm = "".to_owned();
+
+            let view_model = handle_inner(&bootstrap.log, &*bootstrap.conn, params).unwrap();
+
+            match view_model {
+                ViewModel::Invalid(endpoints::signup_show::view_model::Ok {
+                    account: _,
+                    message: Some(message),
+                }) => {
+                    assert_eq!(
+                        "Please type your password again in the confirmation box.",
+                        message
+                    );
+                }
+                _ => panic!("Unexpected view model: {:?}", view_model),
+            };
+        }
+
+        #[test]
+        fn test_signup_post_handler_mismatched_passwords() {
+            let bootstrap = TestBootstrap::new();
+
+            let mut params = valid_params();
+            params.password_confirm = "not-my-password".to_owned();
+
+            let view_model = handle_inner(&bootstrap.log, &*bootstrap.conn, params).unwrap();
+
+            match view_model {
+                ViewModel::Invalid(endpoints::signup_show::view_model::Ok {
+                    account: _,
+                    message: Some(message),
+                }) => {
+                    assert_eq!("Password and password confirmation didn't match.", message);
+                }
                 _ => panic!("Unexpected view model: {:?}", view_model),
             };
         }
