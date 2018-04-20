@@ -31,9 +31,19 @@ pub fn render_layout(view_model: &endpoints::CommonViewModel, content: &str) -> 
             body {
                 span {
                     @ if let Some(ref account) = view_model.account {
-                        : format_args!("Account ID: {}", account.id)
+                        p: format_args!("Account ID: {}", account.id);
+                        @ if account.ephemeral {
+                            p {
+                                a(href="/login"): "Login";
+                                a(href="/signup"): "Signup";
+                            }
+                        }
                     } else {
-                        : "Not account set"
+                        p: "Not account set";
+                        p {
+                            a(href="/login"): "Login";
+                            a(href="/signup"): "Signup";
+                        }
                     }
                 }
                 container {
