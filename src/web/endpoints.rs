@@ -509,6 +509,126 @@ pub mod directory_podcast_get {
     }
 }
 
+pub mod login_get {
+    use errors::*;
+    use server;
+    use web::endpoints;
+    use web::views;
+
+    use actix_web::{HttpRequest, HttpResponse};
+    use futures::future::Future;
+    use slog::Logger;
+
+    handler_noop!();
+
+    //
+    // ViewModel
+    //
+
+    #[derive(Debug)]
+    pub enum ViewModel {
+        Ok(view_model::Ok),
+    }
+
+    pub mod view_model {
+        use model;
+
+        #[derive(Debug)]
+        pub struct Ok {
+            pub account: Option<model::Account>,
+            pub message: Option<String>,
+        }
+    }
+
+    impl ViewModel {
+        fn build<S: server::State>(_log: &Logger, req: &mut HttpRequest<S>) -> ViewModel {
+            ViewModel::Ok(view_model::Ok {
+                account: server::account(req),
+                message: None,
+            })
+        }
+    }
+
+    impl endpoints::ViewModel for ViewModel {
+        fn render(
+            &self,
+            _log: &Logger,
+            req: &mut HttpRequest<server::StateImpl>,
+        ) -> Result<HttpResponse> {
+            match *self {
+                ViewModel::Ok(ref view_model) => {
+                    let common = endpoints::build_common(req, view_model.account.as_ref(), "Login");
+                    endpoints::respond_200(views::login_get::render(&common, view_model)?)
+                }
+            }
+        }
+    }
+
+    //
+    // Tests
+    //
+
+    #[cfg(test)]
+    mod tests {
+        use test_helpers;
+        use web::endpoints::ViewModel as VM;
+        use web::endpoints::login_get::*;
+
+        use actix_web::test::TestRequest;
+
+        //
+        // ViewModel tests
+        //
+
+        #[test]
+        fn test_login_get_view_model_build() {
+            let bootstrap = TestBootstrap::new();
+            let mut req =
+                TestRequest::with_state(test_helpers::server_state(&bootstrap.log)).finish();
+            let view_model = ViewModel::build(&bootstrap.log, &mut req);
+
+            match view_model {
+                ViewModel::Ok(view_model::Ok {
+                    account: None,
+                    message: None,
+                }) => (),
+                _ => panic!("Unexpected view model: {:?}", view_model),
+            };
+        }
+
+        #[test]
+        fn test_login_get_view_model_render_ok() {
+            let bootstrap = TestBootstrap::new();
+            let mut req =
+                TestRequest::with_state(test_helpers::server_state(&bootstrap.log)).finish();
+
+            let view_model = ViewModel::Ok(view_model::Ok {
+                account: None,
+                message: Some("Hello, world.".to_owned()),
+            });
+            let _response = view_model.render(&bootstrap.log, &mut req).unwrap();
+        }
+
+        //
+        // Private types/functions
+        //
+
+        struct TestBootstrap {
+            _common: test_helpers::CommonTestBootstrap,
+            log:     Logger,
+        }
+
+        impl TestBootstrap {
+            fn new() -> TestBootstrap {
+                TestBootstrap {
+                    _common: test_helpers::CommonTestBootstrap::new(),
+                    log:     test_helpers::log(),
+                }
+            }
+        }
+    }
+}
+
 pub mod podcast_get {
     use errors::*;
     use links;
@@ -1223,7 +1343,7 @@ pub mod signup_get {
             let view_model = ViewModel::build(&bootstrap.log, &mut req);
 
             match view_model {
-                ViewModel::Ok(endpoints::signup_get::view_model::Ok {
+                ViewModel::Ok(view_model::Ok {
                     account: None,
                     message: None,
                 }) => (),

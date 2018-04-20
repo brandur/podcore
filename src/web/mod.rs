@@ -102,6 +102,10 @@ impl Server {
                 .resource("/health", |r| {
                     r.method(Method::GET).f(|_req| HttpResponse::Ok())
                 })
+                .resource("/login", |r| {
+                    r.name(names::SIGNUP);
+                    r.method(Method::GET).a(endpoints::login_get::handler);
+                })
                 .resource("/search", |r| {
                     r.method(Method::GET).a(endpoints::search_get::handler)
                 })

@@ -122,6 +122,33 @@ pub mod episode_get {
     }
 }
 
+pub mod login_get {
+    use errors::*;
+    use web::endpoints::CommonViewModel;
+    use web::endpoints::login_get::view_model;
+    use web::views;
+
+    use horrorshow::Template;
+
+    pub fn render(common: &CommonViewModel, view_model: &view_model::Ok) -> Result<String> {
+        views::render_layout(
+            common,
+            (html! {
+                h1: "Login";
+                @ if let Some(ref message) = view_model.message {
+                    p(class="message"): message.as_str();
+                }
+                form(action="/login", method="get") {
+                    input(type="email", name="email", placeholder="Email");
+                    input(type="password", name="password", placeholder="Password");
+                    input(type="submit", value="Login");
+                }
+            }).into_string()?
+                .as_str(),
+        )
+    }
+}
+
 pub mod podcast_get {
     use errors::*;
     use links;
@@ -218,11 +245,14 @@ pub mod signup_get {
 
     use horrorshow::Template;
 
-    pub fn render(common: &CommonViewModel, _view_model: &view_model::Ok) -> Result<String> {
+    pub fn render(common: &CommonViewModel, view_model: &view_model::Ok) -> Result<String> {
         views::render_layout(
             common,
             (html! {
                 h1: "Signup";
+                @ if let Some(ref message) = view_model.message {
+                    p(class="message"): message.as_str();
+                }
                 form(action="/signup", method="post") {
                     input(type="email", name="email", placeholder="Email");
                     input(type="password", name="password", placeholder="Password");
