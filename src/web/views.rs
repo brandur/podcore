@@ -37,6 +37,10 @@ pub fn render_layout(view_model: &endpoints::CommonViewModel, content: &str) -> 
                                 a(href="/login"): "Login";
                                 a(href="/signup"): "Signup";
                             }
+                        } else {
+                            p {
+                                a(href="/logout"): "Logout";
+                            }
                         }
                     } else {
                         p: "Not account set";
