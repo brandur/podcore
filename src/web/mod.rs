@@ -131,17 +131,13 @@ impl Server {
                 })
                 .resource("/login", move |r| {
                     r.name(names::LOGIN);
-                    r.middleware(
-                        csrf::CsrfFilter::new().allowed_origin(&csrf_origin_login.clone()),
-                    );
+                    r.middleware(csrf::CsrfFilter::new().allowed_origin(csrf_origin_login));
                     r.method(Method::GET).a(endpoints::login_get::handler);
                     r.method(Method::POST).a(endpoints::login_post::handler);
                 })
                 .resource("/logout", move |r| {
                     r.name(names::LOGOUT);
-                    r.middleware(
-                        csrf::CsrfFilter::new().allowed_origin(&csrf_origin_logout.clone()),
-                    );
+                    r.middleware(csrf::CsrfFilter::new().allowed_origin(csrf_origin_logout));
                     r.method(Method::GET).a(endpoints::logout_get::handler);
                 })
                 .resource("/search", |r| {
@@ -149,9 +145,7 @@ impl Server {
                 })
                 .resource("/signup", move |r| {
                     r.name(names::SIGNUP);
-                    r.middleware(
-                        csrf::CsrfFilter::new().allowed_origin(&csrf_origin_signup.clone()),
-                    );
+                    r.middleware(csrf::CsrfFilter::new().allowed_origin(csrf_origin_signup));
                     r.method(Method::GET).a(endpoints::signup_get::handler);
                     r.method(Method::POST).a(endpoints::signup_post::handler);
                 })
