@@ -350,15 +350,15 @@ pub mod web {
                     .then(move |res| match res {
                         Ok(view_model) => {
                             match view_model {
-                                ViewModel::NoAccount => {
-                                    set_request_account(&log, &mut req, None);
-                                }
-                                ViewModel::ExistingAccount(account) => {
-                                    set_request_account(&log, &mut req, Some(account));
-                                }
-                                ViewModel::NewAccount(account, key) => {
+                                ViewModel::Created(account, key) => {
                                     set_request_account(&log, &mut req, Some(account));
                                     set_session_key(&log, &mut req, &key);
+                                }
+                                ViewModel::Existing(account) => {
+                                    set_request_account(&log, &mut req, Some(account));
+                                }
+                                ViewModel::NotCreated => {
+                                    set_request_account(&log, &mut req, None);
                                 }
                             };
                             future::ok(None)
@@ -477,9 +477,9 @@ pub mod web {
 
         #[derive(Debug)]
         enum ViewModel {
-            ExistingAccount(model::Account),
-            NewAccount(model::Account, model::Key),
-            NoAccount,
+            Created(model::Account, model::Key),
+            Existing(model::Account),
+            NotCreated,
         }
 
         //
@@ -550,16 +550,16 @@ pub mod web {
         fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
             if params.secret.is_some() {
                 let account = mediators::account_key_authenticator::Mediator {
-                    conn:    conn,
+                    conn,
                     last_ip: params.last_ip.as_str(),
-                    secret:  params.secret.as_ref().unwrap().as_str(),
+                    secret: params.secret.as_ref().unwrap().as_str(),
                 }.run(log)?
                     .account;
 
                 // Only has a value if the authenticator passed successfully. We fall through in
                 // the case of an invalid secret being presented.
                 if account.is_some() {
-                    return Ok(ViewModel::ExistingAccount(account.unwrap()));
+                    return Ok(ViewModel::Existing(account.unwrap()));
                 }
             }
 
@@ -569,37 +569,37 @@ pub mod web {
             // for them.
             if params.is_get {
                 debug!(log, "Request method is GET -- not creating account");
-                return Ok(ViewModel::NoAccount);
+                return Ok(ViewModel::NotCreated);
             }
 
             // Don't create an account if the user is in the process of creating an account.
             if params.is_signup {
                 debug!(log, "Request is for signup -- not creating account");
-                return Ok(ViewModel::NoAccount);
+                return Ok(ViewModel::NotCreated);
             }
 
             if is_bot(&params) {
                 debug!(log, "User-Agent is bot -- not creating account");
-                return Ok(ViewModel::NoAccount);
+                return Ok(ViewModel::NotCreated);
             }
 
             let res = mediators::account_creator::Mediator {
-                conn:       conn,
+                conn,
                 create_key: true,
-                email:      None,
-                ephemeral:  true,
-                last_ip:    params.last_ip.as_str(),
+                email: None,
+                ephemeral: true,
+                last_ip: params.last_ip.as_str(),
 
                 // This is very much a middleware only for use on the web, so `mobile` is false.
                 // Mobile clients will create an account explicitly instead of automatically like
                 // we're doing here.
                 mobile: false,
 
-                password:     None,
+                password: None,
                 scrypt_log_n: None,
             }.run(log)?;
 
-            return Ok(ViewModel::NewAccount(res.account, res.key.unwrap()));
+            Ok(ViewModel::Created(res.account, res.key.unwrap()))
         }
 
         fn is_bot(params: &Params) -> bool {
@@ -616,7 +616,7 @@ pub mod web {
                 }
             }
 
-            return false;
+            false
         }
 
         fn set_request_account<S: server::State>(
@@ -687,7 +687,7 @@ pub mod web {
 
                 let view_model = handle_inner(&bootstrap.log, &bootstrap.conn, params).unwrap();
                 match view_model {
-                    ViewModel::NoAccount => (),
+                    ViewModel::NotCreated => (),
                     _ => panic!("Unexpected view model: {:?}", view_model),
                 }
             }
@@ -706,7 +706,7 @@ pub mod web {
 
                 let view_model = handle_inner(&bootstrap.log, &bootstrap.conn, params).unwrap();
                 match view_model {
-                    ViewModel::NoAccount => (),
+                    ViewModel::NotCreated => (),
                     _ => panic!("Unexpected view model: {:?}", view_model),
                 }
             }
@@ -725,7 +725,7 @@ pub mod web {
 
                 let view_model = handle_inner(&bootstrap.log, &bootstrap.conn, params).unwrap();
                 match view_model {
-                    ViewModel::NoAccount => (),
+                    ViewModel::NotCreated => (),
                     _ => panic!("Unexpected view model: {:?}", view_model),
                 }
             }
@@ -744,7 +744,7 @@ pub mod web {
 
                 let view_model = handle_inner(&bootstrap.log, &bootstrap.conn, params).unwrap();
                 match view_model {
-                    ViewModel::NoAccount => (),
+                    ViewModel::NotCreated => (),
                     _ => panic!("Unexpected view model: {:?}", view_model),
                 }
             }
@@ -773,7 +773,7 @@ pub mod web {
 
                 let view_model = handle_inner(&bootstrap.log, &bootstrap.conn, params).unwrap();
                 match view_model {
-                    ViewModel::ExistingAccount(actual_account) => {
+                    ViewModel::Existing(actual_account) => {
                         assert_eq!(account.id, actual_account.id);
                     }
                     _ => panic!("Unexpected view model: {:?}", view_model),
@@ -794,7 +794,7 @@ pub mod web {
 
                 let view_model = handle_inner(&bootstrap.log, &bootstrap.conn, params).unwrap();
                 match view_model {
-                    ViewModel::NewAccount(account, key) => {
+                    ViewModel::Created(account, key) => {
                         assert_ne!(0, account.id);
                         assert_ne!(0, key.id);
                     }

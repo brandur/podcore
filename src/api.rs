@@ -41,9 +41,9 @@ impl Server {
         let server = actix_web::server::new(move || {
             actix_web::App::with_state(server::StateImpl {
                 assets_version: "".to_owned(),
-                log:            log.clone(),
-                scrypt_log_n:   scrypt_log_n,
-                sync_addr:      Some(sync_addr.clone()),
+                log: log.clone(),
+                scrypt_log_n,
+                sync_addr: Some(sync_addr.clone()),
             }).middleware(middleware::log_initializer::Middleware)
                 .middleware(middleware::request_id::Middleware)
                 .middleware(middleware::request_response_logger::Middleware)

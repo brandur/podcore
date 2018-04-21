@@ -50,8 +50,8 @@ impl<'a> Mediator<'a> {
         }
 
         let res = mediators::key_creator::Mediator {
-            account:   account,
-            conn:      self.conn,
+            account,
+            conn: self.conn,
             expire_at: None,
         }.run(log)?;
         Ok(Some(res.key))
@@ -65,12 +65,12 @@ impl<'a> Mediator<'a> {
         time_helpers::log_timed(&log.new(o!("step" => "insert_account")), |_log| {
             diesel::insert_into(schema::account::table)
                 .values(&insertable::Account {
-                    email:           self.email.map(|e| e.to_owned()),
-                    ephemeral:       self.ephemeral,
-                    last_ip:         self.last_ip.to_owned(),
-                    mobile:          self.mobile,
-                    password_scrypt: password_scrypt,
-                    verified:        if self.ephemeral { None } else { Some(false) },
+                    email: self.email.map(|e| e.to_owned()),
+                    ephemeral: self.ephemeral,
+                    last_ip: self.last_ip.to_owned(),
+                    mobile: self.mobile,
+                    password_scrypt,
+                    verified: if self.ephemeral { None } else { Some(false) },
                 })
                 .get_result(self.conn)
                 .chain_err(|| "Error inserting account")
@@ -117,7 +117,7 @@ impl<'a> Mediator<'a> {
     /// that might be taking a long time).
     fn scrypt_password(&self, log: &Logger, password: &str) -> String {
         time_helpers::log_timed(&log.new(o!("step" => "scrypt_password")), |log| {
-            let log_n = self.scrypt_log_n.clone().unwrap();
+            let log_n = self.scrypt_log_n.unwrap();
             debug!(log, "Scrypting password"; "log_n" => log_n);
 
             // We use some unwraps here with the logic that if something is wrong with our

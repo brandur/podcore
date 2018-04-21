@@ -244,9 +244,9 @@ fn build_common<'a>(
     title: &str,
 ) -> CommonViewModel<'a> {
     CommonViewModel {
-        account:        account,
+        account,
         assets_version: req.state().assets_version.clone(),
-        title:          title.to_owned(),
+        title: title.to_owned(),
     }
 }
 
@@ -768,7 +768,7 @@ pub mod login_post {
 
     fn message_invalid(account: Option<model::Account>, message: &str) -> Result<ViewModel> {
         Ok(ViewModel::Invalid(endpoints::login_get::view_model::Ok {
-            account: account,
+            account,
             message: Some(message.to_owned()),
         }))
     }
@@ -1485,7 +1485,7 @@ pub mod signup_post {
 
     fn message_invalid(account: Option<model::Account>, message: &str) -> Result<ViewModel> {
         Ok(ViewModel::Invalid(endpoints::signup_get::view_model::Ok {
-            account: account,
+            account,
             message: Some(message.to_owned()),
         }))
     }

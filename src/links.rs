@@ -77,7 +77,7 @@ fn slug(s: &str) -> Option<String> {
         // Similar case to the above except that a colon is usually appended onto the
         // end of a word, so it's not its own part. We have a special case here
         // to handle that.
-        if part.ends_with(":") {
+        if part.ends_with(':') {
             last_loop = true;
         }
 
@@ -119,7 +119,7 @@ fn slug(s: &str) -> Option<String> {
         }
     }
 
-    return slug;
+    slug
 }
 
 /// Produces a URL-safe "slugged" identifier for a resource which combines its

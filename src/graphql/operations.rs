@@ -95,7 +95,7 @@ graphql_object!(
                     account:    &executor.context().account,
                     conn:       &executor.context().conn(),
                     podcast_id: &podcast_id,
-                    subscribed: subscribed,
+                    subscribed,
                 }
             )?)
         }
@@ -185,9 +185,9 @@ mod mutation {
             let fetches = Fetches::fetch(&log, conn, &coerced)?;
 
             let res = mediators::account_podcast_episode_favoriter::Mediator {
-                account:   &coerced.account,
-                conn:      conn,
-                episode:   &fetches.episode,
+                account: &coerced.account,
+                conn,
+                episode: &fetches.episode,
                 favorited: params.favorited,
             }.run(log)?;
 
@@ -384,11 +384,11 @@ mod mutation {
             let listened_seconds = if params.played { None } else { Some(0) };
 
             let res = mediators::account_podcast_episode_upserter::Mediator {
-                account:          &coerced.account,
-                conn:             conn,
-                episode:          &fetches.episode,
-                listened_seconds: listened_seconds,
-                played:           params.played,
+                account: &coerced.account,
+                conn,
+                episode: &fetches.episode,
+                listened_seconds,
+                played: params.played,
             }.run(log)?;
 
             Ok(resource::AccountPodcastEpisode::from(
@@ -536,10 +536,10 @@ mod mutation {
 
             let account_podcast = if let Some(subscribed) = params.subscribed {
                 let res = mediators::account_podcast_subscriber::Mediator {
-                    account:    params.account,
-                    conn:       params.conn,
-                    podcast:    &podcast,
-                    subscribed: subscribed,
+                    account: params.account,
+                    conn: params.conn,
+                    podcast: &podcast,
+                    subscribed,
                 }.run(log)?;
                 res.account_podcast
             } else {

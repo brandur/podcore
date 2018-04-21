@@ -88,9 +88,9 @@ impl Server {
 
             actix_web::App::with_state(server::StateImpl {
                 assets_version: assets_version.clone(),
-                log:            log.clone(),
-                scrypt_log_n:   scrypt_log_n,
-                sync_addr:      Some(sync_addr.clone()),
+                log: log.clone(),
+                scrypt_log_n,
+                sync_addr: Some(sync_addr.clone()),
             }).middleware(actix_web::middleware::SessionStorage::new(
                 actix_web::middleware::CookieSessionBackend::signed(cookie_secret.as_bytes())
                     .name("podcore-session")
