@@ -148,7 +148,7 @@ pub mod login_get {
                 @ if let Some(ref message) = view_model.message {
                     p(class="message"): message.as_str();
                 }
-                form(action="/login", method="get") {
+                form(action="/login", method="post") {
                     input(type="email", name="email", placeholder="Email");
                     input(type="password", name="password", placeholder="Password");
                     input(type="submit", value="Login");
