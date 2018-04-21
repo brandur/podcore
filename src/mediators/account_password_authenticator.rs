@@ -49,10 +49,9 @@ impl<'a> Mediator<'a> {
 
         info!(log, "Password matched scrypt hash");
         let account = self.touch_account(log, &account)?;
+        let key = self.select_key(log, &account)?;
 
-        Ok(RunResult {
-            account: Some(account),
-        })
+        Ok(RunResult { account, key })
     }
 
     //
@@ -82,6 +81,16 @@ impl<'a> Mediator<'a> {
         })
     }
 
+    fn select_key(&self, log: &Logger, account: &model::Account) -> Result<model::Key> {
+        time_helpers::log_timed(&log.new(o!("step" => "select_key")), |_log| {
+            schema::key::table
+                .filter(schema::key::account_id.eq(account.id))
+                .filter(schema::key::expire_at.is_null())
+                .first(self.conn)
+                .chain_err(|| "Error selecting key")
+        })
+    }
+
     //
     // Private functions
     //
@@ -100,7 +109,8 @@ impl<'a> Mediator<'a> {
 }
 
 pub struct RunResult {
-    pub account: Option<model::Account>,
+    pub account: model::Account,
+    pub key:     model::Key,
 }
 
 //
@@ -140,10 +150,10 @@ mod tests {
             mediator.run(&log).unwrap()
         };
 
-        assert!(res.account.is_some());
-        let account = res.account.unwrap();
-        assert_eq!(bootstrap.account.id, account.id);
-        assert_eq!(TEST_NEW_IP, account.last_ip);
+        assert_eq!(bootstrap.account.id, res.account.id);
+        assert_eq!(TEST_NEW_IP, res.account.last_ip);
+        assert_eq!(bootstrap.key.id, res.key.id);
+        assert_eq!(bootstrap.account.id, res.key.account_id);
     }
 
     #[test]
@@ -231,6 +241,7 @@ mod tests {
         account: model::Account,
         args:    Args<'a>,
         conn:    PooledConnection<ConnectionManager<PgConnection>>,
+        key:     model::Key,
         log:     Logger,
     }
 
@@ -248,12 +259,21 @@ mod tests {
                     mobile:    false,
                 },
             );
+            let key = test_data::key::insert_args(
+                &log,
+                &*conn,
+                test_data::key::Args {
+                    account:   Some(&account),
+                    expire_at: None,
+                },
+            );
 
             TestBootstrap {
                 _common: test_helpers::CommonTestBootstrap::new(),
                 account,
                 args,
                 conn,
+                key,
                 log,
             }
         }

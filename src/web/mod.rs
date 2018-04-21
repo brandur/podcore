@@ -105,6 +105,7 @@ impl Server {
                 .resource("/login", |r| {
                     r.name(names::SIGNUP);
                     r.method(Method::GET).a(endpoints::login_get::handler);
+                    r.method(Method::POST).a(endpoints::login_post::handler);
                 })
                 .resource("/search", |r| {
                     r.method(Method::GET).a(endpoints::search_get::handler)

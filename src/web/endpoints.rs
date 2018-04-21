@@ -629,6 +629,291 @@ pub mod login_get {
     }
 }
 
+pub mod login_post {
+    use errors::*;
+    use mediators;
+    use middleware;
+    use model;
+    use server;
+    use time_helpers;
+    use web::endpoints;
+    use web::views;
+
+    use actix_web::http::StatusCode;
+    use actix_web::{HttpRequest, HttpResponse};
+    use diesel::pg::PgConnection;
+    use futures::future::Future;
+    use serde_urlencoded;
+    use slog::Logger;
+
+    handler_post!();
+    message_handler!();
+
+    //
+    // Params
+    //
+
+    /// Gets the value for the given parameter name or returns a "parameter
+    /// missing" error.
+
+    struct Params {
+        account:  Option<model::Account>,
+        email:    String,
+        last_ip:  String,
+        password: String,
+    }
+
+    impl server::Params for Params {
+        fn build<S: server::State>(
+            _log: &Logger,
+            req: &mut HttpRequest<S>,
+            data: Option<&[u8]>,
+        ) -> Result<Self> {
+            let form = serde_urlencoded::from_bytes::<ParamsForm>(data.unwrap())
+                .map_err(|e| error::bad_request(format!("{}", e)))?;
+
+            // The missing parameter errors are "hard" errors that usually the user will
+            // not see because even empty fields will be submitted with an HTML
+            // form. There's also validations in the mediator that check each
+            // value for content which will pass a more digestible error back
+            // to the user.
+            Ok(Params {
+                account:  server::account(req),
+                email:    form.email.ok_or_else(|| error::missing_parameter("email"))?,
+                last_ip:  server::ip_for_request(req).to_owned(),
+                password: form.password
+                    .ok_or_else(|| error::missing_parameter("password"))?,
+            })
+        }
+    }
+
+    /// A parameters struct solely intended to be a target for form decoding.
+    #[derive(Debug, Deserialize)]
+    struct ParamsForm {
+        email:    Option<String>,
+        password: Option<String>,
+    }
+
+    //
+    // Handler
+    //
+
+    fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
+        let res = mediators::account_password_authenticator::Mediator {
+            conn,
+            email: params.email.as_str(),
+            last_ip: params.last_ip.as_str(),
+            password: params.password.as_str(),
+        }.run(log);
+
+        if let Err(Error(ErrorKind::Validation(message), _)) = res {
+            return message_invalid(params.account, message.as_str());
+        }
+
+        let res = res?;
+        Ok(ViewModel::Ok(view_model::Ok {
+            account: res.account,
+            key:     res.key,
+        }))
+    }
+
+    //
+    // ViewModel
+    //
+
+    #[derive(Debug)]
+    enum ViewModel {
+        Invalid(endpoints::login_get::view_model::Ok),
+        Ok(view_model::Ok),
+    }
+
+    pub mod view_model {
+        use model;
+
+        #[derive(Debug)]
+        pub struct Ok {
+            pub account: model::Account,
+            pub key:     model::Key,
+        }
+    }
+
+    impl endpoints::ViewModel for ViewModel {
+        fn render(
+            &self,
+            log: &Logger,
+            req: &mut HttpRequest<server::StateImpl>,
+        ) -> Result<HttpResponse> {
+            match *self {
+                ViewModel::Invalid(ref view_model) => {
+                    let common = endpoints::build_common(req, view_model.account.as_ref(), "Login");
+                    endpoints::respond_200(views::login_get::render(&common, view_model)?)
+                }
+                ViewModel::Ok(ref view_model) => {
+                    // Note that we don't set the account state for *this* request because we're
+                    // just redirecting right away. If that ever changes, we should set account
+                    // state.
+                    middleware::web::authenticator::set_session_key(log, req, &view_model.key);
+
+                    Ok(HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
+                        .header("Location", "/account")
+                        .finish())
+                }
+            }
+        }
+    }
+
+    //
+    // Private functions
+    //
+
+    fn message_invalid(account: Option<model::Account>, message: &str) -> Result<ViewModel> {
+        Ok(ViewModel::Invalid(endpoints::login_get::view_model::Ok {
+            account: account,
+            message: Some(message.to_owned()),
+        }))
+    }
+
+    //
+    // Tests
+    //
+
+    #[cfg(test)]
+    mod tests {
+        use server::Params as P;
+        use test_data;
+        use test_helpers;
+        use web::endpoints::ViewModel as VM;
+        use web::endpoints::login_post::*;
+
+        use actix_web::test::TestRequest;
+        use r2d2::PooledConnection;
+        use r2d2_diesel::ConnectionManager;
+
+        //
+        // Params tests
+        //
+
+        #[test]
+        fn test_login_post_params() {
+            let bootstrap = TestBootstrap::new();
+            let mut req =
+                TestRequest::with_state(test_helpers::server_state(&bootstrap.log)).finish();
+            let params = Params::build(
+                &bootstrap.log,
+                &mut req,
+                Some(b"email=foo@example.com&password=my-password"),
+            ).unwrap();
+            assert!(params.account.is_none());
+            assert_eq!("foo@example.com", params.email);
+            assert_eq!(test_helpers::REQUEST_IP, params.last_ip);
+            assert_eq!("my-password", params.password);
+        }
+
+        //
+        // Handler tests
+        //
+
+        #[test]
+        fn test_login_post_handler_success() {
+            let bootstrap = TestBootstrap::new();
+
+            let account = test_data::account::insert_args(
+                &bootstrap.log,
+                &*bootstrap.conn,
+                test_data::account::Args {
+                    email:     Some(TEST_EMAIL),
+                    ephemeral: false,
+                    mobile:    false,
+                },
+            );
+            let _key = test_data::key::insert_args(
+                &bootstrap.log,
+                &*bootstrap.conn,
+                test_data::key::Args {
+                    account:   Some(&account),
+                    expire_at: None,
+                },
+            );
+
+            let view_model =
+                handle_inner(&bootstrap.log, &*bootstrap.conn, valid_params()).unwrap();
+
+            match view_model {
+                ViewModel::Ok(_) => (),
+                _ => panic!("Unexpected view model: {:?}", view_model),
+            };
+        }
+
+        //
+        // ViewModel tests
+        //
+
+        #[test]
+        fn test_login_post_view_model_render_invalid() {
+            let bootstrap = TestBootstrap::new();
+            let mut req =
+                TestRequest::with_state(test_helpers::server_state(&bootstrap.log)).finish();
+
+            let view_model = ViewModel::Invalid(endpoints::login_get::view_model::Ok {
+                account: None,
+                message: Some("Invalid action.".to_owned()),
+            });
+            let _response = view_model.render(&bootstrap.log, &mut req).unwrap();
+        }
+
+        #[test]
+        fn test_login_post_view_model_render_ok() {
+            let bootstrap = TestBootstrap::new();
+            let mut req =
+                TestRequest::with_state(test_helpers::server_state(&bootstrap.log)).finish();
+
+            let account = test_data::account::insert(&bootstrap.log, &*bootstrap.conn);
+            let key = test_data::key::insert_args(
+                &bootstrap.log,
+                &*bootstrap.conn,
+                test_data::key::Args {
+                    account:   Some(&account),
+                    expire_at: None,
+                },
+            );
+
+            let view_model = ViewModel::Ok(view_model::Ok { account, key });
+            let _response = view_model.render(&bootstrap.log, &mut req).unwrap();
+        }
+
+        //
+        // Private types/functions
+        //
+
+        static TEST_EMAIL: &str = "foo@example.com";
+
+        struct TestBootstrap {
+            _common: test_helpers::CommonTestBootstrap,
+            conn:    PooledConnection<ConnectionManager<PgConnection>>,
+            log:     Logger,
+        }
+
+        impl TestBootstrap {
+            fn new() -> TestBootstrap {
+                TestBootstrap {
+                    _common: test_helpers::CommonTestBootstrap::new(),
+                    conn:    test_helpers::connection(),
+                    log:     test_helpers::log(),
+                }
+            }
+        }
+
+        fn valid_params() -> Params {
+            Params {
+                account:  None,
+                email:    TEST_EMAIL.to_owned(),
+                last_ip:  test_helpers::REQUEST_IP.to_owned(),
+                password: test_helpers::PASSWORD.to_owned(),
+            }
+        }
+    }
+}
+
 pub mod podcast_get {
     use errors::*;
     use links;
