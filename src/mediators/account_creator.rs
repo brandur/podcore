@@ -33,6 +33,7 @@ impl<'a> Mediator<'a> {
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
         self.params_check()?;
         self.params_validate()?;
+        self.check_existing_account(log)?;
         let password_scrypt = self.password.map(|p| self.scrypt_password(log, p));
         let account = self.insert_account(log, password_scrypt)?;
         let key = self.create_key(log, &account)?;
@@ -80,6 +81,34 @@ impl<'a> Mediator<'a> {
     // Private functions
     //
 
+    /// Checks whether an account with the given email address already exists.
+    ///
+    /// This isn't strictly necessary because our `UNIQUE` constraint will
+    /// protect us regardless, but this gives the user a much better error.
+    fn check_existing_account(&self, log: &Logger) -> Result<()> {
+        if self.email.is_none() {
+            return Ok(());
+        }
+
+        let email = self.email.unwrap();
+
+        let email_exists =
+            time_helpers::log_timed(&log.new(o!("step" => "select_existing_account")), |_log| {
+                diesel::select(diesel::dsl::exists(
+                    schema::account::table.filter(schema::account::email.eq(email)),
+                )).get_result(self.conn)
+                    .chain_err(|| "Error checking account existence")
+            })?;
+
+        if email_exists {
+            bail!(error::validation(
+                "An account with that email already exists."
+            ));
+        }
+
+        Ok(())
+    }
+
     /// Scrypts the account's password (only called if one was supplied).
     ///
     /// Written as a separate step because scrypting can be a very expensive
@@ -115,7 +144,7 @@ impl<'a> Mediator<'a> {
     }
 
     /// Performs validations on parameters. These are user facing.
-    fn params_validate(&mut self) -> Result<()> {
+    fn params_validate(&self) -> Result<()> {
         if self.ephemeral {
             return Ok(());
         }
@@ -168,6 +197,7 @@ pub struct RunResult {
 #[cfg(test)]
 mod tests {
     use mediators::account_creator::*;
+    use test_data;
     use test_helpers;
 
     use r2d2::PooledConnection;
@@ -320,6 +350,35 @@ mod tests {
         let e = res.err().unwrap();
         assert_eq!(
             "Validation failed: Password must be at least 8 characters long.",
+            format!("{}", e).as_str()
+        );
+    }
+
+    #[test]
+    fn test_account_create_invalid_email_exists() {
+        let mut bootstrap = TestBootstrap::new(Args {
+            create_key: false,
+            email:      Some("foo@example.com"),
+            ephemeral:  false,
+            password:   Some("my-password"),
+        });
+
+        let _account = test_data::account::insert_args(
+            &bootstrap.log,
+            &bootstrap.conn,
+            test_data::account::Args {
+                email:     Some("foo@example.com"),
+                ephemeral: false,
+                mobile:    false,
+            },
+        );
+
+        let (mut mediator, log) = bootstrap.mediator();
+        let res = mediator.run(&log);
+        assert!(res.is_err());
+        let e = res.err().unwrap();
+        assert_eq!(
+            "Validation failed: An account with that email already exists.",
             format!("{}", e).as_str()
         );
     }
