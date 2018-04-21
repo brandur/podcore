@@ -360,7 +360,7 @@ pub mod account_get {
         ) -> Result<HttpResponse> {
             match *self {
                 ViewModel::NoAccount => Ok(HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
-                    .header("Location", "/")
+                    .header("Location", "/login")
                     .finish()),
                 ViewModel::Ok(ref view_model) => {
                     let common =
@@ -453,7 +453,7 @@ pub mod account_get {
             let view_model = ViewModel::NoAccount;
             let response = view_model.render(&bootstrap.log, &mut req).unwrap();
             assert_eq!(StatusCode::TEMPORARY_REDIRECT, response.status());
-            assert_eq!("/", response.headers().get("Location").unwrap());
+            assert_eq!("/login", response.headers().get("Location").unwrap());
         }
 
         #[test]
@@ -990,7 +990,8 @@ pub mod login_post {
                     // state.
                     middleware::web::authenticator::set_session_key(log, req, &view_model.key);
 
-                    Ok(HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
+                    // `SEE_OTHER` (303) is needed to convert a `POST` into a `GET`.
+                    Ok(HttpResponse::build(StatusCode::SEE_OTHER)
                         .header("Location", "/account")
                         .finish())
                 }
@@ -1115,7 +1116,7 @@ pub mod login_post {
 
             let view_model = ViewModel::Ok(view_model::Ok { account, key });
             let response = view_model.render(&bootstrap.log, &mut req).unwrap();
-            assert_eq!(StatusCode::TEMPORARY_REDIRECT, response.status());
+            assert_eq!(StatusCode::SEE_OTHER, response.status());
             assert_eq!("/account", response.headers().get("Location").unwrap());
         }
 
@@ -1707,7 +1708,8 @@ pub mod signup_post {
                     // state.
                     middleware::web::authenticator::set_session_key(log, req, &view_model.key);
 
-                    Ok(HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
+                    // `SEE_OTHER` (303) is needed to convert a `POST` into a `GET`.
+                    Ok(HttpResponse::build(StatusCode::SEE_OTHER)
                         .header("Location", "/account")
                         .finish())
                 }
@@ -1861,7 +1863,7 @@ pub mod signup_post {
 
             let view_model = ViewModel::Ok(view_model::Ok { account, key });
             let response = view_model.render(&bootstrap.log, &mut req).unwrap();
-            assert_eq!(StatusCode::TEMPORARY_REDIRECT, response.status());
+            assert_eq!(StatusCode::SEE_OTHER, response.status());
             assert_eq!("/account", response.headers().get("Location").unwrap());
         }
 
