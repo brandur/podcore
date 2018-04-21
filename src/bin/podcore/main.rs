@@ -396,12 +396,16 @@ const POOL_TIMEOUT: u64 = 10;
 
 // A work factor for generating Scrypt hashes, which should in theory be
 // updated as the general availability of processing power moves forward. Go's
-// current recommendation is 2^15, and I've chosen 2^14 for now given that the
-// incentives for state level attackers to attack me are so low (this should
-// still be ~unbreakable).
+// current recommendation is 2^15.
 //
 // A good article on the subject: https://blog.filippo.io/the-scrypt-parameters/
-const SCRYPT_LOG_N: u8 = 14;
+//
+// I've chosen a much lower number for now because holy cow, while the author
+// above claims that 2^15 runs in < 100 ms on a MacBook Pro, even 2^14 takes ~4
+// seconds on my much more powerful machine. I assume this is because the Rust
+// version of scrypt is not well optimized compared to Go (or anything else).
+// This number should be increased as these optimizations occur.
+const SCRYPT_LOG_N: u8 = 11;
 
 // Default port to start servers on.
 const SERVER_PORT: &str = "8080";
