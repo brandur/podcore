@@ -103,6 +103,11 @@ CREATE TABLE account_podcast_episode (
 CREATE UNIQUE INDEX account_podcast_episode_account_podcast_id_episode_id
     ON account_podcast_episode (account_podcast_id, episode_id);
 
+-- An index that can be used to check the most recent episodes that an account
+-- has played, favorited, or updated.
+CREATE INDEX account_podcast_episode_account_podcast_id_updated_at
+    ON account_podcast_episode (account_podcast_id, updated_at);
+
 ---
 --- key
 ---
