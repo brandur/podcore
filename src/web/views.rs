@@ -86,6 +86,35 @@ pub fn render_user_error(code: StatusCode, message: String) -> Result<String> {
 // Views
 //
 
+pub mod account_get {
+    use errors::*;
+    use links;
+    use web::endpoints::account_get::view_model;
+    use web::endpoints::CommonViewModel;
+    use web::views;
+
+    use horrorshow::Template;
+
+    pub fn render(common: &CommonViewModel, view_model: &view_model::Ok) -> Result<String> {
+        views::render_layout(
+            common,
+            (html! {
+                h1: "Your Account";
+                ul {
+                    @ for podcast in &view_model.podcasts {
+                        li {
+                            a(href=links::link_podcast(&podcast)) {
+                                : podcast.title.as_str()
+                            }
+                        }
+                    }
+                }
+            }).into_string()?
+                .as_str(),
+        )
+    }
+}
+
 pub mod episode_get {
     use errors::*;
     use web::endpoints::episode_get::view_model;

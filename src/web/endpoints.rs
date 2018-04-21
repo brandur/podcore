@@ -269,6 +269,107 @@ pub fn respond_200(body: String) -> Result<HttpResponse> {
 // Endpoints
 //
 
+pub mod account_get {
+    use errors::*;
+    use model;
+    use schema;
+    use server;
+    use time_helpers;
+    use web::endpoints;
+    use web::views;
+
+    use actix_web::http::StatusCode;
+    use actix_web::{HttpRequest, HttpResponse};
+    use diesel::prelude::*;
+    use futures::future::Future;
+    use slog::Logger;
+
+    handler!();
+    message_handler!();
+
+    //
+    // Params
+    //
+
+    struct Params {
+        account: Option<model::Account>,
+    }
+
+    impl server::Params for Params {
+        fn build<S: server::State>(
+            _log: &Logger,
+            req: &mut HttpRequest<S>,
+            _data: Option<&[u8]>,
+        ) -> Result<Self> {
+            Ok(Self {
+                account: server::account(req),
+            })
+        }
+    }
+
+    //
+    // Handler
+    //
+
+    fn handle_inner(_log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
+        if params.account.is_none() {
+            return Ok(ViewModel::NoAccount);
+        }
+
+        let account = params.account.unwrap();
+
+        let podcasts: Vec<model::Podcast> = schema::podcast::table
+            .filter(
+                schema::podcast::id.eq_any(
+                    schema::account_podcast::table
+                        .filter(schema::account_podcast::account_id.eq(account.id))
+                        .select(schema::account_podcast::podcast_id),
+                ),
+            )
+            .order(schema::podcast::title)
+            .get_results(conn)?;
+
+        Ok(ViewModel::Ok(view_model::Ok { account, podcasts }))
+    }
+
+    //
+    // ViewModel
+    //
+
+    pub enum ViewModel {
+        NoAccount,
+        Ok(view_model::Ok),
+    }
+
+    pub mod view_model {
+        use model;
+
+        pub struct Ok {
+            pub account:  model::Account,
+            pub podcasts: Vec<model::Podcast>,
+        }
+    }
+
+    impl endpoints::ViewModel for ViewModel {
+        fn render(
+            &self,
+            _log: &Logger,
+            req: &mut HttpRequest<server::StateImpl>,
+        ) -> Result<HttpResponse> {
+            match *self {
+                ViewModel::NoAccount => Ok(HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
+                    .header("Location", "/")
+                    .finish()),
+                ViewModel::Ok(ref view_model) => {
+                    let common =
+                        endpoints::build_common(req, Some(&view_model.account), "Your Account");
+                    endpoints::respond_200(views::account_get::render(&common, view_model)?)
+                }
+            }
+        }
+    }
+}
+
 pub mod episode_get {
     use errors::*;
     use links;
