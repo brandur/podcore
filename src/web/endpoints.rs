@@ -814,7 +814,7 @@ pub mod login_post {
         //
 
         #[test]
-        fn test_login_post_handler_success() {
+        fn test_login_post_handler_ok() {
             let bootstrap = TestBootstrap::new();
 
             let account = test_data::account::insert_args(
@@ -878,7 +878,9 @@ pub mod login_post {
             );
 
             let view_model = ViewModel::Ok(view_model::Ok { account, key });
-            let _response = view_model.render(&bootstrap.log, &mut req).unwrap();
+            let response = view_model.render(&bootstrap.log, &mut req).unwrap();
+            assert_eq!(StatusCode::TEMPORARY_REDIRECT, response.status());
+            assert_eq!("/account", response.headers().get("Location").unwrap());
         }
 
         //
@@ -999,7 +1001,9 @@ pub mod logout_get {
                 TestRequest::with_state(test_helpers::server_state(&bootstrap.log)).finish();
 
             let view_model = ViewModel::Ok(view_model::Ok {});
-            let _response = view_model.render(&bootstrap.log, &mut req).unwrap();
+            let response = view_model.render(&bootstrap.log, &mut req).unwrap();
+            assert_eq!(StatusCode::TEMPORARY_REDIRECT, response.status());
+            assert_eq!("/", response.headers().get("Location").unwrap());
         }
 
         //
@@ -1529,7 +1533,7 @@ pub mod signup_post {
         //
 
         #[test]
-        fn test_signup_post_handler_success() {
+        fn test_signup_post_handler_ok() {
             let bootstrap = TestBootstrap::new();
 
             let view_model =
@@ -1620,7 +1624,9 @@ pub mod signup_post {
             );
 
             let view_model = ViewModel::Ok(view_model::Ok { account, key });
-            let _response = view_model.render(&bootstrap.log, &mut req).unwrap();
+            let response = view_model.render(&bootstrap.log, &mut req).unwrap();
+            assert_eq!(StatusCode::TEMPORARY_REDIRECT, response.status());
+            assert_eq!("/account", response.headers().get("Location").unwrap());
         }
 
         //
