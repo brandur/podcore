@@ -170,7 +170,7 @@ pub struct Key {
     pub secret:     String,
 }
 
-#[derive(Queryable)]
+#[derive(Debug, Queryable)]
 pub struct Podcast {
     pub id:                i64,
     pub image_url:         Option<String>,

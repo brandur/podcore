@@ -336,6 +336,7 @@ pub mod account_get {
     // ViewModel
     //
 
+    #[derive(Debug)]
     pub enum ViewModel {
         NoAccount,
         Ok(view_model::Ok),
@@ -344,6 +345,7 @@ pub mod account_get {
     pub mod view_model {
         use model;
 
+        #[derive(Debug)]
         pub struct Ok {
             pub account:  model::Account,
             pub podcasts: Vec<model::Podcast>,
@@ -365,6 +367,138 @@ pub mod account_get {
                         endpoints::build_common(req, Some(&view_model.account), "Your Account");
                     endpoints::respond_200(views::account_get::render(&common, view_model)?)
                 }
+            }
+        }
+    }
+
+    //
+    // Tests
+    //
+
+    #[cfg(test)]
+    mod tests {
+        use server::Params as P;
+        use test_data;
+        use test_helpers;
+        use web::endpoints::account_get::*;
+        use web::endpoints::ViewModel as VM;
+
+        use actix_web::test::TestRequest;
+        use r2d2::PooledConnection;
+        use r2d2_diesel::ConnectionManager;
+
+        //
+        // Params tests
+        //
+
+        #[test]
+        fn test_account_get_params() {
+            let bootstrap = TestBootstrap::new();
+            let mut req =
+                TestRequest::with_state(test_helpers::server_state(&bootstrap.log)).finish();
+            let params = Params::build(&bootstrap.log, &mut req, None).unwrap();
+            assert!(params.account.is_none());
+        }
+
+        //
+        // Handler tests
+        //
+
+        #[test]
+        fn test_account_get_handler_ok() {
+            let bootstrap = TestBootstrap::new();
+
+            let view_model = handle_inner(
+                &bootstrap.log,
+                &*bootstrap.conn,
+                valid_params(&bootstrap.account),
+            ).unwrap();
+
+            match view_model {
+                ViewModel::Ok(endpoints::account_get::view_model::Ok { account, podcasts }) => {
+                    assert_eq!(bootstrap.account.id, account.id);
+                    assert_eq!(0, podcasts.len());
+                }
+                _ => panic!("Unexpected view model: {:?}", view_model),
+            };
+        }
+
+        // Notably, we don't test *all* validations because most of them are already
+        // tested in the mediator's suite.
+        #[test]
+        fn test_account_get_handler_no_account() {
+            let bootstrap = TestBootstrap::new();
+
+            let mut params = valid_params(&bootstrap.account);
+            params.account = None;
+
+            let view_model = handle_inner(&bootstrap.log, &*bootstrap.conn, params).unwrap();
+
+            match view_model {
+                ViewModel::NoAccount => (),
+                _ => panic!("Unexpected view model: {:?}", view_model),
+            };
+        }
+
+        //
+        // ViewModel tests
+        //
+
+        #[test]
+        fn test_account_get_view_model_render_no_account() {
+            let bootstrap = TestBootstrap::new();
+            let mut req =
+                TestRequest::with_state(test_helpers::server_state(&bootstrap.log)).finish();
+
+            let view_model = ViewModel::NoAccount;
+            let response = view_model.render(&bootstrap.log, &mut req).unwrap();
+            assert_eq!(StatusCode::TEMPORARY_REDIRECT, response.status());
+            assert_eq!("/", response.headers().get("Location").unwrap());
+        }
+
+        #[test]
+        fn test_account_get_view_model_render_ok() {
+            let bootstrap = TestBootstrap::new();
+            let mut req =
+                TestRequest::with_state(test_helpers::server_state(&bootstrap.log)).finish();
+
+            let view_model = ViewModel::Ok(view_model::Ok {
+                account:  bootstrap.account,
+                podcasts: Vec::new(),
+            });
+            let _response = view_model.render(&bootstrap.log, &mut req).unwrap();
+        }
+
+        //
+        // Private types/functions
+        //
+
+        struct TestBootstrap {
+            _common: test_helpers::CommonTestBootstrap,
+            account: model::Account,
+            conn:    PooledConnection<ConnectionManager<PgConnection>>,
+            log:     Logger,
+        }
+
+        impl TestBootstrap {
+            fn new() -> TestBootstrap {
+                let log = test_helpers::log();
+                let conn = test_helpers::connection();
+
+                let account = test_data::account::insert(&log, &*conn);
+
+                TestBootstrap {
+                    _common: test_helpers::CommonTestBootstrap::new(),
+                    account,
+                    conn,
+                    log,
+                }
+            }
+        }
+
+        fn valid_params(account: &model::Account) -> Params {
+            Params {
+                account: Some(account.clone()),
             }
         }
     }
