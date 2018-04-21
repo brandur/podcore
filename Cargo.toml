@@ -28,7 +28,7 @@ chrono = "0.4"
 clap = "*"
 diesel = { version = "1.0.0-rc1", features = ["chrono", "postgres"] }
 diesel_migrations = "*"
-error-chain = { version = "*" }
+error-chain = "*"
 flate2 = "*"
 futures = "0.1"
 horrorshow = "*"
@@ -51,8 +51,8 @@ openssl-sys = "0.9"
 
 percent-encoding = "*"
 quick-xml = "0.10.1"
-r2d2 = { version = "*" }
-r2d2-diesel = { version = "1.0.0-rc1" }
+r2d2 = "*"
+r2d2-diesel = "1.0.0-rc1"
 
 # 0.5 has been in prerelease forever and contains some useful features. I try
 # not to use non-stable APIs, but lock to it for now.
@@ -71,14 +71,14 @@ rand_core = "=0.1.0-pre.0"
 
 regex = "0.2"
 rust-crypto = "^0.2"
-serde = { version = "1.0.24" }
+serde = "1.0.24"
 serde_derive = "*"
-serde_json = { version = "1.0.8" }
+serde_json = "1.0.8"
 serde_urlencoded = "*"
 slog = "*"
 slog-async = "*"
 slog-term = "*"
-time = { version = "*" }
+time = "*"
 tokio-core = "0.1"
 url = "*"
 uuid = { version = "0.5", features = ["v4"] }
