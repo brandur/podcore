@@ -9,9 +9,9 @@ use server;
 
 use actix;
 use actix_web;
-use actix_web::HttpResponse;
 use actix_web::http::Method;
 use actix_web::middleware::csrf;
+use actix_web::HttpResponse;
 use diesel::pg::PgConnection;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;

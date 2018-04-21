@@ -1,8 +1,8 @@
 use errors::*;
 use web::views;
 
-use actix_web::HttpResponse;
 use actix_web::http::StatusCode;
+use actix_web::HttpResponse;
 use slog::Logger;
 
 /// Renders an internal error to a human compatible HTML form.

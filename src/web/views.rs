@@ -88,12 +88,12 @@ pub fn render_user_error(code: StatusCode, message: String) -> Result<String> {
 
 pub mod episode_get {
     use errors::*;
-    use web::endpoints::CommonViewModel;
     use web::endpoints::episode_get::view_model;
+    use web::endpoints::CommonViewModel;
     use web::views;
 
-    use horrorshow::Template;
     use horrorshow::prelude::*;
+    use horrorshow::Template;
 
     pub fn render(common: &CommonViewModel, view_model: &view_model::Ok) -> Result<String> {
         views::render_layout(
@@ -138,8 +138,8 @@ pub mod episode_get {
 
 pub mod login_get {
     use errors::*;
-    use web::endpoints::CommonViewModel;
     use web::endpoints::login_get::view_model;
+    use web::endpoints::CommonViewModel;
     use web::views;
 
     use horrorshow::Template;
@@ -166,12 +166,12 @@ pub mod login_get {
 pub mod podcast_get {
     use errors::*;
     use links;
-    use web::endpoints::CommonViewModel;
     use web::endpoints::podcast_get::view_model;
+    use web::endpoints::CommonViewModel;
     use web::views;
 
-    use horrorshow::Template;
     use horrorshow::prelude::*;
+    use horrorshow::Template;
 
     pub fn render(common: &CommonViewModel, view_model: &view_model::Ok) -> Result<String> {
         views::render_layout(
@@ -208,8 +208,8 @@ pub mod podcast_get {
 pub mod search_get {
     use errors::*;
     use links;
-    use web::endpoints::CommonViewModel;
     use web::endpoints::search_get::view_model;
+    use web::endpoints::CommonViewModel;
     use web::views;
 
     use horrorshow::Template;
@@ -253,8 +253,8 @@ pub mod search_get {
 
 pub mod signup_get {
     use errors::*;
-    use web::endpoints::CommonViewModel;
     use web::endpoints::signup_get::view_model;
+    use web::endpoints::CommonViewModel;
     use web::views;
 
     use horrorshow::Template;

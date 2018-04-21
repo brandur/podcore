@@ -8,8 +8,8 @@ use chrono::{DateTime, Utc};
 use diesel;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
-use rand::EntropyRng;
 use rand::distributions::Alphanumeric;
+use rand::EntropyRng;
 use slog::Logger;
 use std::iter;
 

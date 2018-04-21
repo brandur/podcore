@@ -2,8 +2,8 @@ pub mod log_initializer {
     use server;
 
     use actix_web;
-    use actix_web::HttpRequest;
     use actix_web::middleware::Started;
+    use actix_web::HttpRequest;
     use slog::Logger;
 
     pub struct Middleware;
@@ -34,8 +34,8 @@ pub mod log_initializer {
         use middleware::log_initializer::*;
         use test_helpers::IntegrationTestBootstrap;
 
-        use actix_web::HttpResponse;
         use actix_web::http::{Method, StatusCode};
+        use actix_web::HttpResponse;
 
         #[test]
         fn test_middleware_log_initializer_integration() {
@@ -57,8 +57,8 @@ pub mod request_id {
     use server;
 
     use actix_web;
-    use actix_web::HttpRequest;
     use actix_web::middleware::Started;
+    use actix_web::HttpRequest;
 
     use uuid::Uuid;
 
@@ -92,8 +92,8 @@ pub mod request_id {
         use middleware::request_id::*;
         use test_helpers::IntegrationTestBootstrap;
 
-        use actix_web::HttpResponse;
         use actix_web::http::{Method, StatusCode};
+        use actix_web::HttpResponse;
 
         #[test]
         fn test_middleware_request_id_integration() {
@@ -164,8 +164,8 @@ pub mod request_response_logger {
         use middleware::request_response_logger::*;
         use test_helpers::IntegrationTestBootstrap;
 
-        use actix_web::HttpResponse;
         use actix_web::http::{Method, StatusCode};
+        use actix_web::HttpResponse;
 
         #[test]
         fn test_middleware_request_response_logger_integration() {
@@ -190,8 +190,8 @@ pub mod api {
         use server;
 
         use actix_web;
-        use actix_web::HttpRequest;
         use actix_web::middleware::Started;
+        use actix_web::HttpRequest;
 
         pub struct Middleware;
 
@@ -228,8 +228,8 @@ pub mod test {
         use server;
 
         use actix_web;
-        use actix_web::HttpRequest;
         use actix_web::middleware::Started;
+        use actix_web::HttpRequest;
 
         /// The test authentication middleware.
         ///
@@ -290,10 +290,10 @@ pub mod web {
         use web;
 
         use actix_web;
-        use actix_web::HttpRequest;
         use actix_web::http::Method;
         use actix_web::middleware::RequestSession;
         use actix_web::middleware::Started;
+        use actix_web::HttpRequest;
         use diesel::pg::PgConnection;
         use futures::future;
         use slog::Logger;
@@ -645,8 +645,8 @@ pub mod web {
             use test_helpers;
             use test_helpers::IntegrationTestBootstrap;
 
-            use actix_web::HttpResponse;
             use actix_web::http::{Method, StatusCode};
+            use actix_web::HttpResponse;
             use r2d2::PooledConnection;
             use r2d2_diesel::ConnectionManager;
 

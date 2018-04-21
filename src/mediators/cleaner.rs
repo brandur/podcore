@@ -264,11 +264,11 @@ mod tests {
     use test_helpers;
 
     use chrono::Utc;
-    use flate2::Compression;
     use flate2::write::GzEncoder;
+    use flate2::Compression;
     use r2d2::PooledConnection;
-    use rand::Rng;
     use rand::distributions::Alphanumeric;
+    use rand::Rng;
     use std::io::prelude::*;
     use std::iter;
     use time::Duration;

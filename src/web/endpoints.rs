@@ -571,8 +571,8 @@ pub mod login_get {
     #[cfg(test)]
     mod tests {
         use test_helpers;
-        use web::endpoints::ViewModel as VM;
         use web::endpoints::login_get::*;
+        use web::endpoints::ViewModel as VM;
 
         use actix_web::test::TestRequest;
 
@@ -782,8 +782,8 @@ pub mod login_post {
         use server::Params as P;
         use test_data;
         use test_helpers;
-        use web::endpoints::ViewModel as VM;
         use web::endpoints::login_post::*;
+        use web::endpoints::ViewModel as VM;
 
         use actix_web::test::TestRequest;
         use r2d2::PooledConnection;
@@ -973,8 +973,8 @@ pub mod logout_get {
     #[cfg(test)]
     mod tests {
         use test_helpers;
-        use web::endpoints::ViewModel as VM;
         use web::endpoints::logout_get::*;
+        use web::endpoints::ViewModel as VM;
 
         use actix_web::test::TestRequest;
 
@@ -1499,8 +1499,8 @@ pub mod signup_post {
         use server::Params as P;
         use test_data;
         use test_helpers;
-        use web::endpoints::ViewModel as VM;
         use web::endpoints::signup_post::*;
+        use web::endpoints::ViewModel as VM;
 
         use actix_web::test::TestRequest;
         use r2d2::PooledConnection;
@@ -1725,8 +1725,8 @@ pub mod signup_get {
     #[cfg(test)]
     mod tests {
         use test_helpers;
-        use web::endpoints::ViewModel as VM;
         use web::endpoints::signup_get::*;
+        use web::endpoints::ViewModel as VM;
 
         use actix_web::test::TestRequest;
 

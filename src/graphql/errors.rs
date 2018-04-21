@@ -1,7 +1,7 @@
 use errors::*;
 
-use actix_web::HttpResponse;
 use actix_web::http::StatusCode;
+use actix_web::HttpResponse;
 use serde_json;
 use slog::Logger;
 

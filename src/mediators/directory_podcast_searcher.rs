@@ -7,8 +7,8 @@ use time_helpers;
 
 use chrono::Utc;
 use diesel;
-use diesel::pg::PgConnection;
 use diesel::pg::upsert::excluded;
+use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use hyper::{Method, Request, StatusCode, Uri};
 use schema;

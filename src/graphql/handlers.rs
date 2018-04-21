@@ -8,8 +8,8 @@ use server::State;
 use time_helpers;
 
 use actix;
-use actix_web::AsyncResponder;
 use actix_web::http::StatusCode;
+use actix_web::AsyncResponder;
 use actix_web::{HttpRequest, HttpResponse};
 use bytes::Bytes;
 use futures::future;
