@@ -18,6 +18,8 @@ spec:
         ports:
         - containerPort: 8083
         env:
+        - name: CSRF_ORIGIN
+          value: "http://podcore.brandur.org"
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
