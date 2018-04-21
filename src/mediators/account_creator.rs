@@ -33,7 +33,8 @@ impl<'a> Mediator<'a> {
     fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
         self.params_check()?;
         self.params_validate()?;
-        let account = self.insert_account(log)?;
+        let password_scrypt = self.password.map(|p| self.scrypt_password(log, p));
+        let account = self.insert_account(log, password_scrypt)?;
         let key = self.create_key(log, &account)?;
         Ok(RunResult { account, key })
     }
@@ -55,7 +56,11 @@ impl<'a> Mediator<'a> {
         Ok(Some(res.key))
     }
 
-    fn insert_account(&mut self, log: &Logger) -> Result<model::Account> {
+    fn insert_account(
+        &mut self,
+        log: &Logger,
+        password_scrypt: Option<String>,
+    ) -> Result<model::Account> {
         time_helpers::log_timed(&log.new(o!("step" => "insert_account")), |_log| {
             diesel::insert_into(schema::account::table)
                 .values(&insertable::Account {
@@ -63,7 +68,7 @@ impl<'a> Mediator<'a> {
                     ephemeral:       self.ephemeral,
                     last_ip:         self.last_ip.to_owned(),
                     mobile:          self.mobile,
-                    password_scrypt: self.password.map(|p| self.scrypt_password(p)),
+                    password_scrypt: password_scrypt,
                     verified:        if self.ephemeral { None } else { Some(false) },
                 })
                 .get_result(self.conn)
@@ -75,13 +80,21 @@ impl<'a> Mediator<'a> {
     // Private functions
     //
 
-    fn scrypt_password(&self, password: &str) -> String {
-        // We use some unwraps here with the logic that if something is wrong with our
-        // scrypt generation, let's just blow up and find out about it.
-        scrypt::scrypt_simple(
-            password,
-            &scrypt::ScryptParams::new(self.scrypt_log_n.clone().unwrap(), 8, 1),
-        ).unwrap()
+    /// Scrypts the account's password (only called if one was supplied).
+    ///
+    /// Written as a separate step because scrypting can be a very expensive
+    /// operation (easily on the order of full seconds with a high enough
+    /// `log_n` value, and this gives us some timing insight into an scrypt
+    /// that might be taking a long time).
+    fn scrypt_password(&self, log: &Logger, password: &str) -> String {
+        time_helpers::log_timed(&log.new(o!("step" => "scrypt_password")), |log| {
+            let log_n = self.scrypt_log_n.clone().unwrap();
+            debug!(log, "Scrypting password"; "log_n" => log_n);
+
+            // We use some unwraps here with the logic that if something is wrong with our
+            // scrypt generation, let's just blow up and find out about it.
+            scrypt::scrypt_simple(password, &scrypt::ScryptParams::new(log_n, 8, 1)).unwrap()
+        })
     }
 
     /// Performs general checks on parameters. Not intended to be user-facing.
