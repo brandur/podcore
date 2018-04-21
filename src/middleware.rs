@@ -398,8 +398,16 @@ pub mod web {
                 .and_then(|e| e.account.as_ref())
         }
 
+        /// Removes a key from the session (used at logout).
+        #[inline]
+        pub fn remove_session_key<S: server::State>(log: &Logger, req: &mut HttpRequest<S>) {
+            debug!(log, "Removing session secret");
+            req.session().remove(COOKIE_KEY_SECRET);
+        }
+
         /// Sets a secret to a client's session/cookie. Logs an error if there
         /// was a problem doing so.
+        #[inline]
         pub fn set_session_key<S: server::State>(
             log: &Logger,
             req: &mut HttpRequest<S>,

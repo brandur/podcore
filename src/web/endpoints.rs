@@ -914,6 +914,114 @@ pub mod login_post {
     }
 }
 
+pub mod logout_get {
+    use errors::*;
+    use middleware;
+    use server;
+    use web::endpoints;
+
+    use actix_web::http::StatusCode;
+    use actix_web::{HttpRequest, HttpResponse};
+    use futures::future::Future;
+    use slog::Logger;
+
+    handler_noop!();
+
+    //
+    // ViewModel
+    //
+
+    #[derive(Debug)]
+    pub enum ViewModel {
+        Ok(view_model::Ok),
+    }
+
+    pub mod view_model {
+        #[derive(Debug)]
+        pub struct Ok {}
+    }
+
+    impl ViewModel {
+        fn build<S: server::State>(_log: &Logger, _req: &mut HttpRequest<S>) -> ViewModel {
+            ViewModel::Ok(view_model::Ok {})
+        }
+    }
+
+    impl endpoints::ViewModel for ViewModel {
+        fn render(
+            &self,
+            log: &Logger,
+            req: &mut HttpRequest<server::StateImpl>,
+        ) -> Result<HttpResponse> {
+            match *self {
+                ViewModel::Ok(ref _view_model) => {
+                    middleware::web::authenticator::remove_session_key(log, req);
+                    Ok(HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
+                        .header("Location", "/")
+                        .finish())
+                }
+            }
+        }
+    }
+
+    //
+    // Tests
+    //
+
+    #[cfg(test)]
+    mod tests {
+        use test_helpers;
+        use web::endpoints::ViewModel as VM;
+        use web::endpoints::logout_get::*;
+
+        use actix_web::test::TestRequest;
+
+        //
+        // ViewModel tests
+        //
+
+        #[test]
+        fn test_logout_get_view_model_build() {
+            let bootstrap = TestBootstrap::new();
+            let mut req =
+                TestRequest::with_state(test_helpers::server_state(&bootstrap.log)).finish();
+            let view_model = ViewModel::build(&bootstrap.log, &mut req);
+
+            match view_model {
+                ViewModel::Ok(view_model::Ok {}) => (),
+            };
+        }
+
+        #[test]
+        fn test_logout_get_view_model_render_ok() {
+            let bootstrap = TestBootstrap::new();
+            let mut req =
+                TestRequest::with_state(test_helpers::server_state(&bootstrap.log)).finish();
+
+            let view_model = ViewModel::Ok(view_model::Ok {});
+            let _response = view_model.render(&bootstrap.log, &mut req).unwrap();
+        }
+
+        //
+        // Private types/functions
+        //
+
+        struct TestBootstrap {
+            _common: test_helpers::CommonTestBootstrap,
+            log:     Logger,
+        }
+
+        impl TestBootstrap {
+            fn new() -> TestBootstrap {
+                TestBootstrap {
+                    _common: test_helpers::CommonTestBootstrap::new(),
+                    log:     test_helpers::log(),
+                }
+            }
+        }
+    }
+}
+
 pub mod podcast_get {
     use errors::*;
     use links;

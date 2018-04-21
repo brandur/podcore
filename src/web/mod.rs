@@ -22,7 +22,12 @@ use time::Duration;
 ///
 /// Please always use this for resource URL names, and for resource URL names
 /// *only*.
+///
+/// It's probably worth checking somewhere down the road that these are
+/// actually being used and useful. I suspect they aren't.
 pub mod names {
+    pub static LOGIN: &str = "login";
+    pub static LOGOUT: &str = "logout";
     pub static SIGNUP: &str = "signup";
 }
 
@@ -103,9 +108,13 @@ impl Server {
                     r.method(Method::GET).f(|_req| HttpResponse::Ok())
                 })
                 .resource("/login", |r| {
-                    r.name(names::SIGNUP);
+                    r.name(names::LOGIN);
                     r.method(Method::GET).a(endpoints::login_get::handler);
                     r.method(Method::POST).a(endpoints::login_post::handler);
+                })
+                .resource("/logout", |r| {
+                    r.name(names::LOGOUT);
+                    r.method(Method::GET).a(endpoints::logout_get::handler);
                 })
                 .resource("/search", |r| {
                     r.method(Method::GET).a(endpoints::search_get::handler)
