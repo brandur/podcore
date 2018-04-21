@@ -58,19 +58,6 @@ impl<'a> Mediator<'a> {
     // Steps
     //
 
-    fn touch_account(&mut self, log: &Logger, account: &model::Account) -> Result<model::Account> {
-        time_helpers::log_timed(&log.new(o!("step" => "touch_account")), |_log| {
-            diesel::update(schema::account::table)
-                .filter(schema::account::id.eq(account.id))
-                .set((
-                    schema::account::last_ip.eq(self.last_ip),
-                    schema::account::last_seen_at.eq(Utc::now()),
-                ))
-                .get_result(self.conn)
-                .chain_err(|| "Error touching account")
-        })
-    }
-
     fn select_account(&mut self, log: &Logger, email: &str) -> Result<Option<model::Account>> {
         time_helpers::log_timed(&log.new(o!("step" => "select_account")), |_log| {
             schema::account::table
@@ -88,6 +75,19 @@ impl<'a> Mediator<'a> {
                 .filter(schema::key::expire_at.is_null())
                 .first(self.conn)
                 .chain_err(|| "Error selecting key")
+        })
+    }
+
+    fn touch_account(&mut self, log: &Logger, account: &model::Account) -> Result<model::Account> {
+        time_helpers::log_timed(&log.new(o!("step" => "touch_account")), |_log| {
+            diesel::update(schema::account::table)
+                .filter(schema::account::id.eq(account.id))
+                .set((
+                    schema::account::last_ip.eq(self.last_ip),
+                    schema::account::last_seen_at.eq(Utc::now()),
+                ))
+                .get_result(self.conn)
+                .chain_err(|| "Error touching account")
         })
     }
 
