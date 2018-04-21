@@ -100,6 +100,7 @@ pub mod account_get {
             common,
             (html! {
                 h1: "Your Account";
+                p: "Your subscriptions:";
                 ul {
                     @ for podcast in &view_model.podcasts {
                         li {
