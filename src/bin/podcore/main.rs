@@ -353,7 +353,7 @@ fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
     let csrf_origin = env::var("CSRF_ORIGIN").unwrap_or_else(|_| {
         let origin = format!("http://localhost:{}", port);
         info!(log, "Set localhost origin; CSRF will not work for remote hosts";
-            "origin" => origin.as_str());
+            "allowed_origin" => origin.as_str());
         origin
     });
     let scrypt_log_n = env::var("SCRYPT_LOG_N")
