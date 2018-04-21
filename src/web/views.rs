@@ -35,7 +35,9 @@ pub fn render_layout(
             body {
                 span {
                     @ if let Some(ref account) = view_model.account {
-                        p: format_args!("Account ID: {}", account.id);
+                        p {
+                            a(href="/account"): format_args!("Account ID: {}", account.id);
+                        }
                         @ if account.ephemeral {
                             p {
                                 a(href="/login"): "Login";
