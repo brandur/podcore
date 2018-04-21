@@ -409,12 +409,17 @@ const POOL_TIMEOUT: u64 = 10;
 //
 // A good article on the subject: https://blog.filippo.io/the-scrypt-parameters/
 //
-// I've chosen a much lower number for now because holy cow, while the author
-// above claims that 2^15 runs in < 100 ms on a MacBook Pro, even 2^14 takes ~4
-// seconds on my much more powerful machine. I assume this is because the Rust
-// version of scrypt is not well optimized compared to Go (or anything else).
-// This number should be increased as these optimizations occur.
-const SCRYPT_LOG_N: u8 = 11;
+// Just to guarantee that Scrypt operations stay < 100 ms on the commodity
+// hardware that I'm likely to be running on, I'm choosing 2^14 instead. This
+// should still be secure against attacks by most sizes of malicious actors in
+// the world (and probably all sizes).
+//
+// One caveat here is that Scrypt in Rust only gets fast with a release build,
+// and even 2^14 takes ~4 seconds per operation in my 2018 iMac Pro in debug.
+// This is pretty annoying for development, so the default `.envrc.sample`
+// comes with an override that's much lower to keep things fast. For production,
+// we should fall back to this default.
+const SCRYPT_LOG_N: u8 = 14;
 
 // Default port to start servers on.
 const SERVER_PORT: &str = "8080";

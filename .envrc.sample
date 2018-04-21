@@ -2,5 +2,6 @@ export COOKIE_SECURE=false
 export DATABASE_URL=postgres://localhost/podcore
 export PODCORE_ENV=development
 export RUST_BACKTRACE=1
+export SCRYPT_LOG_N=11
 export SENTRY_URL=
 export TEST_DATABASE_URL=postgres://localhost/podcore-test
