@@ -285,7 +285,6 @@ pub mod web {
         use model;
         use server;
         use server::Params as P;
-        use std::iter;
         use time_helpers;
         use web;
 
@@ -443,10 +442,7 @@ pub mod web {
                 use actix_web::HttpMessage;
                 Ok(Params {
                     is_get:     *req.method() == Method::GET,
-                    is_signup:  req.path()
-                        == req.url_for(web::names::SIGNUP, iter::empty::<&str>())
-                            .unwrap()
-                            .as_str(),
+                    is_signup:  req.path() == "/signup",
                     last_ip:    server::ip_for_request(req).to_owned(),
                     secret:     req.session()
                         .get::<String>(COOKIE_KEY_SECRET)
@@ -658,10 +654,6 @@ pub mod web {
                     app.middleware(middleware::log_initializer::Middleware)
                         .middleware(Middleware)
                         .resource("/signup", |r| {
-                            // We rely on actix-web's URL generation scheme to create a URL for us.
-                            // Since we're not using the actual web server, we need to create a
-                            // fake target for our signup page.
-                            r.name(web::names::SIGNUP);
                             r.method(Method::POST).h(|_req| HttpResponse::Ok());
                         })
                         .handler(|_req| HttpResponse::Ok())

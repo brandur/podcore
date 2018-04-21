@@ -18,21 +18,6 @@ use r2d2_diesel::ConnectionManager;
 use slog::Logger;
 use time::Duration;
 
-/// Contains names for resource URLs so that we don't have to stringly type them
-/// to the same extent.
-///
-/// Please always use this for resource URL names, and for resource URL names
-/// *only*.
-///
-/// It's probably worth checking somewhere down the road that these are
-/// actually being used and useful. I suspect they aren't.
-pub mod names {
-    pub static ACCOUNT: &str = "account";
-    pub static LOGIN: &str = "login";
-    pub static LOGOUT: &str = "logout";
-    pub static SIGNUP: &str = "signup";
-}
-
 pub struct Server {
     pub assets_version: String,
 
@@ -106,7 +91,6 @@ impl Server {
                 .middleware(middleware::web::authenticator::Middleware)
                 .resource("/", |r| r.method(Method::GET).f(|_req| HttpResponse::Ok()))
                 .resource("/account", move |r| {
-                    r.name(names::ACCOUNT);
                     r.method(Method::GET).a(endpoints::account_get::handler);
                 })
                 .resource("/directory-podcasts/{id}", |r| {
@@ -130,13 +114,11 @@ impl Server {
                     r.method(Method::GET).f(|_req| HttpResponse::Ok())
                 })
                 .resource("/login", move |r| {
-                    r.name(names::LOGIN);
                     r.middleware(csrf::CsrfFilter::new().allowed_origin(csrf_origin_login));
                     r.method(Method::GET).a(endpoints::login_get::handler);
                     r.method(Method::POST).a(endpoints::login_post::handler);
                 })
                 .resource("/logout", move |r| {
-                    r.name(names::LOGOUT);
                     r.middleware(csrf::CsrfFilter::new().allowed_origin(csrf_origin_logout));
                     r.method(Method::GET).a(endpoints::logout_get::handler);
                 })
@@ -144,7 +126,6 @@ impl Server {
                     r.method(Method::GET).a(endpoints::search_get::handler)
                 })
                 .resource("/signup", move |r| {
-                    r.name(names::SIGNUP);
                     r.middleware(csrf::CsrfFilter::new().allowed_origin(csrf_origin_signup));
                     r.method(Method::GET).a(endpoints::signup_get::handler);
                     r.method(Method::POST).a(endpoints::signup_post::handler);
