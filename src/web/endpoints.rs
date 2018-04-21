@@ -229,7 +229,6 @@ pub trait ViewModel {
 pub struct CommonViewModel<'a> {
     pub account:        Option<&'a model::Account>,
     pub assets_version: String,
-    pub title:          String,
 }
 
 //
@@ -241,12 +240,10 @@ pub struct CommonViewModel<'a> {
 fn build_common<'a>(
     req: &HttpRequest<server::StateImpl>,
     account: Option<&'a model::Account>,
-    title: &str,
 ) -> CommonViewModel<'a> {
     CommonViewModel {
         account,
         assets_version: req.state().assets_version.clone(),
-        title: title.to_owned(),
     }
 }
 
@@ -363,8 +360,7 @@ pub mod account_get {
                     .header("Location", "/login")
                     .finish()),
                 ViewModel::Ok(ref view_model) => {
-                    let common =
-                        endpoints::build_common(req, Some(&view_model.account), "Your Account");
+                    let common = endpoints::build_common(req, Some(&view_model.account));
                     endpoints::respond_200(views::account_get::render(&common, view_model)?)
                 }
             }
@@ -636,11 +632,7 @@ pub mod episode_get {
         ) -> Result<HttpResponse> {
             match *self {
                 ViewModel::Ok(ref view_model) => {
-                    let common = endpoints::build_common(
-                        req,
-                        view_model.account.as_ref(),
-                        &format!("Episode: {}", view_model.episode.title.as_str()),
-                    );
+                    let common = endpoints::build_common(req, view_model.account.as_ref());
                     endpoints::respond_200(views::episode_get::render(&common, view_model)?)
                 }
             }
@@ -793,7 +785,7 @@ pub mod login_get {
         ) -> Result<HttpResponse> {
             match *self {
                 ViewModel::Ok(ref view_model) => {
-                    let common = endpoints::build_common(req, view_model.account.as_ref(), "Login");
+                    let common = endpoints::build_common(req, view_model.account.as_ref());
                     endpoints::respond_200(views::login_get::render(&common, view_model)?)
                 }
             }
@@ -981,7 +973,7 @@ pub mod login_post {
         ) -> Result<HttpResponse> {
             match *self {
                 ViewModel::Invalid(ref view_model) => {
-                    let common = endpoints::build_common(req, view_model.account.as_ref(), "Login");
+                    let common = endpoints::build_common(req, view_model.account.as_ref());
                     endpoints::respond_200(views::login_get::render(&common, view_model)?)
                 }
                 ViewModel::Ok(ref view_model) => {
@@ -1381,11 +1373,7 @@ pub mod podcast_get {
         ) -> Result<HttpResponse> {
             match *self {
                 ViewModel::Ok(ref view_model) => {
-                    let common = endpoints::build_common(
-                        req,
-                        view_model.account.as_ref(),
-                        &format!("Podcast: {}", view_model.podcast.title.as_str()),
-                    );
+                    let common = endpoints::build_common(req, view_model.account.as_ref());
                     endpoints::respond_200(views::podcast_get::render(&common, view_model)?)
                 }
             }
@@ -1443,7 +1431,6 @@ pub mod search_get {
                 account: params.account,
                 directory_podcasts_and_podcasts: None,
                 query: None,
-                title: "Search".to_owned(),
             }));
         }
 
@@ -1469,9 +1456,6 @@ pub mod search_get {
         Ok(ViewModel::Ok(view_model::Ok {
             account: params.account,
             directory_podcasts_and_podcasts,
-            title: format!("Search: {}", query.as_str()),
-
-            // Moves into the struct, so set after setting `title`.
             query: Some(query),
         }))
     }
@@ -1492,7 +1476,6 @@ pub mod search_get {
             pub directory_podcasts_and_podcasts:
                 Option<Vec<(model::DirectoryPodcast, Option<model::Podcast>)>>,
             pub query: Option<String>,
-            pub title: String,
         }
     }
 
@@ -1504,11 +1487,7 @@ pub mod search_get {
         ) -> Result<HttpResponse> {
             match *self {
                 ViewModel::Ok(ref view_model) => {
-                    let common = endpoints::build_common(
-                        req,
-                        view_model.account.as_ref(),
-                        view_model.title.as_str(),
-                    );
+                    let common = endpoints::build_common(req, view_model.account.as_ref());
                     endpoints::respond_200(views::search_get::render(&common, view_model)?)
                 }
             }
@@ -1546,15 +1525,6 @@ pub mod search_get {
         Ok(tuples.into_iter().map(|t| t.1).collect())
     }
 }
-
-/*
-fn param_or_missing<S: server::State>(req: &mut HttpRequest<S>, name: &str) -> Result<String> {
-    match req.query().get(name) {
-        Some(val) => Ok(val.to_owned()),
-        None => Err(error::missing_parameter(name)),
-    }
-}
-*/
 
 pub mod signup_post {
     use errors::*;
@@ -1698,8 +1668,7 @@ pub mod signup_post {
         ) -> Result<HttpResponse> {
             match *self {
                 ViewModel::Invalid(ref view_model) => {
-                    let common =
-                        endpoints::build_common(req, view_model.account.as_ref(), "Signup");
+                    let common = endpoints::build_common(req, view_model.account.as_ref());
                     endpoints::respond_200(views::signup_get::render(&common, view_model)?)
                 }
                 ViewModel::Ok(ref view_model) => {
@@ -1948,8 +1917,7 @@ pub mod signup_get {
         ) -> Result<HttpResponse> {
             match *self {
                 ViewModel::Ok(ref view_model) => {
-                    let common =
-                        endpoints::build_common(req, view_model.account.as_ref(), "Signup");
+                    let common = endpoints::build_common(req, view_model.account.as_ref());
                     endpoints::respond_200(views::signup_get::render(&common, view_model)?)
                 }
             }

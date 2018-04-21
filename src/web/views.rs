@@ -9,12 +9,16 @@ use horrorshow::prelude::*;
 // Layouts
 //
 
-pub fn render_layout(view_model: &endpoints::CommonViewModel, content: &str) -> Result<String> {
+pub fn render_layout(
+    view_model: &endpoints::CommonViewModel,
+    title: &str,
+    content: &str,
+) -> Result<String> {
     (html! {
         : doctype::HTML;
         html {
             head {
-                title: view_model.title.as_str();
+                title: title;
 
                 meta(content="text/html; charset=utf-8", http-equiv="Content-Type");
 
@@ -72,10 +76,10 @@ pub fn render_user_error(code: StatusCode, message: String) -> Result<String> {
         &endpoints::CommonViewModel {
             account:        None,
             assets_version: "1".to_owned(),
-            title:          title.to_owned(),
         },
+        &title,
         (html! {
-            h1: title;
+            h1: title.as_str();
             p: message;
         }).into_string()?
             .as_str(),
@@ -98,6 +102,7 @@ pub mod account_get {
     pub fn render(common: &CommonViewModel, view_model: &view_model::Ok) -> Result<String> {
         views::render_layout(
             common,
+            "Your Account",
             (html! {
                 h1: "Your Account";
                 p: "Your subscriptions:";
@@ -128,6 +133,7 @@ pub mod episode_get {
     pub fn render(common: &CommonViewModel, view_model: &view_model::Ok) -> Result<String> {
         views::render_layout(
             common,
+            &format!("Episode: {}", view_model.episode.title.as_str()),
             (html! {
                 h1: view_model.episode.title.as_str();
                 div(id="favorited-toggle") {}
@@ -177,6 +183,7 @@ pub mod login_get {
     pub fn render(common: &CommonViewModel, view_model: &view_model::Ok) -> Result<String> {
         views::render_layout(
             common,
+            "Login",
             (html! {
                 h1: "Login";
                 @ if let Some(ref message) = view_model.message {
@@ -206,6 +213,7 @@ pub mod podcast_get {
     pub fn render(common: &CommonViewModel, view_model: &view_model::Ok) -> Result<String> {
         views::render_layout(
             common,
+            &format!("Podcast: {}", view_model.podcast.title.as_str()),
             (html! {
                 h1: view_model.podcast.title.as_str();
                 div(id="subscribed-toggle") {}
@@ -245,8 +253,14 @@ pub mod search_get {
     use horrorshow::Template;
 
     pub fn render(common: &CommonViewModel, view_model: &view_model::Ok) -> Result<String> {
+        let title = match view_model.query {
+            Some(ref query) => format!("Search: {}", query),
+            None => "Search".to_owned(),
+        };
+
         views::render_layout(
             common,
+            &title,
             (html! {
                 h1: "Search";
                 form(action="/search", method="get") {
@@ -292,6 +306,7 @@ pub mod signup_get {
     pub fn render(common: &CommonViewModel, view_model: &view_model::Ok) -> Result<String> {
         views::render_layout(
             common,
+            &"Signup",
             (html! {
                 h1: "Signup";
                 @ if let Some(ref message) = view_model.message {
