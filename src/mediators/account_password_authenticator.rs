@@ -40,7 +40,7 @@ impl<'a> Mediator<'a> {
         let account = account.unwrap();
         info!(log, "Found account"; "id" => account.id);
 
-        if !scrypt_check(&account, self.password) {
+        if !scrypt_check(log, &account, self.password) {
             info!(log, "Password did not match scrypt hash");
             bail!(error::validation(
                 "That password doesn't match the account's."
@@ -119,10 +119,12 @@ pub struct RunResult {
 
 /// Checks a password against an Scrypted hash. Returns `true` if the
 /// password matched successfully.
-fn scrypt_check(account: &model::Account, password: &str) -> bool {
-    // We use some unwraps here with the logic that if something is wrong with our
-    // scrypt verification, let's just blow up and find out about it.
-    scrypt::scrypt_check(password, account.password_scrypt.as_ref().unwrap()).unwrap()
+fn scrypt_check(log: &Logger, account: &model::Account, password: &str) -> bool {
+    time_helpers::log_timed(&log.new(o!("step" => "scrypt_check")), |_log| {
+        // We use some unwraps here with the logic that if something is wrong with our
+        // scrypt verification, let's just blow up and find out about it.
+        scrypt::scrypt_check(password, account.password_scrypt.as_ref().unwrap()).unwrap()
+    })
 }
 
 //
