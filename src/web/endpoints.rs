@@ -436,6 +436,7 @@ pub mod directory_podcast_get {
     // Params
     //
 
+    #[derive(Clone, Copy)]
     struct Params {
         directory_podcast_id: i64,
     }

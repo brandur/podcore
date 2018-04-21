@@ -520,6 +520,11 @@ mod mutation {
             pub subscribed: Option<bool>,
         }
 
+        // Targets the closure in the call to `map` on the last line. We need the
+        // closure because the `From` trait here is implemented for type's
+        // reference and not the type itself. This appears to be a case where
+        // Clippy is just flat out wrong.
+        #[cfg_attr(feature = "cargo-clippy", allow(redundant_closure))]
         pub fn execute<'a>(
             log: &Logger,
             params: &Params<'a>,

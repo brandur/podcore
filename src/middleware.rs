@@ -547,6 +547,7 @@ pub mod web {
         // Private functions
         //
 
+        #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
         fn handle_inner(log: &Logger, conn: &PgConnection, params: Params) -> Result<ViewModel> {
             if params.secret.is_some() {
                 let account = mediators::account_key_authenticator::Mediator {
