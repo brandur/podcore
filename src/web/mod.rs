@@ -11,6 +11,7 @@ use actix;
 use actix_web;
 use actix_web::HttpResponse;
 use actix_web::http::Method;
+use actix_web::middleware::csrf;
 use diesel::pg::PgConnection;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
@@ -42,6 +43,12 @@ pub struct Server {
     // the server is being used over http://.
     pub cookie_secure: bool,
 
+    // The origin used for CSRF protection on forms.
+    //
+    // A localhost version will be automatically generated, but this won't work for remote origins.
+    // In production `CSRF_ORIGIN` should be set explicitly.
+    pub csrf_origin: String,
+
     pub log:                Logger,
     pub num_sync_executors: u32,
     pub pool:               Pool<ConnectionManager<PgConnection>>,
@@ -56,6 +63,7 @@ impl Server {
         let assets_version = self.assets_version.clone();
         let cookie_secret = self.cookie_secret.clone();
         let cookie_secure = self.cookie_secure;
+        let csrf_origin = self.csrf_origin.clone();
         let log = self.log.clone();
         let pool = self.pool.clone();
         let scrypt_log_n = self.scrypt_log_n;
@@ -73,6 +81,11 @@ impl Server {
         });
 
         let server = actix_web::server::new(move || {
+            let csrf_origin_graphql = csrf_origin.clone();
+            let csrf_origin_login = csrf_origin.clone();
+            let csrf_origin_logout = csrf_origin.clone();
+            let csrf_origin_signup = csrf_origin.clone();
+
             actix_web::App::with_state(server::StateImpl {
                 assets_version: assets_version.clone(),
                 log:            log.clone(),
@@ -98,7 +111,11 @@ impl Server {
                 .resource("/graphiql", |r| {
                     r.method(Method::GET).f(graphql::handlers::graphiql_get);
                 })
-                .resource("/graphql", |r| {
+                .resource("/graphql", move |r| {
+                    r.middleware(
+                        csrf::CsrfFilter::new().allowed_origin(csrf_origin_graphql.as_str()),
+                    );
+
                     // We really don't want to use `GET` operations that are potentially mutations
                     // on the web because of the possibility that crawlers will follow them, so
                     // just mount the `POST` handler for GraphQL.
@@ -107,20 +124,29 @@ impl Server {
                 .resource("/health", |r| {
                     r.method(Method::GET).f(|_req| HttpResponse::Ok())
                 })
-                .resource("/login", |r| {
+                .resource("/login", move |r| {
                     r.name(names::LOGIN);
+                    r.middleware(
+                        csrf::CsrfFilter::new().allowed_origin(&csrf_origin_login.clone()),
+                    );
                     r.method(Method::GET).a(endpoints::login_get::handler);
                     r.method(Method::POST).a(endpoints::login_post::handler);
                 })
-                .resource("/logout", |r| {
+                .resource("/logout", move |r| {
                     r.name(names::LOGOUT);
+                    r.middleware(
+                        csrf::CsrfFilter::new().allowed_origin(&csrf_origin_logout.clone()),
+                    );
                     r.method(Method::GET).a(endpoints::logout_get::handler);
                 })
                 .resource("/search", |r| {
                     r.method(Method::GET).a(endpoints::search_get::handler)
                 })
-                .resource("/signup", |r| {
+                .resource("/signup", move |r| {
                     r.name(names::SIGNUP);
+                    r.middleware(
+                        csrf::CsrfFilter::new().allowed_origin(&csrf_origin_signup.clone()),
+                    );
                     r.method(Method::GET).a(endpoints::signup_get::handler);
                     r.method(Method::POST).a(endpoints::signup_post::handler);
                 })

@@ -343,11 +343,19 @@ fn subcommand_upgrade_https(
 fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
     let matches = matches.subcommand_matches("web").unwrap();
 
+    let port = server_port(matches);
+
     let assets_version = env::var("ASSETS_VERSION").unwrap_or_else(|_| "1".to_owned());
     let cookie_secret = env::var("COOKIE_SECRET").unwrap_or_else(|_| secure_random_string(32));
     let cookie_secure = env::var("COOKIE_SECURE")
         .map(|s| s.parse::<bool>().unwrap())
         .unwrap_or(true);
+    let csrf_origin = env::var("CSRF_ORIGIN").unwrap_or_else(|_| {
+        let origin = format!("http://localhost:{}", port);
+        info!(log, "Set localhost origin; CSRF will not work for remote hosts";
+            "origin" => origin.as_str());
+        origin
+    });
     let scrypt_log_n = env::var("SCRYPT_LOG_N")
         .map(|s| s.parse::<u8>().unwrap())
         .unwrap_or(SCRYPT_LOG_N);
@@ -361,7 +369,7 @@ fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
         debug!(log, "Generated cookie secret"; "secret" => cookie_secret.as_str());
     }
     if cookie_secure {
-        debug!(log, "Using secured cookies; they'll only work over HTTPS");
+        info!(log, "Using secured cookies; they'll only work over HTTPS");
     }
 
     let pool = pool(log, options)?;
@@ -370,10 +378,11 @@ fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
         assets_version,
         cookie_secret,
         cookie_secure,
+        csrf_origin,
         log: log.clone(),
         num_sync_executors: options.num_connections,
         pool,
-        port: server_port(matches),
+        port,
         scrypt_log_n,
     };
     server.run()?;
