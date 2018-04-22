@@ -56,18 +56,7 @@ r2d2-diesel = "1.0.0-rc1"
 
 # 0.5 has been in prerelease forever and contains some useful features. I try
 # not to use non-stable APIs, but lock to it for now.
-rand = "0.5.0-pre.0"
-
-# The prerelease version of `rand` above requires a specific version of
-# `rand_core` as well because there was a breaking change as it moved from
-# `0.1.0-pre.0` to `0.1.0`.
-#
-# When we finally have a fully released `rand` to work with, we should be able
-# to just remove this entry from the file completely (`rand` will find a
-# working `rand_core`).
-#
-# More details: https://github.com/rust-lang-nursery/rand/issues/405
-rand_core = "=0.1.0-pre.0"
+rand = "0.5.0-pre.1"
 
 regex = "0.2"
 rust-crypto = "^0.2"
