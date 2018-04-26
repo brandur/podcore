@@ -11,6 +11,7 @@ pub mod cleaner;
 pub mod directory_podcast_searcher;
 pub mod directory_podcast_updater;
 pub mod error_reporter;
+pub mod job_worker;
 pub mod key_creator;
 pub mod podcast_crawler;
 pub mod podcast_feed_location_upgrader;
