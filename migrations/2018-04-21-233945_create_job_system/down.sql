@@ -1,1 +1,2 @@
+DROP TABLE IF EXISTS job_exception;
 DROP TABLE IF EXISTS job;

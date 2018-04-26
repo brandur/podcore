@@ -241,7 +241,7 @@ mod tests {
 pub mod insertable {
     use schema::{account, account_podcast, account_podcast_episode, directory, directory_podcast,
                  directory_podcast_directory_search, directory_podcast_exception,
-                 directory_search, episode, job, key, podcast, podcast_exception,
+                 directory_search, episode, job, job_exception, key, podcast, podcast_exception,
                  podcast_feed_content, podcast_feed_location};
 
     use chrono::{DateTime, Utc};
@@ -348,6 +348,14 @@ pub mod insertable {
         pub args:   serde_json::Value,
         pub name:   String,
         pub try_at: DateTime<Utc>,
+    }
+
+    #[derive(Insertable)]
+    #[table_name = "job_exception"]
+    pub struct JobException {
+        pub job_id:      i64,
+        pub errors:      Vec<String>,
+        pub occurred_at: DateTime<Utc>,
     }
 
     #[derive(Insertable)]

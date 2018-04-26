@@ -4,6 +4,7 @@
 
 CREATE TABLE job (
     id BIGSERIAL PRIMARY KEY,
+
     args JSONB NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
@@ -20,3 +21,21 @@ CREATE TABLE job (
 
 CREATE INDEX job_try_at
     ON job (try_at) WHERE live = true;
+
+--
+-- job_exception
+--
+
+CREATE TABLE job_exception (
+    id BIGSERIAL PRIMARY KEY,
+
+    errors TEXT[] NOT NULL,
+
+    -- unique because we only save the last error that occurred
+    job_id BIGINT NOT NULL UNIQUE
+        REFERENCES job (id) ON DELETE RESTRICT,
+
+    occurred_at TIMESTAMPTZ NOT NULL
+);
+COMMENT ON TABLE job_exception
+    IS 'Stores exceptions that occurred when trying to work a job.';
