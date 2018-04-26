@@ -84,12 +84,12 @@ impl Mediator {
                     break;
                 }
 
-                for podcast in &podcasts {
-                    work_send.send(podcast.clone());
-                }
-
                 last_id = podcasts[podcasts.len() - 1].id;
                 num_podcasts += podcasts.len() as i64;
+
+                for podcast in podcasts.into_iter() {
+                    work_send.send(podcast);
+                }
             }
 
             Ok(num_podcasts)
@@ -170,7 +170,7 @@ static REFRESH_INTERVAL_SHORT: &'static str = "1 hour";
 
 // Exists because `sql_query` doesn't support querying into a tuple, only a
 // struct.
-#[derive(Clone, Debug, QueryableByName)]
+#[derive(Debug, QueryableByName)]
 #[table_name = "podcast"]
 struct PodcastTuple {
     #[sql_type = "BigInt"]
