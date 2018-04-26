@@ -75,6 +75,7 @@ pub mod errors;
 pub mod graphql;
 
 mod html;
+mod jobs;
 
 #[cfg(test)]
 #[macro_use]

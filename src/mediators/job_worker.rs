@@ -1,5 +1,6 @@
 use errors::*;
 use http_requester::HttpRequesterFactory;
+use jobs;
 use mediators::common;
 use model;
 use schema;
@@ -12,6 +13,7 @@ use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
+use serde_json;
 use slog::Logger;
 use std::thread;
 use std::time::Duration;
@@ -135,15 +137,45 @@ const MAX_JOBS: i64 = 100;
 const SLEEP_SECONDS: u64 = 60;
 
 //
+// Private enums
+//
+
+//
 // Private functions
 //
 
 fn work(
     log: &Logger,
     _pool: &Pool<ConnectionManager<PgConnection>>,
-    _http_requester_factory: &HttpRequesterFactory,
-    _work_recv: &Receiver<model::Job>,
+    http_requester_factory: &HttpRequesterFactory,
+    work_recv: &Receiver<model::Job>,
 ) -> Result<()> {
+    let requester = http_requester_factory.create();
+
+    loop {
+        chan_select! {
+            work_recv.recv() -> job => {
+                let job: model::Job = match job {
+                    Some(t) => t,
+                    None => {
+                        debug!(log, "Received empty data over channel -- dropping");
+                        break;
+                    }
+                };
+
+                match job.name.as_str() {
+                    jobs::verification_mailer::NAME => {
+                        jobs::verification_mailer::Job {
+                            args: serde_json::from_value(job.args)?,
+                            requester: &*requester,
+                        }.run(log)?;
+                    }
+                    _ => panic!("Job not covered!"),
+                }
+            }
+        }
+    }
+
     debug!(log, "Worked a job");
     Ok(())
 }
