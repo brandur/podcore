@@ -353,8 +353,8 @@ pub mod insertable {
     #[derive(Insertable)]
     #[table_name = "job_exception"]
     pub struct JobException {
-        pub job_id:      i64,
         pub errors:      Vec<String>,
+        pub job_id:      i64,
         pub occurred_at: DateTime<Utc>,
     }
 
