@@ -212,7 +212,6 @@ pub struct PodcastFeedContent {
     pub content_gzip: Option<Vec<u8>>,
 }
 
-#[allow(dead_code)]
 #[derive(Queryable)]
 pub struct PodcastFeedLocation {
     pub id:                 i64,
