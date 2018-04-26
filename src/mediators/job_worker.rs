@@ -1,5 +1,5 @@
 use errors::*;
-use http_requester::HttpRequesterFactory;
+use http_requester::{HttpRequester, HttpRequesterFactory};
 use jobs;
 use mediators::common;
 use model;
@@ -144,9 +144,10 @@ const SLEEP_SECONDS: u64 = 60;
 // Private functions
 //
 
+// A single thread's work loop.
 fn work(
     log: &Logger,
-    _pool: &Pool<ConnectionManager<PgConnection>>,
+    pool: &Pool<ConnectionManager<PgConnection>>,
     http_requester_factory: &HttpRequesterFactory,
     work_recv: &Receiver<model::Job>,
 ) -> Result<()> {
@@ -163,19 +164,30 @@ fn work(
                     }
                 };
 
-                match job.name.as_str() {
-                    jobs::verification_mailer::NAME => {
-                        jobs::verification_mailer::Job {
-                            args: serde_json::from_value(job.args)?,
-                            requester: &*requester,
-                        }.run(log)?;
-                    }
-                    _ => panic!("Job not covered!"),
-                }
+                // TODO: Handle error -- don't crash
+                time_helpers::log_timed(&log.new(o!("step" => "work_job", "job_id" => job.id)), |log| {
+                    work_job(log, pool, &*requester, job)
+                })?;
             }
         }
     }
 
     debug!(log, "Worked a job");
     Ok(())
+}
+
+// Working a single job.
+fn work_job(
+    log: &Logger,
+    _pool: &Pool<ConnectionManager<PgConnection>>,
+    requester: &HttpRequester,
+    job: model::Job,
+) -> Result<()> {
+    match job.name.as_str() {
+        jobs::verification_mailer::NAME => jobs::verification_mailer::Job {
+            args:      serde_json::from_value(job.args)?,
+            requester: requester,
+        }.run(log),
+        _ => panic!("Job not covered!"),
+    }
 }
