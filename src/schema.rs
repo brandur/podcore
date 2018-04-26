@@ -96,6 +96,18 @@ table! {
 }
 
 table! {
+    job (id) {
+        id -> Int8,
+        args -> Jsonb,
+        created_at -> Timestamptz,
+        live -> Bool,
+        name -> Text,
+        num_errors -> Int4,
+        try_at -> Timestamptz,
+    }
+}
+
+table! {
     key (id) {
         id -> Int8,
         account_id -> Int8,
@@ -172,6 +184,7 @@ allow_tables_to_appear_in_same_query!(
     directory_podcast_exception,
     directory_search,
     episode,
+    job,
     key,
     podcast,
     podcast_exception,

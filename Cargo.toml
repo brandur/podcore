@@ -26,7 +26,7 @@ bytes = "*"
 chan = "*"
 chrono = "0.4"
 clap = "*"
-diesel = { version = "1.0.0-rc1", features = ["chrono", "postgres"] }
+diesel = { version = "1.0.0-rc1", features = ["chrono", "postgres", "serde_json"] }
 diesel_migrations = "*"
 error-chain = "*"
 flate2 = "*"

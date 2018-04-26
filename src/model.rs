@@ -20,6 +20,7 @@ use diesel;
 use diesel::pg::upsert::excluded;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
+use serde_json;
 use slog::Logger;
 
 #[derive(Clone, Debug, Queryable)]
@@ -161,6 +162,17 @@ pub struct Episode {
     pub title:        String,
 }
 
+#[derive(Queryable)]
+pub struct Job {
+    pub id:         i64,
+    pub args:       serde_json::Value,
+    pub created_at: DateTime<Utc>,
+    pub live:       bool,
+    pub name:       String,
+    pub num_errors: i32,
+    pub try_at:     DateTime<Utc>,
+}
+
 #[derive(Debug, Queryable)]
 pub struct Key {
     pub id:         i64,
@@ -230,10 +242,11 @@ mod tests {
 pub mod insertable {
     use schema::{account, account_podcast, account_podcast_episode, directory, directory_podcast,
                  directory_podcast_directory_search, directory_podcast_exception,
-                 directory_search, episode, key, podcast, podcast_exception, podcast_feed_content,
-                 podcast_feed_location};
+                 directory_search, episode, job, key, podcast, podcast_exception,
+                 podcast_feed_content, podcast_feed_location};
 
     use chrono::{DateTime, Utc};
+    use serde_json;
 
     #[derive(Insertable)]
     #[table_name = "account"]
@@ -328,6 +341,14 @@ pub mod insertable {
         pub podcast_id:   i64,
         pub published_at: DateTime<Utc>,
         pub title:        String,
+    }
+
+    #[derive(Insertable)]
+    #[table_name = "job"]
+    pub struct Job {
+        pub args:   serde_json::Value,
+        pub name:   String,
+        pub try_at: DateTime<Utc>,
     }
 
     #[derive(Insertable)]
