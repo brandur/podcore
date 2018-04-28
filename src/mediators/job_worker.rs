@@ -9,14 +9,16 @@ use time_helpers;
 use chan;
 use chan::{Receiver, Sender};
 use chrono::Utc;
+use diesel;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use serde_json;
 use slog::Logger;
+use std;
 use std::thread;
-use std::time::Duration;
+use time::Duration;
 
 pub struct Mediator {
     // Number of workers to use.
@@ -109,7 +111,7 @@ impl Mediator {
                 if num_jobs == 0 {
                     info!(log, "All jobs consumed -- sleeping";
                         "seconds" => SLEEP_SECONDS);
-                    thread::sleep(Duration::from_secs(SLEEP_SECONDS));
+                    thread::sleep(std::time::Duration::from_secs(SLEEP_SECONDS));
 
                     if self.run_forever {
                         break;
@@ -122,14 +124,23 @@ impl Mediator {
                     work_send.send(job);
                 }
 
-                let mut job_succeeded_ids: Vec<i64> = Vec::with_capacity(num_jobs);
-                let mut job_errored_results: Vec<JobResult> = Vec::new();
+                let mut succeeded_ids: Vec<i64> = Vec::with_capacity(num_jobs);
+                let mut errored_results: Vec<JobResult> = Vec::new();
                 for _i in 0..(num_jobs - 1) {
                     match res_recv.recv().unwrap() {
-                        JobResult { id, e: None } => job_succeeded_ids.push(id),
-                        res => job_errored_results.push(res),
+                        JobResult { id, e: None, .. } => succeeded_ids.push(id),
+                        res => errored_results.push(res),
                     }
                 }
+
+                time_helpers::log_timed(&log.new(o!("step" => "report_jobs")), |_log| {
+                    (&*conn).transaction::<_, Error, _>(|| {
+                        diesel::delete(
+                            schema::job::table.filter(schema::job::id.eq_any(&succeeded_ids)),
+                        ).execute(&*conn)
+                            .chain_err(|| "Error deleting succeeded jobs")
+                    })
+                })?;
 
                 if !self.run_forever {
                     break;
@@ -153,6 +164,10 @@ impl Mediator {
     }
 }
 
+pub struct RunResult {
+    num_jobs: i64,
+}
+
 //
 // Private constants
 //
@@ -167,8 +182,10 @@ const SLEEP_SECONDS: u64 = 60;
 // Private structs
 //
 
-pub struct RunResult {
-    num_jobs: i64,
+struct JobResult {
+    id:         i64,
+    e:          Option<Error>,
+    num_errors: i32,
 }
 
 //
@@ -199,7 +216,11 @@ fn work(
                         break;
                     }
                 };
+
+                // The job moves into `work_job` so we store these values so we can return them
+                // later.
                 let job_id = job.id;
+                let job_num_errors = job.num_errors;
 
                 // TODO: Handle error -- don't crash
                 let res = time_helpers::log_timed(&log.new(o!("step" => "work_job", "job_id" => job.id)), |log| {
@@ -209,19 +230,14 @@ fn work(
                 debug!(log, "Worked a job");
 
                 match res {
-                    Ok(()) => res_send.send(JobResult { id: job_id, e: None }),
-                    Err(e) => res_send.send(JobResult { id: job_id, e: Some(e) }),
+                    Ok(()) => res_send.send(JobResult { id: job_id, num_errors: 0, e: None }),
+                    Err(e) => res_send.send(JobResult { id: job_id, num_errors: job_num_errors + 1, e: Some(e) }),
                 }
             }
         }
     }
 
     Ok(())
-}
-
-struct JobResult {
-    id: i64,
-    e:  Option<Error>,
 }
 
 // Working a single job.
@@ -237,5 +253,27 @@ fn work_job(
             requester: requester,
         }.run(log),
         _ => panic!("Job not covered!"),
+    }
+}
+
+/// Gets the time that should elapsed before the next time a job is tried.
+///
+/// This is based on an exponential backoff formula cargo-culted from other job
+/// libraries.
+fn next_retry(num_errors: i32) -> Duration {
+    Duration::seconds((num_errors as i64).pow(4) + 3)
+}
+
+#[cfg(test)]
+mod tests {
+    use mediators::job_worker::*;
+
+    #[test]
+    fn test_job_worker_next_retry() {
+        assert_eq!(Duration::seconds(4), next_retry(1));
+        assert_eq!(Duration::seconds(19), next_retry(2));
+        assert_eq!(Duration::seconds(84), next_retry(3));
+        assert_eq!(Duration::seconds(259), next_retry(4));
+        assert_eq!(Duration::seconds(628), next_retry(5));
     }
 }
