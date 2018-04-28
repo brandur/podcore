@@ -8,7 +8,8 @@ pub mod verification_mailer {
 
     #[derive(Debug, Deserialize, Serialize)]
     pub struct Args {
-        pub to: String,
+        pub to:    String,
+        pub token: String,
     }
 
     pub struct Job<'a> {
