@@ -122,9 +122,13 @@ impl Mediator {
                     work_send.send(job);
                 }
 
-                let mut job_results = Vec::with_capacity(num_jobs);
+                let mut job_succeeded_ids: Vec<i64> = Vec::with_capacity(num_jobs);
+                let mut job_errored_results: Vec<JobResult> = Vec::new();
                 for _i in 0..(num_jobs - 1) {
-                    job_results.push(res_recv.recv());
+                    match res_recv.recv().unwrap() {
+                        JobResult { id, e: None } => job_succeeded_ids.push(id),
+                        res => job_errored_results.push(res),
+                    }
                 }
 
                 if !self.run_forever {
