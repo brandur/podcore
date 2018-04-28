@@ -113,6 +113,7 @@ impl Mediator {
     fn select_jobs(log: &Logger, conn: &PgConnection) -> Result<Vec<model::Job>> {
         let res = time_helpers::log_timed(&log.new(o!("step" => "select_jobs")), |_log| {
             schema::job::table
+                .filter(schema::job::live.eq(true))
                 .filter(schema::job::try_at.le(Utc::now()))
                 .limit(MAX_JOBS)
                 .get_results(conn)
