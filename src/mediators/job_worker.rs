@@ -42,22 +42,33 @@ impl Mediator {
         let mut workers = vec![];
 
         let num_jobs = {
-            let (work_send, work_recv) = chan::sync(100);
+            let (res_send, res_recv) = chan::sync(MAX_JOBS as usize);
+            let (work_send, work_recv) = chan::sync(MAX_JOBS as usize);
+
             for i in 0..self.num_workers {
                 let thread_name = common::thread_name(i);
                 let log =
                     log.new(o!("thread" => thread_name.clone(), "num_threads" => self.num_workers));
                 let pool_clone = self.pool.clone();
                 let factory_clone = self.http_requester_factory.clone_box();
+                let res_send_clone = res_send.clone();
                 let work_recv_clone = work_recv.clone();
 
                 workers.push(thread::Builder::new()
                     .name(thread_name)
-                    .spawn(move || work(&log, &pool_clone, &*factory_clone, &work_recv_clone))
+                    .spawn(move || {
+                        work(
+                            &log,
+                            &pool_clone,
+                            &*factory_clone,
+                            &work_recv_clone,
+                            &res_send_clone,
+                        )
+                    })
                     .map_err(Error::from)?);
             }
 
-            self.queue_jobs(log, &work_send)?
+            self.queue_and_report_jobs(log, &work_send, &res_recv)?
 
             // `work_send` is dropped, which unblocks our threads' select, passes them a
             // `None` result, and lets them to drop back to main. This only
@@ -78,30 +89,45 @@ impl Mediator {
     // Steps
     //
 
-    fn queue_jobs(&mut self, log: &Logger, work_send: &Sender<model::Job>) -> Result<i64> {
+    fn queue_and_report_jobs(
+        &mut self,
+        log: &Logger,
+        work_send: &Sender<model::Job>,
+        res_recv: &Receiver<JobResult>,
+    ) -> Result<i64> {
         let log = log.new(o!("thread" => "control"));
-        time_helpers::log_timed(&log.new(o!("step" => "queue_jobs")), |log| {
+        time_helpers::log_timed(&log.new(o!("step" => "queue_and_report_jobs")), |log| {
             let conn = &*(self.pool.get().map_err(Error::from))?;
 
             let mut total_num_jobs = 0i64;
             loop {
                 let jobs = Self::select_jobs(log, &*conn)?;
 
-                let num_jobs = jobs.len() as i64;
-                total_num_jobs += num_jobs;
-
-                for job in jobs.into_iter() {
-                    work_send.send(job);
-                }
-
-                if !self.run_forever {
-                    break;
-                }
+                let num_jobs = jobs.len();
+                total_num_jobs += num_jobs as i64;
 
                 if num_jobs == 0 {
                     info!(log, "All jobs consumed -- sleeping";
                         "seconds" => SLEEP_SECONDS);
                     thread::sleep(Duration::from_secs(SLEEP_SECONDS));
+
+                    if self.run_forever {
+                        break;
+                    }
+
+                    continue;
+                }
+
+                for job in jobs.into_iter() {
+                    work_send.send(job);
+                }
+
+                let mut job_results = Vec::with_capacity(num_jobs);
+                for _i in 0..(num_jobs - 1) {
+                    job_results.push(res_recv.recv());
+                }
+
+                if !self.run_forever {
                     break;
                 }
             }
@@ -123,10 +149,6 @@ impl Mediator {
     }
 }
 
-pub struct RunResult {
-    pub num_jobs: i64,
-}
-
 //
 // Private constants
 //
@@ -136,6 +158,14 @@ const MAX_JOBS: i64 = 100;
 
 // Number of seconds to sleep after finding no jobs to work.
 const SLEEP_SECONDS: u64 = 60;
+
+//
+// Private structs
+//
+
+pub struct RunResult {
+    num_jobs: i64,
+}
 
 //
 // Private enums
@@ -151,6 +181,7 @@ fn work(
     pool: &Pool<ConnectionManager<PgConnection>>,
     http_requester_factory: &HttpRequesterFactory,
     work_recv: &Receiver<model::Job>,
+    res_send: &Sender<JobResult>,
 ) -> Result<()> {
     let requester = http_requester_factory.create();
 
@@ -164,17 +195,29 @@ fn work(
                         break;
                     }
                 };
+                let job_id = job.id;
 
                 // TODO: Handle error -- don't crash
-                time_helpers::log_timed(&log.new(o!("step" => "work_job", "job_id" => job.id)), |log| {
+                let res = time_helpers::log_timed(&log.new(o!("step" => "work_job", "job_id" => job.id)), |log| {
                     work_job(log, pool, &*requester, job)
-                })?;
+                });
+
+                debug!(log, "Worked a job");
+
+                match res {
+                    Ok(()) => res_send.send(JobResult { id: job_id, e: None }),
+                    Err(e) => res_send.send(JobResult { id: job_id, e: Some(e) }),
+                }
             }
         }
     }
 
-    debug!(log, "Worked a job");
     Ok(())
+}
+
+struct JobResult {
+    id: i64,
+    e:  Option<Error>,
 }
 
 // Working a single job.
