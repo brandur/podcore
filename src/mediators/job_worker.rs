@@ -128,7 +128,11 @@ impl Mediator {
                 let mut errored_results: Vec<JobResult> = Vec::new();
                 for _i in 0..(num_jobs - 1) {
                     match res_recv.recv().unwrap() {
-                        JobResult { id, e: None, .. } => succeeded_ids.push(id),
+                        JobResult {
+                            job: model::Job { id, .. },
+                            e: None,
+                            ..
+                        } => succeeded_ids.push(id),
                         res => errored_results.push(res),
                     }
                 }
@@ -139,6 +143,8 @@ impl Mediator {
                             schema::job::table.filter(schema::job::id.eq_any(&succeeded_ids)),
                         ).execute(&*conn)
                             .chain_err(|| "Error deleting succeeded jobs")
+
+                        //diesel::update(
                     })
                 })?;
 
@@ -172,6 +178,10 @@ pub struct RunResult {
 // Private constants
 //
 
+// The maximum number of times a job is allowed to fail before its `live` is
+// set to `false` and it won't be worked again without manual intervention.
+const MAX_ERRORS: i32 = 10;
+
 // The maximum number of jobs to select in one batch.
 const MAX_JOBS: i64 = 100;
 
@@ -183,9 +193,8 @@ const SLEEP_SECONDS: u64 = 60;
 //
 
 struct JobResult {
-    id:         i64,
-    e:          Option<Error>,
-    num_errors: i32,
+    job: model::Job,
+    e:   Option<Error>,
 }
 
 //
@@ -195,6 +204,48 @@ struct JobResult {
 //
 // Private functions
 //
+
+/// Generates a new job which moves the given to its next error state.
+///
+/// Most of the time, this means increment its `num_errors` by one, and
+/// scheduling a new time when it should be tried next. For jobs that have
+/// failed many times, this means changing the state of their `live` field,
+/// rendering them dead.
+#[inline]
+fn create_errored_job(job: model::Job) -> model::Job {
+    let num_errors = job.num_errors + 1;
+
+    // If a job has failed too many times, we flip its `live` bit, and it won't be
+    // worked again without manual intervention.
+    let live = num_errors < MAX_ERRORS;
+
+    // Will contain a timestamp for the next time a job will be tried as long as
+    // it's still live. Otherwise contains the time when we effectively set the
+    // job to "permanently failed".
+    let try_at = if live {
+        Utc::now() + next_retry(num_errors)
+    } else {
+        Utc::now()
+    };
+
+    model::Job {
+        id: job.id,
+        args: job.args,
+        created_at: job.created_at,
+        live,
+        name: job.name,
+        num_errors,
+        try_at,
+    }
+}
+
+/// Gets the time that should elapsed before the next time a job is tried.
+///
+/// This is based on an exponential backoff formula cargo-culted from other job
+/// libraries.
+fn next_retry(num_errors: i32) -> Duration {
+    Duration::seconds((num_errors as i64).pow(4) + 3)
+}
 
 // A single thread's work loop.
 fn work(
@@ -217,21 +268,16 @@ fn work(
                     }
                 };
 
-                // The job moves into `work_job` so we store these values so we can return them
-                // later.
-                let job_id = job.id;
-                let job_num_errors = job.num_errors;
-
                 // TODO: Handle error -- don't crash
                 let res = time_helpers::log_timed(&log.new(o!("step" => "work_job", "job_id" => job.id)), |log| {
-                    work_job(log, pool, &*requester, job)
+                    work_job(log, pool, &*requester, &job)
                 });
 
                 debug!(log, "Worked a job");
 
                 match res {
-                    Ok(()) => res_send.send(JobResult { id: job_id, num_errors: 0, e: None }),
-                    Err(e) => res_send.send(JobResult { id: job_id, num_errors: job_num_errors + 1, e: Some(e) }),
+                    Ok(()) => res_send.send(JobResult { job, e: None }),
+                    Err(e) => res_send.send(JobResult { job: create_errored_job(job), e: Some(e) }),
                 }
             }
         }
@@ -245,23 +291,15 @@ fn work_job(
     log: &Logger,
     _pool: &Pool<ConnectionManager<PgConnection>>,
     requester: &HttpRequester,
-    job: model::Job,
+    job: &model::Job,
 ) -> Result<()> {
     match job.name.as_str() {
         jobs::verification_mailer::NAME => jobs::verification_mailer::Job {
-            args:      serde_json::from_value(job.args)?,
+            args:      serde_json::from_value(job.args.clone())?,
             requester: requester,
         }.run(log),
         _ => panic!("Job not covered!"),
     }
-}
-
-/// Gets the time that should elapsed before the next time a job is tried.
-///
-/// This is based on an exponential backoff formula cargo-culted from other job
-/// libraries.
-fn next_retry(num_errors: i32) -> Duration {
-    Duration::seconds((num_errors as i64).pow(4) + 3)
 }
 
 #[cfg(test)]

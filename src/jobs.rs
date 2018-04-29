@@ -6,7 +6,7 @@ pub mod verification_mailer {
 
     pub const NAME: &str = "verification_mailer";
 
-    #[derive(Debug, Deserialize, Serialize)]
+    #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct Args {
         pub to:    String,
         pub token: String,
