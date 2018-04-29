@@ -243,6 +243,7 @@ fn create_errored_job(job: model::Job) -> model::Job {
 ///
 /// This is based on an exponential backoff formula cargo-culted from other job
 /// libraries.
+#[inline]
 fn next_retry(num_errors: i32) -> Duration {
     Duration::seconds((num_errors as i64).pow(4) + 3)
 }
