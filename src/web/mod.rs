@@ -77,8 +77,8 @@ impl Server {
                 log: log.clone(),
                 scrypt_log_n,
                 sync_addr: Some(sync_addr.clone()),
-            }).middleware(actix_web::middleware::SessionStorage::new(
-                actix_web::middleware::CookieSessionBackend::signed(cookie_secret.as_bytes())
+            }).middleware(actix_web::middleware::session::SessionStorage::new(
+                actix_web::middleware::session::CookieSessionBackend::signed(cookie_secret.as_bytes())
                     .name("podcore-session")
                     // Podcasts aren't generally considered to be a super security-sensitive
                     // business (and cookies are secure), so set a lengthy maximum age.

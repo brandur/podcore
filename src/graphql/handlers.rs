@@ -9,7 +9,7 @@ use time_helpers;
 
 use actix;
 use actix_web::http::StatusCode;
-use actix_web::AsyncResponder;
+use actix_web::{AsyncResponder, FromRequest, Query};
 use actix_web::{HttpRequest, HttpResponse};
 use bytes::Bytes;
 use futures::future;
@@ -18,6 +18,7 @@ use juniper::http::GraphQLRequest;
 use juniper::{InputValue, RootNode};
 use serde_json;
 use slog::Logger;
+use std::collections::HashMap;
 
 //
 // Private structs
@@ -62,14 +63,17 @@ impl server::Params for Params {
 
             // Build from `GET` request
             None => {
-                let input_query = match req.query().get("query") {
+                let query = Query::<HashMap<String, String>>::extract(req)
+                    .map_err(|_e| Error::from("Error extracting query from request"))?;
+
+                let input_query = match query.get("query") {
                     Some(q) => q.to_owned(),
                     None => bail!(error::bad_request("No query provided")),
                 };
 
-                let operation_name = req.query().get("operationName").map(|n| n.to_owned());
+                let operation_name = query.get("operationName").map(|n| n.to_owned());
 
-                let variables: Option<InputValue> = match req.query().get("variables") {
+                let variables: Option<InputValue> = match query.get("variables") {
                     Some(v) => match serde_json::from_str::<InputValue>(v) {
                         Ok(v) => Some(v),
                         Err(e) => bail!(error::bad_request(format!(

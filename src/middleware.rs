@@ -13,7 +13,7 @@ pub mod log_initializer {
     impl<S: server::State> actix_web::middleware::Middleware<S> for Middleware {
         fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
             let log = req.state().get_log().clone();
-            req.extensions().insert(Extension(log));
+            req.extensions_mut().insert(Extension(log));
             Ok(Started::Done)
         }
     }
@@ -66,7 +66,7 @@ pub mod request_id {
 
     impl<S: server::State> actix_web::middleware::Middleware<S> for Middleware {
         fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
-            let log = req.extensions()
+            let log = req.extensions_mut()
                 .remove::<log_initializer::Extension>()
                 .unwrap()
                 .0;
@@ -74,9 +74,10 @@ pub mod request_id {
             let request_id = Uuid::new_v4().simple().to_string();
             debug!(&log, "Generated request ID"; "request_id" => request_id.as_str());
 
-            req.extensions().insert(log_initializer::Extension(log.new(
-                o!("request_id" => request_id),
-            )));
+            req.extensions_mut()
+                .insert(log_initializer::Extension(log.new(
+                    o!("request_id" => request_id),
+                )));
 
             Ok(Started::Done)
         }
@@ -130,7 +131,7 @@ pub mod request_response_logger {
 
     impl<S: server::State> actix_web::middleware::Middleware<S> for Middleware {
         fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
-            req.extensions().insert(Extension {
+            req.extensions_mut().insert(Extension {
                 start_time: time::precise_time_ns(),
             });
             Ok(Started::Done)
@@ -252,7 +253,7 @@ pub mod test {
             fn start(&self, req: &mut HttpRequest<S>) -> actix_web::Result<Started> {
                 let log = middleware::log_initializer::log(req);
                 debug!(log, "Test authenticator setting account"; "id" => self.account.id);
-                req.extensions().insert(Extension {
+                req.extensions_mut().insert(Extension {
                     account: self.account.clone(),
                 });
                 Ok(Started::Done)
@@ -290,7 +291,7 @@ pub mod web {
 
         use actix_web;
         use actix_web::http::Method;
-        use actix_web::middleware::RequestSession;
+        use actix_web::middleware::session::RequestSession;
         use actix_web::middleware::Started;
         use actix_web::HttpRequest;
         use diesel::pg::PgConnection;
@@ -627,7 +628,7 @@ pub mod web {
                 debug!(log, "Setting request account"; "id" => account.as_ref().unwrap().id);
             }
 
-            req.extensions().insert(Extension { account });
+            req.extensions_mut().insert(Extension { account });
         }
 
         //
