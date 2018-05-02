@@ -269,7 +269,6 @@ fn work(
                     }
                 };
 
-                // TODO: Handle error -- don't crash
                 let res = time_helpers::log_timed(&log.new(o!("step" => "work_job", "job_id" => job.id)), |log| {
                     work_job(log, pool, &*requester, &job)
                 });
