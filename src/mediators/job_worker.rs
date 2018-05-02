@@ -281,6 +281,8 @@ fn record_results_inner(
             .chain_err(|| "Error deleting succeeded jobs")
     })?;
 
+    // Return early if we only had successes. This is the happy case that will
+    // hopefully be occurring most of the time.
     if errored.is_empty() {
         return Ok(());
     }
