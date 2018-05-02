@@ -12,7 +12,7 @@
 
 use errors::*;
 use schema;
-use schema::directory_podcast;
+use schema::{directory_podcast, job};
 use time_helpers;
 
 use chrono::{DateTime, Utc};
@@ -162,7 +162,8 @@ pub struct Episode {
     pub title:        String,
 }
 
-#[derive(Queryable)]
+#[derive(Insertable, Queryable)]
+#[table_name = "job"]
 pub struct Job {
     pub id:         i64,
     pub args:       serde_json::Value,

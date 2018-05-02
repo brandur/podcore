@@ -3,6 +3,7 @@ use http_requester::{HttpRequester, HttpRequesterFactory};
 use jobs;
 use mediators::common;
 use model;
+use model::insertable;
 use schema;
 use time_helpers;
 
@@ -10,6 +11,7 @@ use chan;
 use chan::{Receiver, Sender};
 use chrono::Utc;
 use diesel;
+use diesel::pg::upsert::excluded;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use r2d2::Pool;
@@ -70,7 +72,7 @@ impl Mediator {
                     .map_err(Error::from)?);
             }
 
-            self.queue_and_report_jobs(log, &work_send, &res_recv)?
+            self.queue_jobs_and_record_results(log, &work_send, &res_recv)?
 
             // `work_send` is dropped, which unblocks our threads' select, passes them a
             // `None` result, and lets them to drop back to main. This only
@@ -91,70 +93,64 @@ impl Mediator {
     // Steps
     //
 
-    fn queue_and_report_jobs(
+    fn queue_jobs_and_record_results(
         &mut self,
         log: &Logger,
         work_send: &Sender<model::Job>,
         res_recv: &Receiver<JobResult>,
     ) -> Result<i64> {
         let log = log.new(o!("thread" => "control"));
-        time_helpers::log_timed(&log.new(o!("step" => "queue_and_report_jobs")), |log| {
-            let conn = &*(self.pool.get().map_err(Error::from))?;
+        time_helpers::log_timed(
+            &log.new(o!("step" => "queue_jobs_and_record_results")),
+            |log| {
+                let conn = &*(self.pool.get().map_err(Error::from))?;
 
-            let mut total_num_jobs = 0i64;
-            loop {
-                let jobs = Self::select_jobs(log, &*conn)?;
+                let mut total_num_jobs = 0i64;
+                loop {
+                    let jobs = Self::select_jobs(log, &*conn)?;
 
-                let num_jobs = jobs.len();
-                total_num_jobs += num_jobs as i64;
+                    let num_jobs = jobs.len();
+                    total_num_jobs += num_jobs as i64;
 
-                if num_jobs == 0 {
-                    info!(log, "All jobs consumed -- sleeping";
+                    if num_jobs == 0 {
+                        info!(log, "All jobs consumed -- sleeping";
                         "seconds" => SLEEP_SECONDS);
-                    thread::sleep(std::time::Duration::from_secs(SLEEP_SECONDS));
+                        thread::sleep(std::time::Duration::from_secs(SLEEP_SECONDS));
 
-                    if self.run_forever {
+                        if self.run_forever {
+                            break;
+                        }
+
+                        continue;
+                    }
+
+                    for job in jobs.into_iter() {
+                        work_send.send(job);
+                    }
+
+                    let mut succeeded_ids: Vec<i64> = Vec::with_capacity(num_jobs);
+                    let mut errored: Vec<JobResult> = Vec::new();
+                    for _i in 0..(num_jobs - 1) {
+                        match res_recv.recv().unwrap() {
+                            JobResult {
+                                job: model::Job { id, .. },
+                                e: None,
+                                ..
+                            } => succeeded_ids.push(id),
+                            res => errored.push(res),
+                        }
+                    }
+
+                    record_results(&log, &*conn, succeeded_ids, errored)?;
+
+                    if !self.run_forever {
                         break;
                     }
-
-                    continue;
                 }
 
-                for job in jobs.into_iter() {
-                    work_send.send(job);
-                }
-
-                let mut succeeded_ids: Vec<i64> = Vec::with_capacity(num_jobs);
-                let mut errored_results: Vec<JobResult> = Vec::new();
-                for _i in 0..(num_jobs - 1) {
-                    match res_recv.recv().unwrap() {
-                        JobResult {
-                            job: model::Job { id, .. },
-                            e: None,
-                            ..
-                        } => succeeded_ids.push(id),
-                        res => errored_results.push(res),
-                    }
-                }
-
-                time_helpers::log_timed(&log.new(o!("step" => "report_jobs")), |_log| {
-                    (&*conn).transaction::<_, Error, _>(|| {
-                        diesel::delete(
-                            schema::job::table.filter(schema::job::id.eq_any(&succeeded_ids)),
-                        ).execute(&*conn)
-                            .chain_err(|| "Error deleting succeeded jobs")
-
-                        //diesel::update(
-                    })
-                })?;
-
-                if !self.run_forever {
-                    break;
-                }
-            }
-
-            Ok(total_num_jobs)
-        })
+                Ok(total_num_jobs)
+            },
+        )
     }
 
     fn select_jobs(log: &Logger, conn: &PgConnection) -> Result<Vec<model::Job>> {
@@ -246,6 +242,94 @@ fn create_errored_job(job: model::Job) -> model::Job {
 #[inline]
 fn next_retry(num_errors: i32) -> Duration {
     Duration::seconds((num_errors as i64).pow(4) + 3)
+}
+
+#[inline]
+fn record_results(
+    log: &Logger,
+    conn: &PgConnection,
+    succeeded_ids: Vec<i64>,
+    errored: Vec<JobResult>,
+) -> Result<()> {
+    time_helpers::log_timed(&log.new(o!("step" => "record_results")), |log| {
+        conn.transaction::<_, Error, _>(|| record_results_inner(log, conn, succeeded_ids, errored))
+    })
+}
+
+/// The same as `record_results`, but allows us to avoid some indentation.
+///
+/// This function must run in a transaction.
+#[inline]
+fn record_results_inner(
+    log: &Logger,
+    conn: &PgConnection,
+    succeeded_ids: Vec<i64>,
+    errored: Vec<JobResult>,
+) -> Result<()> {
+    // Delete any errors that might have been produced for this job
+    time_helpers::log_timed(&log.new(o!("step" => "delete_job_exceptions")), |_log| {
+        diesel::delete(
+            schema::job_exception::table
+                .filter(schema::job_exception::job_id.eq_any(&succeeded_ids)),
+        ).execute(conn)
+            .chain_err(|| "Error deleting job exceptions for successful jobs")
+    })?;
+
+    time_helpers::log_timed(&log.new(o!("step" => "delete_jobs")), |_log| {
+        diesel::delete(schema::job::table.filter(schema::job::id.eq_any(&succeeded_ids)))
+            .execute(conn)
+            .chain_err(|| "Error deleting succeeded jobs")
+    })?;
+
+    if errored.is_empty() {
+        return Ok(());
+    }
+
+    let mut errors: Vec<insertable::JobException> = Vec::with_capacity(errored.len());
+    let mut jobs: Vec<model::Job> = Vec::with_capacity(errored.len());
+    let now = Utc::now();
+
+    for job_result in errored.into_iter() {
+        errors.push(insertable::JobException {
+            errors:      error_strings(&job_result.e.unwrap()),
+            job_id:      job_result.job.id,
+            occurred_at: now,
+        });
+        jobs.push(job_result.job);
+    }
+
+    // Re-insert failed jobs. With upsert we end up overwriting all the existing
+    // records with new status information.
+    time_helpers::log_timed(&log.new(o!("step" => "upsert_jobs")), |_log| {
+        diesel::insert_into(schema::job::table)
+            .values(&jobs)
+            .on_conflict(schema::job::id)
+            .do_update()
+            .set((
+                schema::job::live.eq(excluded(schema::job::live)),
+                schema::job::num_errors.eq(excluded(schema::job::num_errors)),
+                schema::job::try_at.eq(excluded(schema::job::try_at)),
+            ))
+            .execute(conn)
+            .chain_err(|| "Error upserting jobs")
+    })?;
+
+    // This may be the second time (or more) that any job has failed, so we upsert
+    // exceptions.
+    time_helpers::log_timed(&log.new(o!("step" => "upsert_job_exceptions")), |_log| {
+        diesel::insert_into(schema::job_exception::table)
+            .values(&errors)
+            .on_conflict(schema::job_exception::job_id)
+            .do_update()
+            .set((
+                schema::job_exception::errors.eq(excluded(schema::job_exception::errors)),
+                schema::job_exception::occurred_at.eq(excluded(schema::job_exception::occurred_at)),
+            ))
+            .execute(conn)
+            .chain_err(|| "Error upserting job exceptions")
+    })?;
+
+    Ok(())
 }
 
 // A single thread's work loop.
