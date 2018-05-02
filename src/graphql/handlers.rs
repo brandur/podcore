@@ -9,7 +9,7 @@ use time_helpers;
 
 use actix;
 use actix_web::http::StatusCode;
-use actix_web::{AsyncResponder, FromRequest, Query};
+use actix_web::AsyncResponder;
 use actix_web::{HttpRequest, HttpResponse};
 use bytes::Bytes;
 use futures::future;
@@ -18,7 +18,6 @@ use juniper::http::GraphQLRequest;
 use juniper::{InputValue, RootNode};
 use serde_json;
 use slog::Logger;
-use std::collections::HashMap;
 
 //
 // Private structs
@@ -63,8 +62,7 @@ impl server::Params for Params {
 
             // Build from `GET` request
             None => {
-                let query = Query::<HashMap<String, String>>::extract(req)
-                    .map_err(|_e| Error::from("Error extracting query from request"))?;
+                let query = server::query(req)?;
 
                 let input_query = match query.get("query") {
                     Some(q) => q.to_owned(),

@@ -3,12 +3,13 @@ use model;
 
 use actix;
 use actix_web::http::StatusCode;
-use actix_web::{HttpRequest, HttpResponse};
+use actix_web::{FromRequest, HttpRequest, HttpResponse, Query};
 use diesel::pg::PgConnection;
 use errors::*;
 use r2d2::Pool;
 use r2d2_diesel::ConnectionManager;
 use slog::Logger;
+use std::collections::HashMap;
 
 //
 // Macros
@@ -201,6 +202,15 @@ pub fn account<S: State>(req: &mut HttpRequest<S>) -> Option<model::Account> {
 /// make the `last_ip` column nullable.
 pub fn ip_for_request<S: State>(req: &HttpRequest<S>) -> &str {
     req.connection_info().remote().unwrap_or("<no IP>")
+}
+
+/// Gets a `HashMap` containig query data for the given request.
+///
+/// This function is provided as a helper so that we can return a consistent
+/// error message everywhere when a bad query string is provided.
+pub fn query<S: State>(req: &HttpRequest<S>) -> Result<Query<HashMap<String, String>>> {
+    Query::<HashMap<String, String>>::extract(req)
+        .map_err(|_e| error::bad_request("Malformed query string"))
 }
 
 /// Handles a `Result` and renders an error that was intended for the user by

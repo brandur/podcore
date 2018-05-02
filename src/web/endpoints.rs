@@ -1391,12 +1391,11 @@ pub mod search_get {
     use web::endpoints;
     use web::views;
 
-    use actix_web::{FromRequest, HttpRequest, HttpResponse, Query};
+    use actix_web::{HttpRequest, HttpResponse};
     use diesel::pg::PgConnection;
     use diesel::prelude::*;
     use futures::future::Future;
     use slog::Logger;
-    use std::collections::HashMap;
 
     handler!();
     message_handler!();
@@ -1415,12 +1414,9 @@ pub mod search_get {
             req: &mut HttpRequest<S>,
             _data: Option<&[u8]>,
         ) -> Result<Self> {
-            let query = Query::<HashMap<String, String>>::extract(req)
-                .map_err(|_e| Error::from("Error extracting query from request"))?;
-
             Ok(Self {
                 account: server::account(req),
-                query:   query.get("q").map(|q| q.to_owned()),
+                query:   server::query(req)?.get("q").map(|q| q.to_owned()),
             })
         }
     }
