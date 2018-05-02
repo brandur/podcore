@@ -244,6 +244,16 @@ fn next_retry(num_errors: i32) -> Duration {
     Duration::seconds((num_errors as i64).pow(4) + 3)
 }
 
+/// Records the results of a run of jobs.
+///
+/// This is all batched together for efficient insertion, with the downside
+/// being that we won't be able to start a new batch until the slowest job in
+/// the preceding batch has finished running. Batches are large and my jobs are
+/// short-lived, so this is okay for my purposes.
+///
+/// Any job exceptions for succeeded jobs are deleted, the succeeded jobs
+/// themselves are deleted, errored jobs are upserted with new scheduling
+/// status, and finally job exceptions are upserted for failed jobs.
 #[inline]
 fn record_results(
     log: &Logger,
