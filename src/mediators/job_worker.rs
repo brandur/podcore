@@ -128,19 +128,7 @@ impl Mediator {
                         work_send.send(job);
                     }
 
-                    let mut succeeded_ids: Vec<i64> = Vec::with_capacity(num_jobs);
-                    let mut errored: Vec<JobResult> = Vec::new();
-                    for _i in 0..(num_jobs - 1) {
-                        match res_recv.recv().unwrap() {
-                            JobResult {
-                                job: model::Job { id, .. },
-                                e: None,
-                                ..
-                            } => succeeded_ids.push(id),
-                            res => errored.push(res),
-                        }
-                    }
-
+                    let (succeeded_ids, errored) = wait_results(res_recv, num_jobs);
                     record_results(&log, &*conn, succeeded_ids, errored)?;
 
                     if !self.run_forever {
@@ -344,7 +332,26 @@ fn record_results_inner(
     Ok(())
 }
 
-// A single thread's work loop.
+/// Waits on the job result channel for the expected number of results to come
+/// back and sorts them appropriately into vectors of succeeded IDs and errors.
+#[inline]
+fn wait_results(res_recv: &Receiver<JobResult>, num_jobs: usize) -> (Vec<i64>, Vec<JobResult>) {
+    let mut succeeded_ids: Vec<i64> = Vec::with_capacity(num_jobs);
+    let mut errored: Vec<JobResult> = Vec::new();
+    for _i in 0..(num_jobs - 1) {
+        match res_recv.recv().unwrap() {
+            JobResult {
+                job: model::Job { id, .. },
+                e: None,
+                ..
+            } => succeeded_ids.push(id),
+            res => errored.push(res),
+        }
+    }
+    (succeeded_ids, errored)
+}
+
+/// A single thread's work loop.
 fn work(
     log: &Logger,
     pool: &Pool<ConnectionManager<PgConnection>>,
@@ -382,7 +389,7 @@ fn work(
     Ok(())
 }
 
-// Working a single job.
+/// Work a single job.
 fn work_job(
     log: &Logger,
     _pool: &Pool<ConnectionManager<PgConnection>>,
