@@ -935,7 +935,7 @@ pub mod login_post {
             password: params.password.as_str(),
         }.run(log);
 
-        if let Err(Error(ErrorKind::User(user_errors::ErrorKind::Validation(message)), _)) = res {
+        if let Some(message) = user_error_message(&res) {
             return message_invalid(params.account, message.as_str());
         }
 
@@ -1631,7 +1631,7 @@ pub mod signup_post {
             scrypt_log_n: Some(params.scrypt_log_n),
         }.run(log);
 
-        if let Err(Error(ErrorKind::User(user_errors::ErrorKind::Validation(message)), _)) = res {
+        if let Some(message) = user_error_message(&res) {
             return message_invalid(params.account, message.as_str());
         }
 

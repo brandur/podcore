@@ -82,6 +82,18 @@ pub fn error_strings(error: &Error) -> Vec<String> {
         .collect()
 }
 
+/// Gets an error message suitable for display by the user.
+///
+/// This function only returns `Some` if the given `Result` is an error and if
+/// that error is a user error. Otherwise, it returns `None`.
+pub fn user_error_message<T>(res: &Result<T>) -> Option<String> {
+    if let &Err(Error(ErrorKind::User(ref error_kind), _)) = res {
+        return Some(format!("{}", error_kind));
+    }
+
+    return None;
+}
+
 //
 // User error chain
 //
