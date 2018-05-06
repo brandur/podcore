@@ -7,7 +7,7 @@ CREATE TABLE account (
     id BIGSERIAL PRIMARY KEY,
 
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    email TEXT,
+    email TEXT UNIQUE,
     ephemeral BOOLEAN NOT NULL,
 
     last_ip TEXT NOT NULL
@@ -40,7 +40,7 @@ CREATE TABLE account (
     )
 );
 
-CREATE INDEX account_email
+CREATE UNIQUE INDEX account_email
     ON account (email) WHERE email IS NOT NULL;
 
 -- Used for cleaning ephemeral accounts.
@@ -133,3 +133,22 @@ CREATE INDEX key_expire_at
 
 CREATE INDEX key_secret
     ON key (secret);
+
+--
+-- verification_code
+--
+
+CREATE TABLE verification_code (
+    id BIGSERIAL PRIMARY KEY,
+
+    account_id BIGINT NOT NULL
+        REFERENCES account (id) ON DELETE RESTRICT,
+    code TEXT NOT NULL UNIQUE
+        CHECK (char_length(code) <= 100),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX verification_code_account_id
+    ON verification_code (account_id);
+CREATE INDEX verification_code_code
+    ON verification_code (code);

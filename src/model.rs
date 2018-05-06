@@ -222,6 +222,14 @@ pub struct PodcastFeedLocation {
     pub podcast_id:         i64,
 }
 
+#[derive(Queryable)]
+pub struct VerificationCode {
+    pub id:         i64,
+    pub account_id: i64,
+    pub code:       String,
+    pub created_at: DateTime<Utc>,
+}
+
 #[cfg(test)]
 mod tests {
     use model::*;
@@ -243,7 +251,7 @@ pub mod insertable {
     use schema::{account, account_podcast, account_podcast_episode, directory, directory_podcast,
                  directory_podcast_directory_search, directory_podcast_exception,
                  directory_search, episode, job, job_exception, key, podcast, podcast_exception,
-                 podcast_feed_content, podcast_feed_location};
+                 podcast_feed_content, podcast_feed_location, verification_code};
 
     use chrono::{DateTime, Utc};
     use serde_json;
@@ -403,5 +411,12 @@ pub mod insertable {
         pub feed_url:           String,
         pub last_retrieved_at:  DateTime<Utc>,
         pub podcast_id:         i64,
+    }
+
+    #[derive(Insertable)]
+    #[table_name = "verification_code"]
+    pub struct VerificationCode {
+        pub account_id: i64,
+        pub code:       String,
     }
 }

@@ -167,6 +167,15 @@ table! {
     }
 }
 
+table! {
+    verification_code (id) {
+        id -> Int8,
+        account_id -> Int8,
+        code -> Text,
+        created_at -> Timestamptz,
+    }
+}
+
 joinable!(account_podcast -> account (account_id));
 joinable!(account_podcast -> podcast (podcast_id));
 joinable!(account_podcast_episode -> account_podcast (account_podcast_id));
@@ -183,6 +192,7 @@ joinable!(key -> account (account_id));
 joinable!(podcast_exception -> podcast (podcast_id));
 joinable!(podcast_feed_content -> podcast (podcast_id));
 joinable!(podcast_feed_location -> podcast (podcast_id));
+joinable!(verification_code -> account (account_id));
 
 allow_tables_to_appear_in_same_query!(
     account,
@@ -201,4 +211,5 @@ allow_tables_to_appear_in_same_query!(
     podcast_exception,
     podcast_feed_content,
     podcast_feed_location,
+    verification_code,
 );
