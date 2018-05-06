@@ -410,7 +410,12 @@ fn work_job(
 
 #[cfg(test)]
 mod tests {
+    use http_requester::HttpRequesterPassThrough;
     use mediators::job_worker::*;
+    use test_helpers;
+
+    use r2d2::{Pool, PooledConnection};
+    use std::sync::Arc;
 
     #[test]
     fn test_job_worker_create_errored_job() {
@@ -449,5 +454,75 @@ mod tests {
         assert_eq!(Duration::seconds(84), next_retry(3));
         assert_eq!(Duration::seconds(259), next_retry(4));
         assert_eq!(Duration::seconds(628), next_retry(5));
+    }
+
+    #[test]
+    fn test_job_worker_work_job() {
+        let bootstrap = TestBootstrap::new();
+
+        work_job(
+            &bootstrap.log,
+            &bootstrap.pool,
+            &HttpRequesterPassThrough {
+                data: Arc::new(Vec::new()),
+            },
+            &model::Job {
+                id:         0,
+                args:       json!({"message": "hello"}),
+                created_at: Utc::now(),
+                live:       true,
+                name:       jobs::no_op::NAME.to_owned(),
+                num_errors: 0,
+                try_at:     Utc::now(),
+            },
+        ).unwrap();
+    }
+
+    //
+    // Private types/functions
+    //
+
+    struct TestBootstrap {
+        _common: test_helpers::CommonTestBootstrap,
+        conn:    PooledConnection<ConnectionManager<PgConnection>>,
+        log:     Logger,
+        pool:    Pool<ConnectionManager<PgConnection>>,
+    }
+
+    impl TestBootstrap {
+        fn new() -> TestBootstrap {
+            let pool = test_helpers::pool();
+            let conn = pool.get().map_err(Error::from).unwrap();
+            TestBootstrap {
+                _common: test_helpers::CommonTestBootstrap::new(),
+                conn:    conn,
+                log:     test_helpers::log_sync(),
+                pool:    pool,
+            }
+        }
+
+        /*
+        fn mediator(&mut self) -> (Mediator, Logger) {
+            (
+                Mediator {
+                    // Number of connections minus one for the reingester's control thread and
+                    // minus another one for a connection that a test case
+                    // might be using for setup.
+                    num_workers:            test_helpers::MAX_NUM_CONNECTIONS - 1 - 1,
+                    pool:                   self.pool.clone(),
+                    http_requester_factory: Box::new(HttpRequesterFactoryPassThrough {
+                        data: Arc::new(test_helpers::MINIMAL_FEED.to_vec()),
+                    }),
+                },
+                self.log.clone(),
+            )
+        }
+*/
+    }
+
+    impl Drop for TestBootstrap {
+        fn drop(&mut self) {
+            test_helpers::clean_database(&self.log, &*self.conn);
+        }
     }
 }
