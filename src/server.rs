@@ -258,7 +258,7 @@ where
             // happen. Log an error that we're missing some handling and just generic a generic
             // status code.
             e => {
-                error!(log, "Unhandled user error kind");
+                error!(log, "Unhandled user error: {}", e);
                 render_user(log, StatusCode::BAD_REQUEST, format!("{}", e))
             }
         },
