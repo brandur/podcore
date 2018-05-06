@@ -583,6 +583,7 @@ pub mod web {
 
             let res = mediators::account_creator::Mediator {
                 conn,
+                create_code: false,
                 create_key: true,
                 email: None,
                 ephemeral: true,

@@ -39,6 +39,7 @@ pub mod account {
     pub fn insert_args(log: &Logger, conn: &PgConnection, args: Args) -> model::Account {
         account_creator::Mediator {
             conn,
+            create_code: false,
             create_key: false,
             email: args.email,
             ephemeral: args.ephemeral,

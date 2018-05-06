@@ -171,8 +171,8 @@ table! {
     verification_code (id) {
         id -> Int8,
         account_id -> Int8,
-        code -> Text,
         created_at -> Timestamptz,
+        secret -> Text,
     }
 }
 

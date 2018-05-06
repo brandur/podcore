@@ -1622,6 +1622,7 @@ pub mod signup_post {
         // TODO: Should take existing account for merge.
         let res = mediators::account_creator::Mediator {
             conn,
+            create_code: true,
             create_key: true,
             email: Some(params.email.as_str()),
             ephemeral: false,

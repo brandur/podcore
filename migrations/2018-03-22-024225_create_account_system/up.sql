@@ -143,12 +143,12 @@ CREATE TABLE verification_code (
 
     account_id BIGINT NOT NULL
         REFERENCES account (id) ON DELETE RESTRICT,
-    code TEXT NOT NULL UNIQUE
-        CHECK (char_length(code) <= 100),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    secret TEXT NOT NULL UNIQUE
+        CHECK (char_length(secret) <= 100)
 );
 
 CREATE INDEX verification_code_account_id
     ON verification_code (account_id);
-CREATE INDEX verification_code_code
-    ON verification_code (code);
+CREATE INDEX verification_code_secret
+    ON verification_code (secret);

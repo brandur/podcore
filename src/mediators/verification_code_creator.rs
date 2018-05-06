@@ -4,7 +4,6 @@ use model::insertable;
 use schema;
 use time_helpers;
 
-use chrono::{DateTime, Utc};
 use diesel;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -14,9 +13,8 @@ use slog::Logger;
 use std::iter;
 
 pub struct Mediator<'a> {
-    pub account:   &'a model::Account,
-    pub conn:      &'a PgConnection,
-    pub expire_at: Option<DateTime<Utc>>,
+    pub account: &'a model::Account,
+    pub conn:    &'a PgConnection,
 }
 
 impl<'a> Mediator<'a> {
@@ -31,34 +29,35 @@ impl<'a> Mediator<'a> {
 
         // We don't want secrets in logs, so we rely on this statement being compiled
         // out in a release build because it's `debug!`
-        debug!(log, "Generated secret";
-            "expire_at" => format!("{:?}", self.expire_at),
-            "secret" => secret.as_str());
+        debug!(log, "Generated secret"; "secret" => secret.as_str());
 
-        let key = self.insert_key(log, secret)?;
-        Ok(RunResult { key })
+        let code = self.insert_verification_code(log, secret)?;
+        Ok(RunResult { code })
     }
 
     //
     // Steps
     //
 
-    fn insert_key(&mut self, log: &Logger, secret: String) -> Result<model::Key> {
-        time_helpers::log_timed(&log.new(o!("step" => "insert_key")), |_log| {
-            diesel::insert_into(schema::key::table)
-                .values(&insertable::Key {
+    fn insert_verification_code(
+        &mut self,
+        log: &Logger,
+        secret: String,
+    ) -> Result<model::VerificationCode> {
+        time_helpers::log_timed(&log.new(o!("step" => "insert_verification_code")), |_log| {
+            diesel::insert_into(schema::verification_code::table)
+                .values(&insertable::VerificationCode {
                     account_id: self.account.id,
-                    expire_at: self.expire_at,
                     secret,
                 })
                 .get_result(self.conn)
-                .chain_err(|| "Error inserting key")
+                .chain_err(|| "Error inserting verification code")
         })
     }
 }
 
 pub struct RunResult {
-    pub key: model::Key,
+    pub code: model::VerificationCode,
 }
 
 //
@@ -92,7 +91,7 @@ fn generate_secret(_log: &Logger) -> String {
 
 #[cfg(test)]
 mod tests {
-    use mediators::key_creator::*;
+    use mediators::verification_code_creator::*;
     use test_data;
     use test_helpers;
 
@@ -100,13 +99,13 @@ mod tests {
     use r2d2_diesel::ConnectionManager;
 
     #[test]
-    fn test_key_create() {
+    fn test_verification_code_create() {
         let mut bootstrap = TestBootstrap::new();
         let (mut mediator, log) = bootstrap.mediator();
         let res = mediator.run(&log).unwrap();
 
-        assert_ne!(0, res.key.id);
-        assert_eq!(SECRET_LENGTH, res.key.secret.len());
+        assert_ne!(0, res.code.id);
+        assert_eq!(SECRET_LENGTH, res.code.secret.len());
     }
 
     //
@@ -138,9 +137,8 @@ mod tests {
         fn mediator(&mut self) -> (Mediator, Logger) {
             (
                 Mediator {
-                    account:   &self.account,
-                    conn:      &*self.conn,
-                    expire_at: None,
+                    account: &self.account,
+                    conn:    &*self.conn,
                 },
                 self.log.clone(),
             )

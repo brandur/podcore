@@ -17,3 +17,4 @@ pub mod podcast_crawler;
 pub mod podcast_feed_location_upgrader;
 pub mod podcast_reingester;
 pub mod podcast_updater;
+pub mod verification_code_creator;

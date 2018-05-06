@@ -226,8 +226,8 @@ pub struct PodcastFeedLocation {
 pub struct VerificationCode {
     pub id:         i64,
     pub account_id: i64,
-    pub code:       String,
     pub created_at: DateTime<Utc>,
+    pub secret:     String,
 }
 
 #[cfg(test)]
@@ -417,6 +417,6 @@ pub mod insertable {
     #[table_name = "verification_code"]
     pub struct VerificationCode {
         pub account_id: i64,
-        pub code:       String,
+        pub secret:     String,
     }
 }
