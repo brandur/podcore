@@ -183,6 +183,7 @@ pub fn clean_database(log: &Logger, conn: &PgConnection) {
     // I've left out `directory` even thought it's a leaf because there's no point
     // in deleting it over and over when it can be reused unchanged.
     conn.execute("TRUNCATE TABLE account CASCADE").unwrap();
+    conn.execute("TRUNCATE TABLE job CASCADE").unwrap();
     conn.execute("TRUNCATE TABLE podcast CASCADE").unwrap();
 }
 

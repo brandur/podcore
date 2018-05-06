@@ -113,14 +113,12 @@ impl Mediator {
                     total_num_jobs += num_jobs as i64;
 
                     if num_jobs == 0 {
-                        info!(log, "All jobs consumed -- sleeping";
-                        "seconds" => SLEEP_SECONDS);
-                        thread::sleep(std::time::Duration::from_secs(SLEEP_SECONDS));
-
-                        if self.run_forever {
+                        if !self.run_forever {
                             break;
                         }
 
+                        info!(log, "All jobs consumed -- sleeping"; "seconds" => SLEEP_SECONDS);
+                        thread::sleep(std::time::Duration::from_secs(SLEEP_SECONDS));
                         continue;
                     }
 
@@ -142,6 +140,13 @@ impl Mediator {
     }
 
     fn select_jobs(log: &Logger, conn: &PgConnection) -> Result<Vec<model::Job>> {
+        // Helps us easily track from the logs whether the job queue is behind.
+        let total_count: i64 = time_helpers::log_timed(
+            &log.new(o!("step" => "count_jobs")),
+            |_log| schema::job::table.count().first(conn),
+        )?;
+        info!(log, "Counted total jobs"; "num_jobs" => total_count);
+
         let res = time_helpers::log_timed(&log.new(o!("step" => "select_jobs")), |_log| {
             schema::job::table
                 .filter(schema::job::live.eq(true))
@@ -149,12 +154,14 @@ impl Mediator {
                 .limit(MAX_JOBS)
                 .get_results(conn)
         })?;
+        info!(log, "Selected jobs"; "num_jobs" => res.len());
 
         Ok(res)
     }
 }
 
 pub struct RunResult {
+    #[allow(dead_code)]
     num_jobs: i64,
 }
 
@@ -264,6 +271,9 @@ fn record_results_inner(
     succeeded_ids: Vec<i64>,
     errored: Vec<JobResult>,
 ) -> Result<()> {
+    info!(log, "Recording results";
+        "num_successes" => succeeded_ids.len(), "num_errored" => errored.len());
+
     // Delete any errors that might have been produced for this job
     time_helpers::log_timed(&log.new(o!("step" => "delete_job_exceptions")), |_log| {
         diesel::delete(
@@ -338,7 +348,7 @@ fn record_results_inner(
 fn wait_results(res_recv: &Receiver<JobResult>, num_jobs: usize) -> (Vec<i64>, Vec<JobResult>) {
     let mut succeeded_ids: Vec<i64> = Vec::with_capacity(num_jobs);
     let mut errored: Vec<JobResult> = Vec::new();
-    for _i in 0..(num_jobs - 1) {
+    for _i in 0..num_jobs {
         match res_recv.recv().unwrap() {
             JobResult {
                 job: model::Job { id, .. },
@@ -410,7 +420,7 @@ fn work_job(
 
 #[cfg(test)]
 mod tests {
-    use http_requester::HttpRequesterPassThrough;
+    use http_requester::{HttpRequesterFactoryPassThrough, HttpRequesterPassThrough};
     use mediators::job_worker::*;
     use test_helpers;
 
@@ -418,33 +428,59 @@ mod tests {
     use std::sync::Arc;
 
     #[test]
+    #[ignore]
+    fn test_job_worker_work() {
+        let mut bootstrap = TestBootstrapWithClean::new();
+
+        // Insert lots of jobs to be worked
+        let num_jobs = (NUM_WORKERS as i64) * 10;
+
+        // We're only going to do one pass so make sure it's possible to work all our
+        // test jobs in one.
+        assert!(num_jobs <= MAX_JOBS);
+
+        let mut jobs: Vec<insertable::Job> = Vec::with_capacity(num_jobs as usize);
+        for _i in 0..num_jobs {
+            jobs.push(insertable::Job {
+                args:   json!({"message": "hello"}),
+                name:   jobs::no_op::NAME.to_owned(),
+                try_at: Utc::now(),
+            });
+        }
+        diesel::insert_into(schema::job::table)
+            .values(&jobs)
+            .execute(&*bootstrap.conn)
+            .unwrap();
+
+        debug!(&bootstrap.log, "Finished setup (starting the real test)";
+            "num_jobs" => num_jobs);
+
+        {
+            let (mut mediator, log) = bootstrap.mediator();
+            let res = mediator.run(&log).unwrap();
+            assert_eq!(num_jobs, res.num_jobs);
+        }
+
+        // All jobs should have been deleted after they were worked.
+        let actual_count: i64 = schema::job::table.count().first(&*bootstrap.conn).unwrap();
+        assert_eq!(0, actual_count);
+    }
+
+    #[test]
     fn test_job_worker_create_errored_job() {
         // Initial transition into errored state
-        let new_job = create_errored_job(model::Job {
-            id:         0,
-            args:       json!({"message": "hello"}),
-            created_at: Utc::now(),
-            live:       true,
-            name:       jobs::no_op::NAME.to_owned(),
-            num_errors: 0,
-            try_at:     Utc::now(),
-        });
-        assert!(new_job.live);
-        assert_eq!(1, new_job.num_errors);
+        let job = create_errored_job(new_job());
+        assert!(job.live);
+        assert_eq!(1, job.num_errors);
 
         // Test transition from live to dead because we're already at the threshold for
         // maximum retries
-        let new_job = create_errored_job(model::Job {
-            id:         0,
-            args:       json!({"message": "hello"}),
-            created_at: Utc::now(),
-            live:       true,
-            name:       jobs::no_op::NAME.to_owned(),
-            num_errors: MAX_ERRORS,
-            try_at:     Utc::now(),
-        });
-        assert_eq!(false, new_job.live);
-        assert_eq!(MAX_ERRORS + 1, new_job.num_errors);
+        let mut job = new_job();
+        job.num_errors = MAX_ERRORS;
+
+        let job = create_errored_job(job);
+        assert_eq!(false, job.live);
+        assert_eq!(MAX_ERRORS + 1, job.num_errors);
     }
 
     #[test]
@@ -466,34 +502,50 @@ mod tests {
             &HttpRequesterPassThrough {
                 data: Arc::new(Vec::new()),
             },
-            &model::Job {
-                id:         0,
-                args:       json!({"message": "hello"}),
-                created_at: Utc::now(),
-                live:       true,
-                name:       jobs::no_op::NAME.to_owned(),
-                num_errors: 0,
-                try_at:     Utc::now(),
-            },
+            &new_job(),
         ).unwrap();
     }
 
     //
-    // Private types/functions
+    // Private constants/types/functions
     //
 
+    const NUM_WORKERS: u32 = 10;
+
     struct TestBootstrap {
+        _common: test_helpers::CommonTestBootstrap,
+        log:     Logger,
+        pool:    Pool<ConnectionManager<PgConnection>>,
+    }
+
+    impl TestBootstrap {
+        fn new() -> Self {
+            TestBootstrap {
+                _common: test_helpers::CommonTestBootstrap::new(),
+                log:     test_helpers::log_sync(),
+                pool:    test_helpers::pool(),
+            }
+        }
+    }
+
+    /// Similar to `TestBootstrap` above, but cleans the database after it's
+    /// run.
+    ///
+    /// Not suitable for running in the main test suite because it doesn't play
+    /// well with parallelism. Use only for tests that are run
+    /// single-threaded and marked with `ignore`.
+    struct TestBootstrapWithClean {
         _common: test_helpers::CommonTestBootstrap,
         conn:    PooledConnection<ConnectionManager<PgConnection>>,
         log:     Logger,
         pool:    Pool<ConnectionManager<PgConnection>>,
     }
 
-    impl TestBootstrap {
-        fn new() -> TestBootstrap {
+    impl TestBootstrapWithClean {
+        fn new() -> Self {
             let pool = test_helpers::pool();
             let conn = pool.get().map_err(Error::from).unwrap();
-            TestBootstrap {
+            TestBootstrapWithClean {
                 _common: test_helpers::CommonTestBootstrap::new(),
                 conn:    conn,
                 log:     test_helpers::log_sync(),
@@ -501,28 +553,36 @@ mod tests {
             }
         }
 
-        /*
         fn mediator(&mut self) -> (Mediator, Logger) {
             (
                 Mediator {
-                    // Number of connections minus one for the reingester's control thread and
-                    // minus another one for a connection that a test case
-                    // might be using for setup.
-                    num_workers:            test_helpers::MAX_NUM_CONNECTIONS - 1 - 1,
+                    num_workers:            NUM_WORKERS,
                     pool:                   self.pool.clone(),
                     http_requester_factory: Box::new(HttpRequesterFactoryPassThrough {
-                        data: Arc::new(test_helpers::MINIMAL_FEED.to_vec()),
+                        data: Arc::new(Vec::new()),
                     }),
+                    run_forever:            false,
                 },
                 self.log.clone(),
             )
         }
-*/
     }
 
-    impl Drop for TestBootstrap {
+    impl Drop for TestBootstrapWithClean {
         fn drop(&mut self) {
             test_helpers::clean_database(&self.log, &*self.conn);
+        }
+    }
+
+    fn new_job() -> model::Job {
+        model::Job {
+            id:         0,
+            args:       json!({"message": "hello"}),
+            created_at: Utc::now(),
+            live:       true,
+            name:       jobs::no_op::NAME.to_owned(),
+            num_errors: 0,
+            try_at:     Utc::now() - Duration::seconds(10),
         }
     }
 }

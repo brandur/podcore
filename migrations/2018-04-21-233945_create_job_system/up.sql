@@ -11,7 +11,7 @@ CREATE TABLE job (
     -- This is not going to be immediately used for anything, but is designed
     -- to be a control rod that allows us to insert jobs that are not to be
     -- worked.
-    live BOOLEAN NOT NULL DEFAULT false,
+    live BOOLEAN NOT NULL DEFAULT true,
 
     name TEXT NOT NULL
         CHECK (char_length(name) <= 100),
