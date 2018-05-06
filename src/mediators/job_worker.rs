@@ -45,7 +45,7 @@ impl Mediator {
     pub fn run_inner(&mut self, log: &Logger) -> Result<RunResult> {
         let mut workers = vec![];
 
-        let num_jobs = {
+        let res = {
             let (res_send, res_recv) = chan::sync(MAX_JOBS as usize);
             let (work_send, work_recv) = chan::sync(MAX_JOBS as usize);
 
@@ -85,8 +85,11 @@ impl Mediator {
             let _ = worker.join();
         }
 
-        info!(log, "Finished working"; "num_jobs" => num_jobs);
-        Ok(RunResult { num_jobs })
+        info!(log, "Finished working";
+            "num_jobs" => res.num_jobs,
+            "num_succeeded" => res.num_succeeded,
+            "num_errored" => res.num_errored);
+        Ok(res)
     }
 
     //
@@ -98,19 +101,23 @@ impl Mediator {
         log: &Logger,
         work_send: &Sender<model::Job>,
         res_recv: &Receiver<JobResult>,
-    ) -> Result<i64> {
+    ) -> Result<RunResult> {
         let log = log.new(o!("thread" => "control"));
         time_helpers::log_timed(
             &log.new(o!("step" => "queue_jobs_and_record_results")),
             |log| {
                 let conn = &*(self.pool.get().map_err(Error::from))?;
 
-                let mut total_num_jobs = 0i64;
+                let mut res = RunResult {
+                    num_jobs:      0,
+                    num_succeeded: 0,
+                    num_errored:   0,
+                };
                 loop {
                     let jobs = Self::select_jobs(log, &*conn)?;
 
                     let num_jobs = jobs.len();
-                    total_num_jobs += num_jobs as i64;
+                    res.num_jobs += num_jobs as i64;
 
                     if num_jobs == 0 {
                         if self.run_once {
@@ -127,6 +134,9 @@ impl Mediator {
                     }
 
                     let (succeeded_ids, errored) = wait_results(res_recv, num_jobs);
+                    res.num_succeeded += succeeded_ids.len() as i64;
+                    res.num_errored += errored.len() as i64;
+
                     record_results(&log, &*conn, succeeded_ids, errored)?;
 
                     if self.run_once {
@@ -134,7 +144,7 @@ impl Mediator {
                     }
                 }
 
-                Ok(total_num_jobs)
+                Ok(res)
             },
         )
     }
@@ -161,7 +171,20 @@ impl Mediator {
 }
 
 pub struct RunResult {
+    /// Total number of jobs worked.
+    ///
+    /// This may include the same job multiple times if it errored and was
+    /// processed across multiple runs.
     pub num_jobs: i64,
+
+    /// Number of those jobs that succeeded.
+    pub num_succeeded: i64,
+
+    /// Number of those jobs that errored.
+    ///
+    /// A single job is allowed to error multiple times so this is not a count
+    /// of the number of unique jobs that errored.
+    pub num_errored: i64,
 }
 
 //
@@ -271,7 +294,7 @@ fn record_results_inner(
     errored: Vec<JobResult>,
 ) -> Result<()> {
     info!(log, "Recording results";
-        "num_successes" => succeeded_ids.len(), "num_errored" => errored.len());
+        "num_succeeded" => succeeded_ids.len(), "num_errored" => errored.len());
 
     // Delete any errors that might have been produced for this job
     time_helpers::log_timed(&log.new(o!("step" => "delete_job_exceptions")), |_log| {
@@ -413,7 +436,7 @@ fn work_job(
             args:      serde_json::from_value(job.args.clone())?,
             requester: requester,
         }.run(log),
-        _ => panic!("Job not covered!"),
+        _ => Err(error::job_unknown(job.name.clone())),
     }
 }
 
@@ -458,11 +481,46 @@ mod tests {
             let (mut mediator, log) = bootstrap.mediator();
             let res = mediator.run(&log).unwrap();
             assert_eq!(num_jobs, res.num_jobs);
+            assert_eq!(num_jobs, res.num_succeeded);
+            assert_eq!(0, res.num_errored);
         }
 
         // All jobs should have been deleted after they were worked.
         let actual_count: i64 = schema::job::table.count().first(&*bootstrap.conn).unwrap();
         assert_eq!(0, actual_count);
+    }
+
+    #[test]
+    #[ignore]
+    fn test_job_worker_error() {
+        let mut bootstrap = TestBootstrapWithClean::new();
+
+        diesel::insert_into(schema::job::table)
+            .values(&insertable::Job {
+                args:   json!({"message": "hello"}),
+                name:   "bad_job".to_owned(),
+                try_at: Utc::now(),
+            })
+            .execute(&*bootstrap.conn)
+            .unwrap();
+
+        {
+            let (mut mediator, log) = bootstrap.mediator();
+            let res = mediator.run(&log).unwrap();
+            assert_eq!(1, res.num_jobs);
+            assert_eq!(0, res.num_succeeded);
+            assert_eq!(1, res.num_errored);
+        }
+
+        // We should have our job leftover, along with a job exception.
+        let actual_job_count: i64 = schema::job::table.count().first(&*bootstrap.conn).unwrap();
+        assert_eq!(1, actual_job_count);
+
+        let actual_job_exception_count: i64 = schema::job_exception::table
+            .count()
+            .first(&*bootstrap.conn)
+            .unwrap();
+        assert_eq!(1, actual_job_exception_count);
     }
 
     #[test]
@@ -581,7 +639,7 @@ mod tests {
             live:       true,
             name:       jobs::no_op::NAME.to_owned(),
             num_errors: 0,
-            try_at:     Utc::now() - Duration::seconds(10),
+            try_at:     Utc::now(),
         }
     }
 }

@@ -26,6 +26,17 @@ error_chain!{
     }
 
     errors {
+        /// Occurs when encountering a job in the job queue which we don't know how to handle.
+        ///
+        /// This is often the result of a deployment mismatch. When new job classes are added, the
+        /// job worker should ideally be updated first so that it can handle them before any are
+        /// inserted into the queue. When job classes are removed, the worker should be updated
+        /// last to given any existing jobs in the queue a chance to drain.
+        JobUnknown(name: String) {
+            description("Unknown job"),
+            display("Unknown job: {}", name),
+        }
+
         SentryCredentialParseError {
             description("Invalid Sentry DSN syntax. Expected the form `(http|https)://{public key}:{private key}@{host}:{port}/{project id}`")
         }
@@ -112,6 +123,11 @@ pub mod error {
     #[inline]
     pub fn bad_request<S: Into<String>>(message: S) -> Error {
         ErrorKind::BadRequest(message.into()).into()
+    }
+
+    #[inline]
+    pub fn job_unknown<S: Into<String>>(name: S) -> Error {
+        ErrorKind::JobUnknown(name.into()).into()
     }
 
     #[inline]

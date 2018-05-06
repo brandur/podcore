@@ -409,14 +409,12 @@ fn subcommand_work(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) 
         .unwrap_or_else(|_| options.num_connections * 5);
 
     loop {
-        let res = job_worker::Mediator {
+        let _res = job_worker::Mediator {
             num_workers,
             pool: pool(log, options)?.clone(),
             http_requester_factory: Box::new(HttpRequesterFactoryLive {}),
             run_once,
         }.run(log)?;
-
-        info!(log, "Finished work"; "num_jobs" => res.num_jobs);
     }
 }
 
