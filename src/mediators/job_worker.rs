@@ -196,7 +196,7 @@ pub struct RunResult {
 const MAX_ERRORS: i32 = 10;
 
 // The maximum number of jobs to select in one batch.
-const MAX_JOBS: i64 = 100;
+const MAX_JOBS: i64 = 1000;
 
 /// Number of seconds to sleep after finding no jobs to work.
 ///
