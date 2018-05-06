@@ -198,8 +198,13 @@ const MAX_ERRORS: i32 = 10;
 // The maximum number of jobs to select in one batch.
 const MAX_JOBS: i64 = 100;
 
-// Number of seconds to sleep after finding no jobs to work.
-const SLEEP_SECONDS: u64 = 60;
+/// Number of seconds to sleep after finding no jobs to work.
+///
+/// In practice, especially at first, this will be roughly the average time
+/// that a new user has to wait to get an activation email. I've tweaked the
+/// timing a bit so that they get it faster. In pratice, doing a no-op loop
+/// every 30 seconds or so won't be a huge tax on system resources.
+const SLEEP_SECONDS: u64 = 30;
 
 //
 // Private structs
