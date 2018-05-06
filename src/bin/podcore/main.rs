@@ -400,13 +400,17 @@ fn subcommand_work(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) 
     let matches = matches.subcommand_matches("work").unwrap();
     let run_once = matches.is_present("run-once");
 
+    // Jobs don't tend to be as connection hungry as other operations (in that they
+    // don't have to spend all their time in a transaction), so optimistically
+    // set our number of workers much higher than the allowed number of
+    // assigned connections.
+    let num_workers = env::var("NUM_WORKERS")
+        .map(|s| s.parse::<u32>().unwrap())
+        .unwrap_or_else(|_| options.num_connections * 5);
+
     loop {
         let res = job_worker::Mediator {
-            // Jobs don't tend to be as connection hungry as other operations (in that they don't
-            // have to spend all their time in a transaction), so optimistically set our number of
-            // workers much higher than the allowed number of assigned connections.
-            num_workers: options.num_connections * 5,
-
+            num_workers,
             pool: pool(log, options)?.clone(),
             http_requester_factory: Box::new(HttpRequesterFactoryLive {}),
             run_once,
