@@ -1,3 +1,7 @@
+//
+// Macros
+//
+
 /// Creates a per-job enqueue helper function.
 macro_rules! enqueue {
     () => {
