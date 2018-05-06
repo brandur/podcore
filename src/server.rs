@@ -277,7 +277,7 @@ where
             // This is an internal error, so print it out
             error!(log, "Encountered internal error: {}", e);
 
-            render_internal(log, StatusCode::UNAUTHORIZED, format!("{}", e))
+            render_internal(log, StatusCode::INTERNAL_SERVER_ERROR, format!("{}", e))
         }
     }
 }
