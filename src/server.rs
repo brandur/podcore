@@ -258,7 +258,11 @@ where
             // happen. Log an error that we're missing some handling and just generic a generic
             // status code.
             e => {
+                // This should be something more akin to a soft assert (i.e., works in
+                // production, but fails in tests so that we notice without
+                // having to be scanning through the logs).
                 error!(log, "Unhandled user error: {}", e);
+
                 render_user(log, StatusCode::BAD_REQUEST, format!("{}", e))
             }
         },
