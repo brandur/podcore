@@ -33,8 +33,8 @@ pub struct Mediator {
     pub pool:                   Pool<ConnectionManager<PgConnection>>,
     pub http_requester_factory: Box<HttpRequesterFactory>,
 
-    // Tells the worker to run forever rather than fall through after fetching one batch of jobs.
-    pub run_forever: bool,
+    // Tells the worker to run for only one batch of jobs instead of looping continuously forever.
+    pub run_once: bool,
 }
 
 impl Mediator {
@@ -76,8 +76,8 @@ impl Mediator {
 
             // `work_send` is dropped, which unblocks our threads' select, passes them a
             // `None` result, and lets them to drop back to main. This only
-            // occurs if `run_forever` was set to `false` and the loop above
-            // was broken.
+            // occurs if `run_once` was set to `false` and the loop above was
+            // broken.
         };
 
         // Wait for threads to rejoin
@@ -113,7 +113,7 @@ impl Mediator {
                     total_num_jobs += num_jobs as i64;
 
                     if num_jobs == 0 {
-                        if !self.run_forever {
+                        if self.run_once {
                             break;
                         }
 
@@ -129,7 +129,7 @@ impl Mediator {
                     let (succeeded_ids, errored) = wait_results(res_recv, num_jobs);
                     record_results(&log, &*conn, succeeded_ids, errored)?;
 
-                    if !self.run_forever {
+                    if self.run_once {
                         break;
                     }
                 }
@@ -561,7 +561,7 @@ mod tests {
                     http_requester_factory: Box::new(HttpRequesterFactoryPassThrough {
                         data: Arc::new(Vec::new()),
                     }),
-                    run_forever:            false,
+                    run_once:               true,
                 },
                 self.log.clone(),
             )
