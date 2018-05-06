@@ -147,6 +147,7 @@ pub mod verification_mailer {
         use r2d2_diesel::ConnectionManager;
         use std::sync::Arc;
 
+        #[ignore]
         #[test]
         fn test_job_verification_mailer_run() {
             let mut bootstrap = TestBootstrap::new();
