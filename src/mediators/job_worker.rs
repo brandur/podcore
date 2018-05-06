@@ -161,8 +161,7 @@ impl Mediator {
 }
 
 pub struct RunResult {
-    #[allow(dead_code)]
-    num_jobs: i64,
+    pub num_jobs: i64,
 }
 
 //

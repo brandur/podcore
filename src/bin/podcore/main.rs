@@ -24,6 +24,7 @@ use podcore::errors::*;
 use podcore::http_requester::{HttpRequesterFactoryLive, HttpRequesterLive};
 use podcore::mediators::cleaner;
 use podcore::mediators::directory_podcast_searcher;
+use podcore::mediators::job_worker;
 use podcore::mediators::podcast_crawler;
 use podcore::mediators::podcast_feed_location_upgrader;
 use podcore::mediators::podcast_reingester;
@@ -119,6 +120,11 @@ fn main() {
             SubCommand::with_name("web")
                 .about("Starts the web server")
                 .arg_from_usage("-p, --port=[PORT] 'Port to bind server to'"),
+        )
+        .subcommand(
+            SubCommand::with_name("work")
+                .about("Work background jobs")
+                .arg_from_usage("--run-once 'Run only one time instead of looping'"),
         );
 
     let matches = app.clone().get_matches();
@@ -137,6 +143,7 @@ fn main() {
         Some("sleep") => subcommand_sleep(&log, &matches, &options),
         Some("upgrade-https") => subcommand_upgrade_https(&log, &matches, &options),
         Some("web") => subcommand_web(&log, &matches, &options),
+        Some("work") => subcommand_work(&log, &matches, &options),
         None => {
             app.print_help().unwrap();
             Ok(())
@@ -387,6 +394,26 @@ fn subcommand_web(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -
     };
     server.run()?;
     Ok(())
+}
+
+fn subcommand_work(log: &Logger, matches: &ArgMatches, options: &GlobalOptions) -> Result<()> {
+    let matches = matches.subcommand_matches("work").unwrap();
+    let run_once = matches.is_present("run-once");
+
+    loop {
+        let res = job_worker::Mediator {
+            // Jobs don't tend to be as connection hungry as other operations (in that they don't
+            // have to spend all their time in a transaction), so optimistically set our number of
+            // workers much higher than the allowed number of assigned connections.
+            num_workers: options.num_connections * 5,
+
+            pool: pool(log, options)?.clone(),
+            http_requester_factory: Box::new(HttpRequesterFactoryLive {}),
+            run_once,
+        }.run(log)?;
+
+        info!(log, "Finished work"; "num_jobs" => res.num_jobs);
+    }
 }
 
 //
