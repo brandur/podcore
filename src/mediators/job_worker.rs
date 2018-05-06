@@ -486,8 +486,7 @@ mod tests {
         }
 
         // All jobs should have been deleted after they were worked.
-        let actual_count: i64 = schema::job::table.count().first(&*bootstrap.conn).unwrap();
-        assert_eq!(0, actual_count);
+        assert_eq!(0, count_jobs(&*bootstrap.conn));
     }
 
     #[test]
@@ -495,13 +494,18 @@ mod tests {
     fn test_job_worker_error() {
         let mut bootstrap = TestBootstrapWithClean::new();
 
-        diesel::insert_into(schema::job::table)
+        //
+        // Part 1: Insert a job with an unknown name that the worker can't handle.
+        // Verify that the job isn't worked and an exception is inserted.
+        //
+
+        let job: model::Job = diesel::insert_into(schema::job::table)
             .values(&insertable::Job {
                 args:   json!({"message": "hello"}),
                 name:   "bad_job".to_owned(),
                 try_at: Utc::now(),
             })
-            .execute(&*bootstrap.conn)
+            .get_result(&*bootstrap.conn)
             .unwrap();
 
         {
@@ -513,14 +517,32 @@ mod tests {
         }
 
         // We should have our job leftover, along with a job exception.
-        let actual_job_count: i64 = schema::job::table.count().first(&*bootstrap.conn).unwrap();
-        assert_eq!(1, actual_job_count);
+        assert_eq!(1, count_jobs(&*bootstrap.conn));
+        assert_eq!(1, count_job_exceptions(&*bootstrap.conn));
 
-        let actual_job_exception_count: i64 = schema::job_exception::table
-            .count()
-            .first(&*bootstrap.conn)
+        //
+        // Part 2: Correct the job's name. See it worked successfully.
+        //
+
+        diesel::update(schema::job::table.filter(schema::job::id.eq(job.id)))
+            .set((
+                schema::job::name.eq(jobs::no_op::NAME),
+                schema::job::try_at.eq(Utc::now()),
+            ))
+            .execute(&*bootstrap.conn)
             .unwrap();
-        assert_eq!(1, actual_job_exception_count);
+
+        {
+            let (mut mediator, log) = bootstrap.mediator();
+            let res = mediator.run(&log).unwrap();
+            assert_eq!(1, res.num_jobs);
+            assert_eq!(1, res.num_succeeded);
+            assert_eq!(0, res.num_errored);
+        }
+
+        // All jobs and exceptions are now gone.
+        assert_eq!(0, count_jobs(&*bootstrap.conn));
+        assert_eq!(0, count_job_exceptions(&*bootstrap.conn));
     }
 
     #[test]
@@ -629,6 +651,14 @@ mod tests {
         fn drop(&mut self) {
             test_helpers::clean_database(&self.log, &*self.conn);
         }
+    }
+
+    fn count_jobs(conn: &PgConnection) -> i64 {
+        schema::job::table.count().first(conn).unwrap()
+    }
+
+    fn count_job_exceptions(conn: &PgConnection) -> i64 {
+        schema::job_exception::table.count().first(conn).unwrap()
     }
 
     fn new_job() -> model::Job {
