@@ -397,6 +397,9 @@ fn work_job(
     job: &model::Job,
 ) -> Result<()> {
     match job.name.as_str() {
+        jobs::no_op::NAME => jobs::no_op::Job {
+            args: serde_json::from_value(job.args.clone())?,
+        }.run(log),
         jobs::verification_mailer::NAME => jobs::verification_mailer::Job {
             args:      serde_json::from_value(job.args.clone())?,
             requester: requester,
@@ -408,6 +411,36 @@ fn work_job(
 #[cfg(test)]
 mod tests {
     use mediators::job_worker::*;
+
+    #[test]
+    fn test_job_worker_create_errored_job() {
+        // Initial transition into errored state
+        let new_job = create_errored_job(model::Job {
+            id:         0,
+            args:       json!({"message": "hello"}),
+            created_at: Utc::now(),
+            live:       true,
+            name:       jobs::no_op::NAME.to_owned(),
+            num_errors: 0,
+            try_at:     Utc::now(),
+        });
+        assert!(new_job.live);
+        assert_eq!(1, new_job.num_errors);
+
+        // Test transition from live to dead because we're already at the threshold for
+        // maximum retries
+        let new_job = create_errored_job(model::Job {
+            id:         0,
+            args:       json!({"message": "hello"}),
+            created_at: Utc::now(),
+            live:       true,
+            name:       jobs::no_op::NAME.to_owned(),
+            num_errors: MAX_ERRORS,
+            try_at:     Utc::now(),
+        });
+        assert_eq!(false, new_job.live);
+        assert_eq!(MAX_ERRORS + 1, new_job.num_errors);
+    }
 
     #[test]
     fn test_job_worker_next_retry() {
