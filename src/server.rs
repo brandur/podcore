@@ -216,7 +216,7 @@ pub fn query<S: State>(req: &HttpRequest<S>) -> Result<Query<HashMap<String, Str
 /// Handles a `Result` and renders an error that was intended for the user by
 /// invoking the given `render_user` function.
 ///
-/// If `render_user` fails or the user wasn't intended to be user-facing,
+/// If `render_user` fails or the error wasn't intended to be user-facing,
 /// `render_internal` is invoked instead.
 pub fn render_error<FInternal, FUser>(
     log: &Logger,
