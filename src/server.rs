@@ -210,7 +210,7 @@ pub fn ip_for_request<S: State>(req: &HttpRequest<S>) -> &str {
 /// error message everywhere when a bad query string is provided.
 pub fn query<S: State>(req: &HttpRequest<S>) -> Result<Query<HashMap<String, String>>> {
     Query::<HashMap<String, String>>::extract(req)
-        .map_err(|_e| error::bad_request("Malformed query string"))
+        .map_err(|_e| user_errors::bad_request("Malformed query string"))
 }
 
 /// Handles a `Result` and renders an error that was intended for the user by
@@ -231,27 +231,37 @@ where
     // Note that `format!` activates the `Display` trait and shows our errors'
     // `display` definition
     let res = match e {
-        e @ Error(ErrorKind::BadParameter(_, _), _) => {
-            render_user(log, StatusCode::BAD_REQUEST, format!("{}", e))
-        }
-        e @ Error(ErrorKind::BadRequest(_), _) => {
-            render_user(log, StatusCode::BAD_REQUEST, format!("{}", e))
-        }
-        e @ Error(ErrorKind::MissingParameter(_), _) => {
-            render_user(log, StatusCode::BAD_REQUEST, format!("{}", e))
-        }
-        e @ Error(ErrorKind::NotFound(_, _), _) => {
-            render_user(log, StatusCode::NOT_FOUND, format!("{}", e))
-        }
-        e @ Error(ErrorKind::NotFoundGeneral(_), _) => {
-            render_user(log, StatusCode::NOT_FOUND, format!("{}", e))
-        }
-        e @ Error(ErrorKind::Unauthorized, _) => {
-            render_user(log, StatusCode::UNAUTHORIZED, format!("{}", e))
-        }
-        e @ Error(ErrorKind::Validation(_), _) => {
-            render_user(log, StatusCode::UNPROCESSABLE_ENTITY, format!("{}", e))
-        }
+        Error(ErrorKind::User(e), _) => match e {
+            e @ user_errors::ErrorKind::BadParameter(_, _) => {
+                render_user(log, StatusCode::BAD_REQUEST, format!("{}", e))
+            }
+            e @ user_errors::ErrorKind::BadRequest(_) => {
+                render_user(log, StatusCode::BAD_REQUEST, format!("{}", e))
+            }
+            e @ user_errors::ErrorKind::MissingParameter(_) => {
+                render_user(log, StatusCode::BAD_REQUEST, format!("{}", e))
+            }
+            e @ user_errors::ErrorKind::NotFound(_, _) => {
+                render_user(log, StatusCode::NOT_FOUND, format!("{}", e))
+            }
+            e @ user_errors::ErrorKind::NotFoundGeneral(_) => {
+                render_user(log, StatusCode::NOT_FOUND, format!("{}", e))
+            }
+            e @ user_errors::ErrorKind::Unauthorized => {
+                render_user(log, StatusCode::UNAUTHORIZED, format!("{}", e))
+            }
+            e @ user_errors::ErrorKind::Validation(_) => {
+                render_user(log, StatusCode::UNPROCESSABLE_ENTITY, format!("{}", e))
+            }
+
+            // Unfortunately, error-chain requires that we're non-exhaustive, but this should never
+            // happen. Log an error that we're missing some handling and just generic a generic
+            // status code.
+            e => {
+                error!(log, "Unhandled user error kind");
+                render_user(log, StatusCode::BAD_REQUEST, format!("{}", e))
+            }
+        },
         e => Err(e),
     };
 

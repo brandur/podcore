@@ -40,49 +40,148 @@ error_chain!{
         SentryCredentialParseError {
             description("Invalid Sentry DSN syntax. Expected the form `(http|https)://{public key}:{private key}@{host}:{port}/{project id}`")
         }
+    }
 
-        //
-        // User errors
-        //
-        // These are public-facing errors for the API and web. Don't reuse types that are not
-        // appropriate. Add a new one if necessary.
-        //
+    links {
+        User(user_errors::Error, user_errors::ErrorKind);
+    }
+}
 
-        BadParameter(parameter: String, detail: String) {
-            description("Bad parameter"),
-            display("Bad request: Error parsing parameter \"{}\": {}", parameter, detail),
+//
+// Error functions
+//
+
+pub mod errors {
+    use errors::*;
+
+    #[inline]
+    pub fn job_unknown<S: Into<String>>(name: S) -> Error {
+        ErrorKind::JobUnknown(name.into()).into()
+    }
+}
+
+// Collect error strings together so that we can build a good error message to
+// send up. It's worth nothing that the original error is actually at the end of
+// the iterator, but since it's the most relevant, we reverse the list.
+//
+// The chain isn't a double-ended iterator (meaning we can't use `rev`), so we
+// have to collect it to a Vec first before reversing it.
+//
+// I've located this function here instead of error_helpers because it's needed
+// by `error_reporter::Mediator`. It's a bit of a breakage in modularity
+// though, so it might be better just to duplicate the function in two places
+// instead.
+pub fn error_strings(error: &Error) -> Vec<String> {
+    error
+        .iter()
+        .map(|e| e.to_string())
+        .collect::<Vec<_>>()
+        .iter()
+        .cloned()
+        .rev()
+        .collect()
+}
+
+//
+// User error chain
+//
+
+/// An error chain for user errors that should be transformed into something
+/// user-facing before being sent back with a request.
+pub mod user_errors {
+    use errors;
+
+    error_chain!{
+        errors {
+            BadParameter(parameter: String, detail: String) {
+                description("Bad parameter"),
+                display("Bad request: Error parsing parameter \"{}\": {}", parameter, detail),
+            }
+
+            BadRequest(message: String) {
+                description("Bad request"),
+                display("Bad request: {}", message),
+            }
+
+            MissingParameter(parameter: String) {
+                description("Bad parameter"),
+                display("Bad request: Missing parameter \"{}\"", parameter),
+            }
+
+            NotFound(resource: String, id: i64) {
+                description("Not found"),
+                display("Not found: resource \"{}\" with ID {} was not found.", resource, id),
+            }
+
+            // A more generalized "not found" that doesn't identify a specific resource.
+            NotFoundGeneral(message: String) {
+                description("Not found"),
+                display("Not found: {}", message),
+            }
+
+            Unauthorized {
+                description("Unauthorized"),
+                display("Unauthorized: You need to present valid credentials to access this endpoint."),
+            }
+
+            Validation(message: String) {
+                description("Validation error"),
+                display("Validation failed: {}", message),
+            }
         }
+    }
 
-        BadRequest(message: String) {
-            description("Bad request"),
-            display("Bad request: {}", message),
-        }
+    //
+    // Public functions
+    //
 
-        MissingParameter(parameter: String) {
-            description("Bad parameter"),
-            display("Bad request: Missing parameter \"{}\"", parameter),
-        }
+    #[inline]
+    pub fn bad_parameter<E: ::std::error::Error, S: Into<String>>(name: S, e: &E) -> errors::Error {
+        // `format!` invokes the error's `Display` trait implementation
+        to_error(ErrorKind::BadParameter(
+            name.into(),
+            format!("{}", e).to_owned(),
+        ))
+    }
 
-        NotFound(resource: String, id: i64) {
-            description("Not found"),
-            display("Not found: resource \"{}\" with ID {} was not found.", resource, id),
-        }
+    #[inline]
+    pub fn bad_request<S: Into<String>>(message: S) -> errors::Error {
+        to_error(ErrorKind::BadRequest(message.into()))
+    }
 
-        // A more generalized "not found" that doesn't identify a specific resource.
-        NotFoundGeneral(message: String) {
-            description("Not found"),
-            display("Not found: {}", message),
-        }
+    #[inline]
+    pub fn missing_parameter<S: Into<String>>(message: S) -> errors::Error {
+        to_error(ErrorKind::MissingParameter(message.into()))
+    }
 
-        Unauthorized {
-            description("Unauthorized"),
-            display("Unauthorized: You need to present valid credentials to access this endpoint."),
-        }
+    #[inline]
+    pub fn not_found<S: Into<String>>(resource: S, id: i64) -> errors::Error {
+        to_error(ErrorKind::NotFound(resource.into(), id))
+    }
 
-        Validation(message: String) {
-            description("Validation error"),
-            display("Validation failed: {}", message),
-        }
+    #[inline]
+    pub fn not_found_general<S: Into<String>>(message: S) -> errors::Error {
+        to_error(ErrorKind::NotFoundGeneral(message.into()))
+    }
+
+    #[inline]
+    pub fn unauthorized() -> errors::Error {
+        to_error(ErrorKind::Unauthorized)
+    }
+
+    #[inline]
+    pub fn validation<S: Into<String>>(message: S) -> errors::Error {
+        to_error(ErrorKind::Validation(message.into()))
+    }
+
+    //
+    // Private functions
+    //
+
+    #[inline]
+    fn to_error(e: ErrorKind) -> errors::Error {
+        let user_e: Error = e.into();
+        user_e.into()
     }
 }
 
@@ -105,79 +204,4 @@ where
     {
         Box::new(self.then(|r| r.chain_err(callback)))
     }
-}
-
-//
-// Error functions
-//
-
-pub mod error {
-    use errors::*;
-
-    #[inline]
-    pub fn bad_parameter<E: ::std::error::Error, S: Into<String>>(name: S, e: &E) -> Error {
-        // `format!` invokes the error's `Display` trait implementation
-        ErrorKind::BadParameter(name.into(), format!("{}", e).to_owned()).into()
-    }
-
-    #[inline]
-    pub fn bad_request<S: Into<String>>(message: S) -> Error {
-        ErrorKind::BadRequest(message.into()).into()
-    }
-
-    #[inline]
-    pub fn job_unknown<S: Into<String>>(name: S) -> Error {
-        ErrorKind::JobUnknown(name.into()).into()
-    }
-
-    #[inline]
-    pub fn missing_parameter<S: Into<String>>(message: S) -> Error {
-        ErrorKind::MissingParameter(message.into()).into()
-    }
-
-    #[inline]
-    pub fn not_found<S: Into<String>>(resource: S, id: i64) -> Error {
-        ErrorKind::NotFound(resource.into(), id).into()
-    }
-
-    #[inline]
-    pub fn not_found_general<S: Into<String>>(message: S) -> Error {
-        ErrorKind::NotFoundGeneral(message.into()).into()
-    }
-
-    #[inline]
-    pub fn unauthorized() -> Error {
-        ErrorKind::Unauthorized.into()
-    }
-
-    #[inline]
-    pub fn validation<S: Into<String>>(message: S) -> Error {
-        ErrorKind::Validation(message.into()).into()
-    }
-}
-
-//
-// Other functions
-//
-
-// Collect error strings together so that we can build a good error message to
-// send up. It's worth nothing that the original error is actually at the end of
-// the iterator, but since it's the most relevant, we reverse the list.
-//
-// The chain isn't a double-ended iterator (meaning we can't use `rev`), so we
-// have to collect it to a Vec first before reversing it.
-//
-// I've located this function here instead of error_helpers because it's needed
-// by `error_reporter::Mediator`. It's a bit of a breakage in modularity
-// though, so it might be better just to duplicate the function in two places
-// instead.
-pub fn error_strings(error: &Error) -> Vec<String> {
-    error
-        .iter()
-        .map(|e| e.to_string())
-        .collect::<Vec<_>>()
-        .iter()
-        .cloned()
-        .rev()
-        .collect()
 }

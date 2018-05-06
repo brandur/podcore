@@ -44,7 +44,7 @@ impl server::Params for Params {
     ) -> Result<Self> {
         let account = match server::account(req) {
             Some(account) => account,
-            None => bail!(error::unauthorized()),
+            None => bail!(user_errors::unauthorized()),
         };
 
         match data {
@@ -54,7 +54,7 @@ impl server::Params for Params {
                     account,
                     graphql_req,
                 }),
-                Err(e) => bail!(error::bad_request(format!(
+                Err(e) => bail!(user_errors::bad_request(format!(
                     "Error deserializing request body: {}",
                     e
                 ))),
@@ -66,7 +66,7 @@ impl server::Params for Params {
 
                 let input_query = match query.get("query") {
                     Some(q) => q.to_owned(),
-                    None => bail!(error::bad_request("No query provided")),
+                    None => bail!(user_errors::bad_request("No query provided")),
                 };
 
                 let operation_name = query.get("operationName").map(|n| n.to_owned());
@@ -74,7 +74,7 @@ impl server::Params for Params {
                 let variables: Option<InputValue> = match query.get("variables") {
                     Some(v) => match serde_json::from_str::<InputValue>(v) {
                         Ok(v) => Some(v),
-                        Err(e) => bail!(error::bad_request(format!(
+                        Err(e) => bail!(user_errors::bad_request(format!(
                             "Malformed variables JSON: {}",
                             e
                         ))),
@@ -278,7 +278,7 @@ mod tests {
         assert_eq!(StatusCode::UNAUTHORIZED, resp.status());
         let value = test_helpers::read_body_json(resp);
         assert_eq!(
-            json!({"errors": [{"message": format!("{}", error::unauthorized())}]}),
+            json!({"errors": [{"message": format!("{}", user_errors::unauthorized())}]}),
             value
         );
     }
@@ -297,7 +297,7 @@ mod tests {
         let resp = server.execute(req.send()).unwrap();
 
         assert_eq!(StatusCode::BAD_REQUEST, resp.status());
-        let e = error::bad_request("No query provided");
+        let e = user_errors::bad_request("No query provided");
         let value = test_helpers::read_body_json(resp);
         assert_eq!(json!({"errors": [{"message": format!("{}", e)}]}), value);
     }
@@ -336,7 +336,7 @@ mod tests {
         assert_eq!(StatusCode::UNAUTHORIZED, resp.status());
         let value = test_helpers::read_body_json(resp);
         assert_eq!(
-            json!({"errors": [{"message": format!("{}", error::unauthorized())}]}),
+            json!({"errors": [{"message": format!("{}", user_errors::unauthorized())}]}),
             value
         );
     }
@@ -355,7 +355,7 @@ mod tests {
         let resp = server.execute(req.send()).unwrap();
 
         assert_eq!(StatusCode::BAD_REQUEST, resp.status());
-        let error = error::bad_request(concat!(
+        let error = user_errors::bad_request(concat!(
             "Error deserializing request body: ",
             "EOF while parsing a value at line 1 column 0"
         ));

@@ -441,7 +441,7 @@ fn work_job(
             args:      serde_json::from_value(job.args.clone())?,
             requester: requester,
         }.run(log),
-        _ => Err(error::job_unknown(job.name.clone())),
+        _ => Err(errors::job_unknown(job.name.clone())),
     }
 }
 

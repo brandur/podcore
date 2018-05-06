@@ -144,7 +144,7 @@ mod mutation {
                 Ok(CoercedParams {
                     account:    params.account,
                     episode_id: i64::from_str(params.episode_id)
-                        .map_err(|e| error::bad_parameter("episode_id", &e))?,
+                        .map_err(|e| user_errors::bad_parameter("episode_id", &e))?,
                     favorited:  params.favorited,
                 })
             }
@@ -165,7 +165,7 @@ mod mutation {
                         .filter(schema::episode::id.eq(params.episode_id))
                         .first(conn)
                         .optional()?
-                        .ok_or_else(|| error::not_found("episode", params.episode_id))?;
+                        .ok_or_else(|| user_errors::not_found("episode", params.episode_id))?;
 
                     Ok(Fetches { episode })
                 })
@@ -261,7 +261,7 @@ mod mutation {
                 ).err()
                     .unwrap();
                 assert_eq!(
-                    format!("{}", error::not_found("episode", 0)),
+                    format!("{}", user_errors::not_found("episode", 0)),
                     format!("{}", err)
                 );
             }
@@ -339,7 +339,7 @@ mod mutation {
                 Ok(CoercedParams {
                     account:    params.account,
                     episode_id: i64::from_str(params.episode_id)
-                        .map_err(|e| error::bad_parameter("episode_id", &e))?,
+                        .map_err(|e| user_errors::bad_parameter("episode_id", &e))?,
                     played:     params.played,
                 })
             }
@@ -360,7 +360,7 @@ mod mutation {
                         .filter(schema::episode::id.eq(params.episode_id))
                         .first(conn)
                         .optional()?
-                        .ok_or_else(|| error::not_found("episode", params.episode_id))?;
+                        .ok_or_else(|| user_errors::not_found("episode", params.episode_id))?;
 
                     Ok(Fetches { episode })
                 })
@@ -461,7 +461,7 @@ mod mutation {
                 ).err()
                     .unwrap();
                 assert_eq!(
-                    format!("{}", error::not_found("episode", 0)),
+                    format!("{}", user_errors::not_found("episode", 0)),
                     format!("{}", err)
                 );
             }
@@ -530,14 +530,14 @@ mod mutation {
             params: &Params<'a>,
         ) -> Result<Option<resource::AccountPodcast>> {
             let podcast_id = i64::from_str(params.podcast_id)
-                .map_err(|e| error::bad_parameter("podcast_id", &e))?;
+                .map_err(|e| user_errors::bad_parameter("podcast_id", &e))?;
 
             // TODO: move to a fetch?
             let podcast: model::Podcast = schema::podcast::table
                 .filter(schema::podcast::id.eq(podcast_id))
                 .first(params.conn)
                 .optional()?
-                .ok_or_else(|| error::not_found("podcast", podcast_id))?;
+                .ok_or_else(|| user_errors::not_found("podcast", podcast_id))?;
 
             let account_podcast = if let Some(subscribed) = params.subscribed {
                 let res = mediators::account_podcast_subscriber::Mediator {

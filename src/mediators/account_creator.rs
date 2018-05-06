@@ -101,7 +101,7 @@ impl<'a> Mediator<'a> {
             })?;
 
         if email_exists {
-            bail!(error::validation(
+            bail!(user_errors::validation(
                 "An account with that email already exists."
             ));
         }
@@ -156,23 +156,25 @@ impl<'a> Mediator<'a> {
 
         if let Some(email) = self.email {
             if email.is_empty() {
-                bail!(error::validation("Please specify an email address."))
+                bail!(user_errors::validation("Please specify an email address."))
             }
 
             if !EMAIL_REGEX.is_match(email) {
-                bail!(error::validation("Please specify a valid email address."))
+                bail!(user_errors::validation(
+                    "Please specify a valid email address."
+                ))
             }
         }
 
         if let Some(password) = self.password {
             if password.is_empty() {
-                bail!(error::validation("Please specify a password."))
+                bail!(user_errors::validation("Please specify a password."))
             }
 
             // Obviously we want to put in more sophisticated rules around password
             // complexity ...
             if password.len() < 8 {
-                bail!(error::validation(
+                bail!(user_errors::validation(
                     "Password must be at least 8 characters long."
                 ))
             }

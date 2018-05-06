@@ -537,9 +537,9 @@ pub mod episode_get {
             Ok(Self {
                 account:    server::account(req),
                 episode_id: links::unslug_id(req.match_info().get("id").unwrap())
-                    .map_err(|e| error::bad_parameter("episode_id", &e))?,
+                    .map_err(|e| user_errors::bad_parameter("episode_id", &e))?,
                 podcast_id: links::unslug_id(req.match_info().get("podcast_id").unwrap())
-                    .map_err(|e| error::bad_parameter("podcast_id", &e))?,
+                    .map_err(|e| user_errors::bad_parameter("podcast_id", &e))?,
             })
         }
     }
@@ -576,7 +576,7 @@ pub mod episode_get {
                     episode,
                 }))
             }
-            None => Err(error::not_found("episode", params.episode_id)),
+            None => Err(user_errors::not_found("episode", params.episode_id)),
         }
     }
 
@@ -676,7 +676,7 @@ pub mod directory_podcast_get {
         ) -> Result<Self> {
             Ok(Self {
                 directory_podcast_id: links::unslug_id(req.match_info().get("id").unwrap())
-                    .map_err(|e| error::bad_parameter("directory_podcast_id", &e))?,
+                    .map_err(|e| user_errors::bad_parameter("directory_podcast_id", &e))?,
             })
         }
     }
@@ -702,7 +702,7 @@ pub mod directory_podcast_get {
                 let res = mediator.run(log)?;
                 Ok(ViewModel::Ok(res.podcast))
             }
-            None => Err(error::not_found(
+            None => Err(user_errors::not_found(
                 "directory_podcast",
                 params.directory_podcast_id,
             )),
@@ -898,7 +898,7 @@ pub mod login_post {
             data: Option<&[u8]>,
         ) -> Result<Self> {
             let form = serde_urlencoded::from_bytes::<ParamsForm>(data.unwrap())
-                .map_err(|e| error::bad_request(format!("{}", e)))?;
+                .map_err(|e| user_errors::bad_request(format!("{}", e)))?;
 
             // The missing parameter errors are "hard" errors that usually the user will
             // not see because even empty fields will be submitted with an HTML
@@ -907,10 +907,11 @@ pub mod login_post {
             // to the user.
             Ok(Params {
                 account:  server::account(req),
-                email:    form.email.ok_or_else(|| error::missing_parameter("email"))?,
+                email:    form.email
+                    .ok_or_else(|| user_errors::missing_parameter("email"))?,
                 last_ip:  server::ip_for_request(req).to_owned(),
                 password: form.password
-                    .ok_or_else(|| error::missing_parameter("password"))?,
+                    .ok_or_else(|| user_errors::missing_parameter("password"))?,
             })
         }
     }
@@ -934,7 +935,7 @@ pub mod login_post {
             password: params.password.as_str(),
         }.run(log);
 
-        if let Err(Error(ErrorKind::Validation(message), _)) = res {
+        if let Err(Error(ErrorKind::User(user_errors::ErrorKind::Validation(message)), _)) = res {
             return message_invalid(params.account, message.as_str());
         }
 
@@ -1291,7 +1292,7 @@ pub mod podcast_get {
             Ok(Self {
                 account:    server::account(req),
                 podcast_id: links::unslug_id(req.match_info().get("id").unwrap())
-                    .map_err(|e| error::bad_parameter("podcast_id", &e))?,
+                    .map_err(|e| user_errors::bad_parameter("podcast_id", &e))?,
             })
         }
     }
@@ -1330,7 +1331,7 @@ pub mod podcast_get {
                     podcast,
                 }))
             }
-            None => Err(error::not_found("podcast", params.podcast_id)),
+            None => Err(user_errors::not_found("podcast", params.podcast_id)),
         }
     }
 
@@ -1569,7 +1570,7 @@ pub mod signup_post {
             data: Option<&[u8]>,
         ) -> Result<Self> {
             let form = serde_urlencoded::from_bytes::<ParamsForm>(data.unwrap())
-                .map_err(|e| error::bad_request(format!("{}", e)))?;
+                .map_err(|e| user_errors::bad_request(format!("{}", e)))?;
 
             // The missing parameter errors are "hard" errors that usually the user will
             // not see because even empty fields will be submitted with an HTML
@@ -1578,12 +1579,13 @@ pub mod signup_post {
             // to the user.
             Ok(Params {
                 account:          server::account(req),
-                email:            form.email.ok_or_else(|| error::missing_parameter("email"))?,
+                email:            form.email
+                    .ok_or_else(|| user_errors::missing_parameter("email"))?,
                 last_ip:          server::ip_for_request(req).to_owned(),
                 password:         form.password
-                    .ok_or_else(|| error::missing_parameter("password"))?,
+                    .ok_or_else(|| user_errors::missing_parameter("password"))?,
                 password_confirm: form.password_confirm
-                    .ok_or_else(|| error::missing_parameter("password_confirm"))?,
+                    .ok_or_else(|| user_errors::missing_parameter("password_confirm"))?,
                 scrypt_log_n:     req.state().get_scrypt_log_n(),
             })
         }
@@ -1629,7 +1631,7 @@ pub mod signup_post {
             scrypt_log_n: Some(params.scrypt_log_n),
         }.run(log);
 
-        if let Err(Error(ErrorKind::Validation(message), _)) = res {
+        if let Err(Error(ErrorKind::User(user_errors::ErrorKind::Validation(message)), _)) = res {
             return message_invalid(params.account, message.as_str());
         }
 

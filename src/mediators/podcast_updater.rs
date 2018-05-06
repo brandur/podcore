@@ -261,11 +261,11 @@ impl<'a> Mediator<'a> {
                 "body" => string.as_str(), "status" => format!("{}", status));
 
             if status == StatusCode::NotFound {
-                bail!(error::bad_request(
+                bail!(user_errors::bad_request(
                     "That podcast doesn't seem to exist on the host's servers (404)."
                 ));
             } else {
-                bail!(error::bad_request(format!(
+                bail!(user_errors::bad_request(format!(
                     "Error fetching podcast feed. Host responded with status: {}",
                     status
                 )));

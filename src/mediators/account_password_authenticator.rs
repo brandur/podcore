@@ -34,7 +34,9 @@ impl<'a> Mediator<'a> {
         let account = self.select_account(log, self.email)?;
         if account.is_none() {
             info!(log, "No account with that email");
-            bail!(error::validation("No account matched that email address."));
+            bail!(user_errors::validation(
+                "No account matched that email address."
+            ));
         };
 
         let account = account.unwrap();
@@ -42,7 +44,7 @@ impl<'a> Mediator<'a> {
 
         if !scrypt_check(log, &account, self.password) {
             info!(log, "Password did not match scrypt hash");
-            bail!(error::validation(
+            bail!(user_errors::validation(
                 "That password doesn't match the account's."
             ));
         }
@@ -98,10 +100,10 @@ impl<'a> Mediator<'a> {
     /// Performs validations on parameters. These are user facing.
     fn params_validate(&mut self) -> Result<()> {
         if self.email.is_empty() {
-            bail!(error::validation("Please specify an email address."))
+            bail!(user_errors::validation("Please specify an email address."))
         }
         if self.password.is_empty() {
-            bail!(error::validation("Please specify a password."))
+            bail!(user_errors::validation("Please specify a password."))
         }
 
         Ok(())
