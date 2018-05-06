@@ -26,6 +26,9 @@ use std::time::Duration;
 // Public constants
 //
 
+// An email suitable for testing purposes.
+pub const EMAIL: &str = "foo@example.com";
+
 // An "ideal" feed that has proper formatting and the standard set of expected
 // fields.
 //
@@ -72,6 +75,9 @@ pub const MINIMAL_FEED: &[u8] = br#"
     </item>
   </channel>
 </rss>"#;
+
+// An IP suitable for testing purposes.
+pub const IP: &str = "4.5.6.7";
 
 // The password that test accounts (non-ephemeral ones) are created with.
 pub const PASSWORD: &str = "password123";

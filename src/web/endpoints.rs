@@ -1051,7 +1051,7 @@ pub mod login_post {
                 &bootstrap.log,
                 &*bootstrap.conn,
                 test_data::account::Args {
-                    email:     Some(TEST_EMAIL),
+                    email:     Some(test_helpers::EMAIL),
                     ephemeral: false,
                     mobile:    false,
                 },
@@ -1117,8 +1117,6 @@ pub mod login_post {
         // Private types/functions
         //
 
-        static TEST_EMAIL: &str = "foo@example.com";
-
         struct TestBootstrap {
             _common: test_helpers::CommonTestBootstrap,
             conn:    PooledConnection<ConnectionManager<PgConnection>>,
@@ -1138,7 +1136,7 @@ pub mod login_post {
         fn valid_params() -> Params {
             Params {
                 account:  None,
-                email:    TEST_EMAIL.to_owned(),
+                email:    test_helpers::EMAIL.to_owned(),
                 last_ip:  test_helpers::REQUEST_IP.to_owned(),
                 password: test_helpers::PASSWORD.to_owned(),
             }

@@ -1,14 +1,17 @@
 use errors::*;
+use jobs;
 use model;
 use model::insertable;
 use schema;
 use time_helpers;
 
+use chrono::Utc;
 use diesel;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use rand::distributions::Alphanumeric;
 use rand::EntropyRng;
+use serde_json;
 use slog::Logger;
 use std::iter;
 
@@ -32,12 +35,29 @@ impl<'a> Mediator<'a> {
         debug!(log, "Generated secret"; "secret" => secret.as_str());
 
         let code = self.insert_verification_code(log, secret)?;
-        Ok(RunResult { code })
+        let job = self.insert_job(log, &code)?;
+        Ok(RunResult { code, job })
     }
 
     //
     // Steps
     //
+
+    fn insert_job(&mut self, log: &Logger, code: &model::VerificationCode) -> Result<model::Job> {
+        time_helpers::log_timed(&log.new(o!("step" => "insert_job")), |_log| {
+            diesel::insert_into(schema::job::table)
+                .values(&insertable::Job {
+                    args:   serde_json::to_value(&jobs::verification_mailer::Args {
+                        to:                   self.account.email.clone().unwrap(),
+                        verification_code_id: code.id,
+                    })?,
+                    name:   jobs::verification_mailer::NAME.to_owned(),
+                    try_at: Utc::now(),
+                })
+                .get_result(self.conn)
+                .chain_err(|| "Error inserting job")
+        })
+    }
 
     fn insert_verification_code(
         &mut self,
@@ -58,6 +78,7 @@ impl<'a> Mediator<'a> {
 
 pub struct RunResult {
     pub code: model::VerificationCode,
+    pub job:  model::Job,
 }
 
 //
@@ -106,6 +127,10 @@ mod tests {
 
         assert_ne!(0, res.code.id);
         assert_eq!(SECRET_LENGTH, res.code.secret.len());
+
+        let args: jobs::verification_mailer::Args = serde_json::from_value(res.job.args).unwrap();
+        assert_eq!(test_helpers::EMAIL, args.to.as_str());
+        assert_eq!(res.code.id, args.verification_code_id);
     }
 
     //
@@ -126,7 +151,15 @@ mod tests {
 
             TestBootstrap {
                 _common: test_helpers::CommonTestBootstrap::new(),
-                account: test_data::account::insert(&log, &conn),
+                account: test_data::account::insert_args(
+                    &log,
+                    &conn,
+                    test_data::account::Args {
+                        email:     Some(test_helpers::EMAIL),
+                        ephemeral: false,
+                        mobile:    false,
+                    },
+                ),
 
                 // Only move these after filling the above
                 conn: conn,

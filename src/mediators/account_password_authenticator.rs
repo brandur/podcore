@@ -145,7 +145,7 @@ mod tests {
     #[test]
     fn test_account_password_authenticator_ok() {
         let mut bootstrap = TestBootstrap::new(Args {
-            email:    TEST_EMAIL,
+            email:    test_helpers::EMAIL,
             password: test_helpers::PASSWORD,
         });
 
@@ -155,7 +155,7 @@ mod tests {
         };
 
         assert_eq!(bootstrap.account.id, res.account.id);
-        assert_eq!(TEST_NEW_IP, res.account.last_ip);
+        assert_eq!(test_helpers::IP, res.account.last_ip);
         assert_eq!(bootstrap.key.id, res.key.id);
         assert_eq!(bootstrap.account.id, res.key.account_id);
     }
@@ -180,7 +180,7 @@ mod tests {
     #[test]
     fn test_account_password_authenticator_empty_password() {
         let mut bootstrap = TestBootstrap::new(Args {
-            email:    TEST_EMAIL,
+            email:    test_helpers::EMAIL,
             password: "",
         });
 
@@ -214,7 +214,7 @@ mod tests {
     #[test]
     fn test_account_password_authenticator_bad_password() {
         let mut bootstrap = TestBootstrap::new(Args {
-            email:    TEST_EMAIL,
+            email:    test_helpers::EMAIL,
             password: "bad-password",
         });
 
@@ -231,9 +231,6 @@ mod tests {
     //
     // Private types/functions
     //
-
-    static TEST_EMAIL: &str = "foo@example.com";
-    static TEST_NEW_IP: &str = "4.5.6.7";
 
     struct Args<'a> {
         email:    &'a str,
@@ -258,7 +255,7 @@ mod tests {
                 &log,
                 &*conn,
                 test_data::account::Args {
-                    email:     Some(TEST_EMAIL),
+                    email:     Some(test_helpers::EMAIL),
                     ephemeral: false,
                     mobile:    false,
                 },
@@ -287,7 +284,7 @@ mod tests {
                 Mediator {
                     conn:     &*self.conn,
                     email:    self.args.email,
-                    last_ip:  TEST_NEW_IP,
+                    last_ip:  test_helpers::IP,
                     password: self.args.password,
                 },
                 self.log.clone(),

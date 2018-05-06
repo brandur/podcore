@@ -68,8 +68,8 @@ pub mod verification_mailer {
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
     pub struct Args {
-        pub to:    String,
-        pub token: String,
+        pub to:                   String,
+        pub verification_code_id: i64,
     }
 
     pub struct Job<'a> {
@@ -99,8 +99,8 @@ pub mod verification_mailer {
         fn test_job_verification_mailer_run() {
             Job {
                 args:      Args {
-                    to:    "foo@example.com".to_owned(),
-                    token: "verification-token".to_owned(),
+                    to:                   "foo@example.com".to_owned(),
+                    verification_code_id: 0,
                 },
                 requester: &HttpRequesterPassThrough {
                     data: Arc::new(Vec::new()),
