@@ -1,3 +1,26 @@
+/// Creates a per-job enqueue helper function.
+macro_rules! enqueue {
+    () => {
+        pub fn enqueue(_log: &Logger, conn: &PgConnection, args: &Args) -> Result<model::Job> {
+            use model::insertable;
+            use schema;
+
+            use chrono::Utc;
+            use diesel;
+            use diesel::prelude::*;
+            use serde_json;
+
+            diesel::insert_into(schema::job::table)
+                .values(&insertable::Job {
+                    args:   serde_json::to_value(args)?,
+                    name:   NAME.to_owned(),
+                    try_at: Utc::now(),
+                })
+                .get_result(conn)
+                .chain_err(|| "Error inserting job")
+        }
+    };
+}
 pub mod no_op {
     use errors::*;
 
@@ -30,6 +53,13 @@ pub mod no_op {
     }
 
     //
+    // Public functions
+    //
+
+    // Currently not used anywhere.
+    //enqueue!();
+
+    //
     // Tests
     //
 
@@ -54,17 +84,13 @@ pub mod verification_mailer {
     use errors::*;
     use http_requester::HttpRequester;
     use model;
-    use model::insertable;
     use schema;
     use time_helpers;
 
-    use chrono::Utc;
-    use diesel;
     use diesel::pg::PgConnection;
     use diesel::prelude::*;
     use r2d2::Pool;
     use r2d2_diesel::ConnectionManager;
-    use serde_json;
     use slog::Logger;
 
     //
@@ -100,16 +126,7 @@ pub mod verification_mailer {
     // Public functions
     //
 
-    pub fn enqueue(_log: &Logger, conn: &PgConnection, args: &Args) -> Result<model::Job> {
-        diesel::insert_into(schema::job::table)
-            .values(&insertable::Job {
-                args:   serde_json::to_value(args)?,
-                name:   NAME.to_owned(),
-                try_at: Utc::now(),
-            })
-            .get_result(conn)
-            .chain_err(|| "Error inserting job")
-    }
+    enqueue!();
 
     //
     // Private functions
