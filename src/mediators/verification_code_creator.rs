@@ -5,13 +5,11 @@ use model::insertable;
 use schema;
 use time_helpers;
 
-use chrono::Utc;
 use diesel;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use rand::distributions::Alphanumeric;
 use rand::EntropyRng;
-use serde_json;
 use slog::Logger;
 use std::iter;
 
@@ -44,18 +42,15 @@ impl<'a> Mediator<'a> {
     //
 
     fn insert_job(&mut self, log: &Logger, code: &model::VerificationCode) -> Result<model::Job> {
-        time_helpers::log_timed(&log.new(o!("step" => "insert_job")), |_log| {
-            diesel::insert_into(schema::job::table)
-                .values(&insertable::Job {
-                    args:   serde_json::to_value(&jobs::verification_mailer::Args {
-                        to:                   self.account.email.clone().unwrap(),
-                        verification_code_id: code.id,
-                    })?,
-                    name:   jobs::verification_mailer::NAME.to_owned(),
-                    try_at: Utc::now(),
-                })
-                .get_result(self.conn)
-                .chain_err(|| "Error inserting job")
+        time_helpers::log_timed(&log.new(o!("step" => "enqueue")), |log| {
+            jobs::verification_mailer::enqueue(
+                log,
+                self.conn,
+                &jobs::verification_mailer::Args {
+                    to:                   self.account.email.clone().unwrap(),
+                    verification_code_id: code.id,
+                },
+            )
         })
     }
 
@@ -118,6 +113,7 @@ mod tests {
 
     use r2d2::PooledConnection;
     use r2d2_diesel::ConnectionManager;
+    use serde_json;
 
     #[test]
     fn test_verification_code_create() {

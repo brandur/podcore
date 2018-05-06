@@ -53,7 +53,15 @@ pub mod no_op {
 pub mod verification_mailer {
     use errors::*;
     use http_requester::HttpRequester;
+    use model;
+    use model::insertable;
+    use schema;
 
+    use chrono::Utc;
+    use diesel;
+    use diesel::pg::PgConnection;
+    use diesel::prelude::*;
+    use serde_json;
     use slog::Logger;
 
     //
@@ -81,6 +89,21 @@ pub mod verification_mailer {
         pub fn run(&self, _log: &Logger) -> Result<()> {
             Ok(())
         }
+    }
+
+    //
+    // Public functions
+    //
+
+    pub fn enqueue(_log: &Logger, conn: &PgConnection, args: &Args) -> Result<model::Job> {
+        diesel::insert_into(schema::job::table)
+            .values(&insertable::Job {
+                args:   serde_json::to_value(args)?,
+                name:   NAME.to_owned(),
+                try_at: Utc::now(),
+            })
+            .get_result(conn)
+            .chain_err(|| "Error inserting job")
     }
 
     //
