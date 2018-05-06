@@ -269,3 +269,41 @@ pub mod podcast {
             .podcast
     }
 }
+
+pub mod verification_code {
+    use mediators::verification_code_creator;
+    use test_data::*;
+
+    #[derive(Default)]
+    pub struct Args<'a> {
+        pub account: Option<&'a model::Account>,
+    }
+
+    #[allow(dead_code)]
+    pub fn insert(log: &Logger, conn: &PgConnection) -> model::VerificationCode {
+        insert_args(log, conn, Args::default())
+    }
+
+    pub fn insert_args(log: &Logger, conn: &PgConnection, args: Args) -> model::VerificationCode {
+        let account = if args.account.is_none() {
+            Some(super::account::insert_args(
+                log,
+                conn,
+                super::account::Args {
+                    email:     Some(test_helpers::EMAIL),
+                    ephemeral: false,
+                    mobile:    false,
+                },
+            ))
+        } else {
+            None
+        };
+
+        verification_code_creator::Mediator {
+            account: args.account.unwrap_or_else(|| account.as_ref().unwrap()),
+            conn,
+        }.run(log)
+            .unwrap()
+            .code
+    }
+}

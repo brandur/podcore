@@ -429,7 +429,7 @@ fn work(
 /// Work a single job.
 fn work_job(
     log: &Logger,
-    _pool: &Pool<ConnectionManager<PgConnection>>,
+    pool: &Pool<ConnectionManager<PgConnection>>,
     requester: &HttpRequester,
     job: &model::Job,
 ) -> Result<()> {
@@ -438,8 +438,9 @@ fn work_job(
             args: serde_json::from_value(job.args.clone())?,
         }.run(log),
         jobs::verification_mailer::NAME => jobs::verification_mailer::Job {
-            args:      serde_json::from_value(job.args.clone())?,
-            requester: requester,
+            args: serde_json::from_value(job.args.clone())?,
+            pool,
+            requester,
         }.run(log),
         _ => Err(errors::job_unknown(job.name.clone())),
     }
